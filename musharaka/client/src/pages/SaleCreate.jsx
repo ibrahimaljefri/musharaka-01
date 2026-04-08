@@ -1,0 +1,187 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../lib/axiosClient'
+import { supabase } from '../lib/supabaseClient'
+import { useAuthStore } from '../store/authStore'
+import TipsPanel from '../components/TipsPanel'
+import AlertBanner from '../components/AlertBanner'
+
+const MONTHS = [
+  { v: 1, l: 'يناير' }, { v: 2, l: 'فبراير' }, { v: 3, l: 'مارس' },
+  { v: 4, l: 'أبريل' }, { v: 5, l: 'مايو' },   { v: 6, l: 'يونيو' },
+  { v: 7, l: 'يوليو' }, { v: 8, l: 'أغسطس' },  { v: 9, l: 'سبتمبر' },
+  { v: 10, l: 'أكتوبر' }, { v: 11, l: 'نوفمبر' }, { v: 12, l: 'ديسمبر' },
+]
+const YEARS = Array.from({ length: 6 }, (_, i) => 2021 + i)
+
+const ALL_MODES = [
+  { v: 'daily',   l: 'يومي' },
+  { v: 'monthly', l: 'شهري' },
+  { v: 'range',   l: 'فترة مخصصة' },
+]
+
+export default function SaleCreate() {
+  const navigate           = useNavigate()
+  const allowedInputTypes  = useAuthStore(s => s.allowedInputTypes)
+  const availableModes     = ALL_MODES.filter(m => allowedInputTypes.includes(m.v))
+  const [branches, setBranches] = useState([])
+  const [mode, setMode]         = useState(availableModes[0]?.v || 'daily')
+  const [form, setForm]         = useState({
+    branch_id: '', amount: '', invoice_number: '', notes: '',
+    sale_date: new Date().toISOString().split('T')[0],
+    month: new Date().getMonth() + 1, year: new Date().getFullYear(),
+    period_start_date: '', period_end_date: '',
+  })
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const [success, setSuccess]   = useState('')
+
+  useEffect(() => {
+    supabase.from('branches').select('id,code,name').order('name')
+      .then(({ data }) => setBranches(data || []))
+  }, [])
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    setError(''); setSuccess('')
+    if (!form.branch_id) return setError('يرجى اختيار الفرع')
+    if (!form.amount || parseFloat(form.amount) <= 0) return setError('يرجى إدخال مبلغ صحيح أكبر من صفر')
+
+    const payload = { ...form, input_type: mode, amount: parseFloat(form.amount) }
+    setLoading(true)
+    try {
+      const { data } = await api.post('/sales', payload)
+      setSuccess(data.message)
+      setTimeout(() => navigate('/dashboard'), 1500)
+    } catch (err) {
+      setError(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
+    } finally { setLoading(false) }
+  }
+
+  const tips = [
+    'يومي: أدخل مبيعات يوم واحد محدد.',
+    'شهري: يتم توزيع المبلغ تلقائياً على جميع أيام الشهر.',
+    'فترة مخصصة: أدخل نطاق تواريخ ليتم التوزيع عليها.',
+    'رقم الفاتورة اختياري ويستخدم للتتبع.',
+  ]
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <h1 className="text-xl font-bold text-gray-800 font-arabic mb-6">إضافة مبيعات</h1>
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 card-surface p-6">
+          {error   && <AlertBanner type="error"   message={error} />}
+          {success && <AlertBanner type="success" message={success} dismissible={false} />}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Mode selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 font-arabic mb-2">نوع الإدخال</label>
+              <div className="flex gap-4 flex-wrap">
+                {availableModes.map(({ v, l }) => (
+                  <label key={v} className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="mode" value={v} checked={mode === v} onChange={() => setMode(v)} className="text-yellow-600 focus:ring-yellow-400" />
+                    <span className="text-sm text-gray-700 font-arabic">{l}</span>
+                  </label>
+                ))}
+                {availableModes.length === 0 && (
+                  <p className="text-sm text-red-500 font-arabic">لا توجد أنواع إدخال مفعّلة لحسابك</p>
+                )}
+              </div>
+            </div>
+
+            {/* Date inputs based on mode */}
+            {mode === 'daily' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">التاريخ</label>
+                <input type="date" value={form.sale_date} onChange={e => set('sale_date', e.target.value)} dir="ltr"
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+              </div>
+            )}
+            {mode === 'monthly' && (
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الشهر</label>
+                  <select value={form.month} onChange={e => set('month', parseInt(e.target.value))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
+                  </select>
+                </div>
+                <div className="w-28">
+                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">السنة</label>
+                  <select value={form.year} onChange={e => set('year', parseInt(e.target.value))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+            {mode === 'range' && (
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">من التاريخ</label>
+                  <input type="date" value={form.period_start_date} onChange={e => set('period_start_date', e.target.value)} dir="ltr"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">إلى التاريخ</label>
+                  <input type="date" value={form.period_end_date} onChange={e => set('period_end_date', e.target.value)} dir="ltr"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                </div>
+              </div>
+            )}
+
+            {/* Branch */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الفرع <span className="text-red-500">*</span></label>
+              <select value={form.branch_id} onChange={e => set('branch_id', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                <option value="">اختر الفرع</option>
+                {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
+              </select>
+            </div>
+
+            {/* Amount */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">المبلغ (ر.س) <span className="text-red-500">*</span></label>
+              <input type="number" min="0.01" step="0.01" dir="ltr" value={form.amount} onChange={e => set('amount', e.target.value)} placeholder="0.00"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+            </div>
+
+            {/* Invoice number */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">رقم الفاتورة (اختياري)</label>
+              <input type="text" dir="ltr" value={form.invoice_number} onChange={e => set('invoice_number', e.target.value)} placeholder="INV-001"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">ملاحظات (اختياري)</label>
+              <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button type="submit" disabled={loading}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm">
+                {loading ? 'جاري الحفظ...' : 'حفظ المبيعات'}
+              </button>
+              <button type="button" onClick={() => navigate('/dashboard')}
+                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-arabic">
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Tips panel */}
+        <div className="w-full lg:w-64 shrink-0">
+          <TipsPanel tips={tips} />
+        </div>
+      </div>
+    </div>
+  )
+}

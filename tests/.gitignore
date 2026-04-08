@@ -1,0 +1,3 @@
+fixtures/.auth/user.json
+playwright-report/
+test-results/

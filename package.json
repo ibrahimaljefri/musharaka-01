@@ -1,0 +1,12 @@
+{
+  "name": "musharaka",
+  "private": true,
+  "scripts": {
+    "dev:client": "npm run dev --prefix musharaka/client",
+    "dev:server": "npm run dev --prefix musharaka/server",
+    "test:unit": "npm test --prefix musharaka/server",
+    "test:e2e": "cd tests && npx playwright test",
+    "test:e2e:ui": "cd tests && npx playwright test --ui",
+    "install:all": "npm install --prefix musharaka/client && npm install --prefix musharaka/server && cd tests && npm install"
+  }
+}
