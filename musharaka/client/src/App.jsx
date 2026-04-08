@@ -19,6 +19,8 @@ import Tenants from './pages/admin/Tenants'
 import TenantForm from './pages/admin/TenantForm'
 import ApiKeys from './pages/admin/ApiKeys'
 import AdminUsers from './pages/admin/Users'
+import BotSubscribers from './pages/admin/BotSubscribers'
+import BotSubscriberForm from './pages/admin/BotSubscriberForm'
 
 function ProtectedRoute({ children }) {
   const session = useAuthStore(s => s.session)
@@ -82,11 +84,14 @@ export default function App() {
           <Route path="/submissions"       element={<Submissions />} />
 
           {/* Super-admin pages */}
-          <Route path="/admin/tenants"              element={<AdminRoute><Tenants /></AdminRoute>} />
-          <Route path="/admin/tenants/create"       element={<AdminRoute><TenantForm mode="create" /></AdminRoute>} />
-          <Route path="/admin/tenants/:id/edit"     element={<AdminRoute><TenantForm mode="edit" /></AdminRoute>} />
-          <Route path="/admin/tenants/:id/api-keys" element={<AdminRoute><ApiKeys /></AdminRoute>} />
-          <Route path="/admin/users"                element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/tenants"                        element={<AdminRoute><Tenants /></AdminRoute>} />
+          <Route path="/admin/tenants/create"               element={<AdminRoute><TenantForm mode="create" /></AdminRoute>} />
+          <Route path="/admin/tenants/:id/edit"             element={<AdminRoute><TenantForm mode="edit" /></AdminRoute>} />
+          <Route path="/admin/tenants/:id/api-keys"         element={<AdminRoute><ApiKeys /></AdminRoute>} />
+          <Route path="/admin/users"                        element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/bot-subscribers"              element={<AdminRoute><BotSubscribers /></AdminRoute>} />
+          <Route path="/admin/bot-subscribers/create"       element={<AdminRoute><BotSubscriberForm mode="create" /></AdminRoute>} />
+          <Route path="/admin/bot-subscribers/:id/edit"     element={<AdminRoute><BotSubscriberForm mode="edit" /></AdminRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

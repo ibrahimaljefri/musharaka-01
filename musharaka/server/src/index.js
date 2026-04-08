@@ -9,6 +9,7 @@ const importRoutes    = require('./routes/import')
 const submitRoutes    = require('./routes/submit')
 const contractsRoutes = require('./routes/contracts')
 const adminRoutes     = require('./routes/admin')
+const botRoutes       = require('./routes/bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -46,6 +47,7 @@ app.use('/api/sales',     importRoutes)
 app.use('/api/submit',    submitRoutes)
 app.use('/api/contracts', contractsRoutes)
 app.use('/api/admin',     adminRoutes)
+app.use('/api/bot',       botRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

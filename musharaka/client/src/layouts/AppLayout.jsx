@@ -5,7 +5,7 @@ import {
   LayoutDashboard, PlusCircle, Upload, BarChart2,
   GitBranch, Send, FileText, LogOut, Menu, X,
   ChevronLeft, ChevronRight, Building2,
-  ShieldCheck, AlertTriangle, Clock, Users
+  ShieldCheck, AlertTriangle, Clock, Users, MessageCircle
 } from 'lucide-react'
 
 const navItems = [
@@ -19,8 +19,9 @@ const navItems = [
 ]
 
 const adminNavItems = [
-  { to: '/admin/tenants', label: 'إدارة المستأجرين', icon: Building2 },
-  { to: '/admin/users',   label: 'إدارة المستخدمين', icon: Users },
+  { to: '/admin/tenants',         label: 'إدارة المستأجرين', icon: Building2 },
+  { to: '/admin/users',           label: 'إدارة المستخدمين', icon: Users },
+  { to: '/admin/bot-subscribers', label: 'مشتركو الروبوت',   icon: MessageCircle },
 ]
 
 function SubscriptionBanner({ status }) {

@@ -29,7 +29,7 @@ export default function TenantForm({ mode = 'create' }) {
   const isEdit     = mode === 'edit'
 
   const [form, setForm] = useState({
-    name: '', slug: '', plan: 'basic', status: 'active',
+    name: '', slug: '', contract_number: '', plan: 'basic', status: 'active',
     activated_at: new Date().toISOString().split('T')[0],
     expires_at: '',
     notes: '',
@@ -52,6 +52,7 @@ export default function TenantForm({ mode = 'create' }) {
       setForm({
         name:                     data.name,
         slug:                     data.slug,
+        contract_number:          data.contract_number || '',
         plan:                     data.plan,
         status:                   data.status,
         activated_at:             data.activated_at?.split('T')[0] || '',
@@ -154,6 +155,15 @@ export default function TenantForm({ mode = 'create' }) {
               <input value={form.slug} onChange={e => set('slug', e.target.value)} required dir="ltr"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
+              رقم العقد <span className="text-gray-400 font-normal">(اختياري)</span>
+            </label>
+            <input value={form.contract_number} onChange={e => set('contract_number', e.target.value)}
+              dir="ltr" placeholder="CNT-2024-001"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+            <p className="text-xs text-gray-400 font-arabic mt-1">يُستخدم في تأكيدات روبوت واتساب / تيليجرام</p>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">ملاحظات</label>
