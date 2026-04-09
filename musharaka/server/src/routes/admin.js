@@ -116,9 +116,10 @@ router.get('/tenants/:id', async (req, res, next) => {
 router.put('/tenants/:id', async (req, res, next) => {
   try {
     const allowed = [
-      'name','slug','contract_number','plan','status','activated_at','expires_at',
+      'name','slug','plan','status','activated_at','expires_at',
       'notes','allowed_input_types','allow_advanced_dashboard',
       'allow_import','allow_reports',
+      'commercial_registration','primary_phone','account_number',
     ]
     const updates = {}
     for (const k of allowed) {

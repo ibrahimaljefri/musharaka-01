@@ -29,7 +29,9 @@ export default function TenantForm({ mode = 'create' }) {
   const isEdit     = mode === 'edit'
 
   const [form, setForm] = useState({
-    name: '', slug: '', contract_number: '', plan: 'basic', status: 'active',
+    name: '', slug: '',
+    commercial_registration: '', primary_phone: '', account_number: '',
+    plan: 'basic', status: 'active',
     activated_at: new Date().toISOString().split('T')[0],
     expires_at: '',
     notes: '',
@@ -52,7 +54,9 @@ export default function TenantForm({ mode = 'create' }) {
       setForm({
         name:                     data.name,
         slug:                     data.slug,
-        contract_number:          data.contract_number || '',
+        commercial_registration:  data.commercial_registration || '',
+        primary_phone:            data.primary_phone           || '',
+        account_number:           data.account_number          || '',
         plan:                     data.plan,
         status:                   data.status,
         activated_at:             data.activated_at?.split('T')[0] || '',
@@ -156,14 +160,32 @@ export default function TenantForm({ mode = 'create' }) {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
-              رقم العقد <span className="text-gray-400 font-normal">(اختياري)</span>
-            </label>
-            <input value={form.contract_number} onChange={e => set('contract_number', e.target.value)}
-              dir="ltr" placeholder="CNT-2024-001"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-            <p className="text-xs text-gray-400 font-arabic mt-1">يُستخدم في تأكيدات روبوت واتساب / تيليجرام</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
+                رقم السجل التجاري <span className="text-gray-400 font-normal">(اختياري)</span>
+              </label>
+              <input value={form.commercial_registration} onChange={e => set('commercial_registration', e.target.value)}
+                dir="ltr" placeholder="1010123456"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
+                رقم الجوال الرئيسي <span className="text-gray-400 font-normal">(اختياري)</span>
+              </label>
+              <input value={form.primary_phone} onChange={e => set('primary_phone', e.target.value)}
+                dir="ltr" placeholder="05XXXXXXXX"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+              <p className="text-xs text-gray-400 font-arabic mt-1">للتواصل عبر واتساب</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
+                رقم الحساب <span className="text-gray-400 font-normal">(اختياري)</span>
+              </label>
+              <input value={form.account_number} onChange={e => set('account_number', e.target.value)}
+                dir="ltr" placeholder="ACC-2024-001"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+            </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">ملاحظات</label>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مشاركة — نظام إدارة المبيعات</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow:       #EAB308;
+      --yellow-dark:  #B45309;
+      --yellow-light: #FEFCE8;
+      --yellow-border:#FDE68A;
+      --white:        #FFFFFF;
+      --bg:           #F4F6FA;
+      --dark:         #111827;
+      --dark2:        #1A2133;
+      --dark-foot:    #212833;
+      --gray-900:     #111827;
+      --gray-700:     #374151;
+      --gray-600:     #4B5563;
+      --gray-500:     #6B7280;
+      --gray-400:     #9CA3AF;
+      --gray-300:     #D1D5DB;
+      --gray-200:     #E5E7EB;
+      --gray-100:     #F3F4F6;
+      --green:        #10B981;
+      --green-light:  #ECFDF5;
+      --red:          #EF4444;
+      --purple:       #8B5CF6;
+      --purple-light: #F5F3FF;
+      --blue:         #3B82F6;
+      --blue-light:   #EFF6FF;
+      --cyan:         #06B6D4;
+      --cyan-light:   #ECFEFF;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Tajawal', sans-serif; color: var(--gray-900); background: var(--white); }
+
+    /* ── NAVBAR ─────────────────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      height: 68px; display: flex; align-items: center;
+      padding: 0 48px; gap: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .nav-logo { display: flex; flex-direction: column; margin-right: auto; }
+    .nav-logo strong { font-size: 22px; font-weight: 800; color: var(--yellow-dark); line-height: 1; }
+    .nav-logo span   { font-size: 11px; color: var(--gray-400); }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--gray-700); text-decoration: none; transition: color .15s; }
+    .nav-links a:hover { color: var(--yellow-dark); }
+    .nav-btns  { display: flex; gap: 10px; margin-right: auto; }
+    .btn-outline { padding: 8px 18px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--gray-700); background: var(--white); cursor: pointer; transition: border-color .15s; }
+    .btn-outline:hover { border-color: var(--yellow-dark); color: var(--yellow-dark); }
+    .btn-primary { padding: 8px 20px; background: var(--yellow); border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--white); cursor: pointer; transition: background .15s; }
+    .btn-primary:hover { background: var(--yellow-dark); }
+
+    /* ── HERO ────────────────────────────────────────────────────────────────── */
+    .hero {
+      background: var(--yellow-light);
+      padding: 72px 48px 64px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+      min-height: 560px;
+    }
+    .hero-text h1 { font-size: 46px; font-weight: 800; line-height: 1.15; color: var(--gray-900); }
+    .hero-text h1 span { color: var(--yellow-dark); }
+    .hero-text p  { margin-top: 16px; font-size: 16px; color: var(--gray-600); line-height: 1.7; }
+    .hero-btns    { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-hero-primary { padding: 14px 28px; background: var(--yellow); border: none; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--white); cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .btn-hero-primary:hover { background: var(--yellow-dark); }
+    .btn-hero-outline { padding: 14px 24px; border: 2px solid var(--yellow-dark); border-radius: 12px; background: transparent; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--yellow-dark); cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .btn-hero-outline:hover { background: var(--yellow-light); }
+    .hero-trust { margin-top: 16px; font-size: 13px; color: var(--gray-500); display: flex; gap: 20px; flex-wrap: wrap; }
+    .hero-trust span::before { content: "✓ "; color: var(--green); font-weight: 700; }
+
+    /* Dashboard mockup */
+    .dashboard-mockup {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px -12px rgba(0,0,0,.18);
+      overflow: hidden; border: 1px solid var(--gray-200);
+    }
+    .mockup-topbar {
+      background: var(--white); border-bottom: 1px solid var(--gray-100);
+      padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .mockup-topbar .logo-sm { font-size: 13px; font-weight: 700; color: var(--yellow-dark); margin-right: auto; }
+    .online-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+    .online-label { font-size: 11px; color: var(--green); }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 12px; }
+    .kpi-card { border-radius: 10px; padding: 10px 12px; }
+    .kpi-card .kpi-label { font-size: 9px; color: var(--gray-600); margin-bottom: 6px; }
+    .kpi-card .kpi-val   { font-size: 13px; font-weight: 700; }
+    .kpi-green  { background: var(--green-light);  } .kpi-green  .kpi-val { color: var(--green);  }
+    .kpi-red    { background: #FFF1F2; }              .kpi-red    .kpi-val { color: var(--red);    }
+    .kpi-purple { background: var(--purple-light); } .kpi-purple .kpi-val { color: var(--purple); }
+    .kpi-cyan   { background: var(--cyan-light);   } .kpi-cyan   .kpi-val { color: var(--cyan);   }
+    .mock-table { padding: 0 12px 12px; }
+    .mock-table-header { font-size: 10px; font-weight: 700; color: var(--gray-500); padding: 6px 0; border-bottom: 1px solid var(--gray-100); }
+    .mock-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 8px; font-size: 11px; border-radius: 6px; }
+    .mock-row:nth-child(odd) { background: var(--gray-100); }
+    .mock-row .branch { color: var(--gray-900); font-weight: 500; }
+    .mock-row .amount { color: var(--green); font-weight: 700; }
+    .mock-row .date   { color: var(--gray-400); font-size: 10px; }
+
+    /* ── SECTION WRAPPER ─────────────────────────────────────────────────────── */
+    section { padding: 72px 48px; }
+    .section-title { text-align: center; font-size: 30px; font-weight: 800; color: var(--gray-900); margin-bottom: 12px; }
+    .section-sub   { text-align: center; font-size: 15px; color: var(--gray-500); margin-bottom: 48px; }
+
+    /* ── FEATURES ────────────────────────────────────────────────────────────── */
+    .features-section { background: var(--white); }
+    .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1100px; margin: 0 auto; }
+    .feature-card {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: var(--white); border: 1.5px solid var(--gray-200);
+      border-radius: 16px; padding: 24px;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    .feature-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.08); border-color: var(--yellow-border); }
+    .feature-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+    .feature-text h3 { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; }
+    .feature-text p  { font-size: 13px; color: var(--gray-600); line-height: 1.65; }
+    .feat-green  { background: var(--green-light);  }
+    .feat-blue   { background: var(--blue-light);   }
+    .feat-purple { background: var(--purple-light); }
+    .feat-yellow { background: var(--yellow-light); }
+
+    /* ── HOW IT WORKS ────────────────────────────────────────────────────────── */
+    .how-section { background: var(--gray-100); }
+    .steps-row { display: flex; justify-content: center; gap: 0; max-width: 900px; margin: 0 auto; }
+    .step { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px; position: relative; }
+    .step:not(:last-child)::before {
+      content: "←"; position: absolute; left: -16px; top: 36px;
+      font-size: 28px; color: var(--gray-300); font-weight: 700;
+    }
+    .step-num {
+      width: 52px; height: 52px; border-radius: 50%; background: var(--yellow);
+      color: var(--white); font-size: 22px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(234,179,8,.35);
+    }
+    .step-card { background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 14px; padding: 20px 16px; width: 100%; }
+    .step-icon { font-size: 28px; margin-bottom: 8px; }
+    .step h3   { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+    .step p    { font-size: 12px; color: var(--gray-600); line-height: 1.6; }
+
+    /* ── PRICING ─────────────────────────────────────────────────────────────── */
+    .pricing-section { background: var(--white); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; max-width: 1060px; margin: 0 auto; }
+    .pricing-card {
+      border-radius: 20px; border: 1.5px solid var(--gray-200);
+      padding: 32px 28px; background: var(--white); position: relative;
+      transition: box-shadow .2s;
+    }
+    .pricing-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,.10); }
+    .pricing-card.highlight { border: 2.5px solid var(--yellow); box-shadow: 0 8px 32px rgba(234,179,8,.2); }
+    .rec-badge {
+      position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+      background: var(--yellow); color: var(--white);
+      font-size: 12px; font-weight: 700; padding: 4px 20px; border-radius: 20px;
+      white-space: nowrap;
+    }
+    .plan-name  { font-size: 18px; font-weight: 800; color: var(--gray-900); text-align: right; }
+    .plan-price { font-size: 34px; font-weight: 800; text-align: right; margin: 8px 0 4px; }
+    .highlight .plan-price { color: var(--yellow-dark); }
+    .plan-period { font-size: 13px; color: var(--gray-500); text-align: right; margin-bottom: 20px; }
+    .plan-divider { border: none; border-top: 1px solid var(--gray-200); margin: 0 0 20px; }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .plan-features li { font-size: 13px; color: var(--gray-700); display: flex; gap: 8px; align-items: flex-start; }
+    .plan-features li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; }
+    .plan-btn {
+      width: 100%; padding: 12px; border-radius: 10px; font-family: inherit;
+      font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s;
+    }
+    .plan-btn.primary { background: var(--yellow); color: var(--white); border: none; }
+    .plan-btn.primary:hover { background: var(--yellow-dark); }
+    .plan-btn.secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
+    .plan-btn.secondary:hover { border-color: var(--yellow-dark); color: var(--yellow-dark); }
+
+    /* ── PRICING: single-plan default ─────────────────────────────────────── */
+    #plan-basic, #plan-enterprise { display: none; }
+    .pricing-grid.single-plan { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+    .toggle-plans-btn {
+      display: block; margin: 1.5rem auto 0;
+      background: none; border: 1px solid var(--gray-300); color: var(--gray-500);
+      padding: 8px 22px; border-radius: 8px; cursor: pointer;
+      font-family: 'Tajawal', sans-serif; font-size: 13px; transition: all .2s;
+    }
+    .toggle-plans-btn:hover { border-color: var(--yellow-dark); color: var(--yellow-dark); }
+
+    /* ── BOT SHOWCASE ────────────────────────────────────────────────────────── */
+    .bot-section {
+      background: #F9FAFB; border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200);
+      padding: 72px 48px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    }
+    .bot-badge {
+      display: inline-block; background: #fef3c7; color: #92400e;
+      border: 1px solid #fde68a; border-radius: 20px;
+      padding: 4px 14px; font-size: 12px; font-weight: 600; margin-bottom: 12px;
+    }
+    .bot-text h2 { font-size: 28px; font-weight: 800; color: var(--gray-900); margin-bottom: 8px; }
+    .bot-text h2 span { color: var(--yellow-dark); }
+    .bot-text p  { font-size: 14px; color: var(--gray-600); margin-top: 12px; line-height: 1.7; }
+    .bot-platforms { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+    .platform-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px;
+    }
+    .platform-badge.tg { background: rgba(59,130,246,.08); color: #2563EB; border: 1px solid rgba(59,130,246,.2); }
+    .platform-badge.wa { background: rgba(16,185,129,.08); color: #047857; border: 1px solid rgba(16,185,129,.2); }
+    .bot-btns { margin-top: 24px; display: flex; gap: 12px; }
+    .btn-bot-request {
+      padding: 11px 22px; background: var(--gray-900); border: none; border-radius: 10px;
+      font-family: inherit; font-size: 13px; font-weight: 700; color: var(--white); cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-bot-request:hover { background: var(--gray-700); }
+
+    /* Chat mockup */
+    .chat-card {
+      background: var(--dark2); border-radius: 20px; overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,.4);
+    }
+    .chat-header {
+      background: #0E1420; padding: 14px 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .chat-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: var(--white); flex-shrink: 0; }
+    .chat-header-text .name   { font-size: 13px; font-weight: 700; color: var(--white); }
+    .chat-header-text .status { font-size: 11px; color: var(--green); }
+    .chat-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; min-height: 240px; }
+    .bubble-out {
+      align-self: flex-start; background: var(--yellow); color: var(--white);
+      padding: 10px 16px; border-radius: 16px 16px 4px 16px;
+      font-size: 13px; font-weight: 600; max-width: 70%;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .bubble-out .time { font-size: 10px; color: rgba(255,255,255,.7); text-align: left; }
+    .bubble-in {
+      align-self: flex-end; background: #2A3345; color: var(--white);
+      padding: 12px 16px; border-radius: 16px 16px 16px 4px;
+      font-size: 12px; max-width: 85%;
+    }
+    .bubble-in .reply-line { display: flex; gap: 8px; margin-bottom: 3px; }
+    .bubble-in .reply-line .val { font-weight: 700; }
+    .bubble-in .success { color: var(--green); font-weight: 700; font-size: 13px; margin-bottom: 10px; }
+    .bubble-in .amount  { color: #4ADE80; font-weight: 700; }
+
+    /* ── STATS ───────────────────────────────────────────────────────────────── */
+    .stats-section {
+      background: var(--yellow-light); padding: 48px;
+      display: flex; justify-content: center; gap: 0;
+    }
+    .stat-item { text-align: center; padding: 0 52px; position: relative; }
+    .stat-item:not(:last-child)::after { content: ""; position: absolute; left: 0; top: 10%; height: 80%; width: 1px; background: #FDE68A; }
+    .stat-val   { font-size: 38px; font-weight: 800; color: var(--yellow-dark); }
+    .stat-label { font-size: 14px; color: var(--gray-600); margin-top: 4px; }
+
+    /* ── TESTIMONIALS ────────────────────────────────────────────────────────── */
+    .testimonials-section { background: var(--white); }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; max-width: 1060px; margin: 0 auto; }
+    .testimonial-card {
+      border: 1.5px solid var(--gray-200); border-radius: 16px; padding: 24px;
+      transition: box-shadow .2s;
+    }
+    .testimonial-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+    .stars { color: var(--yellow); font-size: 14px; margin-bottom: 12px; }
+    .quote-icon { font-size: 24px; color: var(--yellow); font-weight: 800; margin-bottom: 8px; }
+    .testimonial-text { font-size: 13px; color: var(--gray-700); line-height: 1.7; margin-bottom: 18px; }
+    .testimonial-divider { border: none; border-top: 1px solid var(--gray-100); margin-bottom: 14px; }
+    .testimonial-author .name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .testimonial-author .role { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+    /* ── CTA BANNER ──────────────────────────────────────────────────────────── */
+    .cta-section {
+      background: var(--yellow); padding: 56px 48px; text-align: center;
+    }
+    .cta-section h2 { font-size: 24px; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+    .cta-section p  { font-size: 14px; color: rgba(255,255,255,.85); margin-bottom: 28px; }
+    .cta-section p span { margin: 0 8px; }
+    .btn-cta { padding: 14px 36px; background: var(--white); border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--yellow-dark); cursor: pointer; transition: box-shadow .2s; }
+    .btn-cta:hover { box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+
+    /* ── FOOTER ──────────────────────────────────────────────────────────────── */
+    footer {
+      background: var(--dark-foot); padding: 28px 48px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo strong { font-size: 18px; font-weight: 800; color: var(--yellow); }
+    .footer-logo span   { font-size: 11px; color: #6B7280; display: block; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a { font-size: 12px; color: #6B7280; text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: var(--yellow); }
+    .footer-copy { font-size: 11px; color: #4B5563; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .dashboard-mockup { display: none; }
+      .features-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
+      .bot-section { grid-template-columns: 1fr; }
+      .steps-row { flex-direction: column; align-items: center; gap: 20px; }
+      .step:not(:last-child)::before { display: none; }
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      section { padding: 48px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-logo">
+    <strong>مشاركة</strong>
+    <span>نظام إدارة المبيعات</span>
+  </div>
+  <div class="nav-links">
+    <a href="#features">الميزات</a>
+    <a href="#pricing">الأسعار</a>
+    <a href="#how">كيف يعمل؟</a>
+    <a href="#bot">البوت</a>
+    <a href="#contact">تواصل معنا</a>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-outline" onclick="goToLogin()">تسجيل الدخول</button>
+    <button class="btn-primary" onclick="goToRegister()">ابدأ مجاناً</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>نظام إدارة مبيعات<br/><span>الفروع والفواتير</span></h1>
+    <p>ربط سلس بين فروعك ومنصة سينومي للفواتير الإلكترونية.<br/>إدارة المبيعات اليومية، التقارير، والإرسالات في مكان واحد.</p>
+    <div class="hero-btns">
+      <button class="btn-hero-primary" onclick="goToRegister()">ابدأ تجربة مجانية — 14 يوماً</button>
+      <button class="btn-hero-outline" onclick="scrollToFeatures()">شاهد كيف يعمل ▶</button>
+    </div>
+    <div class="hero-trust">
+      <span>لا يُطلب بطاقة ائتمانية</span>
+      <span>إلغاء في أي وقت</span>
+      <span>دعم عربي كامل</span>
+    </div>
+  </div>
+  <div class="dashboard-mockup">
+    <div class="mockup-topbar">
+      <span class="logo-sm">مشاركة — لوحة التحكم</span>
+      <div class="online-dot"></div>
+      <span class="online-label">متصل بسينومي</span>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-green"><div class="kpi-label">إجمالي المبيعات</div><div class="kpi-val">125,450 ر.س</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-label">مبيعات الشهر</div><div class="kpi-val">38,500 ر.س</div></div>
+      <div class="kpi-card kpi-purple"><div class="kpi-label">الفواتير المُرسلة</div><div class="kpi-val">156</div></div>
+      <div class="kpi-card kpi-cyan"><div class="kpi-label">أيام مفقودة</div><div class="kpi-val">3 أيام</div></div>
+    </div>
+    <div class="mock-table">
+      <div class="mock-table-header">آخر المبيعات</div>
+      <div class="mock-row"><span class="branch">فرع الرياض — يومي</span><span class="date">2026-04-09</span><span class="amount">4,500 ر.س</span></div>
+      <div class="mock-row"><span class="branch">فرع جدة — شهري</span><span class="date">2026-04-08</span><span class="amount">31,200 ر.س</span></div>
+      <div class="mock-row"><span class="branch">فرع الدمام — يومي</span><span class="date">2026-04-08</span><span class="amount">2,800 ر.س</span></div>
+      <div class="mock-row"><span class="branch">فرع مكة — فترة</span><span class="date">2026-04-01</span><span class="amount" style="color:var(--yellow-dark)">18,000 ر.س</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FEATURES
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="features-section" id="features">
+  <h2 class="section-title">لماذا تختار مشاركة؟</h2>
+  <p class="section-sub">كل الأدوات التي تحتاجها لإدارة مبيعاتك، في منصة عربية واحدة</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon feat-green">📊</div>
+      <div class="feature-text">
+        <h3>إدارة مبيعات متعددة الفروع</h3>
+        <p>أضف مبيعات يومية، شهرية، أو بفترات مخصصة لجميع فروعك. استورد بيانات Excel بضغطة واحدة مع كشف التكرارات تلقائياً.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon feat-blue">🔄</div>
+      <div class="feature-text">
+        <h3>تكامل تلقائي مع سينومي</h3>
+        <p>إرسال الفواتير مباشرةً إلى منصة سينومي للفواتير الإلكترونية. تتبع كل إرسال وتنبيهات فورية للأيام المفقودة.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon feat-purple">🤖</div>
+      <div class="feature-text">
+        <h3>بوت واتساب وتيليجرام</h3>
+        <p>مندوبو الفروع يرسلون مبيعاتهم برسالة واحدة ويستلمون تأكيداً فورياً بتفاصيل الفرع، العقد، والمبلغ.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon feat-yellow">📈</div>
+      <div class="feature-text">
+        <h3>تقارير وتحليلات فورية</h3>
+        <p>لوحة تحكم مباشرة بإجمالي المبيعات، الفواتير المعلقة، الأيام المفقودة، ومؤشرات الأداء الرئيسية لكل فرع.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="how-section" id="how">
+  <h2 class="section-title">كيف يعمل النظام؟</h2>
+  <p class="section-sub">ثلاث خطوات بسيطة للبدء</p>
+  <div class="steps-row">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-card">
+        <div class="step-icon">📝</div>
+        <h3>أضف مبيعاتك</h3>
+        <p>أدخل مبيعات الفرع يومياً أو استورد ملف Excel دفعةً واحدة لكل الفروع</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-card">
+        <div class="step-icon">📋</div>
+        <h3>راجع الفواتير</h3>
+        <p>تحقق من السجلات والتقارير قبل الإرسال وتتبع الأيام المفقودة تلقائياً</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-card">
+        <div class="step-icon">🚀</div>
+        <h3>أرسل إلى سينومي</h3>
+        <p>أرسل الفواتير إلى سينومي بضغطة واحدة وتتبع حالة كل إرسال لحظياً</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PRICING
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="pricing-section" id="pricing">
+  <h2 class="section-title">خطط الاشتراك</h2>
+  <p class="section-sub">ابدأ مجاناً لمدة 14 يوماً — لا يُطلب بطاقة ائتمانية</p>
+  <div class="pricing-grid single-plan" id="pricing-grid">
+
+    <div class="pricing-card" id="plan-basic">
+      <div class="plan-name">أساسي</div>
+      <div class="plan-price">299</div>
+      <div class="plan-period">ر.س / شهر</div>
+      <hr class="plan-divider"/>
+      <ul class="plan-features">
+        <li>3 فروع</li>
+        <li>إدخال يومي وشهري</li>
+        <li>تقارير أساسية</li>
+        <li>دعم بالبريد الإلكتروني</li>
+      </ul>
+      <button class="plan-btn secondary" onclick="goToRegister()">ابدأ بالخطة الأساسية</button>
+    </div>
+
+    <div class="pricing-card highlight">
+      <div class="rec-badge">⭐ موصى به</div>
+      <div class="plan-name">احترافي</div>
+      <div class="plan-price">599</div>
+      <div class="plan-period">ر.س / شهر</div>
+      <hr class="plan-divider"/>
+      <ul class="plan-features">
+        <li>10 فروع</li>
+        <li>جميع أنواع الإدخال</li>
+        <li>استيراد Excel</li>
+        <li>تقارير متقدمة</li>
+        <li>دعم ذو أولوية</li>
+      </ul>
+      <button class="plan-btn primary" onclick="goToRegister()">ابدأ الآن</button>
+    </div>
+
+    <div class="pricing-card" id="plan-enterprise">
+      <div class="plan-name">مؤسسي</div>
+      <div class="plan-price" style="font-size:26px;padding-top:6px">تواصل معنا</div>
+      <div class="plan-period">حسب الاتفاق</div>
+      <hr class="plan-divider"/>
+      <ul class="plan-features">
+        <li>فروع غير محدودة</li>
+        <li>API مخصصة</li>
+        <li>تدريب مخصص</li>
+        <li>مدير حساب مخصص</li>
+        <li>اتفاقية SLA مضمونة</li>
+      </ul>
+      <button class="plan-btn secondary" onclick="openContactModal()">تواصل مع فريق المبيعات</button>
+    </div>
+
+  </div>
+  <button class="toggle-plans-btn" id="toggle-plans-btn" onclick="togglePricingPlans()">عرض جميع الخطط ▼</button>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BOT SHOWCASE
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="bot-section" id="bot">
+  <div class="bot-text">
+    <span class="bot-badge">متاح عند الطلب</span>
+    <h2>مساعد المبيعات الذكي<br/><span>عبر واتساب وتيليجرام</span></h2>
+    <p>إمكانية إرسال مبيعات الفروع برسالة واحدة واستلام تأكيد فوري بتفاصيل الفرع والمبلغ — بدون تطبيق إضافي. اطلب التفعيل لفرعك.</p>
+    <div class="bot-platforms">
+      <span class="platform-badge tg">📱 تيليجرام</span>
+      <span class="platform-badge wa">💬 واتساب</span>
+    </div>
+    <div class="bot-btns">
+      <button class="btn-bot-request" onclick="openContactModal()">اطلب التفعيل ←</button>
+    </div>
+  </div>
+  <div class="chat-card">
+    <div class="chat-header">
+      <div class="chat-avatar">م</div>
+      <div class="chat-header-text">
+        <div class="name">مشاركة — بوت المبيعات</div>
+        <div class="status">● متصل الآن</div>
+      </div>
+    </div>
+    <div class="chat-body">
+      <div class="bubble-out">
+        <span>مبيعات اليوم 4500</span>
+        <span class="time">✓✓ 10:32</span>
+      </div>
+      <div class="bubble-in">
+        <div class="success">✅ تم تسجيل المبيعات بنجاح</div>
+        <div class="reply-line"><span>🏢</span><span>شركة الرياض للتجارة</span></div>
+        <div class="reply-line"><span>📋</span><span style="color:#94A3B8">رقم العقد: CNT-2024-001</span></div>
+        <div class="reply-line"><span>🏪</span><span>فرع الرياض (BR-001)</span></div>
+        <div class="reply-line"><span>📅</span><span style="color:#94A3B8">التاريخ: 2026-04-09</span></div>
+        <div class="reply-line"><span>💰</span><span class="amount">المبلغ: 4,500.00 ر.س</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     STATS
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="stats-section">
+  <div class="stat-item"><div class="stat-val">500+</div><div class="stat-label">فرع نشط</div></div>
+  <div class="stat-item"><div class="stat-val">10,000+</div><div class="stat-label">فاتورة مُرسلة شهرياً</div></div>
+  <div class="stat-item"><div class="stat-val">99.9%</div><div class="stat-label">وقت التشغيل</div></div>
+  <div class="stat-item"><div class="stat-val">24/7</div><div class="stat-label">دعم عربي</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TESTIMONIALS
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="testimonials-section">
+  <h2 class="section-title">ماذا يقول عملاؤنا</h2>
+  <p class="section-sub">آراء حقيقية من مدراء المبيعات والعمليات</p>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <div class="quote-icon">❝</div>
+      <p class="testimonial-text">وفّر علينا النظام ساعات من العمل اليدوي في إرسال الفواتير لسينومي. واجهة عربية كاملة وسهلة الاستخدام.</p>
+      <hr class="testimonial-divider"/>
+      <div class="testimonial-author"><div class="name">أحمد الزهراني</div><div class="role">مدير مبيعات — شركة الرياض للتجارة</div></div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <div class="quote-icon">❝</div>
+      <p class="testimonial-text">استيراد Excel والبوت جعلا إدخال مبيعات 8 فروع أمراً في دقائق بدلاً من ساعات. موصى به بشدة.</p>
+      <hr class="testimonial-divider"/>
+      <div class="testimonial-author"><div class="name">سارة العتيبي</div><div class="role">مشرفة عمليات — مجموعة جدة</div></div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <div class="quote-icon">❝</div>
+      <p class="testimonial-text">التقارير الفورية والتنبيهات عن الأيام المفقودة ساعدتنا على ضمان اكتمال الفواتير كل شهر دون أي إغفال.</p>
+      <hr class="testimonial-divider"/>
+      <div class="testimonial-author"><div class="name">محمد الغامدي</div><div class="role">مدير تقنية — فروع الشمال</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     CTA BANNER
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="cta-section" id="contact">
+  <h2>جاهز للبدء؟ جرّب مشاركة مجاناً لمدة 14 يوماً</h2>
+  <p>
+    <span>لا يُطلب بطاقة ائتمانية</span>•
+    <span>إلغاء في أي وقت</span>•
+    <span>دعم عربي كامل</span>
+  </p>
+  <button class="btn-cta" onclick="goToRegister()">ابدأ الآن مجاناً</button>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-logo">
+    <strong>مشاركة</strong>
+    <span>نظام إدارة المبيعات</span>
+  </div>
+  <div class="footer-links">
+    <a href="#features">الميزات</a>
+    <a href="#pricing">الأسعار</a>
+    <a href="#how">كيف يعمل؟</a>
+    <a href="#bot">البوت</a>
+    <a href="#">سياسة الخصوصية</a>
+    <a href="#">شروط الاستخدام</a>
+  </div>
+  <div class="footer-copy">© 2026 مشاركة — جميع الحقوق محفوظة • مصنوع بـ ♥ في المملكة العربية السعودية</div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     CONTACT MODAL
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="contact-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55);
+     z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:20px; padding:2.25rem 2rem; max-width:400px; width:90%;
+              text-align:center; direction:rtl; box-shadow:0 24px 60px rgba(0,0,0,.25);">
+    <div style="width:52px;height:52px;border-radius:14px;background:#FEFCE8;border:1px solid #FDE68A;
+                display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 1rem;">
+      💬
+    </div>
+    <h3 style="font-size:1.2rem;font-weight:800;color:#111827;margin-bottom:0.5rem;font-family:'Tajawal',sans-serif;">تواصل معنا</h3>
+    <p style="color:#6B7280;font-size:13px;margin-bottom:1.5rem;line-height:1.6;font-family:'Tajawal',sans-serif;">
+      سيتواصل معك فريقنا خلال 24 ساعة عمل لمناقشة احتياجاتك وتفعيل الخدمة
+    </p>
+    <a href="https://wa.me/966500000000?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A9%20%D9%85%D8%B4%D8%A7%D8%B1%D9%83%D8%A9"
+       target="_blank"
+       style="display:block;background:#25D366;color:#fff;padding:13px;border-radius:12px;
+              text-decoration:none;margin-bottom:10px;font-weight:700;font-size:14px;
+              font-family:'Tajawal',sans-serif;">
+      💬 واتساب
+    </a>
+    <a href="mailto:info@digital-unitedtools.com?subject=استفسار عن مشاركة"
+       style="display:block;background:#F3F4F6;color:#374151;padding:13px;border-radius:12px;
+              text-decoration:none;font-weight:600;font-size:14px;font-family:'Tajawal',sans-serif;">
+      ✉️ البريد الإلكتروني
+    </a>
+    <button onclick="closeContactModal()"
+            style="margin-top:1rem;background:none;border:none;color:#9CA3AF;cursor:pointer;
+                   font-family:'Tajawal',sans-serif;font-size:13px;">
+      إغلاق
+    </button>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ────────────────────────────────────────────────────────────────
+  const APP_URL = 'http://localhost:5173'  // ← change to production URL before deploy
+
+  // ── NAVIGATION ────────────────────────────────────────────────────────────
+  function goToLogin()    { window.location.href = APP_URL + '/login' }
+  function goToRegister() { window.location.href = APP_URL + '/register' }
+  function scrollToFeatures() {
+    document.getElementById('features').scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // ── CONTACT MODAL ─────────────────────────────────────────────────────────
+  function openContactModal() {
+    document.getElementById('contact-modal').style.display = 'flex'
+    document.body.style.overflow = 'hidden'
+  }
+  function closeContactModal() {
+    document.getElementById('contact-modal').style.display = 'none'
+    document.body.style.overflow = ''
+  }
+  // Close on backdrop click
+  document.getElementById('contact-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeContactModal()
+  })
+  // Close on Escape key
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeContactModal() })
+
+  // ── PRICING TOGGLE ────────────────────────────────────────────────────────
+  let plansExpanded = false
+  function togglePricingPlans() {
+    plansExpanded = !plansExpanded
+    const basic      = document.getElementById('plan-basic')
+    const enterprise = document.getElementById('plan-enterprise')
+    const grid       = document.getElementById('pricing-grid')
+    const btn        = document.getElementById('toggle-plans-btn')
+    basic.style.display      = plansExpanded ? '' : 'none'
+    enterprise.style.display = plansExpanded ? '' : 'none'
+    if (plansExpanded) {
+      grid.classList.remove('single-plan')
+    } else {
+      grid.classList.add('single-plan')
+    }
+    btn.textContent = plansExpanded ? 'إخفاء الخطط الأخرى ▲' : 'عرض جميع الخطط ▼'
+  }
+</script>
+
+</body>
+</html>

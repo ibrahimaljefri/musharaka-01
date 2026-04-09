@@ -119,7 +119,7 @@ export default function Tenants() {
               <tbody className="divide-y divide-gray-100">
                 {tenants.map(t => (
                   <tr key={t.id} className="hover:bg-yellow-50/20 transition-colors">
-                    <td className="px-4 py-3"><TenantBadge name={t.name} contractNumber={t.contract_number} /></td>
+                    <td className="px-4 py-3"><TenantBadge name={t.name} subtext={t.commercial_registration} /></td>
                     <td className="px-4 py-3 text-gray-500 text-xs font-mono">{t.slug}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-arabic ${PLAN_COLORS[t.plan] || PLAN_COLORS.basic}`}>

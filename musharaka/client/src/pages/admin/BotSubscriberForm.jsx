@@ -61,13 +61,14 @@ export default function BotSubscriberForm({ mode = 'create' }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  // When tenant changes: reset branch + auto-fill tenant_name + contract_number
+  // When tenant changes: reset branch + auto-fill tenant_name
   const handleTenantChange = async (tenantId) => {
     const tenant = tenants.find(t => t.id === tenantId)
     set('tenant_id', tenantId)
     set('branch_id', '')
     set('tenant_name', tenant?.name || '')
-    set('contract_number', tenant?.contract_number || '')
+    // contract_number comes from the branch, not the tenant — cleared on tenant change
+    set('contract_number', '')
     set('branch_code', '')
     set('branch_name', '')
     setBranches([])
@@ -76,12 +77,13 @@ export default function BotSubscriberForm({ mode = 'create' }) {
     setBranches(data || [])
   }
 
-  // When branch changes: auto-fill branch_code + branch_name
+  // When branch changes: auto-fill branch_code + branch_name + contract_number (from branch)
   const handleBranchChange = (branchId) => {
     const branch = branches.find(b => b.id === branchId)
     set('branch_id', branchId)
     set('branch_code', branch?.code || '')
     set('branch_name', branch?.name || '')
+    set('contract_number', branch?.contract_number || '')
   }
 
   const handleSubmit = async e => {
@@ -143,7 +145,7 @@ export default function BotSubscriberForm({ mode = 'create' }) {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
                 <option value="">— اختر مستأجراً —</option>
                 {tenants.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}{t.contract_number ? ` (${t.contract_number})` : ''}</option>
+                  <option key={t.id} value={t.id}>{t.name}{t.commercial_registration ? ` — ${t.commercial_registration}` : ''}</option>
                 ))}
               </select>
             </div>

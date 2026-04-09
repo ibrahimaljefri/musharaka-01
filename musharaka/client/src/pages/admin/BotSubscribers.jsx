@@ -105,7 +105,7 @@ export default function BotSubscribers() {
                 {subscribers.map(s => (
                   <tr key={s.id} className="hover:bg-yellow-50/20 transition-colors">
                     <td className="px-4 py-3">
-                      <TenantBadge name={s.tenant_name} contractNumber={s.contract_number} />
+                      <TenantBadge name={s.tenant_name} subtext={s.contract_number} />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col">
