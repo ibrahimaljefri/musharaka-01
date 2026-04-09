@@ -56,6 +56,9 @@ app.use((_req, res) => res.status(404).json({ error: 'المسار غير موج
 
 app.use(errorHandler)
 
-app.listen(PORT, () => console.log(`Musharaka API running on port ${PORT}`))
+// Only start listening when run directly (not when required by tests)
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Musharaka API running on port ${PORT}`))
+}
 
 module.exports = app

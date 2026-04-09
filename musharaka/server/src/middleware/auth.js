@@ -9,6 +9,15 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_
 }
 
 async function authMiddleware(req, res, next) {
+  // Test-mode bypass: integration tests set X-Test-User-Id instead of a real JWT
+  if (process.env.NODE_ENV === 'test') {
+    const testUserId = req.headers['x-test-user-id']
+    if (testUserId) {
+      req.user = { id: testUserId }
+      return next()
+    }
+  }
+
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'غير مصرح' })

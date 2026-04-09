@@ -90,4 +90,15 @@ async function submit(branchId, month, year) {
   }
 }
 
-module.exports = { seinomyApiService: { submit } }
+// In test mode expose a controllable stub so integration tests
+// never make real network or DB calls.
+if (process.env.NODE_ENV === 'test') {
+  const stub = {
+    submit:     async () => ({ success: false, error: 'test-not-configured' }),
+    _setSubmit: (fn)  => { stub.submit = fn },
+    _reset:     ()    => { stub.submit = async () => ({ success: false, error: 'test-not-configured' }) },
+  }
+  module.exports = { seinomyApiService: stub }
+} else {
+  module.exports = { seinomyApiService: { submit } }
+}

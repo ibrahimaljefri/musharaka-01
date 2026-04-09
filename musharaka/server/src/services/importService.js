@@ -100,4 +100,20 @@ async function importFile(buffer, branchId) {
   return { queued, warnings, errors, total: rows.length }
 }
 
-module.exports = { importService: { preview, import: importFile } }
+// In test mode expose a controllable stub so integration tests
+// never parse real files or touch the DB/queue.
+if (process.env.NODE_ENV === 'test') {
+  const stub = {
+    preview:     () => [],
+    import:      async () => ({ queued: 0, warnings: [], errors: [], total: 0 }),
+    _setPreview: (fn) => { stub.preview = fn },
+    _setImport:  (fn) => { stub.import  = fn },
+    _reset:      ()   => {
+      stub.preview = () => []
+      stub.import  = async () => ({ queued: 0, warnings: [], errors: [], total: 0 })
+    },
+  }
+  module.exports = { importService: stub }
+} else {
+  module.exports = { importService: { preview, import: importFile } }
+}
