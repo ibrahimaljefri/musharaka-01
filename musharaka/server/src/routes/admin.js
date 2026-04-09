@@ -116,8 +116,9 @@ router.get('/tenants/:id', async (req, res, next) => {
 router.put('/tenants/:id', async (req, res, next) => {
   try {
     const allowed = [
-      'name','plan','status','activated_at','expires_at',
+      'name','slug','contract_number','plan','status','activated_at','expires_at',
       'notes','allowed_input_types','allow_advanced_dashboard',
+      'allow_import','allow_reports',
     ]
     const updates = {}
     for (const k of allowed) {
@@ -220,6 +221,120 @@ router.delete('/api-keys/:keyId', async (req, res, next) => {
     const { error } = await supabase.from('api_keys').delete().eq('id', req.params.keyId)
     if (error) return res.status(400).json({ error: error.message })
     res.json({ message: 'تم حذف المفتاح بنجاح' })
+  } catch (err) { next(err) }
+})
+
+// ── TENANT BRANCHES (for BotSubscriberForm branch dropdown) ──────────────────
+
+// List branches belonging to a tenant
+router.get('/tenants/:id/branches', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('branches')
+      .select('id, code, name, brand_name')
+      .eq('tenant_id', req.params.id)
+      .order('code', { ascending: true })
+    if (error) throw error
+    res.json(data || [])
+  } catch (err) { next(err) }
+})
+
+// ── USER MANAGEMENT ───────────────────────────────────────────────────────────
+
+// List all users with their tenant memberships
+router.get('/users', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('tenant_users')
+      .select('id, user_id, role, created_at, tenants(id, name, slug)')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    res.json(data || [])
+  } catch (err) { next(err) }
+})
+
+// ── BOT SUBSCRIBERS ───────────────────────────────────────────────────────────
+
+// List all bot subscribers
+router.get('/bot-subscribers', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('bot_subscribers')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    res.json(data || [])
+  } catch (err) { next(err) }
+})
+
+// Get single subscriber
+router.get('/bot-subscribers/:id', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('bot_subscribers')
+      .select('*')
+      .eq('id', req.params.id)
+      .single()
+    if (error) return res.status(404).json({ error: 'المشترك غير موجود' })
+    res.json(data)
+  } catch (err) { next(err) }
+})
+
+// Create subscriber
+router.post('/bot-subscribers', async (req, res, next) => {
+  try {
+    const {
+      tenant_id, branch_id, platform, chat_id, contact_name,
+      tenant_name, contract_number, branch_code, branch_name,
+    } = req.body
+    if (!tenant_id)  return res.status(422).json({ error: 'يرجى اختيار المستأجر' })
+    if (!branch_id)  return res.status(422).json({ error: 'يرجى اختيار الفرع' })
+    if (!platform)   return res.status(422).json({ error: 'يرجى اختيار المنصة' })
+    if (!chat_id)    return res.status(422).json({ error: 'معرّف المحادثة مطلوب' })
+
+    const { data, error } = await supabase
+      .from('bot_subscribers')
+      .insert({ tenant_id, branch_id, platform, chat_id, contact_name: contact_name || null,
+                tenant_name, contract_number: contract_number || null,
+                branch_code, branch_name: branch_name || null })
+      .select()
+      .single()
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ error: 'هذا المشترك مسجّل مسبقاً على نفس المنصة' })
+      throw error
+    }
+    res.status(201).json(data)
+  } catch (err) { next(err) }
+})
+
+// Update subscriber (is_active, contact_name, branch reassignment, etc.)
+router.put('/bot-subscribers/:id', async (req, res, next) => {
+  try {
+    const allowed = [
+      'branch_id','platform','chat_id','contact_name','is_active',
+      'tenant_name','contract_number','branch_code','branch_name',
+    ]
+    const updates = {}
+    for (const k of allowed) {
+      if (req.body[k] !== undefined) updates[k] = req.body[k]
+    }
+    const { data, error } = await supabase
+      .from('bot_subscribers')
+      .update(updates)
+      .eq('id', req.params.id)
+      .select()
+      .single()
+    if (error) return res.status(400).json({ error: error.message })
+    res.json(data)
+  } catch (err) { next(err) }
+})
+
+// Delete subscriber
+router.delete('/bot-subscribers/:id', async (req, res, next) => {
+  try {
+    const { error } = await supabase.from('bot_subscribers').delete().eq('id', req.params.id)
+    if (error) return res.status(400).json({ error: error.message })
+    res.json({ message: 'تم حذف المشترك بنجاح' })
   } catch (err) { next(err) }
 })
 
