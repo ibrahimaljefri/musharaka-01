@@ -147,7 +147,7 @@ export default function TicketDetail() {
           </div>
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">البريد الإلكتروني</p>
-            <p className="font-mono text-gray-700 text-xs" dir="ltr">{ticket.submitter_email}</p>
+            <p className="font-mono text-gray-700 text-xs text-right" dir="ltr">{ticket.submitter_email}</p>
           </div>
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">المستأجر</p>
