@@ -438,5 +438,41 @@ export async function devApiCall(method, url, data) {
   if (userMatch && method === 'delete') return handleDeleteUser(userMatch[1])
   if (userMatch && method === 'put')    return handleUpdateUser(userMatch[1], data)
 
+  // ── Tickets ──────────────────────────────────────────────────
+  if (method === 'post' && path === '/tickets') {
+    const { submitter_name, submitter_email, title, category, description } = data instanceof FormData
+      ? Object.fromEntries(data.entries())
+      : data || {}
+    if (!submitter_name)  return { status: 422, data: { error: 'الاسم مطلوب' } }
+    if (!submitter_email) return { status: 422, data: { error: 'البريد الإلكتروني مطلوب' } }
+    if (!title)           return { status: 422, data: { error: 'عنوان المشكلة مطلوب' } }
+    if (!category)        return { status: 422, data: { error: 'يرجى اختيار تصنيف صحيح' } }
+    if (!description)     return { status: 422, data: { error: 'وصف المشكلة مطلوب' } }
+    const num = 1001 + getTable('dev_tickets').length
+    const ticket = { id: newId(), ticket_number: `SUP-${num}`, submitter_name, submitter_email, title, category, description, status: 'new', created_at: new Date().toISOString() }
+    saveTable('dev_tickets', [...getTable('dev_tickets'), ticket])
+    return { status: 201, data: { id: ticket.id, ticket_number: ticket.ticket_number } }
+  }
+
+  if (method === 'get' && path === '/admin/tickets')
+    return { status: 200, data: getTable('dev_tickets') }
+
+  const ticketMatch = path.match(/^\/admin\/tickets\/([^/]+)$/)
+  if (ticketMatch) {
+    const id = ticketMatch[1]
+    const tickets = getTable('dev_tickets')
+    if (method === 'get') {
+      const t = tickets.find(x => x.id === id)
+      return t ? { status: 200, data: t } : { status: 404, data: { error: 'التذكرة غير موجودة' } }
+    }
+    if (method === 'put') {
+      const idx = tickets.findIndex(x => x.id === id)
+      if (idx === -1) return { status: 404, data: { error: 'التذكرة غير موجودة' } }
+      tickets[idx] = { ...tickets[idx], ...data, updated_at: new Date().toISOString() }
+      saveTable('dev_tickets', tickets)
+      return { status: 200, data: tickets[idx] }
+    }
+  }
+
   return { status: 404, data: { error: 'المسار غير موجود' } }
 }
