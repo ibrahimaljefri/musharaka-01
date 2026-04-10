@@ -15,7 +15,7 @@ const { decrypt }  = require('../utils/crypto')
 async function submit(branchId, month, year) {
   // 1. Fetch branch (need token)
   const { data: branch, error: branchErr } = await supabase
-    .from('branches').select('id, code, name, token').eq('id', branchId).single()
+    .from('branches').select('id, code, name, contract_number, token').eq('id', branchId).single()
   if (branchErr || !branch) return { success: false, error: 'الفرع غير موجود' }
 
   // 2. Fetch pending sales for this period
@@ -33,11 +33,28 @@ async function submit(branchId, month, year) {
   const totalAmount  = sales.reduce((sum, s) => sum + parseFloat(s.amount), 0)
   const invoiceCount = sales.length
 
+  if (!branch.contract_number) return { success: false, error: 'لم يتم تعيين رقم العقد (lease_code) للفرع' }
+
+  // Build the period date range (YYYY-MM-DD) from month/year
+  const mm         = String(month).padStart(2, '0')
+  const lastDay    = new Date(year, month, 0).getDate()   // last day of month
+  const periodStart = `${year}-${mm}-01`
+  const periodEnd   = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`
+
+  // Cenomi API payload: array with one entry per lease/period
+  const payload = [{
+    lease_code:         branch.contract_number,
+    sales_period_start: periodStart,
+    sales_period_end:   periodEnd,
+    sales_amt:          totalAmount,
+  }]
+
   // 3. Mock mode — skip external API call
   if (seinomyCfg.mock) {
-    console.log(`[SEINOMY MOCK] Would submit ${invoiceCount} invoices for branch ${branch.code} ${month}/${year}`)
+    console.log(`[SEINOMY MOCK] Would POST to ${seinomyCfg.baseUrl}/sales-data`)
+    console.log('[SEINOMY MOCK] Payload:', JSON.stringify(payload))
   } else {
-    // 4. Real API call
+    // 4. Real API call — Cenomi Direct Share spec (v1.2)
     let token
     try { token = branch.token ? decrypt(branch.token) : null }
     catch { return { success: false, error: 'فشل في فك تشفير توكن الفرع' } }
@@ -46,18 +63,15 @@ async function submit(branchId, month, year) {
 
     try {
       await axios.post(
-        `${seinomyCfg.baseUrl}/invoices/submit`,
+        `${seinomyCfg.baseUrl}/sales-data`,
+        payload,
         {
-          branch_code: branch.code,
-          month,
-          year,
-          invoices: sales.map(s => ({
-            date:           s.sale_date,
-            amount:         s.amount,
-            invoice_number: s.invoice_number,
-          })),
-        },
-        { headers: { Authorization: `Bearer ${token}` }, timeout: seinomyCfg.timeout }
+          headers: {
+            'x-api-token': token,
+            'Content-Type': 'application/json',
+          },
+          timeout: seinomyCfg.timeout,
+        }
       )
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'فشل الاتصال بسينومي'
