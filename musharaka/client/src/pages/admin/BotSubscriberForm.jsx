@@ -1,12 +1,12 @@
 /**
  * BotSubscriberForm — create or edit a bot subscriber.
- * Smart UX: selecting a tenant auto-fills branch dropdown + contract_number.
+ * Branch is no longer selected here — the bot identifies it per message.
  */
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../lib/axiosClient'
 import AlertBanner from '../../components/AlertBanner'
-import { Save, ArrowRight, MessageCircle } from 'lucide-react'
+import { Save, ArrowRight, MessageCircle, Info } from 'lucide-react'
 
 const PLATFORMS = [
   { v: 'telegram', l: 'تيليجرام' },
@@ -18,72 +18,41 @@ export default function BotSubscriberForm({ mode = 'create' }) {
   const { id }   = useParams()
   const isEdit   = mode === 'edit'
 
-  const [tenants, setTenants]   = useState([])
-  const [branches, setBranches] = useState([])  // filtered by selected tenant
-  const [form, setForm]         = useState({
-    tenant_id: '', branch_id: '', platform: 'telegram',
+  const [tenants, setTenants] = useState([])
+  const [form, setForm]       = useState({
+    tenant_id: '', tenant_name: '', platform: 'telegram',
     chat_id: '', contact_name: '', is_active: true,
-    // denormalized — auto-filled on tenant/branch select
-    tenant_name: '', contract_number: '', branch_code: '', branch_name: '',
   })
   const [loading, setLoading]   = useState(false)
   const [fetching, setFetching] = useState(isEdit)
   const [error, setError]       = useState('')
   const [success, setSuccess]   = useState('')
 
-  // Load tenant list on mount
   useEffect(() => {
     api.get('/admin/tenants').then(({ data }) => setTenants(data || []))
   }, [])
 
-  // Load existing subscriber in edit mode
   useEffect(() => {
     if (!isEdit) return
     api.get(`/admin/bot-subscribers/${id}`).then(({ data }) => {
       setForm({
-        tenant_id:       data.tenant_id,
-        branch_id:       data.branch_id,
-        platform:        data.platform,
-        chat_id:         data.chat_id,
-        contact_name:    data.contact_name || '',
-        is_active:       data.is_active,
-        tenant_name:     data.tenant_name,
-        contract_number: data.contract_number || '',
-        branch_code:     data.branch_code,
-        branch_name:     data.branch_name,
+        tenant_id:    data.tenant_id,
+        tenant_name:  data.tenant_name,
+        platform:     data.platform,
+        chat_id:      data.chat_id,
+        contact_name: data.contact_name || '',
+        is_active:    data.is_active,
       })
-      // Load branches for the tenant
-      api.get(`/admin/tenants/${data.tenant_id}/branches`)
-        .then(({ data: b }) => setBranches(b || []))
       setFetching(false)
     }).catch(() => setFetching(false))
   }, [id, isEdit])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  // When tenant changes: reset branch + auto-fill tenant_name
-  const handleTenantChange = async (tenantId) => {
+  const handleTenantChange = (tenantId) => {
     const tenant = tenants.find(t => t.id === tenantId)
     set('tenant_id', tenantId)
-    set('branch_id', '')
     set('tenant_name', tenant?.name || '')
-    // contract_number comes from the branch, not the tenant — cleared on tenant change
-    set('contract_number', '')
-    set('branch_code', '')
-    set('branch_name', '')
-    setBranches([])
-    if (!tenantId) return
-    const { data } = await api.get(`/admin/tenants/${tenantId}/branches`).catch(() => ({ data: [] }))
-    setBranches(data || [])
-  }
-
-  // When branch changes: auto-fill branch_code + branch_name + contract_number (from branch)
-  const handleBranchChange = (branchId) => {
-    const branch = branches.find(b => b.id === branchId)
-    set('branch_id', branchId)
-    set('branch_code', branch?.code || '')
-    set('branch_name', branch?.name || '')
-    set('contract_number', branch?.contract_number || '')
   }
 
   const handleSubmit = async e => {
@@ -121,7 +90,7 @@ export default function BotSubscriberForm({ mode = 'create' }) {
             {isEdit ? 'تعديل مشترك' : 'إضافة مشترك جديد'}
           </h1>
           <p className="text-xs text-gray-400 font-arabic mt-0.5">
-            ربط رقم واتساب أو تيليجرام بفرع لتفعيل تسجيل المبيعات عبر الروبوت
+            ربط رقم واتساب أو تيليجرام بمستأجر لتفعيل تسجيل المبيعات عبر الروبوت
           </p>
         </div>
       </div>
@@ -131,46 +100,29 @@ export default function BotSubscriberForm({ mode = 'create' }) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
 
-        {/* Tenant + Branch */}
+        {/* Tenant */}
         <div className="card-surface p-6 space-y-4">
           <h2 className="font-semibold text-gray-700 font-arabic text-sm border-b border-gray-100 pb-2">
-            ربط المستأجر والفرع
+            المستأجر
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
-                المستأجر <span className="text-red-500">*</span>
-              </label>
-              <select value={form.tenant_id} onChange={e => handleTenantChange(e.target.value)} required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                <option value="">— اختر مستأجراً —</option>
-                {tenants.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}{t.commercial_registration ? ` — ${t.commercial_registration}` : ''}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
-                الفرع <span className="text-red-500">*</span>
-              </label>
-              <select value={form.branch_id} onChange={e => handleBranchChange(e.target.value)} required
-                disabled={!form.tenant_id}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:opacity-50">
-                <option value="">— اختر فرعاً —</option>
-                {branches.map(b => (
-                  <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
+              المستأجر <span className="text-red-500">*</span>
+            </label>
+            <select value={form.tenant_id} onChange={e => handleTenantChange(e.target.value)} required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+              <option value="">— اختر مستأجراً —</option>
+              {tenants.map(t => (
+                <option key={t.id} value={t.id}>{t.name}{t.commercial_registration ? ` — ${t.commercial_registration}` : ''}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Auto-filled readonly fields */}
-          {form.contract_number && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm font-arabic text-yellow-800">
-              رقم العقد: <span className="font-mono font-semibold">{form.contract_number}</span>
-              <span className="text-yellow-600 text-xs mr-2">(سيظهر في تأكيدات الروبوت)</span>
-            </div>
-          )}
+          {/* Branch info note */}
+          <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm font-arabic text-blue-800">
+            <Info size={15} className="mt-0.5 shrink-0 text-blue-500" />
+            <span>الفرع يُحدَّد تلقائياً من كل رسالة. إذا لم يذكره المشترك، سيسأله الروبوت عنه.</span>
+          </div>
         </div>
 
         {/* Platform + Chat ID */}
