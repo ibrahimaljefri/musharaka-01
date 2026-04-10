@@ -440,7 +440,7 @@ export async function devApiCall(method, url, data) {
 
   // ── Tickets ──────────────────────────────────────────────────
   if (method === 'post' && path === '/tickets') {
-    const { submitter_name, submitter_email, title, category, description } = data instanceof FormData
+    const { submitter_name, submitter_email, title, category, description, steps } = data instanceof FormData
       ? Object.fromEntries(data.entries())
       : data || {}
     if (!submitter_name)  return { status: 422, data: { error: 'الاسم مطلوب' } }
@@ -448,8 +448,34 @@ export async function devApiCall(method, url, data) {
     if (!title)           return { status: 422, data: { error: 'عنوان المشكلة مطلوب' } }
     if (!category)        return { status: 422, data: { error: 'يرجى اختيار تصنيف صحيح' } }
     if (!description)     return { status: 422, data: { error: 'وصف المشكلة مطلوب' } }
+
+    // Auto-resolve tenant from current session (mirrors server tenantMiddleware)
+    let tenant_id = null
+    let tenant_name = ''
+    try {
+      const session = JSON.parse(localStorage.getItem('musharaka_dev_session') || 'null')
+      const userId = session?.user?.id
+      if (userId) {
+        const tuRows = getTable('tenant_users')
+        const membership = tuRows.find(r => r.user_id === userId)
+        if (membership) {
+          const tenant = getTable('tenants').find(t => t.id === membership.tenant_id)
+          tenant_id   = tenant?.id   || null
+          tenant_name = tenant?.name || ''
+        }
+      }
+    } catch {}
+
     const num = 1001 + getTable('dev_tickets').length
-    const ticket = { id: newId(), ticket_number: `SUP-${num}`, submitter_name, submitter_email, title, category, description, status: 'new', created_at: new Date().toISOString() }
+    const ticket = {
+      id: newId(), ticket_number: `SUP-${num}`,
+      tenant_id, tenant_name,
+      submitter_name, submitter_email,
+      title, category, description,
+      steps: steps || null,
+      status: 'new', admin_comment: null,
+      created_at: new Date().toISOString(),
+    }
     saveTable('dev_tickets', [...getTable('dev_tickets'), ticket])
     return { status: 201, data: { id: ticket.id, ticket_number: ticket.ticket_number } }
   }
