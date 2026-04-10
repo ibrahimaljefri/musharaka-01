@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const helmet  = require('helmet')
 const cors    = require('cors')
+const path    = require('path')
 const { errorHandler } = require('./middleware/errorHandler')
 
 const salesRoutes     = require('./routes/sales')
@@ -9,6 +10,7 @@ const importRoutes    = require('./routes/import')
 const submitRoutes    = require('./routes/submit')
 const contractsRoutes = require('./routes/contracts')
 const adminRoutes     = require('./routes/admin')
+const botRoutes       = require('./routes/bot')
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -17,8 +19,13 @@ const PORT = process.env.PORT || 3001
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'none'"],
-      connectSrc: ["'self'"],
+      defaultSrc:     ["'self'"],
+      scriptSrc:      ["'self'"],
+      styleSrc:       ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
+      fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
+      connectSrc:     ["'self'", 'https://*.supabase.co'],
+      imgSrc:         ["'self'", 'data:'],
+      frameAncestors: ["'none'"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -46,14 +53,26 @@ app.use('/api/sales',     importRoutes)
 app.use('/api/submit',    submitRoutes)
 app.use('/api/contracts', contractsRoutes)
 app.use('/api/admin',     adminRoutes)
+app.use('/api/bot',       botRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
-// Catch-all 404 for undefined API routes
-app.use((_req, res) => res.status(404).json({ error: 'المسار غير موجود' }))
+// 404 for undefined /api/* routes only
+app.use('/api', (_req, res) => res.status(404).json({ error: 'المسار غير موجود' }))
+
+// Serve React build (production: client/dist must exist)
+app.use(express.static(path.join(__dirname, '../../client/dist')))
+
+// SPA catch-all — React Router handles all non-API routes
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'))
+})
 
 app.use(errorHandler)
 
-app.listen(PORT, () => console.log(`Musharaka API running on port ${PORT}`))
+// Only start listening when run directly (not when required by tests)
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Musharaka API running on port ${PORT}`))
+}
 
 module.exports = app

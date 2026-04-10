@@ -9,6 +9,7 @@
     "test": "vitest run --reporter=verbose"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.86.1",
     "@supabase/supabase-js": "^2.47.0",
     "axios": "^1.7.9",
     "bullmq": "^5.28.0",

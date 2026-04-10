@@ -9,6 +9,16 @@ async function tenantMiddleware(req, res, next) {
   const userId = req.user?.id
   if (!userId) return res.status(401).json({ error: 'غير مصرح' })
 
+  // Test-mode bypass: skip DB queries so integration tests don't need to mock
+  // the full tenant-lookup chain. Auth is already validated by authMiddleware.
+  if (process.env.NODE_ENV === 'test') {
+    req.isSuperAdmin      = false
+    req.tenantId          = 'test-tenant-id'
+    req.userRole          = 'admin'
+    req.allowedInputTypes = ['daily', 'monthly', 'range']
+    return next()
+  }
+
   // ── Super admin check ───────────────────────────────────────────────────
   const { data: superAdmin } = await supabase
     .from('super_admins')

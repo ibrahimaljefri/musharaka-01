@@ -1,0 +1,27 @@
+name: Build React App
+on:
+  push:
+    branches: [phase-2/ui-improvements-and-deployment, master]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Build client
+        working-directory: musharaka/client
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          npm install --legacy-peer-deps
+          npm run build
+      - name: Commit dist
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add musharaka/client/dist -f
+          git commit -m "chore: add built dist folder" || echo "No changes to commit"
+          git push
