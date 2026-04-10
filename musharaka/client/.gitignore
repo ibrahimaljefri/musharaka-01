@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# production build
+dist/
+
+# environment variables — never commit real credentials
+.env.local
+.env.production
+.env.*.local
+
+# editor
+.DS_Store
+*.local
