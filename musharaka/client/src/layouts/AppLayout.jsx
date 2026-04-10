@@ -5,7 +5,7 @@ import {
   LayoutDashboard, PlusCircle, Upload, BarChart2,
   GitBranch, Send, FileText, LogOut, Menu, X,
   ChevronLeft, ChevronRight, Building2,
-  ShieldCheck, AlertTriangle, Clock, Users, MessageCircle
+  ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy
 } from 'lucide-react'
 
 const navItems = [
@@ -14,14 +14,16 @@ const navItems = [
   { to: '/sales/import', label: 'استيراد Excel',   icon: Upload },
   { to: '/reports',      label: 'التقارير',        icon: BarChart2 },
   { to: '/branches',     label: 'الفروع',          icon: GitBranch },
-  { to: '/submit',       label: 'إرسال الفواتير',  icon: Send },
-  { to: '/submissions',  label: 'تقرير الإرسالات', icon: FileText },
+  { to: '/submit',          label: 'إرسال الفواتير',  icon: Send },
+  { to: '/submissions',     label: 'تقرير الإرسالات', icon: FileText },
+  { to: '/tickets/create',  label: 'رفع تذكرة دعم',   icon: LifeBuoy },
 ]
 
 const adminNavItems = [
   { to: '/admin/tenants',         label: 'إدارة المستأجرين', icon: Building2 },
   { to: '/admin/users',           label: 'إدارة المستخدمين', icon: Users },
   { to: '/admin/bot-subscribers', label: 'مشتركو الروبوت',   icon: MessageCircle },
+  { to: '/admin/tickets',         label: 'تذاكر الدعم',      icon: LifeBuoy },
 ]
 
 function SubscriptionBanner({ status }) {
@@ -98,34 +100,27 @@ export default function AppLayout() {
     <div className="flex min-h-screen" dir="rtl">
 
       {/* ── Desktop sidebar ─────────────────────────────────────── */}
-      <aside className={`hidden lg:flex flex-col bg-white border-l border-gray-200 fixed top-0 right-0 h-full z-30 transition-all duration-300 overflow-visible ${sidebarW}`}>
+      <aside className={`hidden lg:flex flex-col bg-white border-l border-gray-200 fixed top-0 right-0 h-full z-30 transition-all duration-300 overflow-hidden ${sidebarW}`}>
 
-        {/* Floating toggle tab — protrudes from the left edge of the sidebar */}
+        {/* Logo — clicking it toggles collapse */}
         <button
           onClick={() => setCollapsed(c => !c)}
-          className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 z-40
-                     w-5 h-12 bg-white border border-l-gray-200 border-y-gray-200 border-r-0
-                     flex items-center justify-center text-gray-400
-                     hover:text-yellow-700 hover:bg-yellow-50
-                     rounded-l-xl shadow-md transition-colors"
           title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
+          className={`flex items-center border-b border-yellow-100 h-14 w-full hover:bg-yellow-50/60 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
         >
-          {collapsed ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
-        </button>
-
-        {/* Logo */}
-        <div className={`flex items-center border-b border-yellow-100 h-14 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
-          {collapsed ? (
-            <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">م</span>
-            </div>
-          ) : (
-            <div>
-              <div className="text-lg font-bold text-yellow-700 font-arabic leading-tight">مشاركة</div>
+          <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center shrink-0">
+            <span className="text-white font-bold text-sm">م</span>
+          </div>
+          {!collapsed && (
+            <div className="flex-1 text-right">
+              <div className="text-base font-bold text-yellow-700 font-arabic leading-tight">مشاركة</div>
               <div className="text-xs text-gray-400 font-arabic">نظام إدارة المبيعات</div>
             </div>
           )}
-        </div>
+          {!collapsed && (
+            <ChevronRight size={14} className="text-gray-300 group-hover:text-yellow-500 transition-colors shrink-0" />
+          )}
+        </button>
 
         {/* Main nav */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">

@@ -284,20 +284,15 @@ router.get('/bot-subscribers/:id', async (req, res, next) => {
 // Create subscriber
 router.post('/bot-subscribers', async (req, res, next) => {
   try {
-    const {
-      tenant_id, branch_id, platform, chat_id, contact_name,
-      tenant_name, contract_number, branch_code, branch_name,
-    } = req.body
-    if (!tenant_id)  return res.status(422).json({ error: 'يرجى اختيار المستأجر' })
-    if (!branch_id)  return res.status(422).json({ error: 'يرجى اختيار الفرع' })
-    if (!platform)   return res.status(422).json({ error: 'يرجى اختيار المنصة' })
-    if (!chat_id)    return res.status(422).json({ error: 'معرّف المحادثة مطلوب' })
+    const { tenant_id, platform, chat_id, contact_name, tenant_name } = req.body
+    if (!tenant_id)   return res.status(422).json({ error: 'يرجى اختيار المستأجر' })
+    if (!platform)    return res.status(422).json({ error: 'يرجى اختيار المنصة' })
+    if (!chat_id)     return res.status(422).json({ error: 'معرّف المحادثة مطلوب' })
+    if (!tenant_name) return res.status(422).json({ error: 'اسم المستأجر مطلوب' })
 
     const { data, error } = await supabase
       .from('bot_subscribers')
-      .insert({ tenant_id, branch_id, platform, chat_id, contact_name: contact_name || null,
-                tenant_name, contract_number: contract_number || null,
-                branch_code, branch_name: branch_name || null })
+      .insert({ tenant_id, platform, chat_id, contact_name: contact_name || null, tenant_name })
       .select()
       .single()
     if (error) {
@@ -311,10 +306,7 @@ router.post('/bot-subscribers', async (req, res, next) => {
 // Update subscriber (is_active, contact_name, branch reassignment, etc.)
 router.put('/bot-subscribers/:id', async (req, res, next) => {
   try {
-    const allowed = [
-      'branch_id','platform','chat_id','contact_name','is_active',
-      'tenant_name','contract_number','branch_code','branch_name',
-    ]
+    const allowed = ['platform', 'chat_id', 'contact_name', 'is_active', 'tenant_name']
     const updates = {}
     for (const k of allowed) {
       if (req.body[k] !== undefined) updates[k] = req.body[k]
@@ -336,6 +328,68 @@ router.delete('/bot-subscribers/:id', async (req, res, next) => {
     const { error } = await supabase.from('bot_subscribers').delete().eq('id', req.params.id)
     if (error) return res.status(400).json({ error: error.message })
     res.json({ message: 'تم حذف المشترك بنجاح' })
+  } catch (err) { next(err) }
+})
+
+// ── SUPPORT TICKETS ────────────────────────────────────────────────────────
+
+// List all tickets
+router.get('/tickets', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    res.json(data)
+  } catch (err) { next(err) }
+})
+
+// Get single ticket (enriched with tenant phone + branch count)
+router.get('/tickets/:id', async (req, res, next) => {
+  try {
+    const { data: ticket, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('id', req.params.id)
+      .single()
+    if (error) return res.status(404).json({ error: 'التذكرة غير موجودة' })
+
+    // Enrich with tenant phone and branch count if tenant_id is known
+    let tenant_phone = null
+    let branch_count = null
+    if (ticket.tenant_id) {
+      const [{ data: tenant }, { count }] = await Promise.all([
+        supabase.from('tenants').select('primary_phone').eq('id', ticket.tenant_id).single(),
+        supabase.from('branches').select('id', { count: 'exact', head: true }).eq('tenant_id', ticket.tenant_id),
+      ])
+      tenant_phone = tenant?.primary_phone || null
+      branch_count = count ?? null
+    }
+
+    res.json({ ...ticket, tenant_phone, branch_count })
+  } catch (err) { next(err) }
+})
+
+// Update ticket (status, admin_comment)
+router.put('/tickets/:id', async (req, res, next) => {
+  try {
+    const allowed = ['status', 'admin_comment']
+    const updates = { updated_at: new Date().toISOString() }
+    for (const k of allowed) {
+      if (req.body[k] !== undefined) updates[k] = req.body[k]
+    }
+    if (updates.status && !['new', 'in_progress', 'resolved'].includes(updates.status)) {
+      return res.status(422).json({ error: 'حالة غير صحيحة' })
+    }
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .update(updates)
+      .eq('id', req.params.id)
+      .select()
+      .single()
+    if (error) return res.status(400).json({ error: error.message })
+    res.json(data)
   } catch (err) { next(err) }
 })
 

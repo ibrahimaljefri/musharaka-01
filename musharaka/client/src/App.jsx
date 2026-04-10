@@ -21,6 +21,10 @@ import ApiKeys from './pages/admin/ApiKeys'
 import AdminUsers from './pages/admin/Users'
 import BotSubscribers from './pages/admin/BotSubscribers'
 import BotSubscriberForm from './pages/admin/BotSubscriberForm'
+import Tickets from './pages/admin/Tickets'
+import TicketDetail from './pages/admin/TicketDetail'
+import TicketCreate from './pages/TicketCreate'
+import TicketSuccess from './pages/TicketSuccess'
 
 function ProtectedRoute({ children }) {
   const session = useAuthStore(s => s.session)
@@ -82,6 +86,8 @@ export default function App() {
           <Route path="/branches/:id/edit" element={<BranchEdit />} />
           <Route path="/submit"            element={<Submit />} />
           <Route path="/submissions"       element={<Submissions />} />
+          <Route path="/tickets/create"    element={<TicketCreate />} />
+          <Route path="/tickets/success"   element={<TicketSuccess />} />
 
           {/* Super-admin pages */}
           <Route path="/admin/tenants"                        element={<AdminRoute><Tenants /></AdminRoute>} />
@@ -92,6 +98,8 @@ export default function App() {
           <Route path="/admin/bot-subscribers"              element={<AdminRoute><BotSubscribers /></AdminRoute>} />
           <Route path="/admin/bot-subscribers/create"       element={<AdminRoute><BotSubscriberForm mode="create" /></AdminRoute>} />
           <Route path="/admin/bot-subscribers/:id/edit"     element={<AdminRoute><BotSubscriberForm mode="edit" /></AdminRoute>} />
+          <Route path="/admin/tickets"                      element={<AdminRoute><Tickets /></AdminRoute>} />
+          <Route path="/admin/tickets/:id"                  element={<AdminRoute><TicketDetail /></AdminRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
