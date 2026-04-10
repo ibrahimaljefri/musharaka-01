@@ -489,7 +489,16 @@ export async function devApiCall(method, url, data) {
     const tickets = getTable('dev_tickets')
     if (method === 'get') {
       const t = tickets.find(x => x.id === id)
-      return t ? { status: 200, data: t } : { status: 404, data: { error: 'التذكرة غير موجودة' } }
+      if (!t) return { status: 404, data: { error: 'التذكرة غير موجودة' } }
+      // Enrich with tenant phone + branch count
+      let tenant_phone = null
+      let branch_count = null
+      if (t.tenant_id) {
+        const tenant = getTable('tenants').find(x => x.id === t.tenant_id)
+        tenant_phone = tenant?.primary_phone || null
+        branch_count = getTable('branches').filter(b => b.tenant_id === t.tenant_id).length
+      }
+      return { status: 200, data: { ...t, tenant_phone, branch_count } }
     }
     if (method === 'put') {
       const idx = tickets.findIndex(x => x.id === id)

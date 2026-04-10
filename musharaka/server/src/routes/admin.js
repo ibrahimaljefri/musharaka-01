@@ -345,16 +345,29 @@ router.get('/tickets', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
-// Get single ticket
+// Get single ticket (enriched with tenant phone + branch count)
 router.get('/tickets/:id', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    const { data: ticket, error } = await supabase
       .from('support_tickets')
       .select('*')
       .eq('id', req.params.id)
       .single()
     if (error) return res.status(404).json({ error: 'التذكرة غير موجودة' })
-    res.json(data)
+
+    // Enrich with tenant phone and branch count if tenant_id is known
+    let tenant_phone = null
+    let branch_count = null
+    if (ticket.tenant_id) {
+      const [{ data: tenant }, { count }] = await Promise.all([
+        supabase.from('tenants').select('primary_phone').eq('id', ticket.tenant_id).single(),
+        supabase.from('branches').select('id', { count: 'exact', head: true }).eq('tenant_id', ticket.tenant_id),
+      ])
+      tenant_phone = tenant?.primary_phone || null
+      branch_count = count ?? null
+    }
+
+    res.json({ ...ticket, tenant_phone, branch_count })
   } catch (err) { next(err) }
 })
 

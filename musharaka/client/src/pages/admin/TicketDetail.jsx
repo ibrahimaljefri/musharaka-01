@@ -140,7 +140,7 @@ export default function TicketDetail() {
         <h2 className="font-semibold text-gray-700 font-arabic text-sm border-b border-gray-100 pb-2">
           بيانات العميل
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">الاسم</p>
             <p className="font-arabic text-gray-800 font-medium">{ticket.submitter_name}</p>
@@ -151,8 +151,20 @@ export default function TicketDetail() {
           </div>
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">المستأجر</p>
-            <p className="font-arabic text-gray-800">{ticket.tenant_name}</p>
+            <p className="font-arabic text-gray-800">{ticket.tenant_name || '—'}</p>
           </div>
+          {ticket.tenant_phone && (
+            <div>
+              <p className="text-xs text-gray-400 font-arabic mb-0.5">رقم الجوال</p>
+              <p className="font-mono text-gray-700 text-sm" dir="ltr">{ticket.tenant_phone}</p>
+            </div>
+          )}
+          {ticket.branch_count != null && (
+            <div>
+              <p className="text-xs text-gray-400 font-arabic mb-0.5">عدد الفروع</p>
+              <p className="font-arabic text-gray-800 font-medium">{ticket.branch_count} فرع</p>
+            </div>
+          )}
         </div>
       </div>
 
