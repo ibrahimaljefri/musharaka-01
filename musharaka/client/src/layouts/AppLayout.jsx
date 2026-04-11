@@ -88,7 +88,7 @@ export default function AppLayout() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-colors font-arabic ${
               isActive
-                ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700/40'
+                ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-r-2 border-r-yellow-500 dark:border-r-yellow-400'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
             } ${c ? 'justify-center' : ''}`
           }
@@ -104,13 +104,13 @@ export default function AppLayout() {
     <div className="flex min-h-screen" dir="rtl">
 
       {/* ── Desktop sidebar ─────────────────────────────────────── */}
-      <aside className={`hidden lg:flex flex-col bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 fixed top-0 right-0 h-full z-30 transition-all duration-300 overflow-hidden ${sidebarW}`}>
+      <aside className={`hidden md:flex flex-col bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 fixed top-0 right-0 h-full z-30 transition-all duration-300 overflow-hidden ${sidebarW}`}>
 
         {/* Logo — clicking it toggles collapse */}
         <button
           onClick={() => setCollapsed(c => !c)}
           title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
-          className={`flex items-center border-b border-yellow-100 dark:border-yellow-900/30 h-14 w-full hover:bg-yellow-50/60 dark:hover:bg-yellow-900/10 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
+          className={`flex items-center border-b border-gray-100 dark:border-gray-800 h-14 w-full hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
         >
           <LogoMark size={32} id="sidebar" />
           {!collapsed && (
@@ -174,7 +174,7 @@ export default function AppLayout() {
 
           {/* User avatar + name */}
           {!collapsed && (
-            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 mb-1">
+            <div className="flex items-center gap-2.5 px-2.5 py-2 mb-1">
               <div className="w-7 h-7 rounded-full bg-yellow-500 flex items-center justify-center shrink-0">
                 <span className="text-white text-xs font-bold">
                   {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
@@ -199,9 +199,9 @@ export default function AppLayout() {
 
       {/* ── Mobile sidebar ───────────────────────────────────────── */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 flex" dir="rtl">
+        <div className="md:hidden fixed inset-0 z-40 flex" dir="rtl">
           <div className="fixed inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex flex-col w-64 bg-white dark:bg-gray-950 h-full mr-auto z-50 shadow-xl">
+          <aside className="relative flex flex-col w-full sm:w-72 bg-white dark:bg-gray-950 h-full mr-auto z-50 shadow-xl">
             <div className="flex items-center justify-between px-5 border-b border-yellow-100 dark:border-yellow-900/30 h-14">
               <div className="flex items-center gap-3">
                 <LogoMark size={32} id="mobile" />
@@ -220,7 +220,7 @@ export default function AppLayout() {
               }).map(({ to, label, icon: Icon }) => (
                 <NavLink key={to} to={to} onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors font-arabic ${isActive ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'text-gray-600 hover:bg-gray-50'}`
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors font-arabic ${isActive ? 'bg-yellow-50 text-yellow-700 border-r-2 border-r-yellow-500' : 'text-gray-600 hover:bg-gray-50'}`
                   }>
                   <Icon size={18} /><span>{label}</span>
                 </NavLink>
@@ -228,7 +228,7 @@ export default function AppLayout() {
               {isSuperAdmin && adminNavItems.map(({ to, label, icon: Icon }) => (
                 <NavLink key={to} to={to} onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors font-arabic ${isActive ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'text-gray-600 hover:bg-gray-50'}`
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors font-arabic ${isActive ? 'bg-yellow-50 text-yellow-700 border-r-2 border-r-yellow-500' : 'text-gray-600 hover:bg-gray-50'}`
                   }>
                   <Icon size={18} /><span>{label}</span>
                 </NavLink>
@@ -245,12 +245,12 @@ export default function AppLayout() {
       )}
 
       {/* ── Main area ────────────────────────────────────────────── */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'lg:mr-16' : 'lg:mr-64'}`}>
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'md:mr-16' : 'md:mr-64'}`}>
         <SubscriptionBanner status={tenantStatus} />
 
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
-          <button className="lg:hidden text-gray-500 hover:text-gray-700 shrink-0" onClick={() => setMobileOpen(true)}>
+        <header className="sticky top-0 z-20 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 h-14 flex items-center justify-between gap-4">
+          <button className="md:hidden text-gray-500 hover:text-gray-700 shrink-0" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
           </button>
 
@@ -290,7 +290,7 @@ export default function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 p-4 md:p-6">
           {!isSuperAdmin && tenantStatus === null ? (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
               <div className="w-16 h-16 rounded-full bg-yellow-50 border-2 border-yellow-200 flex items-center justify-center mb-5">
