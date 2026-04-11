@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, PlusCircle, Upload, BarChart2,
   GitBranch, Send, FileText, LogOut, Menu, X,
-  ChevronLeft, ChevronRight, Building2,
-  ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy
+  ChevronRight, Building2,
+  ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy, BookOpen
 } from 'lucide-react'
 
 const navItems = [
@@ -146,21 +146,50 @@ export default function AppLayout() {
           )}
         </nav>
 
-        {/* Super admin badge */}
-        {isSuperAdmin && !collapsed && (
-          <div className="px-4 py-2 mx-2 mb-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck size={13} className="text-yellow-600" />
+        {/* User guide link */}
+        <div className="px-2 mb-1">
+          <a
+            href="/user-guide.html"
+            target="_blank"
+            rel="noreferrer"
+            data-tooltip={collapsed ? 'دليل المستخدم' : undefined}
+            className={`flex items-center gap-3 w-full px-2.5 py-2 rounded-lg text-xs font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors font-arabic ${collapsed ? 'justify-center' : ''}`}
+          >
+            <BookOpen size={15} className="shrink-0" />
+            {!collapsed && <span>دليل المستخدم</span>}
+          </a>
+        </div>
+
+        {/* User profile footer */}
+        <div className="px-2 py-3 border-t border-gray-100 space-y-0.5">
+          {/* Super admin badge */}
+          {isSuperAdmin && !collapsed && (
+            <div className="px-3 py-1.5 mb-1 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-1.5">
+              <ShieldCheck size={12} className="text-yellow-600" />
               <span className="text-xs font-semibold text-yellow-700 font-arabic">مشرف عام</span>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Logout */}
-        <div className="px-2 py-3 border-t border-gray-100">
-          <button onClick={handleSignOut} title={collapsed ? 'تسجيل الخروج' : undefined}
-            className={`flex items-center gap-3 w-full px-2.5 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors font-arabic ${collapsed ? 'justify-center' : ''}`}>
-            <LogOut size={18} className="shrink-0" />
+          {/* User avatar + name */}
+          {!collapsed && (
+            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-gray-50 border border-gray-100 mb-1">
+              <div className="w-7 h-7 rounded-full bg-yellow-500 flex items-center justify-center shrink-0">
+                <span className="text-white text-xs font-bold">
+                  {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-700 font-arabic truncate leading-tight">
+                  {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+                </p>
+                <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
+              </div>
+            </div>
+          )}
+
+          <button onClick={handleSignOut} data-tooltip={collapsed ? 'تسجيل الخروج' : undefined}
+            className={`flex items-center gap-3 w-full px-2.5 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors font-arabic ${collapsed ? 'justify-center' : ''}`}>
+            <LogOut size={16} className="shrink-0" />
             {!collapsed && <span>تسجيل الخروج</span>}
           </button>
         </div>
@@ -215,22 +244,42 @@ export default function AppLayout() {
         <SubscriptionBanner status={tenantStatus} />
 
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 lg:px-6 h-14 flex items-center justify-between">
-          <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setMobileOpen(true)}>
+        <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
+          <button className="lg:hidden text-gray-500 hover:text-gray-700 shrink-0" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
           </button>
-          <div className="font-arabic text-sm text-gray-600">
+
+          {/* Left side: greeting */}
+          <div className="font-arabic text-sm text-gray-600 hidden sm:block">
             أهلاً،{' '}
             <span className="font-semibold text-yellow-700">
               {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'مستخدم'}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-            </span>
-            <span className="text-xs text-gray-500 font-arabic hidden sm:inline">متصل بسينومي</span>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Right side: status + user guide */}
+          <div className="flex items-center gap-3">
+            <a
+              href="/user-guide.html"
+              target="_blank"
+              rel="noreferrer"
+              title="دليل المستخدم"
+              className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors font-arabic border border-gray-200 hover:border-blue-200 rounded-lg px-2.5 py-1.5 hover:bg-blue-50"
+            >
+              <BookOpen size={13} />
+              <span>دليل المستخدم</span>
+            </a>
+
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              </span>
+              <span className="text-xs text-gray-500 font-arabic hidden md:inline">متصل بسينومي</span>
+            </div>
           </div>
         </header>
 
@@ -250,7 +299,9 @@ export default function AppLayout() {
               </button>
             </div>
           ) : (
-            <Outlet />
+            <div className="page-enter">
+              <Outlet />
+            </div>
           )}
         </main>
       </div>
