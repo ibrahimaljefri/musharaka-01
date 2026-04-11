@@ -51,13 +51,20 @@ body{
   position:absolute;top:0;right:0;width:100%;height:100vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:40px 60px;
-  opacity:0;visibility:hidden;
-  transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);
-  transform:translateY(40px);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(32px);
+  transition:opacity 0.55s var(--ease),transform 0.55s var(--ease),visibility 0s 0.55s;
   overflow:hidden;
 }
-.slide.active{opacity:1;visibility:visible;transform:translateY(0)}
-.slide.exit-up{opacity:0;transform:translateY(-40px)}
+.slide.active{
+  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
+  transition:opacity 0.55s var(--ease),transform 0.55s var(--ease),visibility 0s 0s;
+}
+/* Used to set starting position before transition fires — transition:none so it snaps */
+.slide.will-enter-below{transform:translateY(32px);opacity:0;visibility:visible;pointer-events:none;transition:none}
+.slide.will-enter-above{transform:translateY(-32px);opacity:0;visibility:visible;pointer-events:none;transition:none}
+.slide.exit-up  {opacity:0;transform:translateY(-32px);visibility:visible}
+.slide.exit-down{opacity:0;transform:translateY(32px);visibility:visible}
 
 /* Background glows */
 .slide::before{
@@ -91,19 +98,19 @@ body{
 .slide-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--gold);margin-bottom:12px;line-height:1.3}
 .slide-subtitle{font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text-secondary);margin-bottom:32px;line-height:1.6;max-width:700px;text-align:center}
 
-/* Reveal children */
+/* Reveal children — reset when slide inactive, animate in when active */
 .slide .reveal{
-  opacity:0;transform:translateY(24px);
+  opacity:0;transform:translateY(20px);
   transition:opacity 0.5s var(--ease),transform 0.5s var(--ease);
 }
 .slide.active .reveal{opacity:1;transform:translateY(0)}
-.slide.active .reveal:nth-child(2){transition-delay:0.1s}
-.slide.active .reveal:nth-child(3){transition-delay:0.18s}
-.slide.active .reveal:nth-child(4){transition-delay:0.26s}
-.slide.active .reveal:nth-child(5){transition-delay:0.34s}
-.slide.active .reveal:nth-child(6){transition-delay:0.4s}
-.slide.active .reveal:nth-child(7){transition-delay:0.46s}
-.slide.active .reveal:nth-child(8){transition-delay:0.52s}
+.slide.active .reveal:nth-child(2) {transition-delay:0.08s}
+.slide.active .reveal:nth-child(3) {transition-delay:0.16s}
+.slide.active .reveal:nth-child(4) {transition-delay:0.24s}
+.slide.active .reveal:nth-child(5) {transition-delay:0.30s}
+.slide.active .reveal:nth-child(6) {transition-delay:0.36s}
+.slide.active .reveal:nth-child(7) {transition-delay:0.42s}
+.slide.active .reveal:nth-child(8) {transition-delay:0.48s}
 
 /* Gold orb */
 .orb{
@@ -273,7 +280,35 @@ body{
 
 <!-- Slide 1: Cover -->
 <div class="slide active" data-slide="0">
-  <div class="orb-lg reveal" style="margin-bottom:28px">م</div>
+  <div class="reveal" style="margin-bottom:28px">
+    <svg width="120" height="120" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شعار مشاركة" style="filter:drop-shadow(0 0 40px rgba(245,158,11,0.35)) drop-shadow(0 0 80px rgba(245,158,11,0.12))">
+      <defs>
+        <linearGradient id="cov_g" x1="28" y1="0" x2="28" y2="56" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#FFFDE7"/>
+          <stop offset="12%"  stop-color="#FDE68A"/>
+          <stop offset="45%"  stop-color="#F59E0B"/>
+          <stop offset="78%"  stop-color="#D97706"/>
+          <stop offset="100%" stop-color="#92400E"/>
+        </linearGradient>
+        <radialGradient id="cov_bg" cx="50%" cy="40%" r="50%">
+          <stop offset="0%"   stop-color="#FBBF24" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+        </radialGradient>
+        <clipPath id="cov_c"><rect width="56" height="56" rx="14"/></clipPath>
+        <mask id="cov_m" x="0" y="0" width="56" height="56" maskUnits="userSpaceOnUse">
+          <rect width="56" height="56" fill="white"/>
+          <g transform="scale(0.2872) translate(-125,-52)">
+            <path d="M -0 163.002 L -0 326.004 221.750 325.752 L 443.500 325.500 443.753 162.750 L 444.006 0 222.003 0 L 0 0 -0 163.002 M 0.488 163.500 C 0.488 253.150, 0.606 289.677, 0.750 244.671 C 0.894 199.665, 0.894 126.315, 0.750 81.671 C 0.606 37.027, 0.488 73.850, 0.488 163.500 M 209.500 52.994 C 198.222 54.673, 180.802 60.487, 173.463 65.023 C 171.642 66.149, 169.504 66.683, 168.194 66.340 C 165.657 65.677, 163 67.489, 163 69.883 C 163 70.784, 160.473 73.538, 157.385 76.002 C 150.647 81.379, 143.773 89.431, 137.859 98.875 C 135.462 102.704, 132.476 106.319, 131.225 106.908 C 129.413 107.762, 128.974 108.745, 129.068 111.740 C 129.133 113.808, 128.037 119.205, 126.631 123.733 C 108.150 183.273, 155.384 240.221, 214.684 229.895 L 221.032 228.789 215.109 222.457 C 211.851 218.975, 207.907 213.848, 206.343 211.064 L 203.500 206.002 197 205.980 C 177.312 205.913, 157.288 189.701, 150.758 168.542 C 147.966 159.496, 147.805 145.220, 150.396 136.500 C 154.251 123.528, 163.371 109.776, 168.844 108.681 C 170.855 108.279, 171.950 107.335, 172.376 105.637 C 173.176 102.450, 180.890 97.694, 190.485 94.473 C 196.474 92.463, 199.831 92, 208.426 92 C 218.115 92, 219 92.158, 219 93.884 C 219 95.461, 220.042 95.879, 225.406 96.453 C 248.638 98.941, 266.872 114.142, 272.416 135.644 C 273.287 139.024, 274 142.988, 274 144.455 L 274 147.121 281.228 146.500 C 285.203 146.158, 288.635 145.698, 288.855 145.478 C 289.933 144.401, 286.628 128.968, 283.934 122.497 C 279.748 112.440, 276.202 107.396, 267.528 99.157 C 255.850 88.063, 239.157 81.067, 224.250 81.017 C 219.048 81, 219 81.028, 219 84.083 C 219 85.779, 218.662 87.017, 218.250 86.833 C 217.838 86.650, 214.372 84.723, 210.548 82.551 C 206.724 80.379, 200.874 77.618, 197.548 76.415 C 194.222 75.212, 191.365 73.556, 191.200 72.735 C 190.831 70.900, 200.702 64.516, 210.668 60.144 C 214.610 58.415, 218.097 57, 218.418 57 C 218.738 57, 219 59.413, 219 62.362 L 219 67.725 227.441 68.410 C 238.846 69.335, 248.638 72.203, 259.461 77.788 C 266.715 81.532, 270.398 84.333, 278.113 91.976 C 286.745 100.529, 288.238 102.570, 292.750 112 C 298.038 123.052, 300.395 130.686, 301.497 140.326 C 302.024 144.937, 302.476 146.031, 303.663 145.576 C 304.488 145.259, 307.891 145, 311.225 145 L 317.287 145 316.660 138.250 C 314.433 114.292, 300.615 88.538, 282.051 73.748 C 261.102 57.057, 234.098 49.332, 209.500 52.994 M 207 56.127 C 195.471 57.999, 173.272 66.685, 172.260 69.720 C 171.784 71.149, 182.019 72.381, 183.346 71.054 C 183.926 70.474, 185.460 70, 186.755 70 C 188.050 70, 191.837 68.148, 195.171 65.884 C 198.505 63.620, 204.442 60.261, 208.366 58.420 C 215.896 54.886, 215.785 54.700, 207 56.127 M 170.575 73.878 C 170.194 74.495, 168.868 75, 167.629 75 C 166.323 75, 164.536 76.156, 163.376 77.750 C 160.423 81.810, 154.725 92.058, 155.172 92.505 C 155.385 92.718, 159.953 91.382, 165.323 89.536 C 175.442 86.058, 175.144 86.286, 182.465 76.399 C 183.840 74.541, 183.095 74.146, 176.833 73.410 C 173.140 72.976, 171.036 73.133, 170.575 73.878 M 153.647 83.250 C 147.009 89.831, 138.937 100.394, 137.314 104.625 C 136.753 106.086, 150.046 96.477, 150.789 94.885 C 150.948 94.543, 153.507 90.155, 156.475 85.132 C 159.443 80.109, 161.666 76, 161.416 76 C 161.165 76, 157.669 79.263, 153.647 83.250 M 187.070 77.478 C 183.951 78.605, 178.998 83.103, 179.001 84.806 C 179.002 85.188, 184.290 85.540, 190.751 85.589 C 198.528 85.647, 204.412 86.239, 208.154 87.339 C 211.264 88.252, 214.362 89, 215.039 89 C 216.850 89, 212.254 85.651, 206.351 82.669 C 202.045 80.495, 190.500 75.724, 190.500 76.120 C 190.500 76.185, 188.956 76.796, 187.070 77.478 M 181.179 87.740 L 175.857 88.109 173.438 93.305 C 172.108 96.162, 171.015 99.063, 171.010 99.750 C 170.998 101.254, 172.632 101.405, 173.512 99.981 C 174.993 97.584, 187.765 92.387, 199.500 89.407 C 202.337 88.686, 202.229 88.605, 197.500 87.910 C 192.297 87.145, 190.067 87.122, 181.179 87.740 M 168.500 90.183 C 166.850 90.748, 162.519 92.553, 158.876 94.195 L 152.251 97.180 149.914 104.045 C 147.409 111.403, 147.781 113.273, 151.295 110.996 C 152.508 110.211, 155.404 108.583, 157.732 107.379 C 163.389 104.453, 167.228 100.458, 170.404 94.190 C 173.197 88.678, 173.156 88.592, 168.500 90.183 M 142.252 104.256 C 138.771 107.072, 137.004 109.249, 137.002 110.724 C 137.001 112.177, 135.972 113.480, 134.038 114.480 C 131.671 115.704, 130.670 117.329, 129.049 122.578 C 126.724 130.104, 124.988 139.899, 125.074 145 L 125.134 148.500 126.402 144.500 C 128.932 136.520, 139.684 119, 142.051 119 C 142.573 119, 143 117.705, 143 116.122 C 143 114.540, 143.642 112.712, 144.427 112.060 C 145.705 111, 149 102.902, 149 100.822 C 149 99.257, 147.476 100.032, 142.252 104.256 M 156.712 110.083 C 153.192 111.900, 150.568 114.005, 150.017 115.455 C 149.519 116.766, 148.420 118.225, 147.576 118.697 C 145.383 119.925, 143.653 133.670, 144.587 142.452 C 145.397 150.076, 145.391 150.084, 148.009 138 C 149.591 130.699, 155.968 117.516, 160.421 112.341 C 165.916 105.955, 165.363 105.618, 156.712 110.083 M 220 117 C 220 124.754, 220.073 125, 222.374 125 C 223.680 125, 226.588 125.649, 228.837 126.442 C 237.171 129.383, 242.311 135.101, 244.575 143.951 L 245.738 148.500 253.119 148.140 C 257.179 147.942, 260.685 147.607, 260.911 147.396 C 261.136 147.185, 260.745 144.422, 260.041 141.256 C 256.433 125.033, 244.265 112.999, 228.526 110.089 C 219.503 108.421, 220 108.019, 220 117 M 138.540 125.719 C 134.228 131.213, 125.775 148.699, 126.680 150.250 C 126.921 150.662, 130.804 150.999, 135.309 150.998 L 143.500 150.997 143.500 135.498 C 143.500 126.973, 143.394 119.999, 143.265 119.999 C 143.135 120, 141.009 122.574, 138.540 125.719 M 194 138.878 C 186.677 141.280, 178.484 147.754, 172.960 155.500 C 171.602 157.406, 171.628 157.426, 173.517 155.922 C 187.013 145.179, 203.424 146.329, 215.992 158.897 C 219.618 162.523, 222.963 168.103, 230.471 183.056 C 235.840 193.750, 241.174 203.850, 242.324 205.500 C 245.091 209.471, 253.738 219.643, 257.500 223.351 C 263.524 229.290, 275.514 232.285, 284.055 229.985 C 286.500 229.327, 288.617 228.845, 288.760 228.914 C 289.575 229.309, 295.651 225.403, 298.065 222.934 L 300.892 220.041 301.196 224.771 C 301.390 227.796, 301.950 229.464, 302.750 229.400 C 303.438 229.345, 306.728 229.233, 310.061 229.150 L 316.123 229 315.811 203.250 C 315.500 177.528, 315.497 177.494, 312.821 172.423 C 307.727 162.770, 297.936 157.795, 284 157.778 C 273.073 157.765, 262.884 160.805, 255.639 166.240 C 253.851 167.580, 253.905 167.862, 256.984 173.318 C 258.748 176.443, 260.430 179, 260.723 179 C 261.015 179, 264.047 177.625, 267.460 175.945 C 281.867 168.852, 295.738 172.140, 298.542 183.311 L 299.217 186 286.290 186 C 272.139 186, 265.776 187.306, 259.642 191.468 L 255.991 193.946 253.648 190.223 C 252.359 188.175, 247.825 179.624, 243.572 171.220 C 231.045 146.468, 222.205 138.934, 205 138.348 C 200.325 138.188, 195.375 138.427, 194 138.878 M 185.882 158.323 C 181.388 160, 175.664 163.495, 173.870 165.656 C 172.657 167.118, 172.776 167.195, 175.008 166.394 C 176.379 165.902, 179.525 165.541, 182 165.592 C 191.102 165.778, 197.280 171.300, 203.711 185 C 206.164 190.225, 209.691 197.679, 211.549 201.565 C 218.655 216.429, 231.116 226.345, 246 228.980 C 249.575 229.613, 253.287 230.285, 254.250 230.472 C 256.877 230.983, 256.369 230.242, 252.843 228.419 C 248.243 226.040, 240.383 218.387, 235.467 211.500 C 233.111 208.200, 227.385 197.589, 222.743 187.920 C 213.835 169.368, 209.533 163.333, 202.750 159.872 C 197.677 157.285, 190.446 156.620, 185.882 158.323 M 274.315 199.464 C 270.529 201.110, 267.707 205.984, 268.563 209.397 C 271.016 219.170, 288.842 219.468, 295.949 209.855 C 297.231 208.121, 298.500 204.745, 298.770 202.352 L 299.260 198 288.380 198.039 C 281.389 198.064, 276.361 198.574, 274.315 199.464" fill="black" fill-rule="evenodd"/>
+          </g>
+        </mask>
+      </defs>
+      <g clip-path="url(#cov_c)">
+        <rect width="56" height="56" fill="#1B2030"/>
+        <ellipse cx="28" cy="22" rx="24" ry="18" fill="url(#cov_bg)"/>
+        <rect width="56" height="56" fill="url(#cov_g)" mask="url(#cov_m)"/>
+      </g>
+    </svg>
+  </div>
   <h1 class="reveal" style="font-size:clamp(3rem,6vw,5rem);font-weight:900;color:var(--gold);letter-spacing:-1px;margin-bottom:4px">مشاركة</h1>
   <p class="reveal" style="font-size:clamp(1.1rem,2vw,1.5rem);color:var(--text-primary);font-weight:600;margin-bottom:8px">نظام إدارة المبيعات للمستأجرين</p>
   <p class="reveal text-sec" style="font-size:clamp(0.9rem,1.4vw,1.1rem)">حل رقمي متكامل لتقارير المبيعات</p>
@@ -755,21 +790,16 @@ body{
 <div class="slide" data-slide="17">
   <h2 class="slide-title reveal">الفريق</h2>
   <p class="slide-subtitle reveal">فريق سعودي متخصص في التقنية وقطاع التجزئة</p>
-  <div class="grid-3 reveal" style="max-width:720px">
-    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:12px">
-      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:var(--bg)">إ</div>
-      <div class="fw-700">إبراهيم الجفري</div>
-      <div class="text-sec text-sm">المؤسس والمدير التقني</div>
+  <div class="reveal" style="display:flex;flex-direction:column;align-items:center;gap:24px;max-width:600px;width:100%">
+    <div class="glass text-center" style="width:100%;padding:32px 40px">
+      <div style="font-size:2.4rem;margin-bottom:12px">&#128101;</div>
+      <p class="fw-700" style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">فريق متخصص في التقنية والتجزئة</p>
+      <p class="text-sec" style="line-height:1.7">خبرة واسعة في بناء الحلول التقنية لقطاع التجزئة في المملكة العربية السعودية، مع فهم عميق لاحتياجات المستأجرين والمراكز التجارية.</p>
     </div>
-    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:12px">
-      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#5b21b6);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:white">ف</div>
-      <div class="fw-700">فهد المالكي</div>
-      <div class="text-sec text-sm">مدير تطوير الأعمال</div>
-    </div>
-    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:12px">
-      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:white">ن</div>
-      <div class="fw-700">نورة الشمري</div>
-      <div class="text-sec text-sm">مديرة المنتج والتصميم</div>
+    <div style="display:flex;gap:16px;width:100%;justify-content:center">
+      <div class="badge">&#127756; فريق سعودي</div>
+      <div class="badge">&#128187; خبرة تقنية</div>
+      <div class="badge">&#127968; قطاع التجزئة</div>
     </div>
   </div>
 </div>
@@ -859,29 +889,25 @@ body{
     var next = slides[index];
     var goingForward = index > current;
 
-    // Exit current
-    prev.classList.remove('active');
-    prev.classList.add(goingForward ? 'exit-up' : '');
+    // Step 1: Snap next slide to its OFF-SCREEN starting position (no transition)
+    next.classList.add(goingForward ? 'will-enter-below' : 'will-enter-above');
 
-    // Prepare next
-    next.style.transform = goingForward ? 'translateY(40px)' : 'translateY(-40px)';
-    next.style.opacity = '0';
-    next.style.visibility = 'visible';
-
-    // Force reflow
+    // Step 2: Force reflow so the browser commits the starting position
     void next.offsetWidth;
 
-    // Enter next
+    // Step 3: Remove snap class + add active → browser sees a "from" state and transitions
+    next.classList.remove('will-enter-below', 'will-enter-above');
     next.classList.add('active');
-    next.style.transform = '';
-    next.style.opacity = '';
+
+    // Step 4: Slide current out
+    prev.classList.remove('active');
+    prev.classList.add(goingForward ? 'exit-up' : 'exit-down');
 
     current = index;
     updateUI();
 
     setTimeout(function() {
-      prev.classList.remove('exit-up');
-      prev.style.visibility = '';
+      prev.classList.remove('exit-up', 'exit-down');
       isAnimating = false;
     }, ANIM_DURATION);
   }

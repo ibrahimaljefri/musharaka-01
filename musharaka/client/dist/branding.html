@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشاركة — دليل الهوية البصرية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:       #F59E0B;
+  --gold-light: #FBBF24;
+  --gold-dark:  #D97706;
+  --gold-deep:  #92400E;
+  --ink:        #080E1A;
+  --ink-2:      #0F172A;
+  --ink-3:      #1E293B;
+  --purple:     #7C3AED;
+  --purple-lt:  #A78BFA;
+  --white:      #FFFFFF;
+  --gray-1:     #F8FAFC;
+  --gray-2:     #E2E8F0;
+  --gray-3:     #94A3B8;
+  --gray-4:     #475569;
+  --gap:        clamp(40px, 6vw, 80px);
+  --r:          16px;
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'Cairo',sans-serif;
+  background:#F8FAFC;
+  color:var(--ink);
+  line-height:1.6;
+  direction:rtl;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Layout helpers ────────────────────────────────────────────────── */
+.container{width:100%;max-width:1160px;margin:0 auto;padding:0 clamp(20px,4vw,60px)}
+.section{padding:var(--gap) 0}
+.section + .section{border-top:1px solid var(--gray-2)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.flex-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.flex-col{display:flex;flex-direction:column;gap:12px}
+
+/* ── Typography ────────────────────────────────────────────────────── */
+.label{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray-3);margin-bottom:10px}
+.section-title{font-size:clamp(1.4rem,2.5vw,2rem);font-weight:800;color:var(--ink);margin-bottom:6px}
+.section-desc{font-size:0.95rem;color:var(--gray-4);max-width:560px;line-height:1.7}
+
+/* ── Card surface ──────────────────────────────────────────────────── */
+.card{
+  background:#fff;border:1px solid var(--gray-2);border-radius:var(--r);
+  padding:28px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04),0 6px 20px rgba(0,0,0,0.03);
+  transition:box-shadow 0.2s ease;
+}
+.card-dark{background:var(--ink-2);border-color:rgba(255,255,255,0.08)}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+#hero{
+  background:var(--ink);
+  padding:80px 0 72px;
+  position:relative;
+  overflow:hidden;
+}
+#hero::before{
+  content:'';position:absolute;width:800px;height:800px;border-radius:50%;
+  background:radial-gradient(circle,rgba(245,158,11,0.10) 0%,transparent 65%);
+  top:-200px;right:-200px;pointer-events:none;
+}
+#hero::after{
+  content:'';position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,58,237,0.07) 0%,transparent 65%);
+  bottom:-150px;left:-150px;pointer-events:none;
+}
+#hero .container{position:relative;z-index:1}
+#hero .label{color:rgba(255,255,255,0.4)}
+#hero h1{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;color:#fff;margin-bottom:8px}
+#hero p{font-size:1rem;color:rgba(255,255,255,0.55);max-width:480px}
+
+/* ── Logo mark SVG ─────────────────────────────────────────────────── */
+.logo-mark{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── Logo showcase ─────────────────────────────────────────────────── */
+.logo-stage{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r);min-height:180px;padding:40px;
+}
+.logo-stage.light{background:var(--gray-1);border:1px solid var(--gray-2)}
+.logo-stage.dark {background:var(--ink)}
+.logo-stage.gold {background:linear-gradient(135deg,var(--gold),var(--gold-dark))}
+
+/* ── Logo versions ─────────────────────────────────────────────────── */
+.wordmark{display:inline-flex;align-items:center;gap:14px;direction:rtl}
+.wordmark-text{display:flex;flex-direction:column;gap:0}
+.wordmark-name{
+  font-size:clamp(1.4rem,2.5vw,2rem);font-weight:800;line-height:1;
+  letter-spacing:-0.01em;color:var(--ink);
+}
+.wordmark-sub{
+  font-size:clamp(0.55rem,0.9vw,0.7rem);font-weight:500;
+  letter-spacing:0.08em;color:var(--gold-dark);text-transform:uppercase;margin-top:3px;
+}
+.wordmark.on-dark .wordmark-name{color:#fff}
+.wordmark.on-dark .wordmark-sub{color:var(--gold-light)}
+.wordmark.on-gold .wordmark-name{color:var(--ink)}
+.wordmark.on-gold .wordmark-sub{color:rgba(8,14,26,0.65)}
+
+/* ── Color swatches ────────────────────────────────────────────────── */
+.swatch{border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.swatch-color{height:100px}
+.swatch-info{padding:12px 16px;background:#fff;border-top:1px solid var(--gray-2)}
+.swatch-name{font-size:0.82rem;font-weight:700;color:var(--ink);margin-bottom:2px}
+.swatch-hex{font-size:0.75rem;color:var(--gray-4);font-family:'Inter',monospace}
+.swatch-use{font-size:0.72rem;color:var(--gray-3);margin-top:4px}
+
+/* ── Typography specimens ──────────────────────────────────────────── */
+.type-row{
+  display:flex;align-items:baseline;gap:24px;flex-wrap:wrap;
+  padding:18px 0;border-bottom:1px solid var(--gray-2);
+}
+.type-row:last-child{border-bottom:none}
+.type-meta{min-width:120px;flex-shrink:0}
+.type-meta-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gray-3);margin-bottom:2px}
+.type-meta-spec{font-size:0.72rem;color:var(--gray-4);font-family:'Inter',monospace}
+.type-specimen{flex:1}
+
+/* ── Do / Don't ────────────────────────────────────────────────────── */
+.rule-card{
+  border-radius:var(--r);overflow:hidden;
+  border:1px solid var(--gray-2);
+}
+.rule-card .rule-stage{
+  display:flex;align-items:center;justify-content:center;
+  min-height:140px;padding:28px;
+  background:var(--gray-1);
+}
+.rule-card .rule-label{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 16px;font-size:0.82rem;font-weight:700;
+}
+.rule-card.do .rule-label{color:#059669;background:#ecfdf5;border-top:1px solid #d1fae5}
+.rule-card.dont .rule-label{color:#dc2626;background:#fef2f2;border-top:1px solid #fecaca}
+.rule-card .rule-desc{padding:8px 16px 14px;font-size:0.8rem;color:var(--gray-4);background:#fff}
+
+/* ── Application mockups ───────────────────────────────────────────── */
+.app-bar{
+  height:52px;background:var(--ink-2);border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+  border-radius:10px 10px 0 0;
+}
+.app-content{
+  background:var(--ink);padding:20px;border-radius:0 0 10px 10px;min-height:120px;
+  display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;
+}
+.app-chip{
+  background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);
+  color:var(--gold-light);border-radius:8px;padding:6px 14px;font-size:0.78rem;font-weight:600;
+}
+.app-chip.purple{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.25);color:var(--purple-lt)}
+
+/* ── Icon mark size ring ───────────────────────────────────────────── */
+.size-ring{
+  display:flex;align-items:flex-end;justify-content:center;
+  gap:20px;flex-wrap:wrap;padding:24px 0;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:99px}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- HERO                                                             -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="container">
+    <p class="label" style="margin-bottom:24px">دليل الهوية البصرية · 2025</p>
+
+    <!-- Full wordmark with new logo -->
+    <div class="wordmark on-dark" style="margin-bottom:28px">
+      <!-- ── NEW LOGO MARK ─────────────────────────────────────── -->
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شعار مشاركة">
+        <defs>
+          <linearGradient id="brd_g" x1="28" y1="0" x2="28" y2="56" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#FFFDE7"/>
+            <stop offset="12%"  stop-color="#FDE68A"/>
+            <stop offset="45%"  stop-color="#F59E0B"/>
+            <stop offset="78%"  stop-color="#D97706"/>
+            <stop offset="100%" stop-color="#92400E"/>
+          </linearGradient>
+          <radialGradient id="brd_bg" cx="50%" cy="40%" r="50%">
+            <stop offset="0%"   stop-color="#FBBF24" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+          </radialGradient>
+          <clipPath id="brd_c"><rect width="56" height="56" rx="14"/></clipPath>
+          <mask id="brd_m" x="0" y="0" width="56" height="56" maskUnits="userSpaceOnUse">
+            <rect width="56" height="56" fill="white"/>
+            <g transform="scale(0.2872) translate(-125,-52)">
+              <path d="M -0 163.002 L -0 326.004 221.750 325.752 L 443.500 325.500 443.753 162.750 L 444.006 0 222.003 0 L 0 0 -0 163.002 M 209.500 52.994 C 198.222 54.673, 180.802 60.487, 173.463 65.023 C 171.642 66.149, 169.504 66.683, 168.194 66.340 C 165.657 65.677, 163 67.489, 163 69.883 C 163 70.784, 160.473 73.538, 157.385 76.002 C 150.647 81.379, 143.773 89.431, 137.859 98.875 C 135.462 102.704, 132.476 106.319, 131.225 106.908 C 129.413 107.762, 128.974 108.745, 129.068 111.740 C 129.133 113.808, 128.037 119.205, 126.631 123.733 C 108.150 183.273, 155.384 240.221, 214.684 229.895 L 221.032 228.789 215.109 222.457 C 211.851 218.975, 207.907 213.848, 206.343 211.064 L 203.500 206.002 197 205.980 C 177.312 205.913, 157.288 189.701, 150.758 168.542 C 147.966 159.496, 147.805 145.220, 150.396 136.500 C 154.251 123.528, 163.371 109.776, 168.844 108.681 C 170.855 108.279, 171.950 107.335, 172.376 105.637 C 173.176 102.450, 180.890 97.694, 190.485 94.473 C 196.474 92.463, 199.831 92, 208.426 92 C 218.115 92, 219 92.158, 219 93.884 C 219 95.461, 220.042 95.879, 225.406 96.453 C 248.638 98.941, 266.872 114.142, 272.416 135.644 C 273.287 139.024, 274 142.988, 274 144.455 L 274 147.121 281.228 146.500 C 285.203 146.158, 288.635 145.698, 288.855 145.478 C 289.933 144.401, 286.628 128.968, 283.934 122.497 C 279.748 112.440, 276.202 107.396, 267.528 99.157 C 255.850 88.063, 239.157 81.067, 224.250 81.017 C 219.048 81, 219 81.028, 219 84.083 C 219 85.779, 218.662 87.017, 218.250 86.833 C 217.838 86.650, 214.372 84.723, 210.548 82.551 C 206.724 80.379, 200.874 77.618, 197.548 76.415 C 194.222 75.212, 191.365 73.556, 191.200 72.735 C 190.831 70.900, 200.702 64.516, 210.668 60.144 C 214.610 58.415, 218.097 57, 218.418 57 C 218.738 57, 219 59.413, 219 62.362 L 219 67.725 227.441 68.410 C 238.846 69.335, 248.638 72.203, 259.461 77.788 C 266.715 81.532, 270.398 84.333, 278.113 91.976 C 286.745 100.529, 288.238 102.570, 292.750 112 C 298.038 123.052, 300.395 130.686, 301.497 140.326 C 302.024 144.937, 302.476 146.031, 303.663 145.576 C 304.488 145.259, 307.891 145, 311.225 145 L 317.287 145 316.660 138.250 C 314.433 114.292, 300.615 88.538, 282.051 73.748 C 261.102 57.057, 234.098 49.332, 209.500 52.994 M 194 138.878 C 186.677 141.280, 178.484 147.754, 172.960 155.500 C 171.602 157.406, 171.628 157.426, 173.517 155.922 C 187.013 145.179, 203.424 146.329, 215.992 158.897 C 219.618 162.523, 222.963 168.103, 230.471 183.056 C 235.840 193.750, 241.174 203.850, 242.324 205.500 C 245.091 209.471, 253.738 219.643, 257.500 223.351 C 263.524 229.290, 275.514 232.285, 284.055 229.985 C 286.500 229.327, 288.617 228.845, 288.760 228.914 C 289.575 229.309, 295.651 225.403, 298.065 222.934 L 300.892 220.041 301.196 224.771 C 301.390 227.796, 301.950 229.464, 302.750 229.400 C 303.438 229.345, 306.728 229.233, 310.061 229.150 L 316.123 229 315.811 203.250 C 315.500 177.528, 315.497 177.494, 312.821 172.423 C 307.727 162.770, 297.936 157.795, 284 157.778 C 273.073 157.765, 262.884 160.805, 255.639 166.240 C 253.851 167.580, 253.905 167.862, 256.984 173.318 C 258.748 176.443, 260.430 179, 260.723 179 C 261.015 179, 264.047 177.625, 267.460 175.945 C 281.867 168.852, 295.738 172.140, 298.542 183.311 L 299.217 186 286.290 186 C 272.139 186, 265.776 187.306, 259.642 191.468 L 255.991 193.946 253.648 190.223 C 252.359 188.175, 247.825 179.624, 243.572 171.220 C 231.045 146.468, 222.205 138.934, 205 138.348 C 200.325 138.188, 195.375 138.427, 194 138.878 M 274.315 199.464 C 270.529 201.110, 267.707 205.984, 268.563 209.397 C 271.016 219.170, 288.842 219.468, 295.949 209.855 C 297.231 208.121, 298.500 204.745, 298.770 202.352 L 299.260 198 288.380 198.039 C 281.389 198.064, 276.361 198.574, 274.315 199.464" fill="black" fill-rule="evenodd"/>
+            </g>
+          </mask>
+        </defs>
+        <g clip-path="url(#brd_c)">
+          <rect width="56" height="56" fill="#1B2030"/>
+          <ellipse cx="28" cy="22" rx="24" ry="18" fill="url(#brd_bg)"/>
+          <rect width="56" height="56" fill="url(#brd_g)" mask="url(#brd_m)"/>
+        </g>
+      </svg>
+      <!-- ─────────────────────────────────────────────────────── -->
+      <div class="wordmark-text">
+        <span class="wordmark-name">مشاركة</span>
+        <span class="wordmark-sub">نظام إدارة المبيعات</span>
+      </div>
+    </div>
+
+    <h1>دليل الهوية البصرية</h1>
+    <p>المرجع الرسمي لاستخدام الشعار والألوان والخطوط في جميع تطبيقات مشاركة</p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 1: LOGO                                                  -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <p class="label">01 — الشعار</p>
+    <h2 class="section-title">الهوية البصرية</h2>
+    <p class="section-desc" style="margin-bottom:36px">الشعار مبني على الحرف العربي "م" مُفكَّكًا هندسيًا — قوس مفتوح وجسر ومعلقة تُجسّد فكرة الربط والمشاركة.</p>
+
+    <!-- Logo on light / dark / gold -->
+    <div class="grid-3" style="margin-bottom:32px">
+      <div>
+        <p class="label">الخلفية الفاتحة</p>
+        <div class="logo-stage light">
+          <div class="wordmark" style="">
+            <svg width="44" height="44" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="la1" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><rect x="1" y="1" width="54" height="54" rx="13" stroke="url(#la1)" stroke-width="1.2" stroke-opacity="0.4" fill="none"/><circle cx="28" cy="34" r="9.5" stroke="url(#la1)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#la1)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#la1)"/></svg>
+            <div class="wordmark-text"><span class="wordmark-name">مشاركة</span><span class="wordmark-sub">نظام إدارة المبيعات</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="label">الخلفية الداكنة</p>
+        <div class="logo-stage dark">
+          <div class="wordmark on-dark">
+            <svg width="44" height="44" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="lb1" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><rect x="1" y="1" width="54" height="54" rx="13" stroke="url(#lb1)" stroke-width="1.2" stroke-opacity="0.5" fill="none"/><circle cx="28" cy="34" r="9.5" stroke="url(#lb1)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#lb1)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#lb1)"/></svg>
+            <div class="wordmark-text"><span class="wordmark-name">مشاركة</span><span class="wordmark-sub">نظام إدارة المبيعات</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="label">الأيقونة فقط — مقاسات</p>
+        <div class="logo-stage light" style="flex-direction:column;gap:16px">
+          <div class="size-ring" style="padding:0;gap:16px;align-items:flex-end">
+            <!-- 64px -->
+            <svg width="64" height="64" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="ls3" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><rect x="1" y="1" width="54" height="54" rx="13" stroke="url(#ls3)" stroke-width="1.2" stroke-opacity="0.5" fill="none"/><circle cx="28" cy="34" r="9.5" stroke="url(#ls3)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#ls3)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#ls3)"/></svg>
+            <!-- 40px -->
+            <svg width="40" height="40" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="ls4" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><circle cx="28" cy="34" r="9.5" stroke="url(#ls4)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#ls4)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#ls4)"/></svg>
+            <!-- 24px -->
+            <svg width="24" height="24" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="ls5" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><circle cx="28" cy="34" r="9.5" stroke="url(#ls5)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#ls5)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#ls5)"/></svg>
+            <!-- 16px -->
+            <svg width="16" height="16" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="ls6" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><circle cx="28" cy="34" r="9.5" stroke="url(#ls6)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#ls6)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#ls6)"/></svg>
+          </div>
+          <p style="font-size:0.72rem;color:var(--gray-3);text-align:center">64 · 40 · 24 · 16 px</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Do / Don't -->
+    <p class="label" style="margin-bottom:14px">القواعد الأساسية</p>
+    <div class="grid-3">
+      <div class="rule-card do">
+        <div class="rule-stage">
+          <div class="wordmark">
+            <svg width="40" height="40" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="d1" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><circle cx="28" cy="34" r="9.5" stroke="url(#d1)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#d1)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#d1)"/></svg>
+            <div class="wordmark-text"><span class="wordmark-name">مشاركة</span><span class="wordmark-sub">نظام إدارة المبيعات</span></div>
+          </div>
+        </div>
+        <div class="rule-label">✓ استخدام صحيح</div>
+        <div class="rule-desc">الشعار مع مسافة هواء واضحة من جميع الجهات</div>
+      </div>
+      <div class="rule-card dont">
+        <div class="rule-stage">
+          <div class="wordmark" style="opacity:0.4;filter:grayscale(1)">
+            <svg width="40" height="40" viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="14" fill="#0F172A"/><circle cx="28" cy="34" r="9.5" stroke="#94A3B8" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="#94A3B8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="#94A3B8"/></svg>
+            <div class="wordmark-text"><span class="wordmark-name" style="color:var(--ink)">مشاركة</span></div>
+          </div>
+        </div>
+        <div class="rule-label">✗ لا تغيّر ألوان الشعار</div>
+        <div class="rule-desc">لا تستبدل ألوان الهوية بألوان محايدة أو رمادية</div>
+      </div>
+      <div class="rule-card dont">
+        <div class="rule-stage">
+          <div class="wordmark" style="transform:rotate(-15deg)">
+            <svg width="40" height="40" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="d3" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><circle cx="28" cy="34" r="9.5" stroke="url(#d3)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#d3)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#d3)"/></svg>
+            <div class="wordmark-text"><span class="wordmark-name">مشاركة</span></div>
+          </div>
+        </div>
+        <div class="rule-label">✗ لا تدوّر الشعار أو تشوّهه</div>
+        <div class="rule-desc">يجب أن يظهر الشعار دائمًا أفقيًا وبنسب صحيحة</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 2: COLORS                                                -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <p class="label">02 — الألوان</p>
+    <h2 class="section-title">نظام الألوان</h2>
+    <p class="section-desc" style="margin-bottom:32px">ثلاثة ألوان رئيسية تحكم جميع المنتجات الرقمية والمطبوعة لمشاركة.</p>
+
+    <!-- Primary palette -->
+    <p class="label" style="margin-bottom:12px">الألوان الأساسية</p>
+    <div class="grid-4" style="margin-bottom:32px">
+      <div class="swatch">
+        <div class="swatch-color" style="background:linear-gradient(135deg,#FBBF24,#D97706)"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Gold — الذهبي</div>
+          <div class="swatch-hex">#F59E0B</div>
+          <div class="swatch-use">العلامة التجارية، CTAs، التمييز</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:linear-gradient(135deg,#0F172A,#080E1A)"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Ink — الحبري</div>
+          <div class="swatch-hex">#080E1A</div>
+          <div class="swatch-use">الخلفيات الداكنة، النص الرئيسي</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:linear-gradient(135deg,#A78BFA,#7C3AED)"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Purple — البنفسجي</div>
+          <div class="swatch-hex">#7C3AED</div>
+          <div class="swatch-use">عناصر ثانوية، التباين مع الذهبي</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#FFFFFF;border-bottom:1px solid #E2E8F0"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">White — الأبيض</div>
+          <div class="swatch-hex">#FFFFFF</div>
+          <div class="swatch-use">الخلفيات الفاتحة، النص على الداكن</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tints -->
+    <p class="label" style="margin-bottom:12px">الدرجات الممتدة</p>
+    <div style="display:flex;gap:8px;height:64px;border-radius:12px;overflow:hidden;margin-bottom:32px">
+      <div style="flex:1;background:#FEF3C7" title="#FEF3C7"></div>
+      <div style="flex:1;background:#FDE68A" title="#FDE68A"></div>
+      <div style="flex:1;background:#FCD34D" title="#FCD34D"></div>
+      <div style="flex:1;background:#FBBF24" title="#FBBF24"></div>
+      <div style="flex:1;background:#F59E0B" title="#F59E0B"></div>
+      <div style="flex:1;background:#D97706" title="#D97706"></div>
+      <div style="flex:1;background:#B45309" title="#B45309"></div>
+      <div style="flex:1;background:#92400E" title="#92400E"></div>
+      <div style="flex:1;background:#451A03" title="#451A03"></div>
+    </div>
+
+    <!-- Neutral -->
+    <p class="label" style="margin-bottom:12px">المحايدة</p>
+    <div style="display:flex;gap:8px;height:48px;border-radius:10px;overflow:hidden">
+      <div style="flex:1;background:#F8FAFC"></div>
+      <div style="flex:1;background:#E2E8F0"></div>
+      <div style="flex:1;background:#CBD5E1"></div>
+      <div style="flex:1;background:#94A3B8"></div>
+      <div style="flex:1;background:#64748B"></div>
+      <div style="flex:1;background:#475569"></div>
+      <div style="flex:1;background:#1E293B"></div>
+      <div style="flex:1;background:#0F172A"></div>
+      <div style="flex:1;background:#080E1A"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 3: TYPOGRAPHY                                            -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <p class="label">03 — الخطوط</p>
+    <h2 class="section-title">منظومة الخطوط</h2>
+    <p class="section-desc" style="margin-bottom:32px">خط Cairo للعربية بجميع درجاته. خط Inter للأرقام والمحتوى اللاتيني.</p>
+
+    <div class="grid-2" style="margin-bottom:32px">
+      <!-- Cairo specimen -->
+      <div class="card">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px">
+          <span class="label" style="margin:0">الخط العربي</span>
+          <span style="font-size:0.82rem;font-family:'Inter';color:var(--gray-4)">Cairo — Google Fonts</span>
+        </div>
+        <p style="font-size:2.6rem;font-weight:900;line-height:1.2;margin-bottom:4px">مشاركة</p>
+        <p style="font-size:1.4rem;font-weight:700;color:var(--gray-4);margin-bottom:4px">نظام إدارة المبيعات</p>
+        <p style="font-size:1rem;font-weight:400;color:var(--gray-4);margin-bottom:4px;line-height:1.7">أبجد هوز حطي كلمن سعفص قرشت ثخذ ضظغ</p>
+        <p style="font-size:0.85rem;font-weight:300;color:var(--gray-3)">حل رقمي متكامل لإدارة تقارير المبيعات للمستأجرين في المراكز التجارية</p>
+      </div>
+      <!-- Inter specimen -->
+      <div class="card">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px">
+          <span class="label" style="margin:0">الخط اللاتيني</span>
+          <span style="font-size:0.82rem;font-family:'Inter';color:var(--gray-4)">Inter — Google Fonts</span>
+        </div>
+        <p style="font-size:2.6rem;font-weight:700;line-height:1.2;font-family:'Inter';margin-bottom:4px">Musharaka</p>
+        <p style="font-size:1.4rem;font-weight:500;color:var(--gray-4);font-family:'Inter';margin-bottom:4px">Sales Management</p>
+        <p style="font-size:1rem;font-weight:400;color:var(--gray-4);font-family:'Inter';margin-bottom:4px">ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+        <p style="font-size:0.85rem;font-weight:300;color:var(--gray-3);font-family:'Inter'">1234567890 · invoice #1,234 · ر.س 12,368.00</p>
+      </div>
+    </div>
+
+    <!-- Type scale -->
+    <div class="card">
+      <p class="label" style="margin-bottom:16px">التسلسل الهرمي</p>
+      <div>
+        <div class="type-row">
+          <div class="type-meta"><div class="type-meta-label">عنوان رئيسي</div><div class="type-meta-spec">900 · 3rem</div></div>
+          <div class="type-specimen"><span style="font-size:3rem;font-weight:900;line-height:1">مشاركة</span></div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="type-meta-label">عنوان ثانوي</div><div class="type-meta-spec">800 · 2rem</div></div>
+          <div class="type-specimen"><span style="font-size:2rem;font-weight:800">نظام إدارة المبيعات</span></div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="type-meta-label">عنوان قسم</div><div class="type-meta-spec">700 · 1.3rem</div></div>
+          <div class="type-specimen"><span style="font-size:1.3rem;font-weight:700">إدارة الفروع والتقارير</span></div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="type-meta-label">نص أساسي</div><div class="type-meta-spec">400 · 1rem</div></div>
+          <div class="type-specimen"><span style="font-size:1rem;color:var(--gray-4)">إرسال تقارير المبيعات اليومية والشهرية بشكل آلي وسهل</span></div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="type-meta-label">نص صغير</div><div class="type-meta-spec">400 · 0.85rem</div></div>
+          <div class="type-specimen"><span style="font-size:0.85rem;color:var(--gray-3)">جميع الفواتير المعلقة للفرع والفترة المحددة</span></div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="type-meta-label">تسمية</div><div class="type-meta-spec">700 · 0.72rem · caps</div></div>
+          <div class="type-specimen"><span style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray-3)">إدارة المبيعات</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 4: DIGITAL APPLICATIONS                                  -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <p class="label">04 — التطبيقات الرقمية</p>
+    <h2 class="section-title">الواجهات والمنتجات</h2>
+    <p class="section-desc" style="margin-bottom:32px">أمثلة على كيفية تطبيق الهوية في الواجهات الرقمية.</p>
+
+    <div class="grid-2" style="gap:24px">
+      <!-- App sidebar mock -->
+      <div>
+        <p class="label" style="margin-bottom:10px">الشريط الجانبي</p>
+        <div style="background:var(--ink-2);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
+          <!-- Top logo row -->
+          <div style="height:52px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;padding:0 16px;gap:10px">
+            <svg width="30" height="30" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="ap1" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><circle cx="28" cy="34" r="9.5" stroke="url(#ap1)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#ap1)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#ap1)"/></svg>
+            <div>
+              <div style="font-size:0.9rem;font-weight:800;color:#fff;line-height:1">مشاركة</div>
+              <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);letter-spacing:0.06em">نظام إدارة المبيعات</div>
+            </div>
+          </div>
+          <!-- Nav items -->
+          <div style="padding:12px 10px;display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.2)">
+              <div style="width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0"></div>
+              <span style="font-size:0.82rem;color:var(--gold-light);font-weight:600">لوحة التحكم</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px">
+              <div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0"></div>
+              <span style="font-size:0.82rem;color:rgba(255,255,255,0.55)">إضافة مبيعات</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px">
+              <div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0"></div>
+              <span style="font-size:0.82rem;color:rgba(255,255,255,0.55)">التقارير</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px">
+              <div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0"></div>
+              <span style="font-size:0.82rem;color:rgba(255,255,255,0.55)">الفروع</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI card mock -->
+      <div>
+        <p class="label" style="margin-bottom:10px">بطاقات الأداء</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--ink-2);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px">
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:6px">إجمالي المبيعات</div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--gold-light);margin-bottom:2px">١٢،٣٦٨ ر.س</div>
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.35)">جميع السجلات</div>
+          </div>
+          <div style="background:var(--ink-2);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px">
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:6px">فواتير معلقة</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#fca5a5;margin-bottom:2px">٣٠</div>
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.35)">في انتظار الإرسال</div>
+          </div>
+          <div style="background:var(--ink-2);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px">
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:6px">فواتير مؤكدة</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#86efac;margin-bottom:2px">١٢٠</div>
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.35)">تم إرسالها بنجاح</div>
+          </div>
+          <div style="background:var(--ink-2);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px">
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:6px">إجمالي السجلات</div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--purple-lt);margin-bottom:2px">١٥٠</div>
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.35)">جميع الإدخالات</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Button system -->
+      <div class="card">
+        <p class="label" style="margin-bottom:16px">منظومة الأزرار</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button style="background:linear-gradient(135deg,#F59E0B,#D97706);color:#080E1A;font-family:'Cairo';font-weight:700;font-size:0.88rem;padding:10px 22px;border:none;border-radius:10px;cursor:default">إضافة مبيعات</button>
+            <button style="background:transparent;border:1px solid #E2E8F0;color:var(--gray-4);font-family:'Cairo';font-size:0.88rem;padding:10px 22px;border-radius:10px;cursor:default">إلغاء</button>
+            <button style="background:#EF4444;color:#fff;font-family:'Cairo';font-weight:600;font-size:0.88rem;padding:10px 22px;border:none;border-radius:10px;cursor:default">حذف</button>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <span style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:var(--gold-dark);border-radius:20px;padding:4px 12px;font-size:0.78rem;font-weight:600">معلقة</span>
+            <span style="background:#ecfdf5;border:1px solid #d1fae5;color:#059669;border-radius:20px;padding:4px 12px;font-size:0.78rem;font-weight:600">مرسلة</span>
+            <span style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:20px;padding:4px 12px;font-size:0.78rem;font-weight:600">موقوفة</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spacing/radius tokens -->
+      <div class="card">
+        <p class="label" style="margin-bottom:16px">الزوايا والمسافات</p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+          <div style="text-align:center">
+            <div style="height:36px;background:var(--gray-1);border:1px solid var(--gray-2);border-radius:4px;margin-bottom:6px"></div>
+            <span style="font-size:0.7rem;color:var(--gray-3);font-family:'Inter'">4px</span>
+          </div>
+          <div style="text-align:center">
+            <div style="height:36px;background:var(--gray-1);border:1px solid var(--gray-2);border-radius:8px;margin-bottom:6px"></div>
+            <span style="font-size:0.7rem;color:var(--gray-3);font-family:'Inter'">8px</span>
+          </div>
+          <div style="text-align:center">
+            <div style="height:36px;background:var(--gray-1);border:1px solid var(--gray-2);border-radius:12px;margin-bottom:6px"></div>
+            <span style="font-size:0.7rem;color:var(--gray-3);font-family:'Inter'">12px</span>
+          </div>
+          <div style="text-align:center">
+            <div style="height:36px;background:var(--gray-1);border:1px solid var(--gray-2);border-radius:16px;margin-bottom:6px"></div>
+            <span style="font-size:0.7rem;color:var(--gray-3);font-family:'Inter'">16px</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:0.75rem;color:var(--gray-4)">المسافة الأساسية:</span>
+          <span style="font-family:'Inter';font-size:0.75rem;color:var(--gray-3)">4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64px</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 5: BRAND VOICE                                           -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <p class="label">05 — شخصية العلامة</p>
+    <h2 class="section-title">الصوت والأسلوب</h2>
+    <p class="section-desc" style="margin-bottom:32px">مشاركة تتحدث بوضوح ومباشرة — محترفة دون تكلّف، وبسيطة دون سطحية.</p>
+
+    <div class="grid-3">
+      <div class="card" style="border-top:3px solid var(--gold)">
+        <div style="font-size:1.6rem;margin-bottom:10px">⚡</div>
+        <div style="font-weight:700;font-size:1rem;margin-bottom:6px">واضح ومباشر</div>
+        <div style="font-size:0.85rem;color:var(--gray-4);line-height:1.7">أرسل تقاريرك في ثوانٍ. لا تعقيدات، لا ورق، لا انتظار.</div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <div style="font-size:1.6rem;margin-bottom:10px">🤝</div>
+        <div style="font-weight:700;font-size:1rem;margin-bottom:6px">شريك موثوق</div>
+        <div style="font-size:0.85rem;color:var(--gray-4);line-height:1.7">نُسهّل عمليات التقارير حتى تتفرغ لما يهم: تطوير أعمالك.</div>
+      </div>
+      <div class="card" style="border-top:3px solid #10b981">
+        <div style="font-size:1.6rem;margin-bottom:10px">🇸🇦</div>
+        <div style="font-weight:700;font-size:1rem;margin-bottom:6px">سعودي بالهوية</div>
+        <div style="font-size:0.85rem;color:var(--gray-4);line-height:1.7">مبني خصيصًا لسوق المملكة ومتطلبات قطاع التجزئة المحلي.</div>
+      </div>
+    </div>
+
+    <!-- Tone examples -->
+    <div style="margin-top:28px">
+      <p class="label" style="margin-bottom:14px">أمثلة على أسلوب الكتابة</p>
+      <div class="grid-2" style="gap:16px">
+        <div class="card" style="border-right:3px solid #10b981">
+          <div style="font-size:0.72rem;font-weight:700;color:#10b981;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">✓ هكذا نكتب</div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--ink)">"أرسل فواتير أبريل بضغطة واحدة — مشاركة يتولى الباقي."</p>
+        </div>
+        <div class="card" style="border-right:3px solid #ef4444">
+          <div style="font-size:0.72rem;font-weight:700;color:#ef4444;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">✗ تجنب هذا</div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--gray-4)">"يُتيح النظام المتكامل إرسال الفواتير عبر واجهة برمجية متقدمة وآمنة ومتوافقة..."</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                           -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<footer style="background:var(--ink);padding:40px 0">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+    <div class="wordmark on-dark">
+      <svg width="32" height="32" viewBox="0 0 56 56" fill="none"><defs><linearGradient id="ft1" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#D97706"/></linearGradient></defs><rect width="56" height="56" rx="14" fill="#0F172A"/><rect x="1" y="1" width="54" height="54" rx="13" stroke="url(#ft1)" stroke-width="1.2" stroke-opacity="0.5" fill="none"/><circle cx="28" cy="34" r="9.5" stroke="url(#ft1)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="46 14" stroke-dashoffset="-7" fill="none"/><path d="M 37 34 L 37 20 Q 37 14 31 14 L 14 14" stroke="url(#ft1)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="14" cy="14" r="2.8" fill="url(#ft1)"/></svg>
+      <div class="wordmark-text"><span class="wordmark-name">مشاركة</span></div>
+    </div>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.35)">دليل الهوية البصرية · إصدار 1.0 · 2025</p>
+  </div>
+</footer>
+
+</body>
+</html>
