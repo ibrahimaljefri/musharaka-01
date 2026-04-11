@@ -22,10 +22,10 @@ function fmt(n) {
 
 function StatusDot({ status }) {
   return status === 'sent'
-    ? <span className="inline-flex items-center gap-1.5 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-arabic">
+    ? <span className="inline-flex items-center gap-1.5 text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-arabic">
         <CheckCircle2 size={10} /> مرسلة
       </span>
-    : <span className="inline-flex items-center gap-1.5 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-arabic">
+    : <span className="inline-flex items-center gap-1.5 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full font-arabic">
         <Clock size={10} /> معلقة
       </span>
 }
@@ -37,10 +37,10 @@ function PercentBar({ label, value, total, color = 'bg-yellow-500' }) {
   return (
     <div>
       <div className="flex justify-between text-xs font-arabic mb-1">
-        <span className="text-gray-600">{label}</span>
-        <span className="font-semibold text-gray-800">{pct}%</span>
+        <span className="text-gray-600 dark:text-gray-300">{label}</span>
+        <span className="font-semibold text-gray-800 dark:text-gray-100">{pct}%</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full transition-all duration-700`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -52,7 +52,7 @@ function MiniBarChart({ data, label }) {
   const max = Math.max(...data.map(d => d.value), 1)
   return (
     <div>
-      <p className="text-xs text-gray-500 font-arabic mb-3">{label}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 font-arabic mb-3">{label}</p>
       <div className="flex items-end gap-1.5 h-20">
         {data.map((d, i) => (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -149,8 +149,8 @@ function AdvancedDashboard({ branchId }) {
         </div>
         <div className="card-surface p-4">
           <p className="text-xs text-gray-400 font-arabic mb-1">أفضل شهر</p>
-          <p className="text-2xl font-bold text-gray-800 font-arabic">{stats.bestMonth?.key || '—'}</p>
-          <p className="text-sm text-gray-500 font-arabic mt-1">{fmt(stats.bestMonth?.value)} ر.س</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100 font-arabic">{stats.bestMonth?.key || '—'}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-arabic mt-1">{fmt(stats.bestMonth?.value)} ر.س</p>
           <div className="flex items-center gap-1 mt-1.5">
             <ArrowUpRight size={12} className="text-green-500" />
             <span className="text-xs text-green-600 font-arabic">الأعلى هذا العام</span>
@@ -164,8 +164,8 @@ function AdvancedDashboard({ branchId }) {
             const pct  = avg > 0 ? Math.round(((curr - avg) / avg) * 100) : 0
             return (
               <>
-                <p className="text-2xl font-bold text-gray-800 font-arabic">{pct > 0 ? `+${pct}%` : `${pct}%`}</p>
-                <p className="text-xs text-gray-400 font-arabic mt-1">المتوسط الشهري: {fmt(avg)} ر.س</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100 font-arabic">{pct > 0 ? `+${pct}%` : `${pct}%`}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 font-arabic mt-1">المتوسط الشهري: {fmt(avg)} ر.س</p>
                 <div className={`flex items-center gap-1 mt-1.5 ${pct >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   <TrendingUp size={12} />
                   <span className="text-xs font-arabic">{pct >= 0 ? 'فوق المتوسط' : 'دون المتوسط'}</span>
@@ -266,7 +266,7 @@ export default function Dashboard() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-800 font-arabic">لوحة التحكم</h1>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">لوحة التحكم</h1>
           <p className="text-xs text-gray-400 font-arabic mt-0.5">
             {now.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
@@ -281,9 +281,9 @@ export default function Dashboard() {
 
       {/* Branch filter */}
       <div className="flex items-center gap-3">
-        <label className="text-sm text-gray-500 font-arabic whitespace-nowrap">الفرع:</label>
+        <label className="text-sm text-gray-500 dark:text-gray-400 font-arabic whitespace-nowrap">الفرع:</label>
         <select value={branchId} onChange={e => { setBranchId(e.target.value); setPage(0) }}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-arabic bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400">
+          className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-arabic bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400">
           <option value="">جميع الفروع</option>
           {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
@@ -304,7 +304,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <BarChart2 size={16} className="text-yellow-600" />
-              <h2 className="font-semibold text-gray-700 font-arabic text-sm">التحليلات المتقدمة</h2>
+              <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">التحليلات المتقدمة</h2>
             </div>
             <button onClick={() => setShowAdvanced(s => !s)}
               className="text-xs text-yellow-600 hover:underline font-arabic">
@@ -318,7 +318,7 @@ export default function Dashboard() {
       {/* Recent sales table */}
       <div className="card-surface overflow-hidden">
         <div className="section-header">
-          <h2 className="font-semibold text-gray-700 font-arabic text-sm">آخر المبيعات</h2>
+          <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">آخر المبيعات</h2>
           <span className="text-xs text-gray-400 font-arabic">{totalRows.toLocaleString('ar-SA')} سجل</span>
         </div>
 
@@ -342,8 +342,8 @@ export default function Dashboard() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-gray-500 text-xs font-arabic border-b border-gray-100">
-                <tr className="bg-gray-50/80">
+              <thead className="text-gray-500 dark:text-gray-300 text-xs font-arabic border-b border-gray-100 dark:border-gray-700">
+                <tr className="bg-gray-50/80 dark:bg-gray-800/60">
                   <th className="px-4 py-3 text-right font-medium">رقم الفاتورة</th>
                   <th className="px-4 py-3 text-right font-medium">الفرع</th>
                   <th className="px-4 py-3 text-right font-medium">النوع</th>
@@ -353,20 +353,20 @@ export default function Dashboard() {
                   <th className="px-4 py-3 text-right font-medium">إجراء</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60">
                 {sales.map(s => (
-                  <tr key={s.id} className={`transition-colors ${s.status === 'sent' ? 'bg-gray-50/40' : 'hover:bg-yellow-50/30'}`}>
-                    <td className="px-4 py-3 text-gray-600 font-arabic text-xs">{s.invoice_number || <span className="text-gray-300">—</span>}</td>
+                  <tr key={s.id} className={`transition-colors ${s.status === 'sent' ? 'bg-gray-50/40 dark:bg-gray-800/20' : 'hover:bg-yellow-50/30 dark:hover:bg-yellow-900/10'}`}>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300 font-arabic text-xs">{s.invoice_number || <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
                     <td className="px-4 py-3"><BranchBadge code={s.branches?.code || '—'} /></td>
-                    <td className="px-4 py-3 text-gray-500 font-arabic text-xs">
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-arabic text-xs">
                       {s.input_type === 'daily' ? 'يومي' : s.input_type === 'monthly' ? 'شهري' : 'مخصص'}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 text-xs" dir="ltr">{s.sale_date}</td>
-                    <td className="px-4 py-3 font-bold text-gray-800 font-arabic">{fmt(s.amount)}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-xs" dir="ltr">{s.sale_date}</td>
+                    <td className="px-4 py-3 font-bold text-gray-800 dark:text-gray-100 font-arabic">{fmt(s.amount)}</td>
                     <td className="px-4 py-3"><StatusDot status={s.status} /></td>
                     <td className="px-4 py-3">
                       {s.status === 'sent' ? (
-                        <span className="text-xs text-gray-300 flex items-center gap-1"><Lock size={10} /> محمية</span>
+                        <span className="text-xs text-gray-300 dark:text-gray-600 flex items-center gap-1"><Lock size={10} /> محمية</span>
                       ) : (
                         <button onClick={() => setDeleteId(s.id)} className="text-red-300 hover:text-red-500 transition-colors">
                           <Trash2 size={14} />

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
+import LogoMark from '../components/LogoMark'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -47,12 +48,7 @@ export default function Login() {
     >
       {/* Brand mark */}
       <div className="flex justify-center mb-5">
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white text-xl"
-          style={{ background: '#F59E0B' }}
-        >
-          م
-        </div>
+        <LogoMark size={48} id="login" />
       </div>
 
       <h1 className="text-xl font-bold text-white font-arabic mb-6 text-center">تسجيل الدخول</h1>

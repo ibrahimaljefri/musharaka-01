@@ -15,6 +15,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           npm install --legacy-peer-deps
           npm run build
@@ -25,3 +26,11 @@ jobs:
           git add musharaka/client/dist -f
           git commit -m "chore: add built dist folder" || echo "No changes to commit"
           git push
+      - name: Deploy to cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./musharaka/client/dist/
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}

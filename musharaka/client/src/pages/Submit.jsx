@@ -13,6 +13,12 @@ const MONTHS = [
 ]
 const YEARS = Array.from({ length: 6 }, (_, i) => 2021 + i)
 
+const selectCls = `w-full border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm font-arabic
+                   bg-white/70 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100
+                   backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-yellow-400`
+
+const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5'
+
 export default function Submit() {
   const [branches, setBranches] = useState([])
   const [form, setForm] = useState({
@@ -46,52 +52,63 @@ export default function Submit() {
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
+      {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800 font-arabic">إرسال الفواتير إلى سينومي</h1>
-        <Link to="/submissions" className="flex items-center gap-1.5 text-sm text-yellow-700 hover:underline font-arabic">
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">إرسال الفواتير</h1>
+        <Link to="/submissions"
+          className="flex items-center gap-1.5 text-sm text-yellow-700 dark:text-yellow-500
+                     hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors font-arabic">
           <FileText size={14} /> تقرير الإرسالات
         </Link>
       </div>
 
+      {/* Glass form card */}
       <div className="card-surface p-6 space-y-5">
         {error   && <AlertBanner type="error"   message={error} />}
         {success && <AlertBanner type="success" message={success} dismissible={false} />}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Branch */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الفرع <span className="text-red-500">*</span></label>
+            <label className={labelCls}>الفرع <span className="text-red-500">*</span></label>
             <select value={form.branch_id} onChange={e => set('branch_id', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+              className={selectCls}>
               <option value="">اختر الفرع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
             </select>
           </div>
 
+          {/* Month + Year */}
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الشهر</label>
+              <label className={labelCls}>الشهر</label>
               <select value={form.month} onChange={e => set('month', parseInt(e.target.value))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                className={selectCls}>
                 {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
               </select>
             </div>
             <div className="w-28">
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">السنة</label>
+              <label className={labelCls}>السنة</label>
               <select value={form.year} onChange={e => set('year', parseInt(e.target.value))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                className={selectCls}>
                 {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
           </div>
 
+          {/* Submit button */}
           <button type="submit" disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-medium py-3 rounded-lg transition-colors font-arabic text-sm">
-            <Send size={16} /> {loading ? 'جاري الإرسال...' : 'إرسال الفواتير إلى سينومي'}
+            className="w-full flex items-center justify-center gap-2
+                       bg-green-600 hover:bg-green-700 active:bg-green-800
+                       disabled:opacity-60 text-white font-medium py-3
+                       rounded-xl transition-colors font-arabic text-sm shadow-sm">
+            <Send size={16} />
+            {loading ? 'جاري الإرسال...' : 'إرسال الفواتير'}
           </button>
         </form>
 
-        <p className="text-xs text-gray-400 font-arabic text-center">
-          سيتم إرسال جميع الفواتير المعلقة للفرع والفترة المحددة إلى منصة سينومي.
+        <p className="text-xs text-gray-400 dark:text-gray-500 font-arabic text-center">
+          سيتم إرسال جميع الفواتير المعلقة للفرع والفترة المحددة.
         </p>
       </div>
     </div>

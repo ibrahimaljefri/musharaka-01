@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Background squircle gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1a2744"/>
+      <stop offset="100%" stop-color="#080E1A"/>
+    </radialGradient>
+
+    <!-- Gold gradient for left ring stroke -->
+    <linearGradient id="goldLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+
+    <!-- Gold gradient for right ring stroke -->
+    <linearGradient id="goldRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+
+    <!-- Bright gold gradient for overlap lens fill -->
+    <radialGradient id="lensGold" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="50%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </radialGradient>
+
+    <!-- Glow filter for rings -->
+    <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Glow filter for lens -->
+    <filter id="lensGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Subtle inner shadow filter for depth -->
+    <filter id="innerShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="in" result="shadow"/>
+      <feBlend in="SourceGraphic" in2="shadow" mode="multiply"/>
+    </filter>
+
+    <!--
+      ClipPath approach:
+      Left ring clip = area inside left circle
+      Right ring clip = area inside right circle
+      We use these to carve the overlap lens from the rings visually,
+      then draw the lens on top.
+
+      Ring params:
+        Left center:  (192, 256), r=104
+        Right center: (320, 256), r=104
+        Distance between centers: 128
+        Half-lens width (x intersection): centers midpoint = 256
+        Intersection x of two circles: x = (d/2) = 64 from each center along x-axis
+          x_intersect = cx_left + (d²)/(2d) = 192 + 64 = 256  (midpoint, symmetric)
+        y_intersect: r² = (x_int - cx)² + y²
+          104² = 64² + y²  => y² = 10816 - 4096 = 6720  => y ≈ 81.97 ≈ 82
+        So intersection points: (256, 256-82) = (256, 174) and (256, 256+82) = (256, 338)
+
+      Lens path (vesica piscis):
+        From (256,174): arc right (large-arc=0, sweep=1) radius 104 to (256,338)
+        From (256,338): arc left (large-arc=0, sweep=1) radius 104 back to (256,174)
+    -->
+
+    <!-- ClipPath: left ring interior (for clipping left half-stroke away from overlap) -->
+    <clipPath id="clipLeft">
+      <circle cx="192" cy="256" r="104"/>
+    </clipPath>
+
+    <!-- ClipPath: right ring interior -->
+    <clipPath id="clipRight">
+      <circle cx="320" cy="256" r="104"/>
+    </clipPath>
+
+    <!-- ClipPath: inverse of overlap lens — used to hide ring stroke in the lens zone -->
+    <!-- We define the lens as a path and use it to subtract from rings -->
+    <clipPath id="clipExcludeLens">
+      <!-- Full canvas minus the lens: achieved by painting full rect then the lens with evenodd -->
+      <path fill-rule="evenodd" d="
+        M0,0 H512 V512 H0 Z
+        M256,174
+          A104,104 0 0,1 256,338
+          A104,104 0 0,1 256,174 Z
+      "/>
+    </clipPath>
+
+    <!-- ClipPath: only the lens area (for lens fill and lens node) -->
+    <clipPath id="clipLensOnly">
+      <path d="
+        M256,174
+        A104,104 0 0,1 256,338
+        A104,104 0 0,1 256,174 Z
+      "/>
+    </clipPath>
+
+  </defs>
+
+  <g id="icon">
+    <!-- Background squircle -->
+    <rect x="0" y="0" width="512" height="512" rx="110" ry="110" fill="url(#bgGrad)"/>
+
+    <!-- Subtle inner border on squircle -->
+    <rect x="1.5" y="1.5" width="509" height="509" rx="109" ry="109"
+          fill="none" stroke="#1e2f50" stroke-width="3" opacity="0.6"/>
+
+    <!-- Decorative arc above rings — tech/network hint -->
+    <!-- A subtle arc connecting the two ring tops suggesting upward movement -->
+    <path d="M 148,220 Q 256,148 364,220"
+          fill="none" stroke="#F59E0B" stroke-width="2.5"
+          stroke-linecap="round" opacity="0.35"/>
+
+    <!-- Node dots on decorative arc ends + midpoint -->
+    <circle cx="148" cy="220" r="5" fill="#F59E0B" opacity="0.4"/>
+    <circle cx="364" cy="220" r="5" fill="#F59E0B" opacity="0.4"/>
+    <circle cx="256" cy="157" r="4.5" fill="#FBBF24" opacity="0.55"/>
+    <!-- Upward arrow/node at top of arc -->
+    <path d="M 251,146 L 256,136 L 261,146" fill="none"
+          stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round" opacity="0.7"/>
+
+    <!--
+      LEFT RING — draw full circle stroke, then clip out the lens zone
+      so the lens fill can sit cleanly on top
+    -->
+    <circle cx="192" cy="256" r="104"
+            fill="none"
+            stroke="url(#goldLeft)"
+            stroke-width="22"
+            stroke-linecap="round"
+            clip-path="url(#clipExcludeLens)"
+            filter="url(#ringGlow)"
+            opacity="0.92"/>
+
+    <!-- RIGHT RING — same treatment -->
+    <circle cx="320" cy="256" r="104"
+            fill="none"
+            stroke="url(#goldRight)"
+            stroke-width="22"
+            stroke-linecap="round"
+            clip-path="url(#clipExcludeLens)"
+            filter="url(#ringGlow)"
+            opacity="0.92"/>
+
+    <!--
+      OVERLAP LENS FILL — the "shared zone"
+      Lens path: arc from left-center through right intersection,
+                 arc back from right-center
+    -->
+    <path d="
+      M 256,174
+      A 104,104 0 0,1 256,338
+      A 104,104 0 0,1 256,174 Z
+    "
+    fill="url(#lensGold)"
+    filter="url(#lensGlow)"
+    opacity="1"/>
+
+    <!--
+      RING STROKE IN LENS ZONE — draw the ring strokes OVER the lens
+      in a slightly darker gold so the rings read as continuous circles
+      but the fill shines through
+    -->
+    <!-- Left ring arc in lens zone only -->
+    <circle cx="192" cy="256" r="104"
+            fill="none"
+            stroke="#D97706"
+            stroke-width="22"
+            stroke-linecap="round"
+            clip-path="url(#clipLensOnly)"
+            opacity="0.4"/>
+
+    <!-- Right ring arc in lens zone only -->
+    <circle cx="320" cy="256" r="104"
+            fill="none"
+            stroke="#D97706"
+            stroke-width="22"
+            stroke-linecap="round"
+            clip-path="url(#clipLensOnly)"
+            opacity="0.4"/>
+
+    <!--
+      LENS CENTRAL NODE — small circle in the middle of the lens
+      suggesting a connection point / handshake moment
+    -->
+    <circle cx="256" cy="256" r="14"
+            fill="#0F172A"
+            opacity="0.85"/>
+    <circle cx="256" cy="256" r="8"
+            fill="#FBBF24"/>
+    <!-- Four small radiating dots -->
+    <circle cx="256" cy="237" r="3" fill="#FDE68A" opacity="0.9"/>
+    <circle cx="256" cy="275" r="3" fill="#FDE68A" opacity="0.9"/>
+    <circle cx="237" cy="256" r="3" fill="#FDE68A" opacity="0.9"/>
+    <circle cx="275" cy="256" r="3" fill="#FDE68A" opacity="0.9"/>
+
+    <!--
+      BOTTOM NETWORK HINT — mirrored subtle arc below
+      suggesting the platform connects outward in both directions
+    -->
+    <path d="M 148,292 Q 256,364 364,292"
+          fill="none" stroke="#F59E0B" stroke-width="2.5"
+          stroke-linecap="round" opacity="0.25"/>
+
+    <!-- Bottom node dots -->
+    <circle cx="148" cy="292" r="5" fill="#F59E0B" opacity="0.3"/>
+    <circle cx="364" cy="292" r="5" fill="#F59E0B" opacity="0.3"/>
+    <circle cx="256" cy="355" r="4" fill="#FBBF24" opacity="0.4"/>
+
+  </g>
+</svg>

@@ -1,0 +1,267 @@
+<svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gold linear gradient top-left to bottom-right -->
+    <linearGradient id="i4_gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FFFDE7"/>
+      <stop offset="12%"  stop-color="#FDE68A"/>
+      <stop offset="50%"  stop-color="#F59E0B"/>
+      <stop offset="80%"  stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Gold vertical gradient -->
+    <linearGradient id="i4_goldV" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#FFF8E1"/>
+      <stop offset="35%"  stop-color="#FBBF24"/>
+      <stop offset="70%"  stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Radial glow -->
+    <radialGradient id="i4_glow" cx="22%" cy="50%" r="28%" fx="22%" fy="50%">
+      <stop offset="0%"   stop-color="rgba(245,158,11,0.20)"/>
+      <stop offset="100%" stop-color="rgba(245,158,11,0)"/>
+    </radialGradient>
+
+    <!-- Shadow gradient -->
+    <linearGradient id="i4_shadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#78350F"/>
+      <stop offset="100%" stop-color="#451A03"/>
+    </linearGradient>
+
+    <!-- Globe clip circle -->
+    <clipPath id="i4_globeClip">
+      <circle cx="145" cy="108" r="40"/>
+    </clipPath>
+
+    <!-- Glow filter for icon -->
+    <filter id="i4_glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Soft glow filter -->
+    <filter id="i4_softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Text glow filter -->
+    <filter id="i4_textGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ═══════════════════════════════════════ BACKGROUND ═══ -->
+  <g id="bg">
+    <rect width="900" height="500" fill="#141B27"/>
+    <!-- Subtle dark vignette corners -->
+    <radialGradient id="i4_vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="60%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.45)"/>
+    </radialGradient>
+    <rect width="900" height="500" fill="url(#i4_vignette)"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════ AMBIENT GLOW ═══ -->
+  <g id="glow">
+    <ellipse cx="210" cy="250" rx="190" ry="200" fill="url(#i4_glow)" opacity="0.9"/>
+    <!-- Secondary smaller glow at globe area -->
+    <radialGradient id="i4_globeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(251,191,36,0.18)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <ellipse cx="145" cy="108" rx="70" ry="70" fill="url(#i4_globeGlow)"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════ ICON GROUP ═══ -->
+  <g id="icon">
+
+    <!-- ─── Outer C Arc — 3 layer metallic ─── -->
+    <!-- Shadow layer (widest) -->
+    <path d="M 340,140 A 165,165 0 1,1 345,358"
+          fill="none"
+          stroke="url(#i4_shadow)"
+          stroke-width="32"
+          stroke-linecap="round"
+          opacity="0.6"/>
+    <!-- Main gold layer -->
+    <path d="M 340,140 A 165,165 0 1,1 345,358"
+          fill="none"
+          stroke="url(#i4_gold)"
+          stroke-width="22"
+          stroke-linecap="round"
+          filter="url(#i4_softGlow)"/>
+    <!-- Highlight layer (thin, bright) -->
+    <path d="M 340,140 A 165,165 0 1,1 345,358"
+          fill="none"
+          stroke="#FFFDE7"
+          stroke-width="7"
+          stroke-linecap="round"
+          opacity="0.45"/>
+
+    <!-- ─── Globe at top terminus (~145, 108) ─── -->
+    <!-- Globe circle -->
+    <circle cx="145" cy="108" r="40"
+            fill="none"
+            stroke="url(#i4_gold)"
+            stroke-width="1.5"
+            filter="url(#i4_glowFilter)"/>
+
+    <!-- Latitude ellipses (clipped) -->
+    <!-- Top latitude -->
+    <ellipse cx="145" cy="96" rx="40" ry="8"
+             fill="none"
+             stroke="url(#i4_gold)"
+             stroke-width="1"
+             opacity="0.7"
+             clip-path="url(#i4_globeClip)"/>
+    <!-- Middle latitude (equator) -->
+    <ellipse cx="145" cy="108" rx="40" ry="14"
+             fill="none"
+             stroke="url(#i4_gold)"
+             stroke-width="1.2"
+             opacity="0.85"
+             clip-path="url(#i4_globeClip)"/>
+    <!-- Bottom latitude -->
+    <ellipse cx="145" cy="120" rx="40" ry="8"
+             fill="none"
+             stroke="url(#i4_gold)"
+             stroke-width="1"
+             opacity="0.7"
+             clip-path="url(#i4_globeClip)"/>
+
+    <!-- Longitude arc 1 (rotated -35°) -->
+    <g transform="rotate(-35, 145, 108)">
+      <ellipse cx="145" cy="108" rx="16" ry="40"
+               fill="none"
+               stroke="url(#i4_gold)"
+               stroke-width="1"
+               opacity="0.75"
+               clip-path="url(#i4_globeClip)"/>
+    </g>
+    <!-- Longitude arc 2 (rotated +35°) -->
+    <g transform="rotate(35, 145, 108)">
+      <ellipse cx="145" cy="108" rx="16" ry="40"
+               fill="none"
+               stroke="url(#i4_gold)"
+               stroke-width="1"
+               opacity="0.75"
+               clip-path="url(#i4_globeClip)"/>
+    </g>
+
+    <!-- Globe node intersection dots (6 nodes) -->
+    <circle cx="145" cy="68"  r="2.5" fill="#FBBF24" opacity="0.9"/>
+    <circle cx="172" cy="96"  r="2.5" fill="#FBBF24" opacity="0.85"/>
+    <circle cx="183" cy="108" r="2.5" fill="#FBBF24" opacity="0.85"/>
+    <circle cx="118" cy="96"  r="2.5" fill="#FBBF24" opacity="0.8"/>
+    <circle cx="107" cy="108" r="2.5" fill="#FBBF24" opacity="0.8"/>
+    <circle cx="145" cy="148" r="2.5" fill="#FBBF24" opacity="0.75"/>
+
+    <!-- Globe apex glow dot -->
+    <circle cx="145" cy="68"  r="4"   fill="#FFFDE7" opacity="0.9" filter="url(#i4_glowFilter)"/>
+
+    <!-- ─── 3 Wave Strokes (inside C) ─── -->
+
+    <!-- Wave 1 — shadow -->
+    <path d="M 100,210 C 132,182 158,188 195,202 C 232,216 255,210 280,222"
+          fill="none" stroke="url(#i4_shadow)" stroke-width="23" stroke-linecap="round" opacity="0.5"/>
+    <!-- Wave 1 — main gold -->
+    <path d="M 100,210 C 132,182 158,188 195,202 C 232,216 255,210 280,222"
+          fill="none" stroke="url(#i4_gold)" stroke-width="13" stroke-linecap="round"
+          filter="url(#i4_glowFilter)"/>
+    <!-- Wave 1 — highlight -->
+    <path d="M 100,210 C 132,182 158,188 195,202 C 232,216 255,210 280,222"
+          fill="none" stroke="#FFFDE7" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- Wave 2 — shadow -->
+    <path d="M 90,252 C 126,226 154,233 193,246 C 232,258 258,251 285,263"
+          fill="none" stroke="url(#i4_shadow)" stroke-width="26" stroke-linecap="round" opacity="0.5"/>
+    <!-- Wave 2 — main gold -->
+    <path d="M 90,252 C 126,226 154,233 193,246 C 232,258 258,251 285,263"
+          fill="none" stroke="url(#i4_gold)" stroke-width="16" stroke-linecap="round"
+          filter="url(#i4_glowFilter)"/>
+    <!-- Wave 2 — highlight -->
+    <path d="M 90,252 C 126,226 154,233 193,246 C 232,258 258,251 285,263"
+          fill="none" stroke="#FFFDE7" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- Wave 3 (closed shape) — shadow -->
+    <path d="M 95,300 C 132,274 158,284 195,295 C 232,306 257,295 283,300 L 283,318 C 255,332 228,337 195,335 C 162,333 133,326 102,316 Z"
+          fill="url(#i4_shadow)" opacity="0.3"
+          stroke="url(#i4_shadow)" stroke-width="4" stroke-linecap="round"/>
+    <!-- Wave 3 — main gold fill + stroke -->
+    <path d="M 95,300 C 132,274 158,284 195,295 C 232,306 257,295 283,300 L 283,318 C 255,332 228,337 195,335 C 162,333 133,326 102,316 Z"
+          fill="url(#i4_gold)" opacity="0.35"
+          stroke="url(#i4_gold)" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"
+          filter="url(#i4_glowFilter)"/>
+    <!-- Wave 3 — highlight -->
+    <path d="M 95,300 C 132,274 158,284 195,295 C 232,306 257,295 283,300"
+          fill="none" stroke="#FFFDE7" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- ─── Light streak lines from globe area ─── -->
+    <line x1="145" y1="148" x2="165" y2="200"
+          stroke="url(#i4_gold)" stroke-width="1" opacity="0.2" stroke-linecap="round"/>
+    <line x1="160" y1="130" x2="200" y2="185"
+          stroke="#FBBF24" stroke-width="0.8" opacity="0.15" stroke-linecap="round"/>
+
+    <!-- ─── Sparkle particles near globe ─── -->
+    <circle cx="118" cy="76"  r="1.8" fill="#FBBF24" opacity="0.65"/>
+    <circle cx="175" cy="72"  r="2.5" fill="#FBBF24" opacity="0.5"/>
+    <circle cx="193" cy="95"  r="1.5" fill="#FDE68A" opacity="0.7"/>
+    <circle cx="105" cy="125" r="3.0" fill="#FBBF24" opacity="0.4"/>
+
+  </g>
+
+  <!-- ═══════════════════════════════════════ DIVIDER ═══ -->
+  <g id="divider">
+    <line x1="410" y1="80" x2="410" y2="420"
+          stroke="url(#i4_gold)"
+          stroke-width="1.2"
+          opacity="0.3"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════ WORDMARK ═══ -->
+  <g id="wordmark">
+
+    <!-- Arabic wordmark -->
+    <text x="860" y="210"
+          text-anchor="end"
+          font-family="'Cairo', 'Arial', sans-serif"
+          font-size="82"
+          font-weight="800"
+          fill="url(#i4_goldV)"
+          direction="rtl"
+          filter="url(#i4_textGlow)">مشاركة</text>
+
+    <!-- English wordmark -->
+    <text x="452" y="310"
+          text-anchor="start"
+          font-family="'Helvetica Neue', 'Arial Black', Arial, sans-serif"
+          font-size="42"
+          font-weight="900"
+          letter-spacing="4"
+          fill="url(#i4_gold)"
+          filter="url(#i4_textGlow)">MOSHARKATECH</text>
+
+    <!-- Tagline -->
+    <text x="452" y="352"
+          text-anchor="start"
+          font-family="Helvetica, Arial, sans-serif"
+          font-size="16"
+          letter-spacing="3"
+          fill="#94A3B8"
+          opacity="0.7">نظام إدارة المبيعات</text>
+
+  </g>
+
+</svg>

@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gold linear gradient: top-left to bottom-right -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FBBF24"/>
+      <stop offset="50%"  stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+
+    <!-- Subtle gold glow behind the mark -->
+    <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#F59E0B" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Inner ring gradient: slightly lighter at top -->
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FBBF24" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#D97706" stop-opacity="0.25"/>
+    </linearGradient>
+
+    <!-- Clip path to squircle shape -->
+    <clipPath id="squircleClip">
+      <rect x="0" y="0" width="512" height="512" rx="110" ry="110"/>
+    </clipPath>
+  </defs>
+
+  <g id="icon">
+    <!-- Squircle background -->
+    <rect x="0" y="0" width="512" height="512" rx="110" ry="110" fill="#080E1A"/>
+
+    <!-- Subtle gold inner border ring on squircle -->
+    <rect x="6" y="6" width="500" height="500" rx="106" ry="106"
+          fill="none"
+          stroke="url(#ringGrad)"
+          stroke-width="2.5"/>
+
+    <!-- Radial glow behind the م letterform -->
+    <ellipse cx="256" cy="270" rx="190" ry="175" fill="url(#glowGrad)"/>
+
+    <!--
+      م (Meem) constructed from geometric primitives:
+
+      The letter م has three main parts:
+        1. A large open bowl arc (about 270° arc, open at top-right)
+        2. A horizontal bridge line running right from the bowl opening
+        3. A vertical stem rising from the bridge end, with a rounded top and terminal dot
+
+      Coordinate design (centered around x=256, y=280):
+        Bowl center: (220, 295)
+        Bowl radius: 80px
+        Bowl arc: from ~315° sweeping ~270° counter-clockwise to ~225°
+          i.e., start at bottom-right of circle, go around to the left/top-left
+        Bridge: horizontal from the bowl's right-exit point going right
+        Stem: vertical upward from bridge end
+        Terminal dot: small circle at top of stem
+    -->
+
+    <!-- ============================================================
+         BOWL ARC
+         Center: (215, 295), radius: 82
+         Arc opens toward upper-right.
+         Start point: upper-right of bowl (about 45° from center)
+         End point: right side of bowl (about 0°/360°)
+         We want ~270° of arc (three-quarters circle), leaving a gap at upper-right.
+
+         Using SVG arc: M startX startY A rx ry 0 large-arc-flag sweep-flag endX endY
+
+         Center (215, 295), r=82
+         Start angle = 330° (upper-right, gap start)
+           startX = 215 + 82*cos(330°) = 215 + 82*0.866 = 215 + 71.0 = 286.0
+           startY = 295 + 82*sin(330°) = 295 + 82*(-0.5) = 295 - 41 = 254.0
+         End angle = 60° (upper-right, gap end)  — sweeping CW (sweep=1) 270°
+           endX = 215 + 82*cos(60°) = 215 + 41 = 256.0
+           endY = 295 + 82*sin(60°) = 295 + 71.0 = 366.0
+
+         Going CW from 330° by 270° lands at 330-270 = 60°...
+         Actually: 330° → sweep CW 270° → 330+270=600° mod 360 = 240°
+           endX = 215 + 82*cos(240°) = 215 + 82*(-0.5) = 215 - 41 = 174
+           endY = 295 + 82*sin(240°) = 295 + 82*(-0.866) = 295 - 71 = 224
+
+         Let me recalculate cleanly with standard math angles (CCW positive):
+         Bowl center C=(215, 295), r=82
+         We want the gap at the top-right, roughly between 340° and 70° (standard math).
+         Arc sweeps from 70° CCW (i.e., SVG CW, sweep=0) 280° to 340°...
+
+         Let me use a simpler approach:
+         Gap between angle A=340° and B=70° (going through 0° = right side)
+         Bowl arc: from 70° to 340° going CCW (sweep-flag=0 in SVG = CCW), large arc = 1 (280°)
+
+         Start (70°):  x = 215 + 82*cos(70°) = 215 + 82*0.342 = 215+28.0 = 243.0
+                       y = 295 - 82*sin(70°) = 295 - 82*0.940 = 295-77.1 = 217.9 ≈ 218
+         End (340°):   x = 215 + 82*cos(340°) = 215 + 82*0.940 = 215+77.1 = 292.1 ≈ 292
+                       y = 295 - 82*sin(340°) = 295 - 82*(-0.342) = 295+28.0 = 323.0
+
+         Arc from (243,218) to (292,323), CCW, large-arc=1, sweep=0 — 280° bowl.
+         But we want the opening to connect to the bridge going RIGHT from the top.
+
+         Let me redesign for better letter shape:
+         Bowl opens at upper-right (~30° to ~90° gap).
+         Gap from 30° to 90° (standard angles, CCW).
+         Arc sweeps from 90° to 30°, going CW (SVG sweep=1), large-arc=1 (300°).
+
+         Start (90° = top):  x = 215 + 82*cos(90°) = 215+0 = 215
+                              y = 295 - 82*sin(90°) = 295-82 = 213
+         End (30° = upper right): x = 215 + 82*cos(30°) = 215+71 = 286
+                                   y = 295 - 82*sin(30°) = 295-41 = 254
+
+         Arc from (215,213) sweeping CW 300° to (286,254). sweep=1, large-arc=1.
+         This gives a nice bowl with opening pointing upper-right.
+    ============================================================ -->
+
+    <!-- Bowl: large 300° arc, open at upper-right -->
+    <path d="M 215 213
+             A 82 82 0 1 1 286 254"
+          fill="none"
+          stroke="url(#goldGrad)"
+          stroke-width="30"
+          stroke-linecap="round"/>
+
+    <!--
+      Bridge: horizontal line from bowl opening point (286,254) going right to (360,254)
+      Then stem: vertical line from (360,254) up to (360,168)
+      We use a rounded corner join via a path with a rounded corner.
+      The corner at (360,254) should be rounded.
+      We'll do it as a single path with a quadratic bezier for the corner.
+    -->
+
+    <!-- Bridge + Stem with rounded corner -->
+    <path d="M 286 254
+             L 346 254
+             Q 370 254 370 230
+             L 370 172"
+          fill="none"
+          stroke="url(#goldGrad)"
+          stroke-width="30"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+
+    <!-- Terminal dot at top of stem -->
+    <circle cx="370" cy="155" r="19" fill="url(#goldGrad)"/>
+
+  </g>
+</svg>

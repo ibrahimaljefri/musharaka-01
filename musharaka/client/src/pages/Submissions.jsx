@@ -19,9 +19,10 @@ function MissingDays({ sentDates, month, year }) {
   const sentSet = new Set(sentDates)
   const missing = allDays.filter(d => !sentSet.has(d))
   if (missing.length === 0) return (
-    <div className="text-xs text-green-600 font-arabic mt-2">لا توجد أيام ناقصة — جميع أيام الشهر مُغطاة</div>
+    <div className="text-xs text-green-600 dark:text-green-400 font-arabic mt-2">
+      لا توجد أيام ناقصة — جميع أيام الشهر مُغطاة
+    </div>
   )
-  // Group consecutive
   const groups = []; let start = missing[0], prev = missing[0]
   for (let i = 1; i < missing.length; i++) {
     const curr = missing[i]
@@ -34,10 +35,14 @@ function MissingDays({ sentDates, month, year }) {
   groups.push({ start, end: prev })
   return (
     <div className="mt-3">
-      <p className="text-xs font-semibold text-red-600 font-arabic mb-1">الأيام غير المُرسلة ({missing.length} يوم):</p>
+      <p className="text-xs font-semibold text-red-600 dark:text-red-400 font-arabic mb-1">
+        الأيام غير المُرسلة ({missing.length} يوم):
+      </p>
       <div className="flex flex-wrap gap-1.5">
         {groups.map((g, i) => (
-          <span key={i} className="text-xs bg-red-50 border border-red-200 text-red-600 px-2 py-0.5 rounded font-arabic" dir="ltr">
+          <span key={i}
+            className="text-xs bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 text-red-600 dark:text-red-400 px-2 py-0.5 rounded font-arabic"
+            dir="ltr">
             {g.start === g.end ? g.start : `${g.start} → ${g.end}`}
           </span>
         ))}
@@ -65,51 +70,78 @@ function SubmissionCard({ sub }) {
 
   return (
     <div className="card-surface overflow-hidden hover-lift">
-      <button onClick={toggle} className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+      {/* Card header row */}
+      <button
+        onClick={toggle}
+        className="w-full px-5 py-4 flex items-center justify-between transition-colors
+                   hover:bg-black/[0.03] dark:hover:bg-white/[0.04] rounded-2xl"
+      >
         <div className="flex items-center gap-4">
           <BranchBadge code={sub.branches?.code || '?'} />
           <div className="text-right">
-            <p className="font-semibold text-gray-800 font-arabic text-sm">{sub.branches?.name}</p>
-            <p className="text-xs text-gray-500 font-arabic">{MONTHS_AR[sub.month]} {sub.year}</p>
+            <p className="font-semibold text-gray-800 dark:text-gray-100 font-arabic text-sm">
+              {sub.branches?.name}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-arabic">
+              {MONTHS_AR[sub.month]} {sub.year}
+            </p>
           </div>
         </div>
+
         <div className="flex items-center gap-6">
           <div className="text-right hidden sm:block">
-            <p className="text-xs text-gray-400 font-arabic">عدد الفواتير</p>
-            <p className="font-semibold text-gray-700 font-arabic text-sm">{sub.invoice_count}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-arabic">عدد الفواتير</p>
+            <p className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">
+              {sub.invoice_count}
+            </p>
           </div>
           <div className="text-right hidden sm:block">
-            <p className="text-xs text-gray-400 font-arabic">الإجمالي</p>
-            <p className="font-semibold text-green-700 font-arabic text-sm">{fmt(sub.total_amount)} ر.س</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-arabic">الإجمالي</p>
+            <p className="font-semibold text-green-700 dark:text-green-400 font-arabic text-sm">
+              {fmt(sub.total_amount)} ر.س
+            </p>
           </div>
-          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-arabic">مرسل</span>
-          {open ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+          <span className="inline-flex items-center gap-1 text-xs
+                           bg-green-100 dark:bg-green-900/40
+                           text-green-700 dark:text-green-400
+                           px-2.5 py-0.5 rounded-full font-arabic">
+            مرسل
+          </span>
+          {open
+            ? <ChevronUp  size={16} className="text-gray-400 dark:text-gray-500 shrink-0" />
+            : <ChevronDown size={16} className="text-gray-400 dark:text-gray-500 shrink-0" />
+          }
         </div>
       </button>
 
+      {/* Expanded detail */}
       {open && (
-        <div className="border-t border-gray-100 px-5 py-4">
+        <div className="border-t border-black/[0.06] dark:border-white/[0.06] px-5 py-4">
           {loadingSales ? (
-            <p className="text-sm text-gray-400 font-arabic text-center py-4">جاري التحميل...</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 font-arabic text-center py-4">
+              جاري التحميل...
+            </p>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead className="bg-gray-50 text-gray-500 font-arabic">
-                    <tr>
+                  <thead className="font-arabic">
+                    <tr className="bg-black/[0.04] dark:bg-white/[0.05]
+                                   text-gray-500 dark:text-gray-300 border-b
+                                   border-black/[0.06] dark:border-white/[0.06]">
                       <th className="px-3 py-2 text-right font-medium">التاريخ</th>
                       <th className="px-3 py-2 text-right font-medium">رقم الفاتورة</th>
                       <th className="px-3 py-2 text-right font-medium">المبلغ (ر.س)</th>
                       <th className="px-3 py-2 text-right font-medium">ملاحظات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
                     {sales.map(s => (
-                      <tr key={s.id}>
-                        <td className="px-3 py-2 text-gray-600" dir="ltr">{s.sale_date}</td>
-                        <td className="px-3 py-2 text-gray-600">{s.invoice_number || '—'}</td>
-                        <td className="px-3 py-2 font-semibold text-gray-800 font-arabic">{fmt(s.amount)}</td>
-                        <td className="px-3 py-2 text-gray-500 font-arabic">{s.notes || '—'}</td>
+                      <tr key={s.id} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+                        <td className="px-3 py-2 text-gray-600 dark:text-gray-300" dir="ltr">{s.sale_date}</td>
+                        <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{s.invoice_number || '—'}</td>
+                        <td className="px-3 py-2 font-semibold text-gray-800 dark:text-gray-100 font-arabic">{fmt(s.amount)}</td>
+                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-arabic">{s.notes || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -146,11 +178,18 @@ export default function Submissions() {
     setLoading(false)
   }
 
+  const selectCls = `border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-arabic
+                     bg-white/70 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100
+                     backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-yellow-400`
+
   return (
     <div className="space-y-6">
+      {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800 font-arabic">تقرير الإرسالات</h1>
-        <Link to="/submit" className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic">
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">تقرير الإرسالات</h1>
+        <Link to="/submit"
+          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800
+                     text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors font-arabic shadow-sm">
           <Send size={15} /> إرسال جديد
         </Link>
       </div>
@@ -159,31 +198,35 @@ export default function Submissions() {
       <div className="card-surface p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div>
-            <label className="block text-xs text-gray-500 font-arabic mb-1">الفرع</label>
-            <select value={filters.branch_id} onChange={e => setFilters(f => ({...f,branch_id:e.target.value}))}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">الفرع</label>
+            <select value={filters.branch_id}
+              onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))}
+              className={selectCls}>
               <option value="">جميع الفروع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 font-arabic mb-1">الشهر</label>
-            <select value={filters.month} onChange={e => setFilters(f => ({...f,month:e.target.value}))}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">الشهر</label>
+            <select value={filters.month}
+              onChange={e => setFilters(f => ({...f, month: e.target.value}))}
+              className={selectCls}>
               <option value="">الكل</option>
               {[...Array(12)].map((_,i) => <option key={i+1} value={i+1}>{MONTHS_AR[i+1]}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 font-arabic mb-1">السنة</label>
-            <select value={filters.year} onChange={e => setFilters(f => ({...f,year:e.target.value}))}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">السنة</label>
+            <select value={filters.year}
+              onChange={e => setFilters(f => ({...f, year: e.target.value}))}
+              className={selectCls}>
               <option value="">الكل</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
           <button onClick={() => load(filters)}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors font-arabic">
+            className="bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white
+                       text-sm font-medium px-5 py-2 rounded-xl transition-colors font-arabic shadow-sm">
             بحث
           </button>
         </div>
@@ -191,7 +234,7 @@ export default function Submissions() {
 
       {/* Submission cards */}
       {loading ? (
-        <div className="text-center text-gray-400 font-arabic py-12">جاري التحميل...</div>
+        <div className="text-center text-gray-400 dark:text-gray-500 font-arabic py-12">جاري التحميل...</div>
       ) : submissions.length === 0 ? (
         <EmptyState
           icon={AlertCircle}
@@ -199,7 +242,8 @@ export default function Submissions() {
           description="لا توجد إرسالات في الفترة المحددة — جرّب تغيير عوامل التصفية أو أنشئ إرسالاً جديداً"
           action={
             <Link to="/submit"
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic">
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white
+                         text-sm font-medium px-4 py-2 rounded-xl transition-colors font-arabic">
               <Send size={15} /> إرسال جديد
             </Link>
           }

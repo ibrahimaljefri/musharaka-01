@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gold vertical gradient for main M -->
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <!-- Slightly lighter gold for underline -->
+    <linearGradient id="goldGradLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="50%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+
+  <g id="icon">
+    <!-- Dark squircle background -->
+    <rect x="0" y="0" width="512" height="512" rx="110" ry="110" fill="#0F172A"/>
+
+    <!--
+      M construction — explicit polygon coordinates
+      Canvas: 512×512. M spans roughly 320×280px, centered.
+      Left edge X: 96, Right edge X: 416 (width 320)
+      Top Y: 116, Bottom Y: 396 (height 280)
+      Center V dip Y: 116 + 280*0.60 = 116 + 168 = 284
+
+      The M has 10 points (5 per side, mirrored):
+      Bottom-left foot (chamfered):
+        outer-bottom-left:  (96, 396)
+        inner-bottom-left:  (96+22, 396) = (118, 396)
+        chamfer-up-left:    (118, 374)   — angled cut
+      Left leg up to top-left:
+        top-left-inner:     (118, 116)
+        (with slight overhang for stroke)
+
+      Actually let me define the full M as a single path with 12 vertices:
+
+      Starting bottom-left, going clockwise:
+      1.  (96,  390)   — outer bottom-left
+      2.  (118, 396)   — bottom foot inner corner (chamfer)
+      3.  (134, 376)   — foot top inner
+      4.  (134, 170)   — left leg inner, going up
+      5.  (256, 284)   — center V bottom
+      6.  (378, 170)   — right leg inner going down from top
+      7.  (378, 376)   — foot top inner right
+      8.  (394, 396)   — bottom foot inner corner right (chamfer)
+      9.  (416, 390)   — outer bottom-right
+      10. (416, 116)   — top-right outer
+      11. (392, 116)   — top-right inner
+      12. (392, 340)   — right leg inner going back down
+      13. (256, 224)   — center V top (creates the inner V)
+      14. (120, 340)   — left leg inner going back down
+      15. (120, 116)   — top-left inner
+      16. (96,  116)   — top-left outer
+
+      Hmm, let me reconsider — a solid M shape.
+
+      The M letterform as a solid filled polygon:
+      Going clockwise from top-left outer:
+
+      Outer contour (the visible edge):
+      TL_out = (96, 116)
+      TR_out = (416, 116)
+      — right leg goes down to bottom-right with chamfered foot
+      BR_outer = (416, 390)
+      BR_chamfer = (394, 396)   chamfer bottom-right
+      BR_foot_in = (378, 376)   foot inner top
+      — right leg comes up to center V
+      V_right = (378, 170)      right leg upper
+      V_bottom = (256, 284)     center dip
+      V_left = (134, 170)       left leg upper
+      — left leg goes down to bottom-left with chamfered foot
+      BL_foot_in = (134, 376)   foot inner top
+      BL_chamfer = (118, 396)   chamfer bottom-left
+      BL_outer = (96, 390)      outer bottom-left
+
+      Inner cutout (the two inner triangles carved from top):
+      — inner top edge runs from (120, 130) to (392, 130)
+      — left inner diagonal from (120, 130) down to V_bottom (256, 284), then right diagonal to (392, 130)
+      — BUT the legs have width, so inner left leg: from (120, 130) down to ~(175, 130) ...
+
+      This is getting complex. Let me use a simpler solid M polygon approach:
+      A solid M with the inner V carved as a separate white-fill shape on top,
+      OR just define the M as a simple thick-stroke path.
+
+      SIMPLEST SOLID M: define as one filled polygon with a hole using SVG fill-rule evenodd.
+
+      Outer M polygon (12 pts, clockwise):
+        96,116  →  416,116  →  416,390  →  394,396  →  378,376  →  378,200  →  256,310  →  134,200  →  134,376  →  118,396  →  96,390  →  96,116
+
+      Inner cutout (hole, counter-clockwise — the V notch from top):
+        120,130  →  120,360  →  134,376  ... no, inner legs need thickness
+
+      Let me just do: outer M fill with no cutout, making a chunky solid M.
+      Width of each leg: ~38px
+      Outer left leg: x=96..134
+      Outer right leg: x=378..416
+
+      Actually the cleanest approach: define the M as a single closed polygon
+      with the inner V carved out using evenodd, two separate polygons.
+
+      POLYGON 1 — Outer M shell (solid, no inner V hole):
+      Points:
+        (96, 116)   top-left outer
+        (416, 116)  top-right outer
+        (416, 390)  bottom-right outer
+        (394, 396)  chamfer BR
+        (378, 375)  foot inner BR
+        (378, 130)  right leg inner top  [thickness=38]
+        (297, 284)  right side of inner V  [V is ~80px wide]
+        (215, 284)  left side of inner V
+        (134, 130)  left leg inner top  [thickness=38]
+        (134, 375)  foot inner BL
+        (118, 396)  chamfer BL
+        (96, 390)   bottom-left outer
+
+      POLYGON 2 — Inner V cutout (applied with fill=bg color):
+      This needs to fill the triangular area between legs.
+      Points:
+        (134, 130)
+        (215, 284)   left V side meets center
+        (297, 284)   right V side meets center
+        (378, 130)
+        → closes back
+
+      Wait — the inner V shape creates a NOTCH from top into the M.
+      For a clean M letter:
+      - Two outer legs on left and right
+      - Connected at top
+      - Center V dips down
+
+      So the M SOLID polygon with inner notch using evenodd:
+
+      Outer path (CW): full M outline
+      Inner path (CCW): the inner V triangle/trapezoid
+
+      Outer M (clockwise):
+      96,116 → 416,116 → 416,390 → 394,396 → 378,375 → 378,130 → 256,284 → 134,130 → 134,375 → 118,396 → 96,390 → close
+
+      Inner V notch (CCW, to create hole):
+      134,130 → 256,284 → 378,130 → close
+
+      But wait — the inner V notch triangles overlap with the M body — that IS the M shape.
+      The inner V hole should start from the TOP of the M (y=116), not from the leg tops.
+
+      Correct M logic:
+      - At the top, there's a central V notch that goes DOWN
+      - The notch bottom is at ~y=284 (60% of height)
+      - Left inner leg goes from top-left-inner (134, 116) down diagonally to V bottom (256, 284)
+      - Right inner leg from top-right-inner (378, 116) down diagonally to V bottom (256, 284)
+
+      M polygon OUTER boundary (CW):
+      (96, 116)   TL outer
+      (416, 116)  TR outer
+      (416, 390)  BR outer
+      (394, 396)  BR chamfer
+      (378, 375)  BR foot inner top
+      (378, 116)  right leg inner top (connected at top, no notch yet)
+      (256, 284)  V center bottom
+      (134, 116)  left leg inner top
+      (134, 375)  BL foot inner top
+      (118, 396)  BL chamfer
+      (96, 390)   BL outer
+
+      This forms a complete solid M with no extra holes needed!
+      The inner V is naturally formed by the diagonal lines 378,116 → 256,284 → 134,116.
+
+      Final coordinate check:
+      - M spans x: 96 to 416 (320px wide) ✓
+      - M spans y: 116 to 396 (280px tall) ✓
+      - Center in 512×512: center at 256, left-right symmetric ✓
+      - V dip: y=284, which is 116 + 168 = 116 + 60%×280 ✓
+      - Foot chamfer: legs end at y=375 then step to y=396 with x shift of 16px ✓
+      - Leg width: 134-96=38px ✓
+    -->
+
+    <!-- Main M — solid gold polygon -->
+    <polygon
+      points="96,116 416,116 416,390 394,396 378,375 378,116 256,284 134,116 134,375 118,396 96,390"
+      fill="url(#goldGrad)"
+    />
+
+    <!-- Gold underline / foundation bar -->
+    <rect x="96" y="408" width="320" height="10" rx="3" ry="3" fill="url(#goldGradLine)"/>
+
+    <!-- Hidden growth arrow / chevron inside the V — subtle lighter gold -->
+    <!-- Small upward triangle centered in the V notch area -->
+    <!-- V bottom is at 256,284; V sides at ~134,116 and ~378,116 -->
+    <!-- Triangle: apex at 256,190, base corners at 220,260 and 292,260 -->
+    <polygon
+      points="256,182 220,262 292,262"
+      fill="#FBBF24"
+      opacity="0.60"
+    />
+
+    <!-- Catch-light: 1px white inset highlight on top edges of M -->
+    <!-- Top edge: horizontal line across the top of the M -->
+    <!-- And the two diagonal inner V edges, simulating 3D top-face highlight -->
+    <polyline
+      points="98,118 414,118"
+      fill="none"
+      stroke="white"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      opacity="0.15"
+    />
+    <!-- Left diagonal top edge highlight (outer top-left to V bottom) -->
+    <polyline
+      points="98,118 136,118 256,286"
+      fill="none"
+      stroke="white"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity="0.15"
+    />
+    <!-- Right diagonal top edge highlight -->
+    <polyline
+      points="376,118 414,118 414,388"
+      fill="none"
+      stroke="white"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity="0.15"
+    />
+  </g>
+</svg>

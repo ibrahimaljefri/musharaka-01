@@ -9,6 +9,7 @@ import {
   ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy, BookOpen,
   Sun, Moon
 } from 'lucide-react'
+import LogoMark from '../components/LogoMark'
 
 const navItems = [
   { to: '/dashboard',    label: 'لوحة التحكم',    icon: LayoutDashboard },
@@ -111,9 +112,7 @@ export default function AppLayout() {
           title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
           className={`flex items-center border-b border-yellow-100 dark:border-yellow-900/30 h-14 w-full hover:bg-yellow-50/60 dark:hover:bg-yellow-900/10 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
         >
-          <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">م</span>
-          </div>
+          <LogoMark size={32} id="sidebar" />
           {!collapsed && (
             <div className="flex-1 text-right">
               <div className="text-base font-bold text-yellow-700 font-arabic leading-tight">مشاركة</div>
@@ -203,10 +202,13 @@ export default function AppLayout() {
         <div className="lg:hidden fixed inset-0 z-40 flex" dir="rtl">
           <div className="fixed inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
           <aside className="relative flex flex-col w-64 bg-white dark:bg-gray-950 h-full mr-auto z-50 shadow-xl">
-            <div className="flex items-center justify-between px-5 border-b border-yellow-100 h-14">
-              <div>
-                <div className="text-lg font-bold text-yellow-700 font-arabic">مشاركة</div>
-                <div className="text-xs text-gray-400 font-arabic">نظام إدارة المبيعات</div>
+            <div className="flex items-center justify-between px-5 border-b border-yellow-100 dark:border-yellow-900/30 h-14">
+              <div className="flex items-center gap-3">
+                <LogoMark size={32} id="mobile" />
+                <div>
+                  <div className="text-base font-bold text-yellow-700 dark:text-yellow-500 font-arabic leading-tight">مشاركة</div>
+                  <div className="text-xs text-gray-400 font-arabic">نظام إدارة المبيعات</div>
+                </div>
               </div>
               <button onClick={() => setMobileOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
@@ -285,13 +287,6 @@ export default function AppLayout() {
               {dark ? <Sun size={14} /> : <Moon size={14} />}
             </button>
 
-            <div className="flex items-center gap-1.5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic hidden md:inline">متصل بسينومي</span>
-            </div>
           </div>
         </header>
 

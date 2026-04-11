@@ -1,0 +1,109 @@
+<svg viewBox="0 0 1024 400" xmlns="http://www.w3.org/2000/svg" xml:lang="ar">
+  <defs>
+    <!-- Gold gradient for icon letterform -->
+    <linearGradient id="c5_g1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <!-- Gold gradient for Arabic wordmark -->
+    <linearGradient id="c5_g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="60%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="400" fill="#0F172A"/>
+
+  <!-- ═══════════════════════════════ -->
+  <!-- ICON GROUP (right side, RTL)   -->
+  <!-- ═══════════════════════════════ -->
+  <g id="icon">
+    <!-- Squircle container -->
+    <rect x="774" y="90" width="220" height="220" rx="44" ry="44" fill="#1E293B"/>
+
+    <!--
+      "م" (meem) letterform — constructed as SVG paths:
+      - Open bowl: 3/4 arc at bottom, like a horseshoe open at top-right
+      - Horizontal bridge connecting left side
+      - Upward stem from right side of bridge
+      - Terminal dot below the bowl opening
+      Centered in the squircle: center = (884, 200)
+    -->
+
+    <!-- Bowl: large open arc, 3/4 circle, open at top-right -->
+    <!-- Arc center: (884, 215), radius 62 -->
+    <!-- From angle ~330° (top-right opening start) going counterclockwise 270° -->
+    <path
+      d="M 884,153
+         A 62,62 0 1 0 946,215"
+      fill="none"
+      stroke="url(#c5_g1)"
+      stroke-width="17"
+      stroke-linecap="round"
+    />
+
+    <!-- Horizontal bridge: from right arc terminus across to the stem -->
+    <!-- Bridge sits at y=215, from x=946 leftward to x=884 -->
+    <line
+      x1="946" y1="215"
+      x2="884" y2="215"
+      stroke="url(#c5_g1)"
+      stroke-width="17"
+      stroke-linecap="round"
+    />
+
+    <!-- Upward stem: from bridge midpoint (884, 215) up to (884, 163) with a rounded top -->
+    <line
+      x1="884" y1="215"
+      x2="884" y2="165"
+      stroke="url(#c5_g1)"
+      stroke-width="17"
+      stroke-linecap="round"
+    />
+
+    <!-- Terminal dot below the bowl opening at bottom-right -->
+    <circle cx="946" cy="248" r="9" fill="url(#c5_g1)"/>
+  </g>
+
+  <!-- Thin vertical separator line -->
+  <line
+    x1="745" y1="60"
+    x2="745" y2="340"
+    stroke="#F59E0B"
+    stroke-width="1.5"
+    opacity="0.3"
+  />
+
+  <!-- ════════════════════════════════════ -->
+  <!-- WORDMARK GROUP (left side, RTL)     -->
+  <!-- ════════════════════════════════════ -->
+  <g id="wordmark">
+    <!-- Arabic: مشاركة — bold, large, right-aligned, gold gradient -->
+    <!-- Positioned so right edge aligns near x=710 -->
+    <text
+      x="710"
+      y="230"
+      text-anchor="end"
+      font-family="Cairo, 'Segoe UI', Tahoma, Arial, sans-serif"
+      font-size="118"
+      font-weight="700"
+      fill="url(#c5_g2)"
+      direction="rtl"
+    >مشاركة</text>
+
+    <!-- English: MOSHARKATECH — medium, right-aligned, cool gray, spaced -->
+    <text
+      x="710"
+      y="288"
+      text-anchor="end"
+      font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+      font-size="36"
+      font-weight="500"
+      fill="#94A3B8"
+      letter-spacing="6"
+    >MOSHARKATECH</text>
+  </g>
+</svg>

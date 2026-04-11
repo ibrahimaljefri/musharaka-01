@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gold gradient for the letterforms -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <!-- Gold gradient for stroke (same, referenced separately for clarity) -->
+    <linearGradient id="goldGradStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <!-- Radial glow behind letterforms -->
+    <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Clip to squircle shape -->
+    <clipPath id="squircleClip">
+      <rect width="512" height="512" rx="110" ry="110"/>
+    </clipPath>
+  </defs>
+
+  <g id="icon">
+    <!-- Squircle background -->
+    <rect width="512" height="512" rx="110" ry="110" fill="#0F172A"/>
+
+    <!-- Subtle inner border -->
+    <rect width="512" height="512" rx="110" ry="110"
+          fill="none"
+          stroke="#FBBF24"
+          stroke-width="1.5"
+          stroke-opacity="0.4"/>
+
+    <!-- Radial glow behind letterforms -->
+    <ellipse cx="256" cy="256" rx="180" ry="160" fill="url(#glowGrad)"/>
+
+    <!--
+      "a" FORM (left):
+      A teardrop/rounded shape — essentially a circle with a vertical descending stroke on its right side.
+      Circle center ~(188, 248), radius ~72
+      The vertical stroke runs from the top-right of the circle down to the baseline.
+
+      Constructed as a closed path:
+      - Circle arc from ~(188,176) going around (almost full circle, open at bottom-right)
+      - A straight vertical stroke descending on the right
+    -->
+    <g id="letter-a">
+      <!--
+        "a" letterform: a near-complete circle with a right-side vertical stem.
+        The circle is centered at (185, 245), r=72.
+        The stem starts at the rightmost point of the circle and drops straight down.
+
+        Path breakdown:
+        - Start at (185, 173) — top of circle
+        - Arc clockwise around to (257, 245) — rightmost point
+        - Continue arc down to (185, 317) — bottom of circle
+        - Arc continues (most of the way) to close near the top,
+          but leave a gap on the upper-right so we can attach the vertical stem.
+
+        Actually, for a classic "a":
+        - Full circle (donut shape) + a right-side stem from the right-midpoint going down
+
+        Let me build it as two stroked paths for clarity:
+      -->
+      <!-- Circle part of "a" — full closed circle, stroked -->
+      <circle cx="185" cy="245" r="72"
+              fill="none"
+              stroke="url(#goldGrad)"
+              stroke-width="26"
+              stroke-linecap="round"/>
+      <!-- Vertical stem on the right of "a" — from top-right of circle down to baseline -->
+      <line x1="257" y1="183"
+            x2="257" y2="317"
+            stroke="url(#goldGrad)"
+            stroke-width="26"
+            stroke-linecap="round"/>
+    </g>
+
+    <!--
+      "c" FORM (right):
+      A large open arc — ~270° of a circle, open on the right side.
+      Circle center ~(295, 248), r~88
+      Arc goes from about 40° (upper-right gap) clockwise around through bottom
+      and up to about 320° (lower-right gap).
+
+      Using SVG arc:
+      Start point: center + r * (cos(40°), sin(40°))
+        = (295 + 88*0.766, 248 - 88*0.643)
+        = (295 + 67.4, 248 - 56.6)
+        = (362.4, 191.4) ≈ (362, 191)
+
+      End point: center + r * (cos(-40°), sin(-40°))
+        = (295 + 88*0.766, 248 + 88*0.643)
+        = (362.4, 304.6) ≈ (362, 305)
+
+      Arc is large (270°), so large-arc-flag = 1, sweep counterclockwise = 0
+      (going from top-right, counterclockwise around the left side, to bottom-right)
+    -->
+    <g id="letter-c">
+      <path d="M 362,191 A 88,88 0 1 0 362,305"
+            fill="none"
+            stroke="url(#goldGrad)"
+            stroke-width="26"
+            stroke-linecap="round"/>
+    </g>
+
+  </g>
+</svg>

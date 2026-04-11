@@ -1,0 +1,287 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 600">
+  <defs>
+    <!-- Gold linear gradient 135deg -->
+    <linearGradient id="i3_gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FFFDE7"/>
+      <stop offset="15%"  stop-color="#FDE68A"/>
+      <stop offset="45%"  stop-color="#F59E0B"/>
+      <stop offset="75%"  stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Gold vertical gradient -->
+    <linearGradient id="i3_goldV" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#FFF8E1"/>
+      <stop offset="30%"  stop-color="#FBBF24"/>
+      <stop offset="60%"  stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Main ambient glow radial -->
+    <radialGradient id="i3_glow1" cx="48%" cy="42%" r="48%">
+      <stop offset="0%"   stop-color="rgba(253,230,138,0.22)"/>
+      <stop offset="100%" stop-color="rgba(253,230,138,0)"/>
+    </radialGradient>
+
+    <!-- Secondary glow near text -->
+    <radialGradient id="i3_glow2" cx="60%" cy="70%" r="30%">
+      <stop offset="0%"   stop-color="rgba(245,158,11,0.12)"/>
+      <stop offset="100%" stop-color="rgba(245,158,11,0)"/>
+    </radialGradient>
+
+    <!-- Shadow gradient for wave 3 fill -->
+    <linearGradient id="i3_shadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#78350F"/>
+      <stop offset="100%" stop-color="#451A03"/>
+    </linearGradient>
+
+    <!-- Globe clip circle -->
+    <clipPath id="i3_globeClip">
+      <circle cx="200" cy="108" r="50"/>
+    </clipPath>
+  </defs>
+
+  <!-- ============================================ -->
+  <!-- BACKGROUND                                   -->
+  <!-- ============================================ -->
+  <rect width="580" height="600" fill="#0F1520"/>
+
+  <!-- ============================================ -->
+  <!-- AMBIENT GLOW ELLIPSES (behind everything)   -->
+  <!-- ============================================ -->
+  <ellipse cx="290" cy="278" rx="240" ry="210" fill="url(#i3_glow1)"/>
+  <ellipse cx="310" cy="490" rx="180" ry="80"  fill="url(#i3_glow2)"/>
+
+  <!-- ============================================ -->
+  <!-- LIGHT STREAK LINES from globe area          -->
+  <!-- ============================================ -->
+  <line x1="218" y1="70"  x2="310" y2="148" stroke="#FDE68A" stroke-width="0.6" opacity="0.35"/>
+  <line x1="205" y1="62"  x2="260" y2="168" stroke="#FDE68A" stroke-width="0.6" opacity="0.20"/>
+  <line x1="230" y1="68"  x2="360" y2="128" stroke="#FDE68A" stroke-width="0.6" opacity="0.28"/>
+
+  <!-- ============================================ -->
+  <!-- SPARKLE PARTICLES near globe                -->
+  <!-- ============================================ -->
+  <circle cx="172" cy="68"  r="1.8" fill="#FDE68A" opacity="0.70"/>
+  <circle cx="246" cy="58"  r="2.8" fill="#FDE68A" opacity="0.55"/>
+  <circle cx="256" cy="75"  r="1.5" fill="#FDE68A" opacity="0.40"/>
+  <circle cx="166" cy="88"  r="3.2" fill="#FBBF24" opacity="0.45"/>
+  <circle cx="240" cy="148" r="2.0" fill="#FDE68A" opacity="0.35"/>
+  <circle cx="158" cy="130" r="1.5" fill="#FDE68A" opacity="0.30"/>
+
+  <!-- ============================================ -->
+  <!-- MAIN ARC — Large "C"                        -->
+  <!-- Metallic Layer A — outer shadow             -->
+  <!-- ============================================ -->
+  <path d="M 450,178 A 198,198 0 1,1 458,368"
+        fill="none"
+        stroke="#6B2200"
+        stroke-width="38"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.4"/>
+  <!-- Layer B — main gold -->
+  <path d="M 450,178 A 198,198 0 1,1 458,368"
+        fill="none"
+        stroke="url(#i3_gold)"
+        stroke-width="26"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="1"/>
+  <!-- Layer C — edge highlight -->
+  <path d="M 450,178 A 198,198 0 1,1 458,368"
+        fill="none"
+        stroke="#FFFDE7"
+        stroke-width="6.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.6"/>
+
+  <!-- ============================================ -->
+  <!-- WAVE 1 — top, smallest                      -->
+  <!-- ============================================ -->
+  <!-- Layer A shadow -->
+  <path d="M 152,230 C 185,195 220,200 268,218 C 316,236 348,228 382,242"
+        fill="none"
+        stroke="#6B2200"
+        stroke-width="27"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.4"/>
+  <!-- Layer B gold -->
+  <path d="M 152,230 C 185,195 220,200 268,218 C 316,236 348,228 382,242"
+        fill="none"
+        stroke="url(#i3_gold)"
+        stroke-width="15"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="1"/>
+  <!-- Layer C highlight -->
+  <path d="M 152,230 C 185,195 220,200 268,218 C 316,236 348,228 382,242"
+        fill="none"
+        stroke="#FFFDE7"
+        stroke-width="3.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.6"/>
+
+  <!-- ============================================ -->
+  <!-- WAVE 2 — middle                             -->
+  <!-- ============================================ -->
+  <!-- Layer A shadow -->
+  <path d="M 140,278 C 178,246 216,254 264,269 C 313,284 348,275 385,289"
+        fill="none"
+        stroke="#6B2200"
+        stroke-width="31"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.4"/>
+  <!-- Layer B gold -->
+  <path d="M 140,278 C 178,246 216,254 264,269 C 313,284 348,275 385,289"
+        fill="none"
+        stroke="url(#i3_gold)"
+        stroke-width="19"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="1"/>
+  <!-- Layer C highlight -->
+  <path d="M 140,278 C 178,246 216,254 264,269 C 313,284 348,275 385,289"
+        fill="none"
+        stroke="#FFFDE7"
+        stroke-width="4.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.6"/>
+
+  <!-- ============================================ -->
+  <!-- WAVE 3 — "a" body, most organic             -->
+  <!-- Fill shadow first -->
+  <!-- ============================================ -->
+  <path d="M 148,332 C 188,300 224,312 266,322 C 308,332 344,320 383,326 L 385,350 C 355,370 316,378 270,376 C 225,374 190,365 155,350 Z"
+        fill="url(#i3_shadow)"
+        opacity="0.25"/>
+  <!-- Layer A shadow on open sweep -->
+  <path d="M 148,332 C 188,300 224,312 266,322 C 308,332 344,320 383,326"
+        fill="none"
+        stroke="#6B2200"
+        stroke-width="34"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.4"/>
+  <!-- Layer B gold on open sweep -->
+  <path d="M 148,332 C 188,300 224,312 266,322 C 308,332 344,320 383,326"
+        fill="none"
+        stroke="url(#i3_gold)"
+        stroke-width="22"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="1"/>
+  <!-- Layer C highlight on open sweep -->
+  <path d="M 148,332 C 188,300 224,312 266,322 C 308,332 344,320 383,326"
+        fill="none"
+        stroke="#FFFDE7"
+        stroke-width="5.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.6"/>
+
+  <!-- ============================================ -->
+  <!-- GLOBE at upper terminus (~200, 108)          -->
+  <!-- ============================================ -->
+
+  <!-- Globe base circle — shadow -->
+  <circle cx="200" cy="108" r="50"
+          fill="none"
+          stroke="#6B2200"
+          stroke-width="4"
+          opacity="0.5"/>
+  <!-- Globe base circle — gold -->
+  <circle cx="200" cy="108" r="50"
+          fill="none"
+          stroke="url(#i3_gold)"
+          stroke-width="1.8"
+          opacity="1"/>
+
+  <!-- Latitude lines clipped to globe -->
+  <g clip-path="url(#i3_globeClip)">
+    <!-- Top latitude ellipse -->
+    <ellipse cx="200" cy="93" rx="50" ry="10"
+             fill="none"
+             stroke="url(#i3_gold)"
+             stroke-width="1.3"
+             opacity="0.9"/>
+    <!-- Equator-ish ellipse -->
+    <ellipse cx="200" cy="108" rx="50" ry="18"
+             fill="none"
+             stroke="url(#i3_gold)"
+             stroke-width="1.3"
+             opacity="0.9"/>
+    <!-- Lower latitude ellipse -->
+    <ellipse cx="200" cy="123" rx="50" ry="10"
+             fill="none"
+             stroke="url(#i3_gold)"
+             stroke-width="1.3"
+             opacity="0.9"/>
+
+    <!-- Longitude lines — rotated ellipses around globe center -->
+    <ellipse cx="200" cy="108" rx="14" ry="50"
+             fill="none"
+             stroke="url(#i3_gold)"
+             stroke-width="1.3"
+             opacity="0.9"
+             transform="rotate(-40 200 108)"/>
+    <ellipse cx="200" cy="108" rx="14" ry="50"
+             fill="none"
+             stroke="url(#i3_gold)"
+             stroke-width="1.3"
+             opacity="0.9"
+             transform="rotate(0 200 108)"/>
+    <ellipse cx="200" cy="108" rx="14" ry="50"
+             fill="none"
+             stroke="url(#i3_gold)"
+             stroke-width="1.3"
+             opacity="0.9"
+             transform="rotate(40 200 108)"/>
+  </g>
+
+  <!-- Node dots at grid intersections -->
+  <!-- Equator intersections with longitudes -->
+  <circle cx="186" cy="110" r="3" fill="#FBBF24"/>
+  <circle cx="200" cy="90"  r="3" fill="#FBBF24"/>
+  <circle cx="214" cy="110" r="3" fill="#FBBF24"/>
+  <circle cx="200" cy="126" r="3" fill="#FBBF24"/>
+  <!-- Side latitude intersections -->
+  <circle cx="178" cy="95"  r="2.5" fill="#FBBF24"/>
+  <circle cx="222" cy="95"  r="2.5" fill="#FBBF24"/>
+  <circle cx="178" cy="121" r="2.5" fill="#FBBF24"/>
+  <circle cx="222" cy="121" r="2.5" fill="#FBBF24"/>
+
+  <!-- Glowing apex node -->
+  <circle cx="200" cy="58" r="7" fill="#FFF8E1" opacity="0.4"/>
+  <circle cx="200" cy="58" r="5" fill="#FFF8E1" opacity="1"/>
+
+  <!-- Radiating lines from apex -->
+  <line x1="200" y1="58" x2="200" y2="46"  stroke="#FBBF24" stroke-width="0.8" opacity="0.9"/>
+  <line x1="200" y1="58" x2="208" y2="48"  stroke="#FBBF24" stroke-width="0.8" opacity="0.9"/>
+  <line x1="200" y1="58" x2="192" y2="48"  stroke="#FBBF24" stroke-width="0.8" opacity="0.9"/>
+  <line x1="200" y1="58" x2="212" y2="52"  stroke="#FBBF24" stroke-width="0.8" opacity="0.7"/>
+
+  <!-- ============================================ -->
+  <!-- WORDMARK                                    -->
+  <!-- ============================================ -->
+  <text x="290" y="548" text-anchor="middle" dominant-baseline="auto">
+    <tspan
+      font-family="'Arial Black', 'Arial Bold', Helvetica, sans-serif"
+      font-size="36"
+      font-weight="900"
+      fill="url(#i3_goldV)"
+      letter-spacing="3">MOSHARKA</tspan><tspan
+      font-family="'Arial Black', Arial, Helvetica, sans-serif"
+      font-size="36"
+      font-weight="400"
+      fill="url(#i3_goldV)"
+      letter-spacing="3"
+      opacity="0.75">TECH</tspan>
+  </text>
+
+</svg>

@@ -1,0 +1,234 @@
+<svg viewBox="0 0 600 620" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+
+    <!-- Vertical metallic gold gradient -->
+    <linearGradient id="i2_gA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#FFFBEB"/>
+      <stop offset="20%"  stop-color="#FDE68A"/>
+      <stop offset="55%"  stop-color="#F59E0B"/>
+      <stop offset="80%"  stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Horizontal metallic gold gradient -->
+    <linearGradient id="i2_gB" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#FFFBEB"/>
+      <stop offset="20%"  stop-color="#FDE68A"/>
+      <stop offset="55%"  stop-color="#F59E0B"/>
+      <stop offset="80%"  stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Ambient glow radial gradient -->
+    <radialGradient id="i2_gGlow" cx="50%" cy="45%" r="50%">
+      <stop offset="0%"   stop-color="rgba(251,191,36,0.30)"/>
+      <stop offset="60%"  stop-color="rgba(245,158,11,0.08)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+
+    <!-- Arc highlight gradient -->
+    <linearGradient id="i2_gArcHL" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%"   stop-color="#FFF8E1" stop-opacity="1"/>
+      <stop offset="50%"  stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+
+    <!-- Clip for globe sphere -->
+    <clipPath id="i2_globeClip">
+      <circle cx="205" cy="115" r="52"/>
+    </clipPath>
+
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 1: Background                                         -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="background">
+    <rect width="600" height="620" fill="#161C29"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 2: Ambient glow ellipse                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="glow">
+    <ellipse cx="300" cy="275" rx="240" ry="220" fill="url(#i2_gGlow)"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 3: Light streaks (diagonal, from globe outward)       -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="light-streaks" opacity="0.25">
+    <line x1="205" y1="115" x2="85"  y2="38"  stroke="#FBBF24" stroke-width="0.7"/>
+    <line x1="205" y1="115" x2="340" y2="52"  stroke="#FBBF24" stroke-width="0.7"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 4: Outer "C" arc — 3-layer metallic                   -->
+  <!-- Center (300,285), R=205                                     -->
+  <!-- Start: (300+205*cos25°, 285-205*sin25°) ≈ (486, 198)       -->
+  <!-- End:   (300+205*cos340°, 285-205*sin340°) ≈ (493, 355)     -->
+  <!-- Large arc (flag=1), counter-clockwise sweep (sweep=0)       -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="outer-arc">
+    <!-- Shadow layer -->
+    <path d="M 486,198 A 205,205 0 1,0 493,355"
+          fill="none"
+          stroke="#7C2D12"
+          stroke-width="34"
+          stroke-linecap="round"
+          opacity="0.45"/>
+    <!-- Main gold layer -->
+    <path d="M 486,198 A 205,205 0 1,0 493,355"
+          fill="none"
+          stroke="url(#i2_gA)"
+          stroke-width="24"
+          stroke-linecap="round"
+          opacity="1"/>
+    <!-- Catchlight highlight layer -->
+    <path d="M 486,198 A 205,205 0 1,0 493,355"
+          fill="none"
+          stroke="#FFFDE7"
+          stroke-width="8.4"
+          stroke-linecap="round"
+          opacity="0.55"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 5: Globe at upper terminus (~205, 115)                -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="globe">
+
+    <!-- Outer circle -->
+    <circle cx="205" cy="115" r="52"
+            fill="none"
+            stroke="url(#i2_gA)"
+            stroke-width="1.5"
+            opacity="0.85"/>
+
+    <!-- Longitude arcs (3 vertical ellipses, clipped to sphere) -->
+    <g clip-path="url(#i2_globeClip)" fill="none" stroke="url(#i2_gA)" stroke-width="1.2" opacity="0.85">
+      <!-- Center longitude (0°) -->
+      <ellipse cx="205" cy="115" rx="20" ry="52"/>
+      <!-- Right longitude (+35°) -->
+      <ellipse cx="205" cy="115" rx="20" ry="52" transform="rotate(35, 205, 115)"/>
+      <!-- Left longitude (−35°) -->
+      <ellipse cx="205" cy="115" rx="20" ry="52" transform="rotate(-35, 205, 115)"/>
+    </g>
+
+    <!-- Latitude ellipses (3 horizontal, clipped) -->
+    <g clip-path="url(#i2_globeClip)" fill="none" stroke="url(#i2_gA)" stroke-width="1.2" opacity="0.85">
+      <!-- Upper latitude -->
+      <ellipse cx="205" cy="103" rx="52" ry="14"/>
+      <!-- Equator -->
+      <ellipse cx="205" cy="115" rx="52" ry="22"/>
+      <!-- Lower latitude -->
+      <ellipse cx="205" cy="127" rx="52" ry="14"/>
+    </g>
+
+    <!-- Intersection node dots -->
+    <circle cx="205" cy="63"  r="2.5" fill="#FBBF24"/>
+    <circle cx="205" cy="167" r="2.5" fill="#FBBF24"/>
+    <circle cx="153" cy="115" r="2.5" fill="#FBBF24"/>
+    <circle cx="257" cy="115" r="2.5" fill="#FBBF24"/>
+    <circle cx="169" cy="89"  r="2.5" fill="#FBBF24"/>
+    <circle cx="241" cy="89"  r="2.5" fill="#FBBF24"/>
+    <circle cx="169" cy="141" r="2.5" fill="#FBBF24"/>
+    <circle cx="241" cy="141" r="2.5" fill="#FBBF24"/>
+    <circle cx="205" cy="93"  r="2.5" fill="#FBBF24"/>
+    <circle cx="205" cy="137" r="2.5" fill="#FBBF24"/>
+
+    <!-- Connection dot where globe meets the C arc terminus -->
+    <circle cx="486" cy="198" r="8" fill="#FBBF24" opacity="0.9"/>
+
+    <!-- Small filled cap at globe top -->
+    <circle cx="205" cy="63" r="5" fill="#FBBF24" opacity="0.85"/>
+
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 6: 3 Wave strokes forming "a" — each 3-layer metallic -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="waves">
+
+    <!-- Wave 1 (uppermost, thinner) W=16 -->
+    <g id="wave-1">
+      <path d="M 168,238 C 210,208 240,214 278,228 C 318,242 345,236 375,248"
+            fill="none" stroke="#7C2D12" stroke-width="26" stroke-linecap="round" opacity="0.45"/>
+      <path d="M 168,238 C 210,208 240,214 278,228 C 318,242 345,236 375,248"
+            fill="none" stroke="url(#i2_gA)" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 168,238 C 210,208 240,214 278,228 C 318,242 345,236 375,248"
+            fill="none" stroke="#FFFDE7" stroke-width="5.6" stroke-linecap="round" opacity="0.55"/>
+    </g>
+
+    <!-- Wave 2 (middle) W=19 -->
+    <g id="wave-2">
+      <path d="M 155,285 C 200,258 232,266 272,278 C 312,290 342,283 378,294"
+            fill="none" stroke="#7C2D12" stroke-width="29" stroke-linecap="round" opacity="0.45"/>
+      <path d="M 155,285 C 200,258 232,266 272,278 C 312,290 342,283 378,294"
+            fill="none" stroke="url(#i2_gA)" stroke-width="19" stroke-linecap="round"/>
+      <path d="M 155,285 C 200,258 232,266 272,278 C 312,290 342,283 378,294"
+            fill="none" stroke="#FFFDE7" stroke-width="6.65" stroke-linecap="round" opacity="0.55"/>
+    </g>
+
+    <!-- Wave 3 (bottom, bowl + tail) -->
+    <g id="wave-3">
+      <!-- Closed fill for the bowl portion -->
+      <path d="M 160,338 C 205,310 238,320 278,330 C 318,340 345,328 376,334 L 376,356 C 345,372 315,378 278,375 C 240,372 206,364 168,352 Z"
+            fill="rgba(146,64,14,0.30)"
+            stroke="none"/>
+      <!-- Shadow layer — open top sweep only -->
+      <path d="M 160,338 C 205,310 238,320 278,330 C 318,340 345,328 376,334"
+            fill="none" stroke="#7C2D12" stroke-width="30" stroke-linecap="round" opacity="0.45"/>
+      <!-- Main gold — open top sweep -->
+      <path d="M 160,338 C 205,310 238,320 278,330 C 318,340 345,328 376,334"
+            fill="none" stroke="url(#i2_gA)" stroke-width="20" stroke-linecap="round"/>
+      <!-- Catchlight — open top sweep -->
+      <path d="M 160,338 C 205,310 238,320 278,330 C 318,340 345,328 376,334"
+            fill="none" stroke="#FFFDE7" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+      <!-- Closed outline (thin) -->
+      <path d="M 160,338 C 205,310 238,320 278,330 C 318,340 345,328 376,334 L 376,356 C 345,372 315,378 278,375 C 240,372 206,364 168,352 Z"
+            fill="none"
+            stroke="url(#i2_gA)"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0.7"/>
+    </g>
+
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 7: Sparkle / particle dots near globe area            -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="particles">
+    <circle cx="148" cy="72"  r="3.0" fill="#FBBF24" opacity="0.65"/>
+    <circle cx="270" cy="58"  r="2.0" fill="#FBBF24" opacity="0.50"/>
+    <circle cx="310" cy="88"  r="2.5" fill="#FBBF24" opacity="0.40"/>
+    <circle cx="130" cy="148" r="2.0" fill="#FBBF24" opacity="0.55"/>
+    <circle cx="235" cy="168" r="1.8" fill="#FBBF24" opacity="0.45"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 8: Wordmark divider line                              -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="divider">
+    <line x1="90" y1="495" x2="510" y2="495"
+          stroke="url(#i2_gB)"
+          stroke-width="0.8"
+          opacity="0.35"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- LAYER 9: Wordmark                                           -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <g id="wordmark">
+    <text x="300" y="558"
+          text-anchor="middle"
+          font-family="'Helvetica Neue', Arial, sans-serif"
+          font-size="38"
+          font-weight="800"
+          letter-spacing="5"
+          fill="url(#i2_gB)">MOSHARKATECH</text>
+  </g>
+
+</svg>
