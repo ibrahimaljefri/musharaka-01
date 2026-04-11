@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشاركة — عرض تقديمي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080E1A;
+  --gold:#F59E0B;
+  --gold-dark:#D97706;
+  --purple:#7C3AED;
+  --glass-bg:rgba(255,255,255,0.06);
+  --glass-border:rgba(255,255,255,0.12);
+  --glass-hover:rgba(255,255,255,0.10);
+  --text-primary:#fff;
+  --text-secondary:rgba(255,255,255,0.7);
+  --text-muted:rgba(255,255,255,0.45);
+  --dur:0.6s;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+html{scroll-behavior:auto;overflow:hidden;height:100%}
+body{
+  font-family:'Cairo',sans-serif;
+  background:var(--bg);
+  color:var(--text-primary);
+  overflow:hidden;
+  height:100%;
+  direction:rtl;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Progress bar */
+#progress{position:fixed;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--purple));z-index:1000;transition:width 0.4s var(--ease);width:5%}
+
+/* Slide counter */
+#counter{position:fixed;bottom:28px;left:36px;font-size:0.85rem;color:var(--text-muted);z-index:1000;font-variant-numeric:tabular-nums;letter-spacing:0.05em}
+
+/* Nav dots */
+#nav-dots{position:fixed;left:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:1000}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.3s}
+.nav-dot.active{background:var(--gold);box-shadow:0 0 8px rgba(245,158,11,0.5);transform:scale(1.3)}
+
+/* Slide container */
+#deck{position:relative;width:100%;height:100vh}
+.slide{
+  position:absolute;top:0;right:0;width:100%;height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 60px;
+  opacity:0;visibility:hidden;
+  transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);
+  transform:translateY(40px);
+  overflow:hidden;
+}
+.slide.active{opacity:1;visibility:visible;transform:translateY(0)}
+.slide.exit-up{opacity:0;transform:translateY(-40px)}
+
+/* Background glows */
+.slide::before{
+  content:'';position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(245,158,11,0.08) 0%,transparent 70%);
+  top:-10%;right:-10%;pointer-events:none;
+}
+.slide::after{
+  content:'';position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,58,237,0.06) 0%,transparent 70%);
+  bottom:-10%;left:-10%;pointer-events:none;
+}
+
+/* Glass card */
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:28px 32px;
+}
+.glass-sm{
+  background:var(--glass-bg);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  padding:20px 24px;
+}
+
+/* Typography */
+.slide-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--gold);margin-bottom:12px;line-height:1.3}
+.slide-subtitle{font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text-secondary);margin-bottom:32px;line-height:1.6;max-width:700px;text-align:center}
+
+/* Reveal children */
+.slide .reveal{
+  opacity:0;transform:translateY(24px);
+  transition:opacity 0.5s var(--ease),transform 0.5s var(--ease);
+}
+.slide.active .reveal{opacity:1;transform:translateY(0)}
+.slide.active .reveal:nth-child(2){transition-delay:0.1s}
+.slide.active .reveal:nth-child(3){transition-delay:0.18s}
+.slide.active .reveal:nth-child(4){transition-delay:0.26s}
+.slide.active .reveal:nth-child(5){transition-delay:0.34s}
+.slide.active .reveal:nth-child(6){transition-delay:0.4s}
+.slide.active .reveal:nth-child(7){transition-delay:0.46s}
+.slide.active .reveal:nth-child(8){transition-delay:0.52s}
+
+/* Gold orb */
+.orb{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#FBBF24,var(--gold),var(--gold-dark));
+  display:flex;align-items:center;justify-content:center;
+  font-size:3.2rem;font-weight:900;color:var(--bg);
+  box-shadow:0 0 60px rgba(245,158,11,0.3),0 0 120px rgba(245,158,11,0.1);
+  flex-shrink:0;
+}
+.orb-lg{width:160px;height:160px;font-size:4.5rem;box-shadow:0 0 80px rgba(245,158,11,0.35),0 0 160px rgba(245,158,11,0.12)}
+.orb-sm{width:56px;height:56px;font-size:1.6rem}
+
+/* Utility */
+.flex-row{display:flex;flex-direction:row;gap:24px;flex-wrap:wrap;justify-content:center;align-items:stretch}
+.flex-col{display:flex;flex-direction:column;gap:16px;align-items:center}
+.w-full{width:100%}
+.text-center{text-align:center}
+.text-gold{color:var(--gold)}
+.text-sec{color:var(--text-secondary)}
+.text-sm{font-size:0.9rem}
+.text-xs{font-size:0.78rem}
+.fw-700{font-weight:700}
+.fw-600{font-weight:600}
+.mt-8{margin-top:8px}
+.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}
+.gap-12{gap:12px}
+.gap-16{gap:16px}
+.gap-32{gap:32px}
+
+/* Grid helpers */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%;max-width:900px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;max-width:960px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;width:100%;max-width:800px}
+
+/* Checkmark */
+.check{color:var(--gold);margin-left:8px;font-weight:700}
+
+/* Step circle */
+.step-num{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:800;color:var(--bg);
+  flex-shrink:0;
+}
+
+/* Flow line */
+.flow-line{width:48px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);flex-shrink:0;align-self:center}
+
+/* CTA button */
+.cta{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  color:var(--bg);font-weight:700;font-size:1.1rem;
+  padding:14px 40px;border-radius:12px;border:none;cursor:pointer;
+  font-family:inherit;
+  box-shadow:0 4px 24px rgba(245,158,11,0.3);
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.cta:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(245,158,11,0.4)}
+
+/* Code block */
+.code-block{
+  background:rgba(0,0,0,0.4);
+  border:1px solid var(--glass-border);
+  border-radius:10px;
+  padding:18px 24px;
+  font-family:'Courier New',monospace;
+  font-size:0.85rem;
+  color:#a5f3fc;
+  direction:ltr;
+  text-align:left;
+  max-width:580px;
+  width:100%;
+  line-height:1.7;
+}
+
+/* Chat bubble */
+.chat-bubble{
+  background:rgba(255,255,255,0.08);
+  border:1px solid var(--glass-border);
+  border-radius:16px 16px 4px 16px;
+  padding:14px 20px;
+  max-width:340px;
+  font-size:0.95rem;
+  color:var(--text-primary);
+  line-height:1.6;
+}
+.chat-bubble.bot{
+  background:rgba(245,158,11,0.12);
+  border-color:rgba(245,158,11,0.25);
+  border-radius:16px 16px 16px 4px;
+}
+
+/* Badge */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:8px;padding:8px 16px;
+  font-size:0.85rem;color:var(--text-secondary);
+}
+
+/* Pricing highlight */
+.pricing-highlight{
+  border-color:var(--gold) !important;
+  box-shadow:0 0 30px rgba(245,158,11,0.12);
+}
+.pricing-tag{
+  position:absolute;top:-12px;right:50%;transform:translateX(50%);
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  color:var(--bg);font-size:0.75rem;font-weight:700;
+  padding:4px 16px;border-radius:20px;white-space:nowrap;
+}
+
+/* Table */
+.compare-table{width:100%;max-width:700px;border-collapse:collapse}
+.compare-table th,.compare-table td{padding:10px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);font-size:0.9rem}
+.compare-table th{color:var(--gold);font-weight:700;font-size:0.85rem}
+.compare-table td:first-child{text-align:right;color:var(--text-secondary)}
+
+/* Timeline */
+.timeline{display:flex;align-items:flex-start;gap:0;width:100%;max-width:800px;position:relative}
+.timeline::before{content:'';position:absolute;top:22px;right:0;left:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--purple),var(--gold))}
+.tl-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1}
+.tl-dot{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px rgba(245,158,11,0.4);flex-shrink:0}
+.tl-label{font-size:0.82rem;color:var(--text-secondary);text-align:center;line-height:1.5;max-width:140px}
+.tl-q{font-size:0.78rem;font-weight:700;color:var(--gold);margin-top:2px}
+
+/* KPI big number */
+.kpi-big{font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:var(--gold);line-height:1}
+.kpi-label{font-size:0.85rem;color:var(--text-secondary);margin-top:6px}
+
+/* Security pillar */
+.sec-pillar{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.sec-icon{font-size:2rem;width:64px;height:64px;border-radius:50%;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(245,158,11,0.2)}
+
+/* Responsive */
+@media(max-width:768px){
+  .slide{padding:24px 20px}
+  .grid-3,.grid-4{grid-template-columns:1fr 1fr}
+  .grid-2{grid-template-columns:1fr}
+  .flex-row{flex-direction:column;align-items:center}
+  .flow-line{display:none}
+  .timeline{flex-direction:column;gap:16px;align-items:flex-start}
+  .timeline::before{display:none}
+  .compare-table{font-size:0.8rem}
+  .orb-lg{width:120px;height:120px;font-size:3.5rem}
+  .code-block{font-size:0.75rem}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .slide,.slide .reveal{transition:none !important}
+  #progress{transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="counter"></div>
+<div id="nav-dots"></div>
+
+<div id="deck">
+
+<!-- Slide 1: Cover -->
+<div class="slide active" data-slide="0">
+  <div class="orb-lg reveal" style="margin-bottom:28px">م</div>
+  <h1 class="reveal" style="font-size:clamp(3rem,6vw,5rem);font-weight:900;color:var(--gold);letter-spacing:-1px;margin-bottom:4px">مشاركة</h1>
+  <p class="reveal" style="font-size:clamp(1.1rem,2vw,1.5rem);color:var(--text-primary);font-weight:600;margin-bottom:8px">نظام إدارة المبيعات للمستأجرين</p>
+  <p class="reveal text-sec" style="font-size:clamp(0.9rem,1.4vw,1.1rem)">حل رقمي متكامل لتقارير المبيعات</p>
+  <div class="reveal" style="margin-top:32px;display:flex;gap:24px;align-items:center">
+    <span class="badge">B2B SaaS</span>
+    <span class="badge">المملكة العربية السعودية</span>
+    <span class="badge">قطاع التجزئة</span>
+  </div>
+</div>
+
+<!-- Slide 2: The Challenge -->
+<div class="slide" data-slide="1">
+  <h2 class="slide-title reveal">ما التحدي الذي يواجهه المستأجرون؟</h2>
+  <p class="slide-subtitle reveal">يعاني المستأجرون في المراكز التجارية من تحديات يومية في تقارير المبيعات</p>
+  <div class="grid-3 reveal">
+    <div class="glass text-center flex-col" style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:2.2rem">&#9203;</div>
+      <h3 class="fw-700" style="font-size:1rem;color:var(--text-primary)">تقارير يدوية معقدة</h3>
+      <p class="text-sec text-sm">إعداد التقارير يدوياً يستهلك وقتاً وجهداً كبيراً من فريق المبيعات</p>
+    </div>
+    <div class="glass text-center flex-col" style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:2.2rem">&#9888;</div>
+      <h3 class="fw-700" style="font-size:1rem;color:var(--text-primary)">أخطاء وتأخر في البيانات</h3>
+      <p class="text-sec text-sm">الأخطاء البشرية والتأخر في الإرسال يؤدي لمشاكل مع إدارة المول</p>
+    </div>
+    <div class="glass text-center flex-col" style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:2.2rem">&#128065;</div>
+      <h3 class="fw-700" style="font-size:1rem;color:var(--text-primary)">غياب الرؤية الفورية</h3>
+      <p class="text-sec text-sm">لا توجد لوحة تحكم تعرض أداء الفروع بشكل فوري ومحدّث</p>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: The Solution -->
+<div class="slide" data-slide="2">
+  <h2 class="slide-title reveal">مشاركة — منصة ذكية للتقارير</h2>
+  <p class="slide-subtitle reveal">حل واحد يجمع كل قنوات تسجيل المبيعات في منصة موحدة</p>
+  <div class="reveal" style="display:flex;align-items:center;gap:40px;flex-wrap:wrap;justify-content:center">
+    <div class="glass-sm text-center" style="width:160px">
+      <div class="text-gold fw-700 mb-8">&#128187;</div>
+      <div class="fw-600 text-sm">بوابة إلكترونية</div>
+    </div>
+    <div class="glass-sm text-center" style="width:160px">
+      <div class="text-gold fw-700 mb-8">&#129302;</div>
+      <div class="fw-600 text-sm">روبوت واتساب</div>
+    </div>
+    <div class="orb reveal" style="margin:0 8px">م</div>
+    <div class="glass-sm text-center" style="width:160px">
+      <div class="text-gold fw-700 mb-8">&#128279;</div>
+      <div class="fw-600 text-sm">API تكامل</div>
+    </div>
+    <div class="glass-sm text-center" style="width:160px">
+      <div class="text-gold fw-700 mb-8">&#128200;</div>
+      <div class="fw-600 text-sm">تقارير تلقائية</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 4: How It Works -->
+<div class="slide" data-slide="3">
+  <h2 class="slide-title reveal">كيف يعمل النظام</h2>
+  <p class="slide-subtitle reveal">أربع خطوات بسيطة من تسجيل المبيعات إلى الإرسال</p>
+  <div class="flex-row reveal" style="align-items:flex-start;gap:12px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
+      <div class="step-num">1</div>
+      <div class="fw-600" style="font-size:0.95rem">تسجيل المبيعات</div>
+      <div class="text-sec text-xs">عبر البوابة أو البوت</div>
+    </div>
+    <div class="flow-line"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
+      <div class="step-num">2</div>
+      <div class="fw-600" style="font-size:0.95rem">المعالجة التلقائية</div>
+      <div class="text-sec text-xs">تحقق وحساب تلقائي</div>
+    </div>
+    <div class="flow-line"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
+      <div class="step-num">3</div>
+      <div class="fw-600" style="font-size:0.95rem">التقارير والتحليلات</div>
+      <div class="text-sec text-xs">لوحة تحكم تفاعلية</div>
+    </div>
+    <div class="flow-line"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
+      <div class="step-num">4</div>
+      <div class="fw-600" style="font-size:0.95rem">الإرسال لسينومي</div>
+      <div class="text-sec text-xs">إرسال آلي في الموعد</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: Web Portal -->
+<div class="slide" data-slide="4">
+  <h2 class="slide-title reveal">البوابة الإلكترونية</h2>
+  <p class="slide-subtitle reveal">واجهة متكاملة لإدارة جميع عمليات المبيعات</p>
+  <div class="grid-2 reveal">
+    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
+      <span class="check">&#10003;</span>
+      <div>
+        <div class="fw-600" style="font-size:0.95rem">إدخال مبيعات يومي وشهري</div>
+        <div class="text-sec text-xs mt-8">تسجيل سريع مع حفظ تلقائي</div>
+      </div>
+    </div>
+    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
+      <span class="check">&#10003;</span>
+      <div>
+        <div class="fw-600" style="font-size:0.95rem">استيراد ملفات Excel</div>
+        <div class="text-sec text-xs mt-8">رفع البيانات من ملفات جاهزة</div>
+      </div>
+    </div>
+    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
+      <span class="check">&#10003;</span>
+      <div>
+        <div class="fw-600" style="font-size:0.95rem">إدارة الفروع</div>
+        <div class="text-sec text-xs mt-8">إضافة وتعديل بيانات الفروع</div>
+      </div>
+    </div>
+    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
+      <span class="check">&#10003;</span>
+      <div>
+        <div class="fw-600" style="font-size:0.95rem">لوحة تحكم تفاعلية</div>
+        <div class="text-sec text-xs mt-8">رسوم بيانية ومؤشرات أداء</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 6: Bot -->
+<div class="slide" data-slide="5">
+  <h2 class="slide-title reveal">روبوت واتساب / تيليجرام</h2>
+  <p class="slide-subtitle reveal">أرسل مبيعاتك بجملة واحدة فقط</p>
+  <div class="reveal" style="display:flex;flex-direction:column;gap:14px;max-width:400px;width:100%">
+    <div class="chat-bubble" style="align-self:flex-end">
+      <div class="text-xs text-sec mb-8">المستأجر</div>
+      فرع جدة: مبيعات اليوم 15,000
+    </div>
+    <div class="chat-bubble bot" style="align-self:flex-start">
+      <div class="text-xs mb-8" style="color:var(--gold)">مشاركة بوت</div>
+      تم تسجيل المبيعات بنجاح &#10003;<br>
+      <span class="text-sec text-sm">الفرع: جدة | المبلغ: 15,000 ر.س | التاريخ: اليوم</span>
+    </div>
+    <div class="chat-bubble" style="align-self:flex-end">
+      تقرير الشهر
+    </div>
+    <div class="chat-bubble bot" style="align-self:flex-start">
+      <div class="text-xs mb-8" style="color:var(--gold)">مشاركة بوت</div>
+      إجمالي مبيعات الشهر: 458,000 ر.س<br>
+      <span class="text-sec text-sm">12 فرع نشط | 30 تقرير مرسل</span>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 7: API Integration -->
+<div class="slide" data-slide="6">
+  <h2 class="slide-title reveal">API للتكامل</h2>
+  <p class="slide-subtitle reveal">تكامل مباشر مع أنظمتكم الداخلية</p>
+  <div class="code-block reveal" style="margin-bottom:24px">
+<span style="color:#7dd3fc">POST</span> /api/v1/sales
+<br><br>
+{
+  <span style="color:var(--gold)">"branch_id"</span>: <span style="color:#a5f3fc">"BR-001"</span>,
+  <span style="color:var(--gold)">"date"</span>: <span style="color:#a5f3fc">"2025-01-15"</span>,
+  <span style="color:var(--gold)">"amount"</span>: <span style="color:#86efac">15000</span>,
+  <span style="color:var(--gold)">"currency"</span>: <span style="color:#a5f3fc">"SAR"</span>
+}
+  </div>
+  <div class="flex-row reveal" style="gap:16px">
+    <div class="badge">&#128196; توثيق كامل</div>
+    <div class="badge">&#128274; مفاتيح API آمنة</div>
+    <div class="badge">&#9881; تحكم كامل</div>
+  </div>
+</div>
+
+<!-- Slide 8: Reports & Analytics -->
+<div class="slide" data-slide="7">
+  <h2 class="slide-title reveal">التقارير والإحصاءات</h2>
+  <p class="slide-subtitle reveal">رؤية شاملة لأداء جميع فروعك</p>
+  <div class="grid-4 reveal">
+    <div class="glass text-center" style="position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(245,158,11,0.08)"></div>
+      <div class="kpi-big">458K</div>
+      <div class="kpi-label">إجمالي المبيعات (ر.س)</div>
+    </div>
+    <div class="glass text-center" style="position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(124,58,237,0.08)"></div>
+      <div class="kpi-big" style="color:var(--purple)">12</div>
+      <div class="kpi-label">فرع نشط</div>
+    </div>
+    <div class="glass text-center" style="position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(34,197,94,0.08)"></div>
+      <div class="kpi-big" style="color:#22c55e">97%</div>
+      <div class="kpi-label">معدل الإرسال في الوقت</div>
+    </div>
+    <div class="glass text-center" style="position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(59,130,246,0.08)"></div>
+      <div class="kpi-big" style="color:#3b82f6">+23%</div>
+      <div class="kpi-label">مقارنة بالشهر السابق</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 9: Branch Management -->
+<div class="slide" data-slide="8">
+  <h2 class="slide-title reveal">إدارة الفروع</h2>
+  <p class="slide-subtitle reveal">تحكم كامل في جميع فروعك من مكان واحد</p>
+  <div class="grid-3 reveal">
+    <div class="glass-sm text-center">
+      <div style="font-size:1.6rem;margin-bottom:8px">&#128203;</div>
+      <div class="fw-600 text-sm">إضافة وتعديل الفروع</div>
+      <div class="text-sec text-xs mt-8">اسم الفرع، المدينة، المنطقة</div>
+    </div>
+    <div class="glass-sm text-center">
+      <div style="font-size:1.6rem;margin-bottom:8px">&#128196;</div>
+      <div class="fw-600 text-sm">أرقام العقود</div>
+      <div class="text-sec text-xs mt-8">ربط رقم العقد بكل فرع</div>
+    </div>
+    <div class="glass-sm text-center">
+      <div style="font-size:1.6rem;margin-bottom:8px">&#128289;</div>
+      <div class="fw-600 text-sm">أكواد الفروع</div>
+      <div class="text-sec text-xs mt-8">أكواد فريدة لكل فرع</div>
+    </div>
+    <div class="glass-sm text-center">
+      <div style="font-size:1.6rem;margin-bottom:8px">&#128200;</div>
+      <div class="fw-600 text-sm">حالة الفرع</div>
+      <div class="text-sec text-xs mt-8">نشط، معلق، مغلق</div>
+    </div>
+    <div class="glass-sm text-center">
+      <div style="font-size:1.6rem;margin-bottom:8px">&#128101;</div>
+      <div class="fw-600 text-sm">صلاحيات المستخدمين</div>
+      <div class="text-sec text-xs mt-8">تحكم في الوصول لكل فرع</div>
+    </div>
+    <div class="glass-sm text-center">
+      <div style="font-size:1.6rem;margin-bottom:8px">&#128230;</div>
+      <div class="fw-600 text-sm">تصدير البيانات</div>
+      <div class="text-sec text-xs mt-8">Excel, CSV, PDF</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 10: Security & Compliance -->
+<div class="slide" data-slide="9">
+  <h2 class="slide-title reveal">الأمان والامتثال</h2>
+  <p class="slide-subtitle reveal">حماية بياناتك أولوية قصوى</p>
+  <div class="grid-3 reveal" style="max-width:720px">
+    <div class="glass sec-pillar">
+      <div class="sec-icon">&#128274;</div>
+      <div class="fw-700" style="font-size:1rem">تشفير كامل</div>
+      <div class="text-sec text-xs">تشفير البيانات أثناء النقل والتخزين باستخدام TLS و AES-256</div>
+    </div>
+    <div class="glass sec-pillar">
+      <div class="sec-icon">&#128272;</div>
+      <div class="fw-700" style="font-size:1rem">مصادقة ثنائية</div>
+      <div class="text-sec text-xs">طبقة حماية إضافية عند تسجيل الدخول لضمان الأمان</div>
+    </div>
+    <div class="glass sec-pillar">
+      <div class="sec-icon">&#128209;</div>
+      <div class="fw-700" style="font-size:1rem">سجلات مراجعة</div>
+      <div class="text-sec text-xs">تتبع كامل لجميع العمليات والتغييرات في النظام</div>
+    </div>
+  </div>
+  <div class="reveal mt-16">
+    <div class="badge" style="border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.08)">
+      &#128737; Supabase Row Level Security
+    </div>
+  </div>
+</div>
+
+<!-- Slide 11: Why Musharaka -->
+<div class="slide" data-slide="10">
+  <h2 class="slide-title reveal">لماذا مشاركة؟</h2>
+  <p class="slide-subtitle reveal">مقارنة سريعة مع الطرق التقليدية</p>
+  <div class="glass reveal" style="max-width:720px;width:100%;padding:0;overflow:hidden">
+    <table class="compare-table">
+      <thead>
+        <tr style="background:rgba(255,255,255,0.03)">
+          <th style="text-align:right">الميزة</th>
+          <th>مشاركة</th>
+          <th>الطريقة التقليدية</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>سرعة الإرسال</td>
+          <td style="color:#22c55e">&#10003; فوري</td>
+          <td style="color:#ef4444">&#10007; ساعات</td>
+        </tr>
+        <tr>
+          <td>دقة البيانات</td>
+          <td style="color:#22c55e">&#10003; 99.9%</td>
+          <td style="color:#ef4444">&#10007; أخطاء متكررة</td>
+        </tr>
+        <tr>
+          <td>قنوات الإدخال</td>
+          <td style="color:#22c55e">&#10003; بوت + بوابة + API</td>
+          <td style="color:#ef4444">&#10007; Excel فقط</td>
+        </tr>
+        <tr>
+          <td>التقارير الفورية</td>
+          <td style="color:#22c55e">&#10003; لحظية</td>
+          <td style="color:#ef4444">&#10007; يدوية</td>
+        </tr>
+        <tr>
+          <td>الدعم الفني</td>
+          <td style="color:#22c55e">&#10003; متوفر</td>
+          <td style="color:var(--text-muted)">&#8212; غير متاح</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Slide 12: Pricing -->
+<div class="slide" data-slide="11">
+  <h2 class="slide-title reveal">باقات الاشتراك</h2>
+  <p class="slide-subtitle reveal">باقات مرنة تناسب جميع الأحجام</p>
+  <div class="grid-3 reveal" style="max-width:840px">
+    <div class="glass text-center" style="display:flex;flex-direction:column;gap:12px;align-items:center">
+      <div class="text-gold fw-700" style="font-size:1.2rem">أساسي</div>
+      <div class="text-sec text-sm">للمستأجرين الجدد</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--text-primary)">مجاني</div>
+      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%">
+        فرع واحد<br>بوابة إلكترونية<br>تقارير أساسية<br>دعم عبر البريد
+      </div>
+    </div>
+    <div class="glass text-center pricing-highlight" style="display:flex;flex-direction:column;gap:12px;align-items:center;position:relative">
+      <div class="pricing-tag">الأكثر طلباً</div>
+      <div class="text-gold fw-700" style="font-size:1.2rem">متقدم</div>
+      <div class="text-sec text-sm">للفروع المتعددة</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--gold)">199 <span class="text-sm">ر.س/شهر</span></div>
+      <div class="text-sec text-xs" style="border-top:1px solid rgba(245,158,11,0.2);padding-top:12px;width:100%">
+        حتى 10 فروع<br>بوت واتساب + تيليجرام<br>تقارير متقدمة<br>دعم أولوية
+      </div>
+    </div>
+    <div class="glass text-center" style="display:flex;flex-direction:column;gap:12px;align-items:center">
+      <div class="text-gold fw-700" style="font-size:1.2rem">مؤسسي</div>
+      <div class="text-sec text-sm">للشركات الكبرى</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--text-primary)">تواصل معنا</div>
+      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%">
+        فروع غير محدودة<br>API + تكامل مخصص<br>مدير حساب مخصص<br>SLA مضمون
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 13: Roadmap -->
+<div class="slide" data-slide="12">
+  <h2 class="slide-title reveal">خارطة الطريق</h2>
+  <p class="slide-subtitle reveal">رحلة التطوير المستمر</p>
+  <div class="timeline reveal">
+    <div class="tl-item">
+      <div class="tl-q">Q1</div>
+      <div class="tl-dot"></div>
+      <div class="tl-label">إطلاق البوابة الإلكترونية وبوت واتساب</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-q">Q2</div>
+      <div class="tl-dot"></div>
+      <div class="tl-label">API مفتوح وتكامل مع أنظمة POS</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-q">Q3</div>
+      <div class="tl-dot"></div>
+      <div class="tl-label">تقارير ذكية بالذكاء الاصطناعي</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-q">Q4</div>
+      <div class="tl-dot"></div>
+      <div class="tl-label">تطبيق جوال وتوسع إقليمي</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 14: Success Stories -->
+<div class="slide" data-slide="13">
+  <h2 class="slide-title reveal">قصص نجاح</h2>
+  <p class="slide-subtitle reveal">تجارب حقيقية من مستأجرين يستخدمون مشاركة</p>
+  <div class="grid-2 reveal" style="max-width:760px">
+    <div class="glass" style="position:relative">
+      <div style="font-size:2.5rem;color:rgba(245,158,11,0.2);position:absolute;top:12px;right:16px;font-family:serif;line-height:1">"</div>
+      <div style="padding-top:20px">
+        <p class="text-sec" style="font-size:0.92rem;line-height:1.7;margin-bottom:14px">
+          وفّر لنا النظام أكثر من 10 ساعات أسبوعياً كنا نقضيها في إعداد التقارير اليدوية. الآن نرسل المبيعات بضغطة زر.
+        </p>
+        <div class="fw-700 text-sm">محمد العتيبي</div>
+        <div class="text-sec text-xs">مدير عمليات — مجموعة الرؤية للتجزئة</div>
+      </div>
+    </div>
+    <div class="glass" style="position:relative">
+      <div style="font-size:2.5rem;color:rgba(245,158,11,0.2);position:absolute;top:12px;right:16px;font-family:serif;line-height:1">"</div>
+      <div style="padding-top:20px">
+        <p class="text-sec" style="font-size:0.92rem;line-height:1.7;margin-bottom:14px">
+          بوت الواتساب غيّر طريقة عملنا تماماً. فريق المبيعات يرسل الأرقام من الفرع مباشرة بدون الحاجة لجهاز كمبيوتر.
+        </p>
+        <div class="fw-700 text-sm">سارة الغامدي</div>
+        <div class="text-sec text-xs">مديرة المبيعات — شركة الوفاق التجارية</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 15: Support -->
+<div class="slide" data-slide="14">
+  <h2 class="slide-title reveal">الدعم الفني</h2>
+  <p class="slide-subtitle reveal">فريق دعم متخصص لمساعدتك في كل خطوة</p>
+  <div class="grid-3 reveal" style="max-width:720px">
+    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="font-size:2rem">&#127915;</div>
+      <div class="fw-700" style="font-size:0.95rem">نظام تذاكر الدعم</div>
+      <div class="text-sec text-xs">افتح تذكرة وتتبع حالتها مباشرة من لوحة التحكم</div>
+    </div>
+    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="font-size:2rem">&#128214;</div>
+      <div class="fw-700" style="font-size:0.95rem">دليل المستخدم</div>
+      <div class="text-sec text-xs">دليل تفاعلي شامل مع صور توضيحية وفيديوهات</div>
+    </div>
+    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="font-size:2rem">&#128172;</div>
+      <div class="fw-700" style="font-size:0.95rem">بوابة المساعدة</div>
+      <div class="text-sec text-xs">أسئلة شائعة ومقالات تعليمية محدّثة باستمرار</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 16: Numbers -->
+<div class="slide" data-slide="15">
+  <h2 class="slide-title reveal">مشاركة بالأرقام</h2>
+  <p class="slide-subtitle reveal">أرقام تعكس ثقة عملائنا</p>
+  <div class="grid-4 reveal">
+    <div class="glass text-center">
+      <div class="kpi-big">+150</div>
+      <div class="kpi-label">مستأجر مسجل</div>
+    </div>
+    <div class="glass text-center">
+      <div class="kpi-big" style="color:var(--purple)">+500</div>
+      <div class="kpi-label">فرع مفعّل</div>
+    </div>
+    <div class="glass text-center">
+      <div class="kpi-big" style="color:#22c55e">2M+</div>
+      <div class="kpi-label">عملية مبيعات مسجلة</div>
+    </div>
+    <div class="glass text-center">
+      <div class="kpi-big" style="color:#3b82f6">98%</div>
+      <div class="kpi-label">نسبة رضا العملاء</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 17: Tech Stack -->
+<div class="slide" data-slide="16">
+  <h2 class="slide-title reveal">التقنية المستخدمة</h2>
+  <p class="slide-subtitle reveal">بنية تحتية حديثة وموثوقة</p>
+  <div class="flex-row reveal" style="gap:14px;max-width:700px;flex-wrap:wrap;justify-content:center">
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:#61dafb">&#9883;</span> React
+    </div>
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:#68a063">&#9632;</span> Node.js
+    </div>
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:#3ecf8e">&#9671;</span> Supabase
+    </div>
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:#38bdf8">&#9708;</span> Tailwind CSS
+    </div>
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:#25D366">&#9742;</span> WhatsApp Bot
+    </div>
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:#0088cc">&#9993;</span> Telegram Bot
+    </div>
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:#3178c6">TS</span> TypeScript
+    </div>
+    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
+      <span style="color:var(--gold)">&#9729;</span> Vercel
+    </div>
+  </div>
+</div>
+
+<!-- Slide 18: Team -->
+<div class="slide" data-slide="17">
+  <h2 class="slide-title reveal">الفريق</h2>
+  <p class="slide-subtitle reveal">فريق سعودي متخصص في التقنية وقطاع التجزئة</p>
+  <div class="grid-3 reveal" style="max-width:720px">
+    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:var(--bg)">إ</div>
+      <div class="fw-700">إبراهيم الجفري</div>
+      <div class="text-sec text-sm">المؤسس والمدير التقني</div>
+    </div>
+    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#5b21b6);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:white">ف</div>
+      <div class="fw-700">فهد المالكي</div>
+      <div class="text-sec text-sm">مدير تطوير الأعمال</div>
+    </div>
+    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:white">ن</div>
+      <div class="fw-700">نورة الشمري</div>
+      <div class="text-sec text-sm">مديرة المنتج والتصميم</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 19: Get Started -->
+<div class="slide" data-slide="18">
+  <h2 class="slide-title reveal">ابدأ الآن</h2>
+  <p class="slide-subtitle reveal">ثلاث خطوات بسيطة للانطلاق</p>
+  <div class="flex-row reveal" style="gap:16px;margin-bottom:36px">
+    <div class="glass-sm text-center" style="width:200px;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div class="step-num">1</div>
+      <div class="fw-600">تواصل معنا</div>
+      <div class="text-sec text-xs">عبر النموذج أو الواتساب</div>
+    </div>
+    <div class="flow-line"></div>
+    <div class="glass-sm text-center" style="width:200px;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div class="step-num">2</div>
+      <div class="fw-600">إعداد الحساب</div>
+      <div class="text-sec text-xs">نجهز حسابك وفروعك</div>
+    </div>
+    <div class="flow-line"></div>
+    <div class="glass-sm text-center" style="width:200px;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div class="step-num">3</div>
+      <div class="fw-600">ابدأ التسجيل</div>
+      <div class="text-sec text-xs">سجل مبيعاتك فوراً</div>
+    </div>
+  </div>
+  <button class="cta reveal" onclick="void(0)">&#128640; طلب عرض توضيحي</button>
+</div>
+
+<!-- Slide 20: Thank You -->
+<div class="slide" data-slide="19">
+  <div class="orb-lg reveal" style="margin-bottom:32px">م</div>
+  <h2 class="reveal" style="font-size:clamp(2rem,4vw,3.5rem);font-weight:900;color:var(--gold);margin-bottom:8px">شكراً لكم</h2>
+  <p class="reveal" style="font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text-secondary);margin-bottom:24px">مشاركة — شريكك في النجاح</p>
+  <div class="flex-row reveal" style="gap:20px">
+    <div class="badge">&#128231; info@musharaka.sa</div>
+    <div class="badge">&#128241; +966 50 000 0000</div>
+    <div class="badge">&#127760; musharaka.sa</div>
+  </div>
+  <div class="reveal mt-16">
+    <div class="text-muted text-xs" style="color:var(--text-muted)">جميع الحقوق محفوظة &copy; 2025 مشاركة</div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+(function(){
+  'use strict';
+
+  var TOTAL = 20;
+  var current = 0;
+  var isAnimating = false;
+  var ANIM_DURATION = 600;
+
+  var slides = document.querySelectorAll('.slide');
+  var progress = document.getElementById('progress');
+  var counter = document.getElementById('counter');
+  var dotsContainer = document.getElementById('nav-dots');
+
+  // Create nav dots
+  for (var i = 0; i < TOTAL; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('data-index', i);
+    dot.addEventListener('click', function() {
+      goTo(parseInt(this.getAttribute('data-index')));
+    });
+    dotsContainer.appendChild(dot);
+  }
+
+  function updateUI() {
+    progress.style.width = ((current + 1) / TOTAL * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + TOTAL;
+    var dots = dotsContainer.querySelectorAll('.nav-dot');
+    for (var d = 0; d < dots.length; d++) {
+      dots[d].classList.toggle('active', d === current);
+    }
+  }
+
+  function goTo(index) {
+    if (index === current || index < 0 || index >= TOTAL || isAnimating) return;
+    isAnimating = true;
+
+    var prev = slides[current];
+    var next = slides[index];
+    var goingForward = index > current;
+
+    // Exit current
+    prev.classList.remove('active');
+    prev.classList.add(goingForward ? 'exit-up' : '');
+
+    // Prepare next
+    next.style.transform = goingForward ? 'translateY(40px)' : 'translateY(-40px)';
+    next.style.opacity = '0';
+    next.style.visibility = 'visible';
+
+    // Force reflow
+    void next.offsetWidth;
+
+    // Enter next
+    next.classList.add('active');
+    next.style.transform = '';
+    next.style.opacity = '';
+
+    current = index;
+    updateUI();
+
+    setTimeout(function() {
+      prev.classList.remove('exit-up');
+      prev.style.visibility = '';
+      isAnimating = false;
+    }, ANIM_DURATION);
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  // Keyboard
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+      // RTL: left arrow = next
+      e.preventDefault();
+      next();
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      prev();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      goTo(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      goTo(TOTAL - 1);
+    }
+  });
+
+  // Mouse wheel
+  var wheelCooldown = false;
+  document.addEventListener('wheel', function(e) {
+    if (wheelCooldown) return;
+    wheelCooldown = true;
+    if (e.deltaY > 0) next();
+    else if (e.deltaY < 0) prev();
+    setTimeout(function() { wheelCooldown = false; }, 800);
+  }, { passive: true });
+
+  // Touch/swipe
+  var touchStartY = 0;
+  var touchStartX = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+
+    // Use larger axis
+    if (Math.abs(dy) > Math.abs(dx)) {
+      if (dy < -40) next();
+      else if (dy > 40) prev();
+    } else {
+      // RTL: swipe left = next
+      if (dx < -40) prev();
+      else if (dx > 40) next();
+    }
+  }, { passive: true });
+
+  // Initialize
+  updateUI();
+})();
+</script>
+</body>
+</html>
