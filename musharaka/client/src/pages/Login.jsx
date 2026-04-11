@@ -41,39 +41,64 @@ export default function Login() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-      <h1 className="text-xl font-bold text-gray-800 font-arabic mb-6 text-center">تسجيل الدخول</h1>
+    <div
+      className="backdrop-blur-xl rounded-2xl p-8 border shadow-2xl"
+      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+    >
+      {/* Brand mark */}
+      <div className="flex justify-center mb-5">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white text-xl"
+          style={{ background: '#F59E0B' }}
+        >
+          م
+        </div>
+      </div>
+
+      <h1 className="text-xl font-bold text-white font-arabic mb-6 text-center">تسجيل الدخول</h1>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 font-arabic text-center">
+        <div
+          className="mb-4 p-3 rounded-lg text-sm font-arabic text-center border"
+          style={{ background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.25)', color: '#FCA5A5' }}
+        >
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">البريد الإلكتروني</label>
+          <label className="block text-sm font-medium font-arabic mb-1.5" style={{ color: 'rgba(255,255,255,0.70)' }}>
+            البريد الإلكتروني
+          </label>
           <input
             type="email" dir="ltr" autoComplete="email"
             value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+            className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors"
+            style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }}
             placeholder="example@email.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">كلمة المرور</label>
+          <label className="block text-sm font-medium font-arabic mb-1.5" style={{ color: 'rgba(255,255,255,0.70)' }}>
+            كلمة المرور
+          </label>
           <div className="relative">
             <input
               type={showPass ? 'text' : 'password'} dir="ltr" autoComplete="current-password"
               value={form.password}
               onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent pl-10"
+              className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors pl-10"
+              style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }}
             />
             <button
               type="button" onClick={() => setShowPass(p => !p)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute left-3 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: 'rgba(255,255,255,0.40)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.70)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.40)'}
             >
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -82,21 +107,28 @@ export default function Login() {
 
         <button
           type="submit" disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm"
+          className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold disabled:opacity-60 hover:brightness-110"
+          style={{ background: '#F59E0B', color: '#0a0a0a' }}
         >
           {loading ? 'جاري الدخول...' : <><LogIn size={16} /><span>دخول</span></>}
         </button>
       </form>
 
       <div className="mt-4 text-center">
-        <Link to="/forgot-password" className="text-sm text-gray-400 hover:text-yellow-700 font-arabic hover:underline">
+        <Link
+          to="/forgot-password"
+          className="text-sm font-arabic hover:underline transition-colors"
+          style={{ color: 'rgba(255,255,255,0.40)' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#F59E0B'}
+          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.40)'}
+        >
           نسيت كلمة المرور؟
         </Link>
       </div>
 
-      <p className="mt-3 text-center text-sm text-gray-500 font-arabic">
+      <p className="mt-3 text-center text-sm font-arabic" style={{ color: 'rgba(255,255,255,0.50)' }}>
         ليس لديك حساب؟{' '}
-        <Link to="/register" className="text-yellow-700 hover:underline font-medium">إنشاء حساب جديد</Link>
+        <Link to="/register" className="text-yellow-400 hover:underline font-medium">إنشاء حساب جديد</Link>
       </p>
     </div>
   )
