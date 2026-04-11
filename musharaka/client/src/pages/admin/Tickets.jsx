@@ -7,25 +7,7 @@ import api from '../../lib/axiosClient'
 import AlertBanner from '../../components/AlertBanner'
 import EmptyState from '../../components/EmptyState'
 import { Ticket } from 'lucide-react'
-
-const STATUS_LABELS = { new: 'جديد', in_progress: 'قيد المعالجة', resolved: 'محلول' }
-const STATUS_COLORS = {
-  new:         'bg-yellow-100 text-yellow-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  resolved:    'bg-green-100 text-green-700',
-}
-const CATEGORY_LABELS = { integration: 'تكامل', license: 'ترخيص', technical: 'تقني', reporting: 'تقارير' }
-const CATEGORY_COLORS = {
-  integration: 'bg-purple-100 text-purple-700',
-  license:     'bg-blue-100 text-blue-700',
-  technical:   'bg-orange-100 text-orange-700',
-  reporting:   'bg-teal-100 text-teal-700',
-}
-
-function fmtDate(d) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })
-}
+import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, CATEGORY_COLORS, fmtTicketDate } from '../../lib/ticketConstants'
 
 export default function Tickets() {
   const navigate = useNavigate()
@@ -110,7 +92,7 @@ export default function Tickets() {
                         {CATEGORY_LABELS[t.category] || t.category}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs font-arabic">{fmtDate(t.created_at)}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs font-arabic">{fmtTicketDate(t.created_at)}</td>
                   </tr>
                 ))}
               </tbody>

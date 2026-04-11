@@ -19,12 +19,20 @@ const { expandSale }      = require('./saleDistributionService')
 const MONTHS_AR = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو',
                    'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
 
-function fmt(n) {
+function formatCurrency(n) {
   return Number(n).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 // ── In-memory conversation state (TTL: 5 minutes) ───────────────────────────
 const _pending = new Map() // key: `${platform}:${chatId}` → { message, expiresAt }
+
+// Periodic sweep to evict expired entries and prevent unbounded growth
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of _pending) {
+    if (now > entry.expiresAt) _pending.delete(key)
+  }
+}, 60 * 1000)
 
 function _stateKey(platform, chatId) { return `${platform}:${chatId}` }
 
@@ -149,7 +157,7 @@ async function processSale(sub, branch, message) {
     .from('bot_subscribers')
     .update({ last_message_at: new Date().toISOString() })
     .eq('id', sub.id)
-    .then(() => {})
+    .then(({ error }) => { if (error) console.error('[bot] last_message_at update failed:', error.message) })
 
   const dateLabel = parsed.input_type === 'monthly'
     ? `${MONTHS_AR[parsed.month] || parsed.month} ${parsed.year}`
@@ -164,7 +172,7 @@ async function processSale(sub, branch, message) {
     branch.contract_number ? `📋 رقم العقد: ${branch.contract_number}` : null,
     `🏪 الفرع: ${branch.name} (${branch.code})`,
     `📅 الفترة: ${dateLabel}`,
-    `💰 المبلغ: ${fmt(parsed.amount)} ر.س`,
+    `💰 المبلغ: ${formatCurrency(parsed.amount)} ر.س`,
   ].filter(Boolean).join('\n')
 }
 

@@ -53,7 +53,8 @@ router.post(
       const { submitter_name, submitter_email, title, category, description, steps } = req.body
 
       if (!submitter_name)  return res.status(422).json({ error: 'الاسم مطلوب' })
-      if (!submitter_email) return res.status(422).json({ error: 'البريد الإلكتروني مطلوب' })
+      if (!submitter_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitter_email))
+        return res.status(422).json({ error: 'البريد الإلكتروني غير صحيح' })
       if (!title)           return res.status(422).json({ error: 'عنوان المشكلة مطلوب' })
       if (!category || !['integration', 'license', 'technical', 'reporting'].includes(category))
         return res.status(422).json({ error: 'يرجى اختيار تصنيف صحيح' })

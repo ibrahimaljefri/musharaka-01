@@ -6,23 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../lib/axiosClient'
 import AlertBanner from '../../components/AlertBanner'
 import { ArrowRight, Paperclip, Save } from 'lucide-react'
-
-const STATUS_OPTIONS = [
-  { v: 'new',         l: 'جديد' },
-  { v: 'in_progress', l: 'قيد المعالجة' },
-  { v: 'resolved',    l: 'محلول' },
-]
-const STATUS_COLORS = {
-  new:         'bg-yellow-100 text-yellow-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  resolved:    'bg-green-100 text-green-700',
-}
-const CATEGORY_LABELS = { integration: 'تكامل', license: 'ترخيص', technical: 'تقني', reporting: 'تقارير' }
-
-function fmtDate(d) {
-  if (!d) return '—'
-  return new Date(d).toLocaleString('ar-SA', { dateStyle: 'medium', timeStyle: 'short' })
-}
+import { STATUS_OPTIONS, STATUS_COLORS, CATEGORY_LABELS, fmtTicketDate } from '../../lib/ticketConstants'
 
 export default function TicketDetail() {
   const { id }     = useParams()
@@ -103,7 +87,7 @@ export default function TicketDetail() {
           </div>
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">تاريخ الإنشاء</p>
-            <p className="font-arabic text-gray-700">{fmtDate(ticket.created_at)}</p>
+            <p className="font-arabic text-gray-700">{fmtTicketDate(ticket.created_at, true)}</p>
           </div>
         </div>
 
