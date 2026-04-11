@@ -261,7 +261,7 @@ router.get('/bot-subscribers', async (req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('bot_subscribers')
-      .select('*')
+      .select('id,tenant_id,tenant_name,platform,chat_id,contact_name,is_active,last_message_at,created_at')
       .order('created_at', { ascending: false })
     if (error) throw error
     res.json(data || [])
@@ -338,7 +338,7 @@ router.get('/tickets', async (req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('support_tickets')
-      .select('*')
+      .select('id,ticket_number,tenant_id,tenant_name,submitter_name,submitter_email,title,category,status,created_at')
       .order('created_at', { ascending: false })
     if (error) throw error
     res.json(data)
