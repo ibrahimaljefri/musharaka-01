@@ -1,11 +1,13 @@
 import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useThemeStore } from '../store/themeStore'
 import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, PlusCircle, Upload, BarChart2,
   GitBranch, Send, FileText, LogOut, Menu, X,
   ChevronRight, Building2,
-  ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy, BookOpen
+  ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy, BookOpen,
+  Sun, Moon
 } from 'lucide-react'
 
 const navItems = [
@@ -42,6 +44,7 @@ function SubscriptionBanner({ status }) {
 export default function AppLayout() {
   const { user, signOut, init, loading, isSuperAdmin, tenantStatus, mustChangePassword,
           allowImport, allowReports } = useAuthStore()
+  const { dark, toggle: toggleTheme } = useThemeStore()
   const navigate  = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed]   = useState(() => {
@@ -84,8 +87,8 @@ export default function AppLayout() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-colors font-arabic ${
               isActive
-                ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700/40'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
             } ${c ? 'justify-center' : ''}`
           }
         >
@@ -100,13 +103,13 @@ export default function AppLayout() {
     <div className="flex min-h-screen" dir="rtl">
 
       {/* ── Desktop sidebar ─────────────────────────────────────── */}
-      <aside className={`hidden lg:flex flex-col bg-white border-l border-gray-200 fixed top-0 right-0 h-full z-30 transition-all duration-300 overflow-hidden ${sidebarW}`}>
+      <aside className={`hidden lg:flex flex-col bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 fixed top-0 right-0 h-full z-30 transition-all duration-300 overflow-hidden ${sidebarW}`}>
 
         {/* Logo — clicking it toggles collapse */}
         <button
           onClick={() => setCollapsed(c => !c)}
           title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
-          className={`flex items-center border-b border-yellow-100 h-14 w-full hover:bg-yellow-50/60 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
+          className={`flex items-center border-b border-yellow-100 dark:border-yellow-900/30 h-14 w-full hover:bg-yellow-50/60 dark:hover:bg-yellow-900/10 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
         >
           <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-sm">م</span>
@@ -161,7 +164,7 @@ export default function AppLayout() {
         </div>
 
         {/* User profile footer */}
-        <div className="px-2 py-3 border-t border-gray-100 space-y-0.5">
+        <div className="px-2 py-3 border-t border-gray-100 dark:border-gray-800 space-y-0.5">
           {/* Super admin badge */}
           {isSuperAdmin && !collapsed && (
             <div className="px-3 py-1.5 mb-1 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-1.5">
@@ -172,14 +175,14 @@ export default function AppLayout() {
 
           {/* User avatar + name */}
           {!collapsed && (
-            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-gray-50 border border-gray-100 mb-1">
+            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 mb-1">
               <div className="w-7 h-7 rounded-full bg-yellow-500 flex items-center justify-center shrink-0">
                 <span className="text-white text-xs font-bold">
                   {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-700 font-arabic truncate leading-tight">
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 font-arabic truncate leading-tight">
                   {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
                 </p>
                 <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
@@ -199,7 +202,7 @@ export default function AppLayout() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex" dir="rtl">
           <div className="fixed inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex flex-col w-64 bg-white h-full mr-auto z-50 shadow-xl">
+          <aside className="relative flex flex-col w-64 bg-white dark:bg-gray-950 h-full mr-auto z-50 shadow-xl">
             <div className="flex items-center justify-between px-5 border-b border-yellow-100 h-14">
               <div>
                 <div className="text-lg font-bold text-yellow-700 font-arabic">مشاركة</div>
@@ -244,13 +247,13 @@ export default function AppLayout() {
         <SubscriptionBanner status={tenantStatus} />
 
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-20 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
           <button className="lg:hidden text-gray-500 hover:text-gray-700 shrink-0" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
           </button>
 
           {/* Left side: greeting */}
-          <div className="font-arabic text-sm text-gray-600 hidden sm:block">
+          <div className="font-arabic text-sm text-gray-600 dark:text-gray-400 hidden sm:block">
             أهلاً،{' '}
             <span className="font-semibold text-yellow-700">
               {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'مستخدم'}
@@ -260,25 +263,34 @@ export default function AppLayout() {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Right side: status + user guide */}
+          {/* Right side: status + user guide + theme toggle */}
           <div className="flex items-center gap-3">
             <a
               href="/user-guide.html"
               target="_blank"
               rel="noreferrer"
               title="دليل المستخدم"
-              className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors font-arabic border border-gray-200 hover:border-blue-200 rounded-lg px-2.5 py-1.5 hover:bg-blue-50"
+              className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-arabic border border-gray-200 dark:border-gray-700 hover:border-blue-200 rounded-lg px-2.5 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20"
             >
               <BookOpen size={13} />
               <span>دليل المستخدم</span>
             </a>
+
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              title={dark ? 'الوضع الفاتح' : 'الوضع الداكن'}
+              className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              {dark ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
 
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
               </span>
-              <span className="text-xs text-gray-500 font-arabic hidden md:inline">متصل بسينومي</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic hidden md:inline">متصل بسينومي</span>
             </div>
           </div>
         </header>

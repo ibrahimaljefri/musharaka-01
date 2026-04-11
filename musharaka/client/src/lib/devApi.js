@@ -438,6 +438,55 @@ export async function devApiCall(method, url, data) {
   if (userMatch && method === 'delete') return handleDeleteUser(userMatch[1])
   if (userMatch && method === 'put')    return handleUpdateUser(userMatch[1], data)
 
+  // ── Admin — Bot Subscribers ──────────────────────────────────
+  if (method === 'get' && path === '/admin/bot-subscribers')
+    return { status: 200, data: getTable('bot_subscribers') }
+
+  if (method === 'post' && path === '/admin/bot-subscribers') {
+    const { tenant_id, platform, chat_id, contact_name, tenant_name } = data || {}
+    if (!tenant_id)   return { status: 422, data: { error: 'يرجى اختيار المستأجر' } }
+    if (!platform)    return { status: 422, data: { error: 'يرجى اختيار المنصة' } }
+    if (!chat_id)     return { status: 422, data: { error: 'معرّف المحادثة مطلوب' } }
+    if (!tenant_name) return { status: 422, data: { error: 'اسم المستأجر مطلوب' } }
+    const subs = getTable('bot_subscribers')
+    if (subs.find(s => s.platform === platform && s.chat_id === chat_id))
+      return { status: 409, data: { error: 'هذا المشترك مسجّل مسبقاً على نفس المنصة' } }
+    const sub = { id: newId(), tenant_id, tenant_name, platform, chat_id,
+      contact_name: contact_name || null, is_active: true,
+      last_message_at: null, created_at: new Date().toISOString() }
+    saveTable('bot_subscribers', [...subs, sub])
+    return { status: 201, data: sub }
+  }
+
+  const botSubMatch = path.match(/^\/admin\/bot-subscribers\/([^/]+)$/)
+  if (botSubMatch) {
+    const id   = botSubMatch[1]
+    const subs = getTable('bot_subscribers')
+    if (method === 'get') {
+      const s = subs.find(x => x.id === id)
+      return s ? { status: 200, data: s } : { status: 404, data: { error: 'المشترك غير موجود' } }
+    }
+    if (method === 'put') {
+      const idx = subs.findIndex(x => x.id === id)
+      if (idx === -1) return { status: 404, data: { error: 'المشترك غير موجود' } }
+      subs[idx] = { ...subs[idx], ...data }
+      saveTable('bot_subscribers', subs)
+      return { status: 200, data: subs[idx] }
+    }
+    if (method === 'delete') {
+      saveTable('bot_subscribers', subs.filter(x => x.id !== id))
+      return { status: 200, data: { message: 'تم الحذف' } }
+    }
+  }
+
+  // /admin/tenants/:id/branches
+  const tenantBranchesMatch = path.match(/^\/admin\/tenants\/([^/]+)\/branches$/)
+  if (tenantBranchesMatch && method === 'get') {
+    const tenantId = tenantBranchesMatch[1]
+    const branches = getTable('branches').filter(b => b.tenant_id === tenantId)
+    return { status: 200, data: branches }
+  }
+
   // ── Tickets ──────────────────────────────────────────────────
   if (method === 'post' && path === '/tickets') {
     const { submitter_name, submitter_email, title, category, description, steps } = data instanceof FormData
