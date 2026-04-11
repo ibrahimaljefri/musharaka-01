@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import api from '../../lib/axiosClient'
 import AlertBanner from '../../components/AlertBanner'
 import ConfirmDialog from '../../components/ConfirmDialog'
@@ -42,7 +43,7 @@ function AssignModal({ user, onClose, onDone }) {
     } finally { setLoading(false) }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" dir="rtl">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
@@ -89,7 +90,8 @@ function AssignModal({ user, onClose, onDone }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -113,7 +115,7 @@ function CreateUserModal({ onClose, onDone }) {
     } finally { setLoading(false) }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" dir="rtl">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
@@ -164,7 +166,8 @@ function CreateUserModal({ onClose, onDone }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -203,7 +206,7 @@ function EditUserModal({ user, onClose, onDone }) {
     } finally { setLoading(false) }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" dir="rtl">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
@@ -269,7 +272,8 @@ function EditUserModal({ user, onClose, onDone }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

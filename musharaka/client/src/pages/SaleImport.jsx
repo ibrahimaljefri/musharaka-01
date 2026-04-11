@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabaseClient'
 import api from '../lib/axiosClient'
 import TipsPanel from '../components/TipsPanel'
@@ -122,7 +123,7 @@ export default function SaleImport() {
       </div>
 
       {/* Preview Modal */}
-      {showPreview && preview && (
+      {showPreview && preview && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowPreview(false)} />
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
@@ -143,7 +144,8 @@ export default function SaleImport() {
               </table>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
