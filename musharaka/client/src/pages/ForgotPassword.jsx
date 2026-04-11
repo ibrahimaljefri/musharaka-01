@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import { devAuth } from '../lib/devAuth'
 import { MailOpen, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react'
 
+const glassInput = {
+  background: 'rgba(255,255,255,0.08)',
+  borderColor: 'rgba(255,255,255,0.15)',
+}
+
 export default function ForgotPassword() {
   const [step, setStep]       = useState('email')  // 'email' | 'reset' | 'done'
   const [email, setEmail]     = useState('')
@@ -17,11 +22,9 @@ export default function ForgotPassword() {
     e.preventDefault()
     setError('')
     if (!email.trim()) return setError('يرجى إدخال البريد الإلكتروني')
-    // In dev mode: check if the email exists in dev_auth_users
     const users = JSON.parse(localStorage.getItem('dev_auth_users') || '[]')
-    if (!users.find(u => u.email === email.trim())) {
+    if (!users.find(u => u.email === email.trim()))
       return setError('البريد الإلكتروني غير مسجل في النظام')
-    }
     setStep('reset')
   }
 
@@ -37,36 +40,56 @@ export default function ForgotPassword() {
     setStep('done')
   }
 
+  // ── Done state ────────────────────────────────────────────────────────────
   if (step === 'done') return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
-      <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-        <ShieldCheck size={28} className="text-green-600" />
+    <div
+      className="backdrop-blur-xl rounded-2xl p-8 border shadow-2xl text-center"
+      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+    >
+      <div
+        className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+        style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.30)' }}
+      >
+        <ShieldCheck size={28} className="text-green-400" />
       </div>
-      <h2 className="text-lg font-bold text-gray-800 font-arabic mb-2">تم إعادة تعيين كلمة المرور</h2>
-      <p className="text-sm text-gray-500 font-arabic mb-5">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة</p>
+      <h2 className="text-lg font-bold text-white font-arabic mb-2">تم إعادة تعيين كلمة المرور</h2>
+      <p className="text-sm font-arabic mb-6" style={{ color: 'rgba(255,255,255,0.50)' }}>
+        يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة
+      </p>
       <Link to="/login"
-        className="inline-flex items-center gap-2 px-5 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors font-arabic">
+        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all font-arabic hover:brightness-110 font-bold"
+        style={{ background: '#F59E0B', color: '#0a0a0a' }}
+      >
         <ArrowRight size={15} /> تسجيل الدخول
       </Link>
     </div>
   )
 
+  // ── Main card ─────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+    <div
+      className="backdrop-blur-xl rounded-2xl p-8 border shadow-2xl"
+      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+    >
+      {/* Icon + title */}
       <div className="flex flex-col items-center mb-6">
-        <div className="w-13 h-13 rounded-full bg-yellow-50 border-2 border-yellow-200 flex items-center justify-center mb-3 p-3">
-          <MailOpen size={24} className="text-yellow-600" />
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
+          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)' }}
+        >
+          <MailOpen size={22} className="text-yellow-400" />
         </div>
-        <h1 className="text-xl font-bold text-gray-800 font-arabic">نسيت كلمة المرور؟</h1>
-        <p className="text-sm text-gray-500 font-arabic text-center mt-1">
-          {step === 'email'
-            ? 'أدخل بريدك الإلكتروني للمتابعة'
-            : 'أدخل كلمة المرور الجديدة'}
+        <h1 className="text-xl font-bold text-white font-arabic">نسيت كلمة المرور؟</h1>
+        <p className="text-sm font-arabic text-center mt-1" style={{ color: 'rgba(255,255,255,0.50)' }}>
+          {step === 'email' ? 'أدخل بريدك الإلكتروني للمتابعة' : 'أدخل كلمة المرور الجديدة'}
         </p>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 font-arabic text-center">
+        <div
+          className="mb-4 p-3 rounded-lg text-sm font-arabic text-center border"
+          style={{ background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.25)', color: '#FCA5A5' }}
+        >
           {error}
         </div>
       )}
@@ -74,17 +97,23 @@ export default function ForgotPassword() {
       {step === 'email' && (
         <form onSubmit={handleEmail} className="space-y-4" noValidate>
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">البريد الإلكتروني</label>
+            <label className="block text-sm font-medium font-arabic mb-1.5"
+              style={{ color: 'rgba(255,255,255,0.70)' }}>
+              البريد الإلكتروني
+            </label>
             <input
               type="email" dir="ltr" autoComplete="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="example@email.com"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors"
+              style={glassInput}
             />
           </div>
           <button type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm">
+            className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold hover:brightness-110"
+            style={{ background: '#F59E0B', color: '#0a0a0a' }}
+          >
             متابعة
           </button>
         </form>
@@ -97,34 +126,56 @@ export default function ForgotPassword() {
             { key: 'confirm', label: 'تأكيد كلمة المرور' },
           ].map(({ key, label }) => (
             <div key={key}>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">{label}</label>
+              <label className="block text-sm font-medium font-arabic mb-1.5"
+                style={{ color: 'rgba(255,255,255,0.70)' }}>
+                {label}
+              </label>
               <div className="relative">
                 <input
                   type={show[key] ? 'text' : 'password'} dir="ltr"
                   value={form[key]}
                   onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent pl-10"
+                  className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors pl-10"
+                  style={glassInput}
                 />
                 <button type="button" onClick={() => toggle(key)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  className="absolute left-3 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.40)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.70)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.40)'}
+                >
                   {show[key] ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
           ))}
           <button type="submit" disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm">
+            className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold disabled:opacity-60 hover:brightness-110"
+            style={{ background: '#F59E0B', color: '#0a0a0a' }}
+          >
             {loading ? 'جاري الحفظ...' : 'حفظ كلمة المرور الجديدة'}
           </button>
           <button type="button" onClick={() => { setStep('email'); setError('') }}
-            className="w-full text-center text-sm text-gray-400 hover:text-gray-600 font-arabic py-1">
+            className="w-full text-center text-sm font-arabic py-1 transition-colors"
+            style={{ color: 'rgba(255,255,255,0.40)' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.70)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.40)'}
+          >
             رجوع
           </button>
         </form>
       )}
 
-      <p className="mt-5 text-center text-sm text-gray-500 font-arabic">
-        <Link to="/login" className="text-yellow-700 hover:underline font-medium">العودة لتسجيل الدخول</Link>
+      <p className="mt-5 text-center text-sm font-arabic" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        <Link
+          to="/login"
+          className="font-medium transition-colors"
+          style={{ color: '#FBBF24' }}
+          onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+          onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+        >
+          العودة لتسجيل الدخول
+        </Link>
       </p>
     </div>
   )
