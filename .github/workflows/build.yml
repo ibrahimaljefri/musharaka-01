@@ -25,6 +25,7 @@ jobs:
           git config user.name "GitHub Action"
           git add musharaka/client/dist -f
           git commit -m "chore: add built dist folder" || echo "No changes to commit"
+          git pull --rebase origin master
           git push
       - name: Deploy to cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
