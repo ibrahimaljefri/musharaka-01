@@ -1,0 +1,11 @@
+# Remove restrictive CSP set by cPanel/Apache — frontend needs to call Render API
+Header unset Content-Security-Policy
+Header always unset Content-Security-Policy
+
+# SPA fallback — serve index.html for all routes (React Router)
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
