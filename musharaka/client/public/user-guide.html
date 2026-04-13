@@ -1548,12 +1548,11 @@ html, body {
 (function () {
   'use strict';
 
+  const deck      = document.getElementById('deck');
+  const slides    = Array.from(deck.querySelectorAll('.slide'));
   const TOTAL = slides.length;
   let current = 0;
   let isAnimating = false;
-
-  const deck      = document.getElementById('deck');
-  const slides    = Array.from(deck.querySelectorAll('.slide'));
   const bar       = document.getElementById('progress-bar');
   const btnPrev   = document.getElementById('nav-prev');
   const btnNext   = document.getElementById('nav-next');

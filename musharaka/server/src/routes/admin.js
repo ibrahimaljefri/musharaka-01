@@ -26,6 +26,73 @@ const { standardLimiter } = require('../middleware/rateLimiter')
 // All admin routes require auth + super-admin
 router.use(standardLimiter, authMiddleware, tenantMiddleware, superAdminOnly)
 
+// ── PLATFORM STATS ────────────────────────────────────────────────────────────
+
+router.get('/stats', async (req, res, next) => {
+  try {
+    const now  = new Date()
+    const in3  = new Date(now); in3.setMonth(in3.getMonth() + 3)
+    const in6  = new Date(now); in6.setMonth(in6.getMonth() + 6)
+    const in11 = new Date(now); in11.setMonth(in11.getMonth() + 11)
+
+    const [
+      { count: totalTenants },
+      { data: tenants },
+      { count: totalBranches },
+      { count: totalTenantUsers },
+      { data: { users: authUsers } },
+      { data: tuRows },
+      { data: branchRows },
+    ] = await Promise.all([
+      supabase.from('tenants').select('*', { count: 'exact', head: true }),
+      supabase.from('tenants').select('id, name, status, expires_at'),
+      supabase.from('branches').select('*', { count: 'exact', head: true }),
+      supabase.from('tenant_users').select('*', { count: 'exact', head: true }),
+      supabase.auth.admin.listUsers({ perPage: 1000 }),
+      supabase.from('tenant_users').select('user_id, tenants(id, name)'),
+      supabase.from('branches').select('tenant_id, tenants(name)'),
+    ])
+
+    const active   = (tenants || []).filter(t => t.status === 'active')
+    const exp3     = active.filter(t => t.expires_at && new Date(t.expires_at) <= in3)
+    const exp6     = active.filter(t => t.expires_at && new Date(t.expires_at) > in3  && new Date(t.expires_at) <= in6)
+    const exp11    = active.filter(t => t.expires_at && new Date(t.expires_at) > in6  && new Date(t.expires_at) <= in11)
+    const exp12p   = active.filter(t => t.expires_at && new Date(t.expires_at) > in11)
+    const noExpiry = active.filter(t => !t.expires_at)
+
+    const usersPerTenant = {}
+    for (const row of tuRows || []) {
+      const key = row.tenants?.name || row.user_id
+      usersPerTenant[key] = (usersPerTenant[key] || 0) + 1
+    }
+
+    const branchesPerTenant = {}
+    for (const row of branchRows || []) {
+      const key = row.tenants?.name || row.tenant_id
+      branchesPerTenant[key] = (branchesPerTenant[key] || 0) + 1
+    }
+
+    res.json({
+      totals: {
+        tenants:       totalTenants     || 0,
+        branches:      totalBranches    || 0,
+        tenant_users:  totalTenantUsers || 0,
+        auth_users:    (authUsers || []).length,
+        pending_users: (authUsers || []).length - (totalTenantUsers || 0),
+      },
+      subscriptions: {
+        expiring_3m:       exp3.length,
+        expiring_6m:       exp6.length,
+        expiring_11m:      exp11.length,
+        expiring_12m_plus: exp12p.length,
+        no_expiry:         noExpiry.length,
+      },
+      users_per_tenant:    usersPerTenant,
+      branches_per_tenant: branchesPerTenant,
+    })
+  } catch (err) { next(err) }
+})
+
 // ── TENANTS ───────────────────────────────────────────────────────────────────
 
 // List all tenants

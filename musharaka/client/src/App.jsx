@@ -21,6 +21,7 @@ import ApiKeys from './pages/admin/ApiKeys'
 import AdminUsers from './pages/admin/Users'
 import BotSubscribers from './pages/admin/BotSubscribers'
 import BotSubscriberForm from './pages/admin/BotSubscriberForm'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import Tickets from './pages/admin/Tickets'
 import TicketDetail from './pages/admin/TicketDetail'
 import TicketCreate from './pages/TicketCreate'
@@ -53,6 +54,12 @@ function AdminRoute({ children }) {
   return children
 }
 
+function SuperAdminDashboardRoute() {
+  const isSuperAdmin = useAuthStore(s => s.isSuperAdmin)
+  if (isSuperAdmin) return <Navigate to="/admin/dashboard" replace />
+  return <Dashboard />
+}
+
 export default function App() {
   const loading = useAuthStore(s => s.loading)
   if (loading) return (
@@ -77,7 +84,7 @@ export default function App() {
         {/* Authenticated app routes */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           {/* Tenant pages */}
-          <Route path="/dashboard"         element={<Dashboard />} />
+          <Route path="/dashboard"         element={<SuperAdminDashboardRoute />} />
           <Route path="/sales/create"      element={<SaleCreate />} />
           <Route path="/sales/import"      element={<FeatureRoute flag="allowImport"><SaleImport /></FeatureRoute>} />
           <Route path="/reports"           element={<FeatureRoute flag="allowReports"><Reports /></FeatureRoute>} />
@@ -90,6 +97,7 @@ export default function App() {
           <Route path="/tickets/success"   element={<TicketSuccess />} />
 
           {/* Super-admin pages */}
+          <Route path="/admin/dashboard"                        element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/tenants"                        element={<AdminRoute><Tenants /></AdminRoute>} />
           <Route path="/admin/tenants/create"               element={<AdminRoute><TenantForm mode="create" /></AdminRoute>} />
           <Route path="/admin/tenants/:id/edit"             element={<AdminRoute><TenantForm mode="edit" /></AdminRoute>} />

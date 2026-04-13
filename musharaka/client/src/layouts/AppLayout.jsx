@@ -23,6 +23,7 @@ const navItems = [
 ]
 
 const adminNavItems = [
+  { to: '/admin/dashboard',       label: 'لوحة التحكم',      icon: LayoutDashboard },
   { to: '/admin/tenants',         label: 'إدارة المستأجرين', icon: Building2 },
   { to: '/admin/users',           label: 'إدارة المستخدمين', icon: Users },
   { to: '/admin/bot-subscribers', label: 'مشتركو الروبوت',   icon: MessageCircle },
