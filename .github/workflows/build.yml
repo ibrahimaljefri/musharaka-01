@@ -31,6 +31,8 @@ jobs:
             echo "No dist changes"
           else
             git commit -m "chore: update dist [skip ci]"
+            git stash || true
             git pull --rebase origin master
+            git stash pop || true
             git push origin master
           fi
