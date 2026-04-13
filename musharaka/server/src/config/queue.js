@@ -1,5 +1,5 @@
-// In test mode skip real Redis/BullMQ connections entirely
-if (process.env.NODE_ENV === 'test') {
+// Skip real Redis/BullMQ when REDIS_URL is absent (test, cPanel, Render free tier)
+if (!process.env.REDIS_URL || process.env.NODE_ENV === 'test') {
   module.exports = {
     saleImportQueue: { add: () => Promise.resolve({ id: 'mock-job' }) },
     connection:       {},
@@ -8,7 +8,7 @@ if (process.env.NODE_ENV === 'test') {
   const { Queue } = require('bullmq')
   const Redis     = require('ioredis')
 
-  const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+  const connection = new Redis(process.env.REDIS_URL, {
     maxRetriesPerRequest: null,
   })
 
