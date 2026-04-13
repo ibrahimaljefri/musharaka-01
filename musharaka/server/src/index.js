@@ -16,19 +16,10 @@ const ticketsRoutes   = require('./routes/tickets')
 const app  = express()
 const PORT = process.env.PORT || 3001
 
-// Security headers
+// Security headers — CSP disabled: frontend is served from cPanel (static), not this server.
+// This server only handles /api/* routes so a page-level CSP here is not applicable.
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc:     ["'self'"],
-      scriptSrc:      ["'self'"],
-      styleSrc:       ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
-      fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
-      connectSrc:     ["'self'", 'https://*.supabase.co', 'https://musharaka-01.onrender.com'],
-      imgSrc:         ["'self'", 'data:'],
-      frameAncestors: ["'none'"],
-    },
-  },
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }))
 
