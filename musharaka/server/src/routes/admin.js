@@ -35,15 +35,7 @@ router.get('/stats', async (req, res, next) => {
     const in6  = new Date(now); in6.setMonth(in6.getMonth() + 6)
     const in11 = new Date(now); in11.setMonth(in11.getMonth() + 11)
 
-    const [
-      { count: totalTenants },
-      { data: tenants },
-      { count: totalBranches },
-      { count: totalTenantUsers },
-      { data: { users: authUsers } },
-      { data: tuRows },
-      { data: branchRows },
-    ] = await Promise.all([
+    const [r0, r1, r2, r3, r4, r5, r6] = await Promise.all([
       supabase.from('tenants').select('*', { count: 'exact', head: true }),
       supabase.from('tenants').select('id, name, status, expires_at'),
       supabase.from('branches').select('*', { count: 'exact', head: true }),
@@ -53,7 +45,23 @@ router.get('/stats', async (req, res, next) => {
       supabase.from('branches').select('tenant_id, tenants(name)'),
     ])
 
-    const active   = (tenants || []).filter(t => t.status === 'active')
+    if (r0.error) throw r0.error
+    if (r1.error) throw r1.error
+    if (r2.error) throw r2.error
+    if (r3.error) throw r3.error
+    if (r4.error) throw r4.error
+    if (r5.error) throw r5.error
+    if (r6.error) throw r6.error
+
+    const totalTenants     = r0.count     || 0
+    const tenants          = r1.data      || []
+    const totalBranches    = r2.count     || 0
+    const totalTenantUsers = r3.count     || 0
+    const authUsers        = r4.data?.users || []
+    const tuRows           = r5.data      || []
+    const branchRows       = r6.data      || []
+
+    const active   = tenants.filter(t => t.status === 'active')
     const exp3     = active.filter(t => t.expires_at && new Date(t.expires_at) <= in3)
     const exp6     = active.filter(t => t.expires_at && new Date(t.expires_at) > in3  && new Date(t.expires_at) <= in6)
     const exp11    = active.filter(t => t.expires_at && new Date(t.expires_at) > in6  && new Date(t.expires_at) <= in11)
@@ -74,11 +82,11 @@ router.get('/stats', async (req, res, next) => {
 
     res.json({
       totals: {
-        tenants:       totalTenants     || 0,
-        branches:      totalBranches    || 0,
-        tenant_users:  totalTenantUsers || 0,
-        auth_users:    (authUsers || []).length,
-        pending_users: (authUsers || []).length - (totalTenantUsers || 0),
+        tenants:       totalTenants,
+        branches:      totalBranches,
+        tenant_users:  totalTenantUsers,
+        auth_users:    authUsers.length,
+        pending_users: Math.max(0, authUsers.length - totalTenantUsers),
       },
       subscriptions: {
         expiring_3m:       exp3.length,
@@ -312,8 +320,9 @@ router.get('/tenants/:id/branches', async (req, res, next) => {
 // List ALL registered users (assigned + pending)
 router.get('/users', async (req, res, next) => {
   try {
-    const { data: { users: authUsers }, error: authErr } = await supabase.auth.admin.listUsers()
+    const { data: usersData, error: authErr } = await supabase.auth.admin.listUsers()
     if (authErr) throw authErr
+    const authUsers = usersData?.users || []
 
     const { data: tenantUsers, error: tuErr } = await supabase
       .from('tenant_users')
