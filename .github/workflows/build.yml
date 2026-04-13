@@ -1,12 +1,15 @@
 name: Build React App
 on:
   push:
-    branches: [phase-2/ui-improvements-and-deployment, master]
+    branches: [master]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -19,11 +22,15 @@ jobs:
         run: |
           npm install --legacy-peer-deps
           npm run build
-      - name: Deploy to cPanel via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./musharaka/client/dist/
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+      - name: Commit and push dist
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add musharaka/client/dist -f
+          if git diff --staged --quiet; then
+            echo "No dist changes"
+          else
+            git commit -m "chore: update dist [skip ci]"
+            git pull --rebase origin master
+            git push origin master
+          fi
