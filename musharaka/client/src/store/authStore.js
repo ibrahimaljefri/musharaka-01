@@ -23,7 +23,7 @@ export const useAuthStore = create((set, get) => ({
       if (IS_DEV_AUTH) set({ mustChangePassword: devAuth.getMustChangePassword(session.user.id) })
     }
 
-    supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       set({ session, user: session?.user ?? null })
       if (session?.user) {
         await get()._loadTenantContext(session.user.id)
@@ -33,6 +33,7 @@ export const useAuthStore = create((set, get) => ({
               allowAdvancedDashboard: false, allowImport: false, allowReports: false, mustChangePassword: false })
       }
     })
+    set({ _authSubscription: subscription })
   },
 
   _loadTenantContext: async (userId) => {
@@ -78,7 +79,10 @@ export const useAuthStore = create((set, get) => ({
   },
 
   signOut: async () => {
+    get()._authSubscription?.unsubscribe()
     await supabase.auth.signOut()
-    set({ session: null, user: null, isSuperAdmin: false, tenantId: null, tenantStatus: null, allowedInputTypes: ['daily'], mustChangePassword: false })
+    set({ session: null, user: null, isSuperAdmin: false, tenantId: null, tenantStatus: null,
+          allowedInputTypes: ['daily'], mustChangePassword: false, _authSubscription: null })
+    window.location.href = '/login'
   },
 }))

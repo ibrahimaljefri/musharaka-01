@@ -242,15 +242,106 @@ router.get('/tenants/:id/branches', async (req, res, next) => {
 
 // ── USER MANAGEMENT ───────────────────────────────────────────────────────────
 
-// List all users with their tenant memberships
+// List ALL registered users (assigned + pending)
 router.get('/users', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    const { data: { users: authUsers }, error: authErr } = await supabase.auth.admin.listUsers()
+    if (authErr) throw authErr
+
+    const { data: tenantUsers, error: tuErr } = await supabase
       .from('tenant_users')
-      .select('id, user_id, role, created_at, tenants(id, name, slug)')
-      .order('created_at', { ascending: false })
+      .select('user_id, role, tenants(id, name)')
+    if (tuErr) throw tuErr
+
+    const assignmentMap = {}
+    for (const tu of tenantUsers || []) {
+      assignmentMap[tu.user_id] = {
+        tenant_id:   tu.tenants?.id,
+        tenant_name: tu.tenants?.name,
+        role:        tu.role,
+      }
+    }
+
+    const result = authUsers.map(u => {
+      const a = assignmentMap[u.id] || null
+      return {
+        id:            u.id,
+        email:         u.email,
+        full_name:     u.user_metadata?.full_name || u.user_metadata?.name || null,
+        status:        a ? 'assigned' : 'pending',
+        tenant_id:     a?.tenant_id   || null,
+        tenant_name:   a?.tenant_name || null,
+        role:          a?.role        || null,
+        registered_at: u.created_at,
+      }
+    })
+
+    res.json(result)
+  } catch (err) { next(err) }
+})
+
+// Create user (by admin — email auto-confirmed)
+router.post('/users', async (req, res, next) => {
+  try {
+    const { email, password, full_name } = req.body
+    if (!email)    return res.status(422).json({ error: 'البريد الإلكتروني مطلوب' })
+    if (!password) return res.status(422).json({ error: 'كلمة المرور مطلوبة' })
+
+    const { data, error } = await supabase.auth.admin.createUser({
+      email, password,
+      user_metadata: { full_name: full_name || '' },
+      email_confirm: true,
+    })
     if (error) throw error
-    res.json(data || [])
+    res.status(201).json({ id: data.user.id, email: data.user.email })
+  } catch (err) { next(err) }
+})
+
+// Assign user to tenant
+router.post('/users/:id/assign', async (req, res, next) => {
+  try {
+    const { tenant_id, role } = req.body
+    if (!tenant_id) return res.status(422).json({ error: 'يرجى اختيار المستأجر' })
+
+    const { error } = await supabase
+      .from('tenant_users')
+      .upsert({ user_id: req.params.id, tenant_id, role: role || 'user' }, { onConflict: 'user_id' })
+    if (error) throw error
+    res.json({ message: 'تم تعيين المستخدم بنجاح' })
+  } catch (err) { next(err) }
+})
+
+// Update user (name, password, tenant assignment, role)
+router.put('/users/:id', async (req, res, next) => {
+  try {
+    const { full_name, new_password, tenant_id, role } = req.body
+
+    const updates = { user_metadata: { full_name: full_name || '' } }
+    if (new_password) updates.password = new_password
+
+    const { error: authErr } = await supabase.auth.admin.updateUserById(req.params.id, updates)
+    if (authErr) throw authErr
+
+    if (tenant_id) {
+      const { error: tuErr } = await supabase
+        .from('tenant_users')
+        .upsert({ user_id: req.params.id, tenant_id, role: role || 'user' }, { onConflict: 'user_id' })
+      if (tuErr) throw tuErr
+    } else {
+      await supabase.from('tenant_users').delete().eq('user_id', req.params.id)
+    }
+
+    res.json({ message: 'تم تحديث المستخدم بنجاح' })
+  } catch (err) { next(err) }
+})
+
+// Delete user
+router.delete('/users/:id', async (req, res, next) => {
+  try {
+    await supabase.from('tenant_users').delete().eq('user_id', req.params.id)
+    const { error } = await supabase.auth.admin.deleteUser(req.params.id)
+    if (error) throw error
+    res.json({ message: 'تم حذف المستخدم' })
   } catch (err) { next(err) }
 })
 

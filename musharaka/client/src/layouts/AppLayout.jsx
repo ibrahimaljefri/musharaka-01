@@ -57,10 +57,7 @@ export default function AppLayout() {
     try { localStorage.setItem('sidebar_collapsed', String(collapsed)) } catch {}
   }, [collapsed])
 
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
-  }
+  const handleSignOut = () => signOut()
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
