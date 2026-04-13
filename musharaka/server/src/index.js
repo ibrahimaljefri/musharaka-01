@@ -24,7 +24,7 @@ app.use(helmet({
       scriptSrc:      ["'self'"],
       styleSrc:       ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
       fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
-      connectSrc:     ["'self'", 'https://*.supabase.co'],
+      connectSrc:     ["'self'", 'https://*.supabase.co', 'https://musharaka-01.onrender.com'],
       imgSrc:         ["'self'", 'data:'],
       frameAncestors: ["'none'"],
     },
