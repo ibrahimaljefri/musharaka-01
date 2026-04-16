@@ -13,11 +13,13 @@ async function tenantMiddleware(req, res, next) {
   // the full tenant-lookup chain. Auth is already validated by authMiddleware.
   // Set x-test-super-admin: true to test super-admin routes.
   if (process.env.NODE_ENV === 'test') {
-    const isSA            = req.headers['x-test-super-admin'] === 'true'
-    req.isSuperAdmin      = isSA
-    req.tenantId          = isSA ? null : 'test-tenant-id'
-    req.userRole          = isSA ? 'super_admin' : 'admin'
-    req.allowedInputTypes = ['daily', 'monthly', 'range']
+    const isSA              = req.headers['x-test-super-admin'] === 'true'
+    req.isSuperAdmin        = isSA
+    req.tenantId            = isSA ? null : 'test-tenant-id'
+    req.userRole            = isSA ? 'super_admin' : 'admin'
+    req.allowedInputTypes   = ['daily', 'monthly', 'range']
+    req.tenantActivatedAt   = '2020-01-01'  // broad window so date-range tests pass
+    req.tenantExpiresAt     = null          // null = no expiry enforced in tests
     return next()
   }
 
@@ -38,7 +40,7 @@ async function tenantMiddleware(req, res, next) {
   // ── Regular user — look up tenant membership ────────────────────────────
   const { data: membership, error } = await supabase
     .from('tenant_users')
-    .select('tenant_id, role, tenants(id, status, expires_at, allowed_input_types)')
+    .select('tenant_id, role, tenants(id, status, activated_at, expires_at, allowed_input_types)')
     .eq('user_id', userId)
     .maybeSingle()
 
@@ -55,10 +57,12 @@ async function tenantMiddleware(req, res, next) {
     return res.status(402).json({ error: 'انتهت صلاحية الاشتراك، يرجى التجديد للمتابعة' })
   }
 
-  req.isSuperAdmin       = false
-  req.tenantId           = membership.tenant_id
-  req.userRole           = membership.role
-  req.allowedInputTypes  = tenant.allowed_input_types || ['daily']
+  req.isSuperAdmin         = false
+  req.tenantId             = membership.tenant_id
+  req.userRole             = membership.role
+  req.allowedInputTypes    = tenant.allowed_input_types || ['daily']
+  req.tenantActivatedAt    = tenant.activated_at   || null   // ISO string or null
+  req.tenantExpiresAt      = tenant.expires_at     || null   // ISO string or null
   next()
 }
 

@@ -1,27 +1,31 @@
 -- Subscription plans table
 CREATE TABLE IF NOT EXISTS subscription_plans (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name_ar     text NOT NULL,
-  name_en     text NOT NULL,
-  price_sar   integer NOT NULL,
-  max_users   integer,           -- NULL = unlimited
-  max_branches integer,          -- NULL = unlimited
-  features    jsonb DEFAULT '{}',
-  is_active   boolean DEFAULT true,
-  created_at  timestamptz DEFAULT now()
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name_ar           text NOT NULL,
+  name_en           text NOT NULL,
+  price_sar         integer NOT NULL,        -- annual price in SAR
+  billing_period    text NOT NULL DEFAULT 'annual', -- 'annual' only for now
+  max_users         integer NOT NULL,        -- no unlimited — hard cap per plan
+  max_branches      integer NOT NULL,        -- no unlimited — hard cap per plan
+  extra_branch_sar  integer NOT NULL DEFAULT 0, -- extra cost per additional branch/year
+  extra_user_sar    integer NOT NULL DEFAULT 0, -- extra cost per additional user/year
+  features          jsonb DEFAULT '{}',
+  is_active         boolean DEFAULT true,
+  created_at        timestamptz DEFAULT now()
 );
 
--- Seed 4 plans
-INSERT INTO subscription_plans (name_ar, name_en, price_sar, max_users, max_branches) VALUES
-  ('أساسي',    'Basic',        699,  3,    5),
-  ('متوسط',    'Standard',     999,  10,   15),
-  ('متقدم',    'Professional', 1499, 25,   40),
-  ('مؤسسي',   'Enterprise',   2499, NULL, NULL)
+-- Seed 3 annual plans (999 / 1,999 / 3,999 ر.س/year)
+INSERT INTO subscription_plans
+  (name_ar, name_en, price_sar, billing_period, max_users, max_branches, extra_branch_sar, extra_user_sar)
+VALUES
+  ('أساسي',  'Basic',        999,  'annual', 3,  3,  300, 240),
+  ('متوسط',  'Standard',     1999, 'annual', 8,  8,  300, 240),
+  ('متقدم',  'Professional', 3999, 'annual', 15, 15, 300, 240)
 ON CONFLICT DO NOTHING;
 
--- Add max_branches column to tenants (default 5, min 5)
+-- Add columns to tenants
 ALTER TABLE tenants
-  ADD COLUMN IF NOT EXISTS max_branches integer DEFAULT 5 CHECK (max_branches >= 5),
+  ADD COLUMN IF NOT EXISTS max_branches integer DEFAULT 3 CHECK (max_branches >= 1),
   ADD COLUMN IF NOT EXISTS plan_id uuid REFERENCES subscription_plans(id);
 
 -- Row Level Security for subscription_plans (read-only for authenticated users)

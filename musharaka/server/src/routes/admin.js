@@ -107,12 +107,21 @@ router.get('/plans', async (req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('subscription_plans')
-      .select('id, name_ar, name_en, price_sar, max_users, max_branches')
+      .select('id, name_ar, name_en, price_sar, billing_period, max_users, max_branches, extra_branch_sar, extra_user_sar')
       .eq('is_active', true)
       .order('price_sar', { ascending: true })
 
     if (error) throw error
-    res.json(data)
+
+    // Compute monthly_sar: annual plans divide by 12, monthly plans keep as-is
+    const plans = (data || []).map(p => ({
+      ...p,
+      monthly_sar: p.billing_period === 'annual'
+        ? Math.round(p.price_sar / 12)
+        : p.price_sar,
+    }))
+
+    res.json(plans)
   } catch (err) {
     next(err)
   }

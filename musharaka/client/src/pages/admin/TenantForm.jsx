@@ -39,7 +39,7 @@ export default function TenantForm({ mode = 'create' }) {
     allow_advanced_dashboard: false,
     allow_import:             false,
     allow_reports:            false,
-    max_branches: 5,
+    max_branches: 3,
     plan_id:      '',
   })
   const [userForm, setUserForm] = useState({
@@ -73,7 +73,7 @@ export default function TenantForm({ mode = 'create' }) {
         allow_advanced_dashboard: data.allow_advanced_dashboard || false,
         allow_import:             data.allow_import             || false,
         allow_reports:            data.allow_reports            || false,
-        max_branches:             data.max_branches || 5,
+        max_branches:             data.max_branches || 3,
         plan_id:                  data.plan_id || '',
       })
       setFetching(false)
@@ -307,8 +307,7 @@ export default function TenantForm({ mode = 'create' }) {
               <option value="">-- بدون باقة محددة --</option>
               {plans.map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.name_ar} — {p.price_sar.toLocaleString('ar-SA')} ر.س/شهر
-                  {p.max_branches ? ` (${p.max_branches} فرع)` : ' (غير محدود)'}
+                  {p.name_ar} — {(p.monthly_sar ?? Math.round(p.price_sar / 12)).toLocaleString('ar-SA')} ر.س/شهر ({p.price_sar.toLocaleString('ar-SA')} ر.س/سنة) — {p.max_branches} فرع / {p.max_users} مستخدم{p.extra_branch_sar ? ` (+${p.extra_branch_sar} فرع إضافي)` : ''}{p.extra_user_sar ? ` (+${p.extra_user_sar} مستخدم إضافي)` : ''}
                 </option>
               ))}
             </select>
@@ -318,13 +317,13 @@ export default function TenantForm({ mode = 'create' }) {
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 font-arabic mb-1">
               الحد الأقصى للفروع
-              <span className="text-gray-400 mr-1 text-xs">(الحد الأدنى: 5)</span>
+              <span className="text-gray-400 mr-1 text-xs">(الحد الأدنى: 3)</span>
             </label>
             <input
               type="number"
-              min="5"
+              min="3"
               value={form.max_branches}
-              onChange={e => set('max_branches', Math.max(5, parseInt(e.target.value) || 5))}
+              onChange={e => set('max_branches', Math.max(3, parseInt(e.target.value) || 3))}
               className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />
           </div>

@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, useMemo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
 import KpiCard from '../components/KpiCard'
 import {
   DollarSign, TrendingUp, Hash, Lock, Trash2,
   ChevronLeft, ChevronRight, PlusCircle, Clock,
-  CheckCircle2, BarChart2, ArrowUpRight
+  CheckCircle2, BarChart2, ArrowUpRight, BadgeCheck, CalendarDays
 } from 'lucide-react'
 import ConfirmDialog from '../components/ConfirmDialog'
 import AlertBanner from '../components/AlertBanner'
@@ -64,6 +64,94 @@ function MiniBarChart({ data, label }) {
             <span className="text-xs text-gray-400 font-arabic truncate w-full text-center">{d.key}</span>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+// ── License Widget ──────────────────────────────────────────────────────────────
+function LicenseWidget({ activatedAt, expiresAt, planName, onRenew }) {
+  const daysLeft = useMemo(() => {
+    if (!expiresAt) return null
+    return Math.ceil((new Date(expiresAt) - new Date()) / 86400000)
+  }, [expiresAt])
+
+  const totalDays = useMemo(() => {
+    if (!activatedAt || !expiresAt) return null
+    return Math.ceil((new Date(expiresAt) - new Date(activatedAt)) / 86400000)
+  }, [activatedAt, expiresAt])
+
+  const pct = (totalDays && daysLeft !== null)
+    ? Math.max(0, Math.min(100, Math.round((daysLeft / totalDays) * 100)))
+    : null
+
+  const colorClass = daysLeft === null
+    ? 'text-gray-500 dark:text-gray-400'
+    : daysLeft > 90
+    ? 'text-green-600 dark:text-green-400'
+    : daysLeft > 30
+    ? 'text-amber-600 dark:text-amber-400'
+    : 'text-red-600 dark:text-red-400'
+
+  const barColor = daysLeft === null
+    ? 'bg-gray-300 dark:bg-gray-600'
+    : daysLeft > 90
+    ? 'bg-green-500'
+    : daysLeft > 30
+    ? 'bg-amber-400'
+    : 'bg-red-500'
+
+  const expiryLabel = expiresAt
+    ? new Date(expiresAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })
+    : null
+
+  const daysLabel = daysLeft === null
+    ? 'ترخيص مفتوح'
+    : daysLeft <= 0
+    ? 'منتهي'
+    : `${daysLeft.toLocaleString('ar-SA')} ${daysLeft === 1 ? 'يوم' : 'يوم'}`
+
+  return (
+    <div className="card-surface p-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        {/* Plan & expiry info */}
+        <div className="flex items-center gap-4 flex-1 flex-wrap">
+          {planName && (
+            <div className="flex items-center gap-1.5">
+              <BadgeCheck size={14} className="text-yellow-600 shrink-0" />
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic">الباقة:</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 font-arabic capitalize">{planName}</span>
+            </div>
+          )}
+          {expiryLabel && (
+            <div className="flex items-center gap-1.5">
+              <CalendarDays size={14} className="text-gray-400 shrink-0" />
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic">الانتهاء:</span>
+              <span className="text-sm text-gray-700 dark:text-gray-200 font-arabic">{expiryLabel}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Days left + progress */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className={`text-sm font-bold font-arabic ${colorClass} flex items-center gap-1`}>
+            {daysLeft !== null && daysLeft > 0 && daysLeft < 30 && (
+              <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            )}
+            <span>متبقي: {daysLabel}</span>
+          </div>
+          {pct !== null && (
+            <div className="w-24 hidden sm:block">
+              <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${barColor} rounded-full transition-all duration-700`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 text-left mt-0.5">{pct}%</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -187,8 +275,19 @@ function AdvancedDashboard({ branchId }) {
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const navigate               = useNavigate()
   const allowAdvancedDashboard = useAuthStore(s => s.allowAdvancedDashboard)
-  const tenantId = useAuthStore(s => s.tenantId)
+  const tenantId               = useAuthStore(s => s.tenantId)
+  const isSuperAdmin           = useAuthStore(s => s.isSuperAdmin)
+  const activatedAt            = useAuthStore(s => s.activatedAt)
+  const expiresAt              = useAuthStore(s => s.expiresAt)
+  const planName               = useAuthStore(s => s.planName)
+
+  // License widget helpers (memoized to avoid re-computation every render)
+  const daysLeft = useMemo(() => {
+    if (!expiresAt) return null
+    return Math.ceil((new Date(expiresAt) - new Date()) / 86400000)
+  }, [expiresAt])
 
   const [branches, setBranches]   = useState([])
   const [branchId, setBranchId]   = useState('')
@@ -290,6 +389,31 @@ export default function Dashboard() {
       </div>
 
       {flash && <AlertBanner type={flash.type} message={flash.msg} />}
+
+      {/* License widget — hidden for super-admins (they have no tenant license) */}
+      {!isSuperAdmin && (activatedAt || expiresAt || planName) && (
+        <LicenseWidget
+          activatedAt={activatedAt}
+          expiresAt={expiresAt}
+          planName={planName}
+        />
+      )}
+
+      {/* Expiry CTA banner — shown when < 30 days remain */}
+      {!isSuperAdmin && daysLeft !== null && daysLeft < 30 && (
+        <AlertBanner type="warning" message={
+          <span className="font-arabic">
+            ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم.{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/tickets/create?category=license')}
+              className="underline font-semibold hover:no-underline"
+            >
+              سجّل طلب تجديد الآن ←
+            </button>
+          </span>
+        } />
+      )}
 
       {/* Branch quota warning */}
       {branchQuota && branchQuota.max !== null && branchQuota.max !== undefined &&

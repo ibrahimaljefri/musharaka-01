@@ -62,6 +62,138 @@ function isInstruction(message) {
   return INSTRUCTION_TRIGGERS.some(t => m === t || m.startsWith(t + ' '))
 }
 
+// ── User-guide triggers ───────────────────────────────────────────────────────
+const GUIDE_TRIGGERS = [
+  '/guide', 'دليل', 'دليل المستخدم', 'شرح', 'شرح النظام', 'كيف استخدم',
+  'كيف أستخدم', 'طريقة الاستخدام',
+]
+
+function isGuideRequest(message) {
+  const m = message.trim().toLowerCase()
+  return GUIDE_TRIGGERS.some(t => m === t || m.startsWith(t + ' '))
+}
+
+// ── Branch-registration FAQ triggers ─────────────────────────────────────────
+const BRANCH_HELP_PATTERNS = [
+  /كيف\s+(أ|ا)سجل\s+فرع/,
+  /كيف\s+(أ|ا)ضيف\s+فرع/,
+  /تسجيل\s+فرع/,
+  /(إ|ا)ضافة\s+فرع/,
+  /فرع\s+جديد/,
+  /انشاء\s+فرع/,
+  /(إ|ا)نشاء\s+فرع/,
+]
+
+function isBranchHelp(message) {
+  const m = message.trim()
+  return BRANCH_HELP_PATTERNS.some(re => re.test(m))
+}
+
+// ── Branch-limit increase FAQ triggers ───────────────────────────────────────
+const BRANCH_LIMIT_PATTERNS = [
+  /كيف\s+(أ|ا)زيد\s+عدد\s+الفروع/,
+  /زيادة\s+عدد\s+الفروع/,
+  /زيادة\s+الفروع/,
+  /(أ|ا)ريد\s+(أ|ا)زيد\s+فروع/,
+  /رفع\s+حد\s+الفروع/,
+  /الحد\s+الأقصى\s+للفروع/,
+  /وصلت\s+(إ|ا)لى\s+الحد/,
+  /(إ|ا)شتراك.*فروع/,
+  /ترقية.*باقة/,
+  /تغيير.*باقة/,
+]
+
+function isBranchLimitHelp(message) {
+  const m = message.trim()
+  return BRANCH_LIMIT_PATTERNS.some(re => re.test(m))
+}
+
+function branchLimitHelpMessage() {
+  return [
+    '📈 كيفية زيادة عدد الفروع:',
+    '',
+    'عدد الفروع مرتبط بباقة اشتراكك الحالية:',
+    '',
+    '📦 الباقات المتاحة (تُدفع سنوياً):',
+    '• أساسي  — 3 فروع  / 3 مستخدمين  — 83 ر.س/شهر   (999 ر.س/سنة)',
+    '• متوسط  — 8 فروع  / 8 مستخدمين  — 167 ر.س/شهر  (1,999 ر.س/سنة)',
+    '• متقدم  — 15 فرعاً / 15 مستخدماً — 333 ر.س/شهر  (3,999 ر.س/سنة)',
+    '',
+    '➕ فرع إضافي: 300 ر.س/سنة  |  مستخدم إضافي: 240 ر.س/سنة',
+    'للترقية أو الإضافة تواصل مع الإدارة.',
+    '',
+    'اكتب "دليل" للحصول على رابط دليل المستخدم الكامل.',
+  ].join('\n')
+}
+
+// ── User-addition FAQ triggers ────────────────────────────────────────────────
+const USER_HELP_PATTERNS = [
+  /كيف\s+(أ|ا)ضيف\s+مستخدم/,
+  /كيف\s+(أ|ا)سجل\s+مستخدم/,
+  /(إ|ا)ضافة\s+مستخدم/,
+  /تسجيل\s+مستخدم/,
+  /مستخدم\s+جديد/,
+  /انشاء\s+مستخدم/,
+  /(إ|ا)نشاء\s+حساب/,
+  /كيف\s+(أ|ا)ضيف\s+موظف/,
+  /(إ|ا)ضافة\s+موظف/,
+]
+
+function isUserHelp(message) {
+  const m = message.trim()
+  return USER_HELP_PATTERNS.some(re => re.test(m))
+}
+
+function userHelpMessage() {
+  return [
+    '👤 كيفية إضافة مستخدم جديد:',
+    '',
+    'إضافة المستخدمين تتم عبر لوحة التحكم على الموقع.',
+    '',
+    '📋 الخطوات:',
+    '1. سجّل دخولك على المنصة',
+    '2. من القائمة الجانبية اختر "المستخدمون"',
+    '3. اضغط "إضافة مستخدم"',
+    '4. أدخل البريد الإلكتروني وحدد صلاحياته',
+    '5. سيصله بريد إلكتروني لتفعيل حسابه',
+    '',
+    'اكتب "دليل" للحصول على رابط دليل المستخدم الكامل.',
+  ].join('\n')
+}
+
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173'
+
+function guideMessage() {
+  return [
+    '📖 دليل المستخدم — عروة للمبيعات',
+    '',
+    'يمكنك الاطلاع على الدليل الكامل من الرابط التالي:',
+    `${CLIENT_ORIGIN}/user-guide.html`,
+    '',
+    'يشمل الدليل:',
+    '• كيفية إضافة الفروع وإدارتها',
+    '• تسجيل المبيعات اليومية والشهرية',
+    '• استعراض التقارير والإحصاءات',
+    '• إعداد الإشعارات والاشتراكات',
+  ].join('\n')
+}
+
+function branchHelpMessage() {
+  return [
+    '🏢 كيفية إضافة فرع جديد:',
+    '',
+    'إضافة الفروع تتم عبر لوحة التحكم على الموقع، وليس من خلال البوت.',
+    '',
+    '📋 الخطوات:',
+    '1. سجّل دخولك على المنصة',
+    '2. من القائمة الجانبية اختر "الفروع"',
+    '3. اضغط "إضافة فرع جديد"',
+    '4. أدخل اسم الفرع ورمزه ثم احفظ',
+    '',
+    'اكتب "دليل" للحصول على رابط دليل المستخدم الكامل.',
+  ].join('\n')
+}
+
 function instructionMessage() {
   return [
     'مرحباً! 👋',
@@ -81,6 +213,7 @@ function instructionMessage() {
     '   "مبيعات من 1 أبريل إلى 15 أبريل: 25000"',
     '',
     'اكتب "مساعدة" في أي وقت لعرض هذه التعليمات.',
+    'اكتب "دليل" للحصول على رابط دليل المستخدم الكامل.',
   ].join('\n')
 }
 
@@ -201,6 +334,26 @@ async function processMessage(platform, chatId, message) {
   // 2. Instruction keywords
   if (isInstruction(message)) {
     return instructionMessage()
+  }
+
+  // 2b. User guide request
+  if (isGuideRequest(message)) {
+    return guideMessage()
+  }
+
+  // 2c. Branch registration FAQ
+  if (isBranchHelp(message)) {
+    return branchHelpMessage()
+  }
+
+  // 2d. User addition FAQ
+  if (isUserHelp(message)) {
+    return userHelpMessage()
+  }
+
+  // 2e. Branch limit / upgrade FAQ
+  if (isBranchLimitHelp(message)) {
+    return branchLimitHelpMessage()
   }
 
   // 3. Handle awaiting-branch state (subscriber is replying with their branch name)

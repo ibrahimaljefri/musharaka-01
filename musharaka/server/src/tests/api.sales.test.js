@@ -109,8 +109,9 @@ describe('POST /api/sales', () => {
     })
 
     it('response body includes a success message', async () => {
+      const today = new Date().toISOString().split('T')[0]
       const res = await request(app).post('/api/sales').set(AUTH_HEADERS)
-        .send({ branch_id: VALID_BRANCH, input_type: 'daily', amount: 100, sale_date: '2026-06-01' })
+        .send({ branch_id: VALID_BRANCH, input_type: 'daily', amount: 100, sale_date: today })
       expect(res.status).toBe(201)
       expect(typeof res.body.message).toBe('string')
     })

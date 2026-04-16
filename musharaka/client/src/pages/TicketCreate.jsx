@@ -2,30 +2,41 @@
  * TicketCreate — client-facing support ticket submission form
  */
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../lib/axiosClient'
 import AlertBanner from '../components/AlertBanner'
 import { Send, Paperclip, X } from 'lucide-react'
 
-const CATEGORIES = [
-  { v: 'integration', l: 'تكامل' },
-  { v: 'license',     l: 'ترخيص' },
-  { v: 'technical',   l: 'تقني' },
-  { v: 'reporting',   l: 'تقارير' },
-]
+const CATEGORIES = ['مبيعات', 'فروع', 'مستخدمون', 'ترخيص', 'تقني', 'أخرى']
+
+/** Maps English URL param values → Arabic category labels */
+const CAT_MAP = {
+  license:  'ترخيص',
+  sales:    'مبيعات',
+  branch:   'فروع',
+  user:     'مستخدمون',
+  tech:     'تقني',
+}
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'application/pdf']
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 
 export default function TicketCreate() {
   const navigate = useNavigate()
+  const location = useLocation()
   const user     = useAuthStore(s => s.user)
+
+  // Pre-fill category from URL param e.g. ?category=license
+  const initialCategory = (() => {
+    const param = new URLSearchParams(location.search).get('category')
+    return CAT_MAP[param?.toLowerCase()] || ''
+  })()
 
   const [form, setForm] = useState({
     submitter_email: '',
     title:           '',
-    category:        '',
+    category:        initialCategory,
     description:     '',
     steps:           '',
   })
@@ -121,9 +132,9 @@ export default function TicketCreate() {
               التصنيف <span className="text-red-500">*</span>
             </label>
             <select value={form.category} onChange={e => set('category', e.target.value)} required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
               <option value="">— اختر التصنيف —</option>
-              {CATEGORIES.map(c => <option key={c.v} value={c.v}>{c.l}</option>)}
+              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
 

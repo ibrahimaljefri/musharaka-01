@@ -7,7 +7,7 @@ import {
   GitBranch, Send, FileText, LogOut, Menu, X,
   ChevronRight, Building2,
   ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy, BookOpen,
-  Sun, Moon
+  Sun, Moon, HelpCircle
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark'
 
@@ -20,6 +20,7 @@ const navItems = [
   { to: '/submit',          label: 'إرسال الفواتير',  icon: Send },
   { to: '/submissions',     label: 'تقرير الإرسالات', icon: FileText },
   { to: '/tickets/create',  label: 'رفع تذكرة دعم',   icon: LifeBuoy },
+  { to: '/faq',             label: 'الأسئلة الشائعة',  icon: HelpCircle },
 ]
 
 const adminNavItems = [

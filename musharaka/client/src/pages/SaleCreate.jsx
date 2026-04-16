@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import { supabase } from '../lib/supabaseClient'
@@ -12,7 +12,6 @@ const MONTHS = [
   { v: 7, l: 'يوليو' }, { v: 8, l: 'أغسطس' },  { v: 9, l: 'سبتمبر' },
   { v: 10, l: 'أكتوبر' }, { v: 11, l: 'نوفمبر' }, { v: 12, l: 'ديسمبر' },
 ]
-const YEARS = Array.from({ length: 6 }, (_, i) => 2021 + i)
 
 const ALL_MODES = [
   { v: 'daily',   l: 'يومي' },
@@ -23,7 +22,33 @@ const ALL_MODES = [
 export default function SaleCreate() {
   const navigate           = useNavigate()
   const allowedInputTypes  = useAuthStore(s => s.allowedInputTypes)
+  const activatedAt        = useAuthStore(s => s.activatedAt)
+  const expiresAt          = useAuthStore(s => s.expiresAt)
   const availableModes     = ALL_MODES.filter(m => allowedInputTypes.includes(m.v))
+
+  // ── License date window ───────────────────────────────────────────────────────
+  const today    = new Date().toISOString().split('T')[0]           // 'YYYY-MM-DD'
+  const minDate  = activatedAt ? activatedAt.split('T')[0] : '2020-01-01'
+  const maxDate  = (expiresAt && expiresAt.split('T')[0] < today)
+    ? expiresAt.split('T')[0]
+    : today
+
+  // Days left in license (null = open / unlimited)
+  const daysLeft = useMemo(() => {
+    if (!expiresAt) return null
+    return Math.ceil((new Date(expiresAt) - new Date()) / 86400000)
+  }, [expiresAt])
+
+  // Year options: from activatedAt year to current year (inclusive)
+  const currentYear   = new Date().getFullYear()
+  const licenseStartY = activatedAt ? new Date(activatedAt).getFullYear() : 2021
+  const YEARS = Array.from(
+    { length: currentYear - licenseStartY + 1 },
+    (_, i) => licenseStartY + i,
+  )
+
+  // Current month/year for blocking future selections
+  const currentMonth = new Date().getMonth() + 1
   const [branches, setBranches] = useState([])
   const [mode, setMode]         = useState(availableModes[0]?.v || 'daily')
   const [form, setForm]         = useState({
@@ -72,6 +97,20 @@ export default function SaleCreate() {
       <h1 className="text-xl font-bold text-gray-800 font-arabic mb-6">إضافة مبيعات</h1>
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 card-surface p-6">
+          {daysLeft !== null && daysLeft < 30 && (
+            <AlertBanner type="warning" message={
+              <span className="font-arabic">
+                ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم.{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/tickets/create?category=license')}
+                  className="underline font-semibold hover:no-underline"
+                >
+                  سجّل طلب تجديد الآن ←
+                </button>
+              </span>
+            } />
+          )}
           {error   && <AlertBanner type="error"   message={error} />}
           {success && <AlertBanner type="success" message={success} dismissible={false} />}
 
@@ -97,6 +136,7 @@ export default function SaleCreate() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">التاريخ</label>
                 <input type="date" value={form.sale_date} onChange={e => set('sale_date', e.target.value)} dir="ltr"
+                  min={minDate} max={maxDate}
                   className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
               </div>
             )}
@@ -106,14 +146,23 @@ export default function SaleCreate() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الشهر</label>
                   <select value={form.month} onChange={e => set('month', parseInt(e.target.value))}
                     className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                    {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
+                    {MONTHS.map(m => {
+                      const isFuture = form.year === currentYear && m.v > currentMonth
+                      return (
+                        <option key={m.v} value={m.v} disabled={isFuture}>
+                          {m.l}{isFuture ? ' (مستقبلي)' : ''}
+                        </option>
+                      )
+                    })}
                   </select>
                 </div>
                 <div className="w-28">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">السنة</label>
                   <select value={form.year} onChange={e => set('year', parseInt(e.target.value))}
                     className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                    {YEARS.map(y => (
+                      <option key={y} value={y} disabled={y > currentYear}>{y}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -123,11 +172,13 @@ export default function SaleCreate() {
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">من التاريخ</label>
                   <input type="date" value={form.period_start_date} onChange={e => set('period_start_date', e.target.value)} dir="ltr"
+                    min={minDate} max={maxDate}
                     className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">إلى التاريخ</label>
                   <input type="date" value={form.period_end_date} onChange={e => set('period_end_date', e.target.value)} dir="ltr"
+                    min={minDate} max={maxDate}
                     className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
                 </div>
               </div>

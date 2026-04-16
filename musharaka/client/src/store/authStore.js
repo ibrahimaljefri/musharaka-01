@@ -14,6 +14,9 @@ export const useAuthStore = create((set, get) => ({
   allowImport:            false,
   allowReports:           false,
   mustChangePassword:     false,
+  activatedAt:            null,  // ISO string — license start date
+  expiresAt:              null,  // ISO string — license end date (null = open)
+  planName:               null,  // 'basic' | 'professional' | 'enterprise' | null
 
   init: async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -30,7 +33,8 @@ export const useAuthStore = create((set, get) => ({
         if (IS_DEV_AUTH) set({ mustChangePassword: devAuth.getMustChangePassword(session.user.id) })
       } else {
         set({ isSuperAdmin: false, tenantId: null, tenantStatus: null, allowedInputTypes: ['daily'],
-              allowAdvancedDashboard: false, allowImport: false, allowReports: false, mustChangePassword: false })
+              allowAdvancedDashboard: false, allowImport: false, allowReports: false, mustChangePassword: false,
+              activatedAt: null, expiresAt: null, planName: null })
       }
     })
     set({ _authSubscription: subscription })
@@ -57,7 +61,7 @@ export const useAuthStore = create((set, get) => ({
       // never prevents the user from logging in.
       const { data: membership, error: memberErr } = await supabase
         .from('tenant_users')
-        .select('tenant_id, role, tenants(status, expires_at, allowed_input_types, allow_advanced_dashboard, allow_import, allow_reports)')
+        .select('tenant_id, role, tenants(status, plan, activated_at, expires_at, allowed_input_types, allow_advanced_dashboard, allow_import, allow_reports)')
         .eq('user_id', userId)
         .maybeSingle()
 
@@ -67,7 +71,7 @@ export const useAuthStore = create((set, get) => ({
         // Retry with only the columns that the base migration guarantees
         const { data: fallback } = await supabase
           .from('tenant_users')
-          .select('tenant_id, role, tenants(status, expires_at, allowed_input_types, allow_advanced_dashboard)')
+          .select('tenant_id, role, tenants(status, plan, activated_at, expires_at, allowed_input_types, allow_advanced_dashboard)')
           .eq('user_id', userId)
           .maybeSingle()
 
@@ -93,6 +97,9 @@ export const useAuthStore = create((set, get) => ({
           allowAdvancedDashboard: t.allow_advanced_dashboard || false,
           allowImport:            false,
           allowReports:           false,
+          activatedAt:            t.activated_at  || null,
+          expiresAt:              t.expires_at    || null,
+          planName:               t.plan          || null,
         })
         return
       }
@@ -122,6 +129,9 @@ export const useAuthStore = create((set, get) => ({
         allowAdvancedDashboard: tenant.allow_advanced_dashboard || false,
         allowImport:            tenant.allow_import             || false,
         allowReports:           tenant.allow_reports            || false,
+        activatedAt:            tenant.activated_at             || null,
+        expiresAt:              tenant.expires_at               || null,
+        planName:               tenant.plan                     || null,
       })
     } catch (err) {
       console.error('[auth] _loadTenantContext unexpected error:', err)
@@ -133,7 +143,8 @@ export const useAuthStore = create((set, get) => ({
     get()._authSubscription?.unsubscribe()
     await supabase.auth.signOut()
     set({ session: null, user: null, isSuperAdmin: false, tenantId: null, tenantStatus: null,
-          allowedInputTypes: ['daily'], mustChangePassword: false, _authSubscription: null })
+          allowedInputTypes: ['daily'], mustChangePassword: false, _authSubscription: null,
+          activatedAt: null, expiresAt: null, planName: null })
     window.location.href = '/login'
   },
 }))
