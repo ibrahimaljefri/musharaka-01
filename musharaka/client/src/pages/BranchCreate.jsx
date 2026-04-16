@@ -31,6 +31,24 @@ export default function BranchCreate() {
     if (!tenantId) return setError('لم يتم تحديد المستأجر. يرجى تسجيل الخروج والدخول مجدداً.')
     setLoading(true)
     try {
+      // Check branch limit
+      const { count: currentCount } = await supabase
+        .from('branches')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+
+      const { data: tenantData } = await supabase
+        .from('tenants')
+        .select('max_branches')
+        .eq('id', tenantId)
+        .single()
+
+      const maxBranches = tenantData?.max_branches
+      if (maxBranches !== null && maxBranches !== undefined && currentCount >= maxBranches) {
+        setLoading(false)
+        return setError(`لقد وصلت إلى الحد الأقصى للفروع المسموح بها (${maxBranches} فروع). تواصل مع الإدارة للترقية.`)
+      }
+
       const { error: err } = await supabase.from('branches').insert({
         tenant_id:       tenantId,
         code:            form.code.trim(),

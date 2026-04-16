@@ -188,6 +188,7 @@ function AdvancedDashboard({ branchId }) {
 
 export default function Dashboard() {
   const allowAdvancedDashboard = useAuthStore(s => s.allowAdvancedDashboard)
+  const tenantId = useAuthStore(s => s.tenantId)
 
   const [branches, setBranches]   = useState([])
   const [branchId, setBranchId]   = useState('')
@@ -199,11 +200,22 @@ export default function Dashboard() {
   const [deleteId, setDeleteId]   = useState(null)
   const [flash, setFlash]         = useState(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [branchQuota, setBranchQuota] = useState(null)
 
   useEffect(() => {
     supabase.from('branches').select('id,code,name').order('name')
       .then(({ data }) => setBranches(data || []))
   }, [])
+
+  useEffect(() => {
+    if (!tenantId) return
+    Promise.all([
+      supabase.from('branches').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      supabase.from('tenants').select('max_branches').eq('id', tenantId).single(),
+    ]).then(([{ count: branchCount }, { data: tenantInfo }]) => {
+      setBranchQuota({ used: branchCount || 0, max: tenantInfo?.max_branches })
+    }).catch(() => {})
+  }, [tenantId])
 
   useEffect(() => { load() }, [branchId, page])
 
@@ -278,6 +290,19 @@ export default function Dashboard() {
       </div>
 
       {flash && <AlertBanner type={flash.type} message={flash.msg} />}
+
+      {/* Branch quota warning */}
+      {branchQuota && branchQuota.max !== null && branchQuota.max !== undefined &&
+        branchQuota.used >= Math.floor(branchQuota.max * 0.8) && (
+        <AlertBanner
+          type={branchQuota.used >= branchQuota.max ? 'error' : 'warning'}
+          message={
+            branchQuota.used >= branchQuota.max
+              ? `تنبيه: لقد وصلت إلى الحد الأقصى للفروع (${branchQuota.max} فروع). تواصل مع الإدارة للترقية.`
+              : `تنبيه: لديك ${branchQuota.max - branchQuota.used} فرع متبقٍ من أصل ${branchQuota.max}. تواصل مع الإدارة للترقية.`
+          }
+        />
+      )}
 
       {/* Branch filter */}
       <div className="flex items-center gap-3">

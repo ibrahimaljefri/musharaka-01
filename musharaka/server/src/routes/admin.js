@@ -101,6 +101,23 @@ router.get('/stats', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// ── SUBSCRIPTION PLANS ────────────────────────────────────────────────────────
+
+router.get('/plans', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('subscription_plans')
+      .select('id, name_ar, name_en, price_sar, max_users, max_branches')
+      .eq('is_active', true)
+      .order('price_sar', { ascending: true })
+
+    if (error) throw error
+    res.json(data)
+  } catch (err) {
+    next(err)
+  }
+})
+
 // ── TENANTS ───────────────────────────────────────────────────────────────────
 
 // List all tenants
@@ -200,6 +217,8 @@ router.put('/tenants/:id', async (req, res, next) => {
     for (const k of allowed) {
       if (req.body[k] !== undefined) updates[k] = req.body[k]
     }
+    if (req.body.max_branches !== undefined) updates.max_branches = parseInt(req.body.max_branches) || 5
+    if (req.body.plan_id !== undefined) updates.plan_id = req.body.plan_id || null
     const { data, error } = await supabase
       .from('tenants')
       .update(updates)

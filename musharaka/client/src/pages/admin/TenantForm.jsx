@@ -39,14 +39,21 @@ export default function TenantForm({ mode = 'create' }) {
     allow_advanced_dashboard: false,
     allow_import:             false,
     allow_reports:            false,
+    max_branches: 5,
+    plan_id:      '',
   })
   const [userForm, setUserForm] = useState({
     user_email: '', user_password: '', user_name: '',
   })
+  const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(isEdit)
   const [error, setError]   = useState('')
   const [success, setSuccess] = useState('')
+
+  useEffect(() => {
+    api.get('/admin/plans').then(({ data }) => setPlans(data)).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!isEdit) return
@@ -66,6 +73,8 @@ export default function TenantForm({ mode = 'create' }) {
         allow_advanced_dashboard: data.allow_advanced_dashboard || false,
         allow_import:             data.allow_import             || false,
         allow_reports:            data.allow_reports            || false,
+        max_branches:             data.max_branches || 5,
+        plan_id:                  data.plan_id || '',
       })
       setFetching(false)
     }).catch(() => setFetching(false))
@@ -102,7 +111,9 @@ export default function TenantForm({ mode = 'create' }) {
     try {
       const payload = {
         ...form,
-        expires_at: form.expires_at || null,
+        expires_at:   form.expires_at || null,
+        max_branches: form.max_branches,
+        plan_id:      form.plan_id || null,
         ...(isEdit ? {} : userForm),
       }
       if (isEdit) {
@@ -277,6 +288,45 @@ export default function TenantForm({ mode = 'create' }) {
             <p className="text-xs text-gray-400 font-arabic mt-1.5">
               حدد الأنواع التي يمكن للمستأجر استخدامها عند إدخال المبيعات
             </p>
+          </div>
+
+          {/* Subscription plan */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 font-arabic mb-1">باقة الاشتراك</label>
+            <select
+              value={form.plan_id}
+              onChange={e => {
+                const selected = plans.find(p => p.id === e.target.value)
+                set('plan_id', e.target.value)
+                if (selected && selected.max_branches) {
+                  set('max_branches', selected.max_branches)
+                }
+              }}
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            >
+              <option value="">-- بدون باقة محددة --</option>
+              {plans.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.name_ar} — {p.price_sar.toLocaleString('ar-SA')} ر.س/شهر
+                  {p.max_branches ? ` (${p.max_branches} فرع)` : ' (غير محدود)'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Max branches override */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 font-arabic mb-1">
+              الحد الأقصى للفروع
+              <span className="text-gray-400 mr-1 text-xs">(الحد الأدنى: 5)</span>
+            </label>
+            <input
+              type="number"
+              min="5"
+              value={form.max_branches}
+              onChange={e => set('max_branches', Math.max(5, parseInt(e.target.value) || 5))}
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            />
           </div>
         </div>
 
