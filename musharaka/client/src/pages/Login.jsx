@@ -47,8 +47,8 @@ export default function Login() {
       style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
     >
       {/* Brand mark */}
-      <div className="flex justify-center mb-5">
-        <LogoMark size={48} id="login" />
+      <div className="flex justify-center items-center mb-6">
+        <LogoMark size={56} id="login" />
       </div>
 
       <h1 className="text-xl font-bold text-white font-arabic mb-6 text-center">تسجيل الدخول</h1>
