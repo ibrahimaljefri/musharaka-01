@@ -6,7 +6,8 @@ const IS_DEV = !import.meta.env.VITE_SUPABASE_URL ||
                import.meta.env.VITE_SUPABASE_URL.includes('placeholder')
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api'
+  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
+  timeout: 15000, // 15 s — prevents infinite spinner when server is slow
 })
 
 api.interceptors.request.use(async config => {
@@ -22,6 +23,14 @@ api.interceptors.response.use(
   err => {
     if (err.response?.status === 401) {
       window.location.href = '/login'
+      return Promise.reject(err)
+    }
+    // Timeout or network failure — surface a readable Arabic error
+    if (err.code === 'ECONNABORTED' || err.message === 'Network Error' || !err.response) {
+      err.response = {
+        status: 503,
+        data: { error: 'تعذّر الاتصال بالخادم، يرجى المحاولة مجدداً' },
+      }
     }
     return Promise.reject(err)
   }
