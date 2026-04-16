@@ -379,10 +379,19 @@ router.post('/users/:id/assign', async (req, res, next) => {
     const { tenant_id, role } = req.body
     if (!tenant_id) return res.status(422).json({ error: 'يرجى اختيار المستأجر' })
 
-    const { error } = await supabase
+    // Remove any existing assignment first, then insert the new one.
+    // Using delete+insert avoids the ON CONFLICT constraint requirement.
+    const { error: delErr } = await supabase
       .from('tenant_users')
-      .upsert({ user_id: req.params.id, tenant_id, role: role || 'user' }, { onConflict: 'user_id' })
-    if (error) throw error
+      .delete()
+      .eq('user_id', req.params.id)
+    if (delErr) throw delErr
+
+    const { error: insErr } = await supabase
+      .from('tenant_users')
+      .insert({ user_id: req.params.id, tenant_id, role: role || 'user' })
+    if (insErr) throw insErr
+
     res.json({ message: 'تم تعيين المستخدم بنجاح' })
   } catch (err) { next(err) }
 })
@@ -399,9 +408,16 @@ router.put('/users/:id', async (req, res, next) => {
     if (authErr) throw authErr
 
     if (tenant_id) {
+      // delete+insert to avoid ON CONFLICT constraint requirement
+      const { error: delErr } = await supabase
+        .from('tenant_users')
+        .delete()
+        .eq('user_id', req.params.id)
+      if (delErr) throw delErr
+
       const { error: tuErr } = await supabase
         .from('tenant_users')
-        .upsert({ user_id: req.params.id, tenant_id, role: role || 'user' }, { onConflict: 'user_id' })
+        .insert({ user_id: req.params.id, tenant_id, role: role || 'user' })
       if (tuErr) throw tuErr
     } else {
       await supabase.from('tenant_users').delete().eq('user_id', req.params.id)
