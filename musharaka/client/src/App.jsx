@@ -1,32 +1,45 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import AppLayout from './layouts/AppLayout'
 import GuestLayout from './layouts/GuestLayout'
-import LandingPage from './pages/LandingPage'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ForgotPassword from './pages/ForgotPassword'
-import ChangePassword from './pages/ChangePassword'
-import Dashboard from './pages/Dashboard'
-import SaleCreate from './pages/SaleCreate'
-import SaleImport from './pages/SaleImport'
-import Reports from './pages/Reports'
-import Branches from './pages/Branches'
-import BranchCreate from './pages/BranchCreate'
-import BranchEdit from './pages/BranchEdit'
-import Submit from './pages/Submit'
-import Submissions from './pages/Submissions'
-import Tenants from './pages/admin/Tenants'
-import TenantForm from './pages/admin/TenantForm'
-import ApiKeys from './pages/admin/ApiKeys'
-import AdminUsers from './pages/admin/Users'
-import BotSubscribers from './pages/admin/BotSubscribers'
-import BotSubscriberForm from './pages/admin/BotSubscriberForm'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import Tickets from './pages/admin/Tickets'
-import TicketDetail from './pages/admin/TicketDetail'
-import TicketCreate from './pages/TicketCreate'
-import TicketSuccess from './pages/TicketSuccess'
+
+// Public pages
+const LandingPage      = lazy(() => import('./pages/LandingPage'))
+const Login            = lazy(() => import('./pages/Login'))
+const Register         = lazy(() => import('./pages/Register'))
+const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'))
+const ChangePassword   = lazy(() => import('./pages/ChangePassword'))
+
+// Protected pages
+const Dashboard        = lazy(() => import('./pages/Dashboard'))
+const SaleCreate       = lazy(() => import('./pages/SaleCreate'))
+const SaleImport       = lazy(() => import('./pages/SaleImport'))
+const Reports          = lazy(() => import('./pages/Reports'))
+const Branches         = lazy(() => import('./pages/Branches'))
+const BranchCreate     = lazy(() => import('./pages/BranchCreate'))
+const BranchEdit       = lazy(() => import('./pages/BranchEdit'))
+const Submit           = lazy(() => import('./pages/Submit'))
+const Submissions      = lazy(() => import('./pages/Submissions'))
+const TicketCreate     = lazy(() => import('./pages/TicketCreate'))
+const TicketSuccess    = lazy(() => import('./pages/TicketSuccess'))
+
+// Admin pages
+const Tenants           = lazy(() => import('./pages/admin/Tenants'))
+const TenantForm        = lazy(() => import('./pages/admin/TenantForm'))
+const ApiKeys           = lazy(() => import('./pages/admin/ApiKeys'))
+const AdminUsers        = lazy(() => import('./pages/admin/Users'))
+const BotSubscribers    = lazy(() => import('./pages/admin/BotSubscribers'))
+const BotSubscriberForm = lazy(() => import('./pages/admin/BotSubscriberForm'))
+const AdminDashboard    = lazy(() => import('./pages/admin/AdminDashboard'))
+const AdminTickets      = lazy(() => import('./pages/admin/Tickets'))
+const AdminTicketDetail = lazy(() => import('./pages/admin/TicketDetail'))
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+    <div className="text-yellow-500 font-arabic text-sm animate-pulse">جاري التحميل...</div>
+  </div>
+)
 
 function ProtectedRoute({ children }) {
   const session = useAuthStore(s => s.session)
@@ -70,52 +83,54 @@ export default function App() {
   )
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public landing page */}
-        <Route path="/" element={<LandingPage />} />
+    <Suspense fallback={<PageLoader />}>
+      <BrowserRouter>
+        <Routes>
+          {/* Public landing page */}
+          <Route path="/" element={<LandingPage />} />
 
-        {/* Guest routes */}
-        <Route element={<GuestLayout />}>
-          <Route path="/login"            element={<GuestRoute><Login /></GuestRoute>} />
-          <Route path="/register"         element={<GuestRoute><Register /></GuestRoute>} />
-          <Route path="/forgot-password"  element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-        </Route>
+          {/* Guest routes */}
+          <Route element={<GuestLayout />}>
+            <Route path="/login"            element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/register"         element={<GuestRoute><Register /></GuestRoute>} />
+            <Route path="/forgot-password"  element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+          </Route>
 
-        {/* Force password change — authenticated but outside AppLayout */}
-        <Route path="/change-password" element={<ProtectedRoute><ChangePassword forced /></ProtectedRoute>} />
+          {/* Force password change — authenticated but outside AppLayout */}
+          <Route path="/change-password" element={<ProtectedRoute><ChangePassword forced /></ProtectedRoute>} />
 
-        {/* Authenticated app routes */}
-        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          {/* Tenant pages */}
-          <Route path="/dashboard"         element={<SuperAdminDashboardRoute />} />
-          <Route path="/sales/create"      element={<SaleCreate />} />
-          <Route path="/sales/import"      element={<FeatureRoute flag="allowImport"><SaleImport /></FeatureRoute>} />
-          <Route path="/reports"           element={<FeatureRoute flag="allowReports"><Reports /></FeatureRoute>} />
-          <Route path="/branches"          element={<Branches />} />
-          <Route path="/branches/create"   element={<BranchCreate />} />
-          <Route path="/branches/:id/edit" element={<BranchEdit />} />
-          <Route path="/submit"            element={<Submit />} />
-          <Route path="/submissions"       element={<Submissions />} />
-          <Route path="/tickets/create"    element={<TicketCreate />} />
-          <Route path="/tickets/success"   element={<TicketSuccess />} />
+          {/* Authenticated app routes */}
+          <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            {/* Tenant pages */}
+            <Route path="/dashboard"         element={<SuperAdminDashboardRoute />} />
+            <Route path="/sales/create"      element={<SaleCreate />} />
+            <Route path="/sales/import"      element={<FeatureRoute flag="allowImport"><SaleImport /></FeatureRoute>} />
+            <Route path="/reports"           element={<FeatureRoute flag="allowReports"><Reports /></FeatureRoute>} />
+            <Route path="/branches"          element={<Branches />} />
+            <Route path="/branches/create"   element={<BranchCreate />} />
+            <Route path="/branches/:id/edit" element={<BranchEdit />} />
+            <Route path="/submit"            element={<Submit />} />
+            <Route path="/submissions"       element={<Submissions />} />
+            <Route path="/tickets/create"    element={<TicketCreate />} />
+            <Route path="/tickets/success"   element={<TicketSuccess />} />
 
-          {/* Super-admin pages */}
-          <Route path="/admin/dashboard"                        element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/tenants"                        element={<AdminRoute><Tenants /></AdminRoute>} />
-          <Route path="/admin/tenants/create"               element={<AdminRoute><TenantForm mode="create" /></AdminRoute>} />
-          <Route path="/admin/tenants/:id/edit"             element={<AdminRoute><TenantForm mode="edit" /></AdminRoute>} />
-          <Route path="/admin/tenants/:id/api-keys"         element={<AdminRoute><ApiKeys /></AdminRoute>} />
-          <Route path="/admin/users"                        element={<AdminRoute><AdminUsers /></AdminRoute>} />
-          <Route path="/admin/bot-subscribers"              element={<AdminRoute><BotSubscribers /></AdminRoute>} />
-          <Route path="/admin/bot-subscribers/create"       element={<AdminRoute><BotSubscriberForm mode="create" /></AdminRoute>} />
-          <Route path="/admin/bot-subscribers/:id/edit"     element={<AdminRoute><BotSubscriberForm mode="edit" /></AdminRoute>} />
-          <Route path="/admin/tickets"                      element={<AdminRoute><Tickets /></AdminRoute>} />
-          <Route path="/admin/tickets/:id"                  element={<AdminRoute><TicketDetail /></AdminRoute>} />
-        </Route>
+            {/* Super-admin pages */}
+            <Route path="/admin/dashboard"                        element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/tenants"                        element={<AdminRoute><Tenants /></AdminRoute>} />
+            <Route path="/admin/tenants/create"               element={<AdminRoute><TenantForm mode="create" /></AdminRoute>} />
+            <Route path="/admin/tenants/:id/edit"             element={<AdminRoute><TenantForm mode="edit" /></AdminRoute>} />
+            <Route path="/admin/tenants/:id/api-keys"         element={<AdminRoute><ApiKeys /></AdminRoute>} />
+            <Route path="/admin/users"                        element={<AdminRoute><AdminUsers /></AdminRoute>} />
+            <Route path="/admin/bot-subscribers"              element={<AdminRoute><BotSubscribers /></AdminRoute>} />
+            <Route path="/admin/bot-subscribers/create"       element={<AdminRoute><BotSubscriberForm mode="create" /></AdminRoute>} />
+            <Route path="/admin/bot-subscribers/:id/edit"     element={<AdminRoute><BotSubscriberForm mode="edit" /></AdminRoute>} />
+            <Route path="/admin/tickets"                      element={<AdminRoute><AdminTickets /></AdminRoute>} />
+            <Route path="/admin/tickets/:id"                  element={<AdminRoute><AdminTicketDetail /></AdminRoute>} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </Suspense>
   )
 }
