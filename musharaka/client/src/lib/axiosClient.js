@@ -7,9 +7,10 @@ const IS_DEV = !import.meta.env.VITE_SUPABASE_URL ||
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
-  timeout: 15000, // 15 s — prevents infinite spinner when server is slow
+  timeout: 15000,
 })
 
+// Attach fresh token before every request
 api.interceptors.request.use(async config => {
   const { data: { session } } = await supabase.auth.getSession()
   if (session?.access_token) {
@@ -20,18 +21,31 @@ api.interceptors.request.use(async config => {
 
 api.interceptors.response.use(
   res => res,
-  err => {
-    if (err.response?.status === 401) {
+  async err => {
+    const config = err.config || {}
+
+    // ── 401: try to refresh the session once, then retry the request ──────────
+    if (err.response?.status === 401 && !config._sessionRefreshed) {
+      config._sessionRefreshed = true
+      try {
+        const { data: { session } } = await supabase.auth.refreshSession()
+        if (session?.access_token) {
+          config.headers = config.headers || {}
+          config.headers.Authorization = `Bearer ${session.access_token}`
+          return api(config)   // transparent retry with fresh token
+        }
+      } catch { /* refresh failed — fall through to login redirect */ }
       window.location.href = '/login'
       return Promise.reject(err)
     }
-    // Timeout or network failure — surface a readable Arabic error
-    if (err.code === 'ECONNABORTED' || err.message === 'Network Error' || !err.response) {
-      err.response = {
-        status: 503,
-        data: { error: 'تعذّر الاتصال بالخادم، يرجى المحاولة مجدداً' },
-      }
+
+    // ── Network error / server timeout: retry once after a short pause ────────
+    if (!config._retried && (err.code === 'ECONNABORTED' || !err.response)) {
+      config._retried = true
+      await new Promise(r => setTimeout(r, 1500))
+      return api(config)   // transparent single retry
     }
+
     return Promise.reject(err)
   }
 )
