@@ -136,7 +136,10 @@ export default function Tenants() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 flex-wrap">
-                        {(t.allowed_input_types || ['daily']).map(type => (
+                        {(Array.isArray(t.allowed_input_types)
+                          ? t.allowed_input_types
+                          : (t.allowed_input_types || 'daily').split(',').filter(Boolean)
+                        ).map(type => (
                           <span key={type} className="text-xs bg-yellow-50 border border-yellow-200 text-yellow-700 px-1.5 py-0.5 rounded font-arabic">
                             {type === 'daily' ? 'يومي' : type === 'monthly' ? 'شهري' : 'مخصص'}
                           </span>

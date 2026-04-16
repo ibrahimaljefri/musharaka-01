@@ -46,15 +46,24 @@ export default function BarChart({ data = [], title = '', color = '#F59E0B', hei
     const x = scaleLinear().domain([0, xMax * 1.1]).range([0, width])
     const y = scaleBand().domain(sliced.map(d => d.label)).range([0, chartHeight]).padding(0.25)
 
-    // Y axis (labels)
+    // Y axis tick lines only — no default labels (Arabic RTL needs custom placement)
     const yAxis = g.append('g')
-      .call(axisLeft(y).tickSize(0))
+      .call(axisLeft(y).tickFormat('').tickSize(0))
     yAxis.select('.domain').remove()
-    yAxis.selectAll('text')
+
+    // Custom Arabic label placement — text-anchor:"start" puts the visual-right
+    // of Arabic text at x=-12, letting it extend left into the margin
+    g.selectAll('.y-label')
+      .data(sliced)
+      .enter().append('text')
+      .attr('class', 'y-label')
+      .attr('x', -12)
+      .attr('y', d => y(d.label) + y.bandwidth() / 2 + 4)
+      .attr('text-anchor', 'start')
       .attr('fill', textColor)
       .attr('font-family', 'Tajawal, sans-serif')
       .attr('font-size', '11px')
-      .attr('text-anchor', 'end')
+      .text(d => d.label)
 
     // Grid lines
     g.selectAll('.grid-line')

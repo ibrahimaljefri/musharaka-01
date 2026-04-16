@@ -345,20 +345,25 @@ router.get('/tenants/:id/branches', async (req, res, next) => {
 
 // ── USER MANAGEMENT ───────────────────────────────────────────────────────────
 
-// List ALL registered users (assigned + pending)
+// List ALL registered users (assigned + pending) — super-admins excluded
 router.get('/users', async (req, res, next) => {
   try {
-    const { data: usersData, error: authErr } = await supabase.auth.admin.listUsers()
-    if (authErr) throw authErr
-    const authUsers = usersData?.users || []
+    const [usersResult, tenantUsersResult, superAdminsResult] = await Promise.all([
+      supabase.auth.admin.listUsers(),
+      supabase.from('tenant_users').select('user_id, role, tenants(id, name)'),
+      supabase.from('super_admins').select('user_id'),
+    ])
 
-    const { data: tenantUsers, error: tuErr } = await supabase
-      .from('tenant_users')
-      .select('user_id, role, tenants(id, name)')
-    if (tuErr) throw tuErr
+    if (usersResult.error) throw usersResult.error
+    if (tenantUsersResult.error) throw tenantUsersResult.error
+    // super_admins errors are non-fatal — if it fails, just show all users
+
+    const authUsers = usersResult.data?.users || []
+    const tenantUsers = tenantUsersResult.data || []
+    const superAdminIds = new Set((superAdminsResult.data || []).map(sa => sa.user_id))
 
     const assignmentMap = {}
-    for (const tu of tenantUsers || []) {
+    for (const tu of tenantUsers) {
       assignmentMap[tu.user_id] = {
         tenant_id:   tu.tenants?.id,
         tenant_name: tu.tenants?.name,
@@ -366,19 +371,21 @@ router.get('/users', async (req, res, next) => {
       }
     }
 
-    const result = authUsers.map(u => {
-      const a = assignmentMap[u.id] || null
-      return {
-        id:            u.id,
-        email:         u.email,
-        full_name:     u.user_metadata?.full_name || u.user_metadata?.name || null,
-        status:        a ? 'assigned' : 'pending',
-        tenant_id:     a?.tenant_id   || null,
-        tenant_name:   a?.tenant_name || null,
-        role:          a?.role        || null,
-        registered_at: u.created_at,
-      }
-    })
+    const result = authUsers
+      .filter(u => !superAdminIds.has(u.id))   // hide super-admins from the list
+      .map(u => {
+        const a = assignmentMap[u.id] || null
+        return {
+          id:            u.id,
+          email:         u.email,
+          full_name:     u.user_metadata?.full_name || u.user_metadata?.name || null,
+          status:        a ? 'assigned' : 'pending',
+          tenant_id:     a?.tenant_id   || null,
+          tenant_name:   a?.tenant_name || null,
+          role:          a?.role        || null,
+          registered_at: u.created_at,
+        }
+      })
 
     res.json(result)
   } catch (err) { next(err) }

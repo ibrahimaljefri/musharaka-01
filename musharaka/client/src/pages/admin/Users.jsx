@@ -59,8 +59,8 @@ function AssignModal({ user, onClose, onDone }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">المستأجر</label>
-            <select value={tenantId} onChange={e => setTenantId(e.target.value)}
+            <label htmlFor="assign-tenant" className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">المستأجر</label>
+            <select id="assign-tenant" value={tenantId} onChange={e => setTenantId(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
               <option value="">اختر مستأجراً...</option>
               {tenants.map(t => (
@@ -70,8 +70,8 @@ function AssignModal({ user, onClose, onDone }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الدور</label>
-            <select value={role} onChange={e => setRole(e.target.value)}
+            <label htmlFor="assign-role" className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الدور</label>
+            <select id="assign-role" value={role} onChange={e => setRole(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
               <option value="admin">مدير</option>
               <option value="member">مستخدم</option>

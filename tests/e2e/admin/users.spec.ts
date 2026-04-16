@@ -10,7 +10,7 @@ const MOCK_USERS_JSON = JSON.stringify([
     role: 'admin',
     tenant_id: 'tenant-001',
     tenant_name: 'شركة الاختبار',
-    status: 'confirmed',
+    status: 'assigned',
     registered_at: '2025-01-01T10:00:00Z',
     created_at: '2025-01-01T10:00:00Z',
   },
