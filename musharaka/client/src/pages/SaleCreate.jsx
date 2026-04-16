@@ -94,7 +94,7 @@ export default function SaleCreate() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 font-arabic mb-6">إضافة مبيعات</h1>
+      <h1 className="text-xl font-bold text-gray-800 dark:text-white font-arabic mb-6">إضافة مبيعات</h1>
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 card-surface p-6">
           {daysLeft !== null && daysLeft < 30 && (
@@ -221,7 +221,7 @@ export default function SaleCreate() {
                 {loading ? 'جاري الحفظ...' : 'حفظ المبيعات'}
               </button>
               <button type="button" onClick={() => navigate('/dashboard')}
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-arabic">
+                className="px-5 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-arabic">
                 إلغاء
               </button>
             </div>
