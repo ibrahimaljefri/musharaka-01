@@ -78,12 +78,12 @@ export default function SaleCreate() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Mode selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-2">نوع الإدخال</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-2">نوع الإدخال</label>
               <div className="flex gap-4 flex-wrap">
                 {availableModes.map(({ v, l }) => (
                   <label key={v} className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="mode" value={v} checked={mode === v} onChange={() => setMode(v)} className="text-yellow-600 focus:ring-yellow-400" />
-                    <span className="text-sm text-gray-700 font-arabic">{l}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 font-arabic">{l}</span>
                   </label>
                 ))}
                 {availableModes.length === 0 && (
@@ -95,24 +95,24 @@ export default function SaleCreate() {
             {/* Date inputs based on mode */}
             {mode === 'daily' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">التاريخ</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">التاريخ</label>
                 <input type="date" value={form.sale_date} onChange={e => set('sale_date', e.target.value)} dir="ltr"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                  className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
               </div>
             )}
             {mode === 'monthly' && (
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الشهر</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الشهر</label>
                   <select value={form.month} onChange={e => set('month', parseInt(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
                     {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
                   </select>
                 </div>
                 <div className="w-28">
-                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">السنة</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">السنة</label>
                   <select value={form.year} onChange={e => set('year', parseInt(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
                     {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
@@ -121,23 +121,23 @@ export default function SaleCreate() {
             {mode === 'range' && (
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">من التاريخ</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">من التاريخ</label>
                   <input type="date" value={form.period_start_date} onChange={e => set('period_start_date', e.target.value)} dir="ltr"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">إلى التاريخ</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">إلى التاريخ</label>
                   <input type="date" value={form.period_end_date} onChange={e => set('period_end_date', e.target.value)} dir="ltr"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
                 </div>
               </div>
             )}
 
             {/* Branch */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الفرع <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الفرع <span className="text-red-500">*</span></label>
               <select value={form.branch_id} onChange={e => set('branch_id', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
                 <option value="">اختر الفرع</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
               </select>
@@ -145,23 +145,23 @@ export default function SaleCreate() {
 
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">المبلغ (ر.س) <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">المبلغ (ر.س) <span className="text-red-500">*</span></label>
               <input type="number" min="0.01" step="0.01" dir="ltr" value={form.amount} onChange={e => set('amount', e.target.value)} placeholder="0.00"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
             </div>
 
             {/* Invoice number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">رقم الفاتورة (اختياري)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">رقم الفاتورة (اختياري)</label>
               <input type="text" dir="ltr" value={form.invoice_number} onChange={e => set('invoice_number', e.target.value)} placeholder="INV-001"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
             </div>
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">ملاحظات (اختياري)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">ملاحظات (اختياري)</label>
               <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
             </div>
 
             <div className="flex gap-3 pt-2">

@@ -32,7 +32,7 @@ export default function GuestLayout() {
       <div className="relative w-full max-w-md px-4">
         {/* Brand */}
         <div className="text-center mb-8">
-          <div className="text-4xl font-bold font-arabic mb-1" style={{ color: '#F59E0B' }}>مشاركة</div>
+          <img src="/urwah-logo.png" alt="عروة" className="h-20 object-contain mb-1" />
           <div className="text-sm font-arabic" style={{ color: 'rgba(255,255,255,0.45)' }}>نظام إدارة المبيعات</div>
         </div>
         <Outlet />

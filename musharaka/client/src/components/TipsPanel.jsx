@@ -3,11 +3,7 @@ import { Lightbulb } from 'lucide-react'
 export default function TipsPanel({ tips = [] }) {
   return (
     <div
-      className="rounded-xl border border-yellow-200 p-4 overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #fffbeb 0%, #fef9c3 100%)',
-        boxShadow: 'inset 0 0 0 1px rgba(202,138,4,0.08)',
-      }}
+      className="rounded-xl border border-amber-200 dark:border-amber-700/50 p-4 overflow-hidden bg-amber-50 dark:bg-amber-900/20"
     >
       <div className="flex items-center gap-2 mb-3">
         <div className="p-1.5 bg-yellow-100 rounded-lg">

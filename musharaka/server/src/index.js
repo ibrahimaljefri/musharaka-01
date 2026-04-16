@@ -88,7 +88,7 @@ app.use(errorHandler)
 
 // Only start listening when run directly (not when required by tests)
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Musharaka API running on port ${PORT}`))
+  app.listen(PORT, () => console.log(`Urwah API running on port ${PORT}`))
 }
 
 module.exports = app

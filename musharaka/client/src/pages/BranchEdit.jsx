@@ -57,9 +57,9 @@ export default function BranchEdit() {
 
   const field = (key, label, dir = 'rtl', type = 'text') => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">{label}</label>
       <input type={type} dir={dir} value={form[key] || ''} onChange={e => set(key, e.target.value)}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
     </div>
   )
 
@@ -67,7 +67,7 @@ export default function BranchEdit() {
     <div className="max-w-3xl mx-auto">
       <h1 className="text-xl font-bold text-gray-800 font-arabic mb-6">تعديل الفرع</h1>
       <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex-1 card-surface rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           {error   && <AlertBanner type="error"   message={error}   />}
           {success && <AlertBanner type="success" message={success} dismissible={false} />}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -79,13 +79,13 @@ export default function BranchEdit() {
             {field('token',           'توكن الفرع',         'ltr', 'password')}
             {field('location',        'الموقع',             'rtl')}
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">العنوان</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">العنوان</label>
               <textarea value={form.address || ''} onChange={e => set('address', e.target.value)} rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
             </div>
 
             {/* Metadata */}
-            <div className="pt-2 border-t border-gray-100 text-xs text-gray-400 space-y-1 font-arabic">
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-400 space-y-1 font-arabic">
               <p>تم الإنشاء: <span dir="ltr">{new Date(form.created_at).toLocaleString('ar-SA')}</span></p>
               <p>آخر تحديث: <span dir="ltr">{new Date(form.updated_at).toLocaleString('ar-SA')}</span></p>
             </div>

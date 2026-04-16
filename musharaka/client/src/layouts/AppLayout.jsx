@@ -113,7 +113,7 @@ export default function AppLayout() {
           <LogoMark size={32} id="sidebar" />
           {!collapsed && (
             <div className="flex-1 text-right">
-              <div className="text-base font-bold text-yellow-700 font-arabic leading-tight">مشاركة</div>
+              <div className="text-base font-bold text-yellow-700 font-arabic leading-tight">عروة</div>
               <div className="text-xs text-gray-400 font-arabic">نظام إدارة المبيعات</div>
             </div>
           )}
@@ -204,7 +204,7 @@ export default function AppLayout() {
               <div className="flex items-center gap-3">
                 <LogoMark size={32} id="mobile" />
                 <div>
-                  <div className="text-base font-bold text-yellow-700 dark:text-yellow-500 font-arabic leading-tight">مشاركة</div>
+                  <div className="text-base font-bold text-yellow-700 dark:text-yellow-500 font-arabic leading-tight">عروة</div>
                   <div className="text-xs text-gray-400 font-arabic">نظام إدارة المبيعات</div>
                 </div>
               </div>

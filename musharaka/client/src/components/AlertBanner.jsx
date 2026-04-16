@@ -2,9 +2,10 @@ import { CheckCircle, AlertCircle, AlertTriangle, X } from 'lucide-react'
 import { useState } from 'react'
 
 const configs = {
-  success: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', Icon: CheckCircle },
-  error:   { bg: 'bg-red-50',   border: 'border-red-200',   text: 'text-red-700',   Icon: AlertCircle  },
-  warning: { bg: 'bg-yellow-50',border: 'border-yellow-200',text: 'text-yellow-700',Icon: AlertTriangle },
+  success: { bg: 'bg-green-50 dark:bg-green-900/20',   border: 'border-green-200 dark:border-green-700/50',   text: 'text-green-700 dark:text-green-300',   Icon: CheckCircle },
+  error:   { bg: 'bg-red-50 dark:bg-red-900/20',       border: 'border-red-200 dark:border-red-700/50',       text: 'text-red-700 dark:text-red-300',       Icon: AlertCircle  },
+  warning: { bg: 'bg-yellow-50 dark:bg-amber-900/20',  border: 'border-yellow-200 dark:border-amber-700/50',  text: 'text-yellow-700 dark:text-amber-300',  Icon: AlertTriangle },
+  info:    { bg: 'bg-blue-50 dark:bg-blue-900/20',     border: 'border-blue-200 dark:border-blue-700/50',     text: 'text-blue-700 dark:text-blue-300',     Icon: AlertCircle  },
 }
 
 export default function AlertBanner({ type = 'success', message, dismissible = true }) {

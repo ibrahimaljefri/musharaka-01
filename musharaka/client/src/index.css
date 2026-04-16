@@ -185,6 +185,10 @@
   animation: shimmer 1.4s infinite;
   border-radius: 6px;
 }
+.dark .skeleton {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter, .skeleton { animation: none; }

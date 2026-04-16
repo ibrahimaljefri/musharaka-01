@@ -53,11 +53,11 @@ export default function BranchCreate() {
 
   const field = (key, label, required = false, dir = 'rtl', placeholder = '', type = 'text') => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input type={type} dir={dir} value={form[key]} onChange={e => set(key, e.target.value)} placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
     </div>
   )
 
@@ -65,7 +65,7 @@ export default function BranchCreate() {
     <div className="max-w-3xl mx-auto">
       <h1 className="text-xl font-bold text-gray-800 font-arabic mb-6">إضافة فرع جديد</h1>
       <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex-1 card-surface rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           {error && <AlertBanner type="error" message={error} />}
           <form onSubmit={handleSubmit} className="space-y-4">
             {field('code',            'كود الفرع',          true,  'ltr', 'BR-001')}
@@ -76,9 +76,9 @@ export default function BranchCreate() {
             {field('token',           'توكن الفرع (سري)',   false, 'ltr', '', 'password')}
             {field('location',        'الموقع',             false, 'rtl', 'الرياض، حي العليا')}
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">العنوان</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">العنوان</label>
               <textarea value={form.address} onChange={e => set('address', e.target.value)} rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
             </div>
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={loading}
