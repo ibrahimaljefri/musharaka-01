@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import AppLayout from './layouts/AppLayout'
 import GuestLayout from './layouts/GuestLayout'
+import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -71,6 +72,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public landing page */}
+        <Route path="/" element={<LandingPage />} />
+
         {/* Guest routes */}
         <Route element={<GuestLayout />}>
           <Route path="/login"            element={<GuestRoute><Login /></GuestRoute>} />
