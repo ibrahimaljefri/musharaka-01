@@ -389,7 +389,7 @@ router.post('/users/:id/assign', async (req, res, next) => {
 
     const { error: insErr } = await supabase
       .from('tenant_users')
-      .insert({ user_id: req.params.id, tenant_id, role: role || 'user' })
+      .insert({ user_id: req.params.id, tenant_id, role: role || 'member' })
     if (insErr) throw insErr
 
     res.json({ message: 'تم تعيين المستخدم بنجاح' })
@@ -417,7 +417,7 @@ router.put('/users/:id', async (req, res, next) => {
 
       const { error: tuErr } = await supabase
         .from('tenant_users')
-        .insert({ user_id: req.params.id, tenant_id, role: role || 'user' })
+        .insert({ user_id: req.params.id, tenant_id, role: role || 'member' })
       if (tuErr) throw tuErr
     } else {
       await supabase.from('tenant_users').delete().eq('user_id', req.params.id)

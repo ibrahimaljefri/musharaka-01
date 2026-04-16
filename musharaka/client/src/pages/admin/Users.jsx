@@ -23,7 +23,7 @@ function fmtDate(d) {
 function AssignModal({ user, onClose, onDone }) {
   const [tenants, setTenants]   = useState([])
   const [tenantId, setTenantId] = useState('')
-  const [role, setRole]         = useState('user')
+  const [role, setRole]         = useState('member')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
 
@@ -74,7 +74,7 @@ function AssignModal({ user, onClose, onDone }) {
             <select value={role} onChange={e => setRole(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
               <option value="admin">مدير</option>
-              <option value="user">مستخدم</option>
+              <option value="member">مستخدم</option>
             </select>
           </div>
 
@@ -178,7 +178,7 @@ function EditUserModal({ user, onClose, onDone }) {
     full_name:    user.full_name || '',
     new_password: '',
     tenant_id:    user.tenant_id || '',
-    role:         user.role || 'user',
+    role:         user.role || 'member',
   })
   const [showPass, setShowPass]   = useState(false)
   const [loading, setLoading]     = useState(false)
@@ -256,7 +256,7 @@ function EditUserModal({ user, onClose, onDone }) {
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
               <option value="admin">مدير</option>
-              <option value="user">مستخدم</option>
+              <option value="member">مستخدم</option>
             </select>
           </div>
 
@@ -401,7 +401,7 @@ export default function Users() {
                     <td className="px-4 py-3">{statusBadge(u.status)}</td>
                     <td className="px-4 py-3 text-gray-600 font-arabic text-xs">{u.tenant_name || <span className="text-gray-300">غير مُعيَّن</span>}</td>
                     <td className="px-4 py-3 text-gray-500 font-arabic text-xs">
-                      {u.role === 'admin' ? 'مدير' : u.role === 'user' ? 'مستخدم' : '—'}
+                      {u.role === 'admin' ? 'مدير' : u.role === 'member' ? 'مستخدم' : '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs font-arabic">{fmtDate(u.registered_at)}</td>
                     <td className="px-4 py-3">
