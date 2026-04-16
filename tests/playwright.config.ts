@@ -42,5 +42,20 @@ export default defineConfig({
       use: { ...devices['iPad Pro'], storageState: 'fixtures/.auth/user.json' },
       dependencies: ['setup'],
     },
+    // Admin setup
+    {
+      name: 'admin-setup',
+      testMatch: /admin\.setup\.ts/,
+    },
+    // Admin authenticated project
+    {
+      name: 'admin',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'fixtures/.auth/admin.json',
+      },
+      dependencies: ['admin-setup'],
+      testMatch: '**/admin/**/*.spec.ts',
+    },
   ],
 })

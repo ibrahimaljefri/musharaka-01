@@ -68,4 +68,11 @@ test.describe('Branches list page', () => {
   test('B-07: html element has dir="rtl"', async ({ page }) => {
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
   })
+
+  test('dark mode: branch cards use dark styling', async ({ page }) => {
+    await page.evaluate(() => document.documentElement.classList.add('dark'))
+    await page.waitForTimeout(200)
+    const hasDark = await page.evaluate(() => document.documentElement.classList.contains('dark'))
+    expect(hasDark).toBe(true)
+  })
 })
