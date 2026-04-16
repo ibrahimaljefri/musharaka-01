@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { useAuthStore } from '../store/authStore'
 import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
 
@@ -12,7 +13,8 @@ const TIPS = [
 ]
 
 export default function BranchCreate() {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const tenantId  = useAuthStore(s => s.tenantId)
   const [form, setForm] = useState({
     code: '', name: '', contract_number: '', brand_name: '',
     unit_number: '', token: '', location: '', address: '',
@@ -26,20 +28,27 @@ export default function BranchCreate() {
     setError('')
     if (!form.code.trim()) return setError('كود الفرع مطلوب')
     if (!form.name.trim()) return setError('اسم الفرع مطلوب')
+    if (!tenantId) return setError('لم يتم تحديد المستأجر. يرجى تسجيل الخروج والدخول مجدداً.')
     setLoading(true)
-    const { error: err } = await supabase.from('branches').insert({
-      code:            form.code.trim(),
-      name:            form.name.trim(),
-      contract_number: form.contract_number || null,
-      brand_name:      form.brand_name || null,
-      unit_number:     form.unit_number || null,
-      token:           form.token || null,
-      location:        form.location || null,
-      address:         form.address || null,
-    })
-    setLoading(false)
-    if (err) return setError(err.code === '23505' ? 'كود الفرع مستخدم مسبقاً. يرجى اختيار كود آخر.' : err.message)
-    navigate('/branches')
+    try {
+      const { error: err } = await supabase.from('branches').insert({
+        tenant_id:       tenantId,
+        code:            form.code.trim(),
+        name:            form.name.trim(),
+        contract_number: form.contract_number || null,
+        brand_name:      form.brand_name || null,
+        unit_number:     form.unit_number || null,
+        token:           form.token || null,
+        location:        form.location || null,
+        address:         form.address || null,
+      })
+      if (err) return setError(err.code === '23505' ? 'كود الفرع مستخدم مسبقاً. يرجى اختيار كود آخر.' : err.message)
+      navigate('/branches')
+    } catch (e) {
+      setError('حدث خطأ غير متوقع. يرجى المحاولة مجدداً.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const field = (key, label, required = false, dir = 'rtl', placeholder = '', type = 'text') => (

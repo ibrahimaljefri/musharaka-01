@@ -31,19 +31,25 @@ export default function BranchEdit() {
     if (!form.code?.trim()) return setError('كود الفرع مطلوب')
     if (!form.name?.trim()) return setError('اسم الفرع مطلوب')
     setLoading(true)
-    const { error: err } = await supabase.from('branches').update({
-      code: form.code.trim(), name: form.name.trim(),
-      contract_number: form.contract_number || null,
-      brand_name: form.brand_name || null,
-      unit_number: form.unit_number || null,
-      token: form.token || null,
-      location: form.location || null,
-      address: form.address || null,
-    }).eq('id', id)
-    setLoading(false)
-    if (err) return setError(err.code === '23505' ? 'كود الفرع مستخدم مسبقاً.' : err.message)
-    setSuccess('تم حفظ التغييرات بنجاح')
-    setTimeout(() => navigate('/branches'), 1200)
+    try {
+      const { error: err } = await supabase.from('branches').update({
+        code:            form.code.trim(),
+        name:            form.name.trim(),
+        contract_number: form.contract_number || null,
+        brand_name:      form.brand_name || null,
+        unit_number:     form.unit_number || null,
+        token:           form.token || null,
+        location:        form.location || null,
+        address:         form.address || null,
+      }).eq('id', id)
+      if (err) return setError(err.code === '23505' ? 'كود الفرع مستخدم مسبقاً.' : err.message)
+      setSuccess('تم حفظ التغييرات بنجاح')
+      setTimeout(() => navigate('/branches'), 1200)
+    } catch (e) {
+      setError('حدث خطأ غير متوقع. يرجى المحاولة مجدداً.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (fetching) return <div className="p-8 text-center text-gray-400 font-arabic">جاري التحميل...</div>
