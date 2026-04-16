@@ -11,10 +11,12 @@ async function tenantMiddleware(req, res, next) {
 
   // Test-mode bypass: skip DB queries so integration tests don't need to mock
   // the full tenant-lookup chain. Auth is already validated by authMiddleware.
+  // Set x-test-super-admin: true to test super-admin routes.
   if (process.env.NODE_ENV === 'test') {
-    req.isSuperAdmin      = false
-    req.tenantId          = 'test-tenant-id'
-    req.userRole          = 'admin'
+    const isSA            = req.headers['x-test-super-admin'] === 'true'
+    req.isSuperAdmin      = isSA
+    req.tenantId          = isSA ? null : 'test-tenant-id'
+    req.userRole          = isSA ? 'super_admin' : 'admin'
     req.allowedInputTypes = ['daily', 'monthly', 'range']
     return next()
   }

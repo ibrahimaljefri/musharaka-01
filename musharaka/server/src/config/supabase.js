@@ -14,10 +14,19 @@ if (process.env.NODE_ENV === 'test') {
     return q
   }
   const testSupabase = {
-    auth: { getUser: () => Promise.resolve({ data: { user: null }, error: { message: 'test' } }) },
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null }, error: { message: 'test' } }),
+      admin: {
+        listUsers:       () => Promise.resolve({ data: { users: [] }, error: null }),
+        createUser:      () => Promise.resolve({ data: { user: null }, error: null }),
+        updateUserById:  () => Promise.resolve({ data: { user: null }, error: null }),
+        deleteUser:      () => Promise.resolve({ data: {}, error: null }),
+      },
+    },
     from: () => chainable(),
     rpc:  () => Promise.resolve({ data: null, error: null }),
-    _setFrom: (fn) => { testSupabase.from = fn },
+    _setFrom:      (fn)        => { testSupabase.from = fn },
+    _setAuthAdmin: (overrides) => { testSupabase.auth.admin = { ...testSupabase.auth.admin, ...overrides } },
   }
   module.exports = { supabase: testSupabase }
 } else {
