@@ -3,6 +3,7 @@ import { select } from 'd3-selection'
 import { scaleBand, scaleLinear } from 'd3-scale'
 import { axisLeft } from 'd3-axis'
 import { max } from 'd3-array'
+import 'd3-transition' // patches d3-selection with .transition()
 
 export default function BarChart({ data = [], title = '', color = '#F59E0B', height = 300, maxItems = 20 }) {
   const svgRef = useRef(null)
