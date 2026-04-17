@@ -119,8 +119,8 @@ export default function AppLayout() {
           className={`flex items-center border-b border-gray-100 dark:border-gray-800 h-14 w-full hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
         >
           {collapsed
-            ? <UrwahLogo width={28} variant="mark" id="sidebar-c" />
-            : <UrwahLogo width={90} variant="full" id="sidebar" />
+            ? <UrwahLogo width={22} variant="mark" id="sidebar-c" />
+            : <UrwahLogo width={68} variant="full" id="sidebar" />
           }
           {!collapsed && (
             <ChevronRight size={14} className="text-gray-300 group-hover:text-yellow-500 transition-colors shrink-0 mr-auto" />
