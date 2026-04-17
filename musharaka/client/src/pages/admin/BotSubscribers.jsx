@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../lib/axiosClient'
-import AlertBanner from '../../components/AlertBanner'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import EmptyState from '../../components/EmptyState'
 import TenantBadge from '../../components/TenantBadge'
+import { TableSkeleton } from '../../components/SkeletonLoader'
+import TableControls from '../../components/TableControls'
+import { toast } from '../../lib/useToast'
 import { Plus, Edit2, Trash2, MessageCircle, CheckCircle2, XCircle } from 'lucide-react'
 
 const PLATFORM_LABELS = { telegram: 'تيليجرام', whatsapp: 'واتساب' }
@@ -19,10 +21,10 @@ function fmtDate(d) {
 }
 
 export default function BotSubscribers() {
-  const [subscribers, setSubscribers] = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [flash, setFlash]             = useState(null)
+  const [subscribers, setSubscribers]   = useState([])
+  const [loading, setLoading]           = useState(true)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [search, setSearch]             = useState('')
 
   useEffect(() => { load() }, [])
 
@@ -32,7 +34,7 @@ export default function BotSubscribers() {
       const { data } = await api.get('/admin/bot-subscribers')
       setSubscribers(data || [])
     } catch (err) {
-      setFlash({ type: 'error', msg: err.response?.data?.error || 'فشل تحميل المشتركين' })
+      toast.error(err.response?.data?.error || 'فشل تحميل المشتركين')
     } finally { setLoading(false) }
   }
 
@@ -41,12 +43,23 @@ export default function BotSubscribers() {
     setDeleteTarget(null)
     try {
       await api.delete(`/admin/bot-subscribers/${id}`)
-      setFlash({ type: 'success', msg: 'تم حذف المشترك بنجاح' })
+      toast.success('تم حذف المشترك بنجاح')
       load()
     } catch (err) {
-      setFlash({ type: 'error', msg: err.response?.data?.error || 'فشل الحذف' })
+      toast.error(err.response?.data?.error || 'فشل الحذف')
     }
   }
+
+  const filtered = useMemo(() => {
+    if (!search) return subscribers
+    const q = search.toLowerCase()
+    return subscribers.filter(s =>
+      (s.platform || '').toLowerCase().includes(q) ||
+      (s.chat_id || '').toLowerCase().includes(q) ||
+      (s.tenant_name || '').toLowerCase().includes(q) ||
+      (s.contact_name || '').toLowerCase().includes(q)
+    )
+  }, [subscribers, search])
 
   return (
     <div className="space-y-6">
@@ -61,18 +74,25 @@ export default function BotSubscribers() {
         </Link>
       </div>
 
-      {flash && <AlertBanner type={flash.type} message={flash.msg} />}
-
       <div className="card-surface overflow-hidden">
         <div className="section-header">
           <span className="font-semibold text-gray-700 font-arabic text-sm">المشتركون المسجلون</span>
           <span className="text-xs text-gray-400 font-arabic">{subscribers.length} مشترك</span>
         </div>
 
+        <div className="px-4 pt-3">
+          <TableControls
+            value={search}
+            onChange={setSearch}
+            count={filtered.length}
+            total={subscribers.length}
+            placeholder="بحث بالمنصة أو المعرّف أو المستأجر..."
+          />
+        </div>
+
         {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-gray-400 font-arabic text-sm">جاري التحميل...</p>
+          <div className="p-4">
+            <TableSkeleton rows={5} cols={8} />
           </div>
         ) : subscribers.length === 0 ? (
           <EmptyState
@@ -89,7 +109,7 @@ export default function BotSubscribers() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50/80 text-gray-500 text-xs font-arabic border-b border-gray-100">
+              <thead className="table-head">
                 <tr>
                   <th className="px-4 py-3 text-right font-medium">المستأجر</th>
                   <th className="px-4 py-3 text-right font-medium">الفرع</th>
@@ -102,7 +122,7 @@ export default function BotSubscribers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {subscribers.map(s => (
+                {filtered.map(s => (
                   <tr key={s.id} className="hover:bg-yellow-50/20 transition-colors">
                     <td className="px-4 py-3">
                       <TenantBadge name={s.tenant_name} subtext={s.contract_number} />

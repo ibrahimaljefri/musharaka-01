@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../../lib/axiosClient'
-import AlertBanner from '../../components/AlertBanner'
 import ConfirmDialog from '../../components/ConfirmDialog'
+import { TableSkeleton } from '../../components/SkeletonLoader'
+import TableControls from '../../components/TableControls'
+import SortableHeader from '../../components/SortableHeader'
+import { toast } from '../../lib/useToast'
 import {
-  UserPlus, Trash2, CheckCircle2, Clock, UserCheck,
+  UserPlus, Trash2, Clock, UserCheck,
   Building2, Eye, EyeOff, X, Pencil
 } from 'lucide-react'
 
@@ -31,6 +34,12 @@ function AssignModal({ user, onClose, onDone }) {
     api.get('/admin/tenants').then(({ data }) => setTenants(data || []))
   }, [])
 
+  useEffect(() => {
+    const handleEsc = e => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [onClose])
+
   const handleSubmit = async e => {
     e.preventDefault()
     if (!tenantId) return setError('يرجى اختيار المستأجر')
@@ -45,23 +54,23 @@ function AssignModal({ user, onClose, onDone }) {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" dir="rtl">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-800 font-arabic">تعيين مستأجر للمستخدم</h2>
+          <h2 className="font-bold text-gray-800 dark:text-gray-100 font-arabic">تعيين مستأجر للمستخدم</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
         </div>
 
         <p className="text-sm text-gray-500 font-arabic mb-4">
-          المستخدم: <span className="font-semibold text-gray-700">{user.email}</span>
+          المستخدم: <span className="font-semibold text-gray-700 dark:text-gray-300">{user.email}</span>
         </p>
 
         {error && <div className="mb-3 p-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 font-arabic">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="assign-tenant" className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">المستأجر</label>
+            <label htmlFor="assign-tenant" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">المستأجر</label>
             <select id="assign-tenant" value={tenantId} onChange={e => setTenantId(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
+              className="input-base font-arabic">
               <option value="">اختر مستأجراً...</option>
               {tenants.map(t => (
                 <option key={t.id} value={t.id}>{t.name} ({t.slug})</option>
@@ -70,9 +79,9 @@ function AssignModal({ user, onClose, onDone }) {
           </div>
 
           <div>
-            <label htmlFor="assign-role" className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الدور</label>
+            <label htmlFor="assign-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الدور</label>
             <select id="assign-role" value={role} onChange={e => setRole(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
+              className="input-base font-arabic">
               <option value="admin">مدير</option>
               <option value="member">مستخدم</option>
             </select>
@@ -80,7 +89,7 @@ function AssignModal({ user, onClose, onDone }) {
 
           <div className="flex gap-2 pt-1">
             <button type="submit" disabled={loading}
-              className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors font-arabic">
+              className="btn-primary flex-1 disabled:opacity-60">
               {loading ? 'جاري التعيين...' : 'تعيين'}
             </button>
             <button type="button" onClick={onClose}
@@ -97,10 +106,16 @@ function AssignModal({ user, onClose, onDone }) {
 
 // ── Create User Modal ─────────────────────────────────────────────────────────
 function CreateUserModal({ onClose, onDone }) {
-  const [form, setForm]       = useState({ email: '', password: '', full_name: '' })
+  const [form, setForm]         = useState({ email: '', password: '', full_name: '' })
   const [showPass, setShowPass] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+
+  useEffect(() => {
+    const handleEsc = e => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [onClose])
 
   const handleSubmit = async e => {
     e.preventDefault()
@@ -117,9 +132,9 @@ function CreateUserModal({ onClose, onDone }) {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" dir="rtl">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-bold text-gray-800 font-arabic">إنشاء مستخدم جديد</h2>
+          <h2 className="font-bold text-gray-800 dark:text-gray-100 font-arabic">إنشاء مستخدم جديد</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
         </div>
 
@@ -127,25 +142,25 @@ function CreateUserModal({ onClose, onDone }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الاسم الكامل</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الاسم الكامل</label>
             <input type="text" dir="rtl" value={form.full_name}
               onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
               placeholder="أحمد محمد"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+              className="input-base" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">البريد الإلكتروني</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">البريد الإلكتروني</label>
             <input type="email" dir="ltr" value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               placeholder="user@example.com"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+              className="input-base" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">كلمة المرور المؤقتة</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">كلمة المرور المؤقتة</label>
             <div className="relative">
               <input type={showPass ? 'text' : 'password'} dir="ltr" value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 pl-10" />
+                className="input-base pl-10" />
               <button type="button" onClick={() => setShowPass(p => !p)}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -156,7 +171,7 @@ function CreateUserModal({ onClose, onDone }) {
 
           <div className="flex gap-2 pt-1">
             <button type="submit" disabled={loading}
-              className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors font-arabic">
+              className="btn-primary flex-1 disabled:opacity-60">
               {loading ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
             </button>
             <button type="button" onClick={onClose}
@@ -173,20 +188,26 @@ function CreateUserModal({ onClose, onDone }) {
 
 // ── Edit User Modal ───────────────────────────────────────────────────────────
 function EditUserModal({ user, onClose, onDone }) {
-  const [tenants, setTenants]     = useState([])
-  const [form, setForm]           = useState({
+  const [tenants, setTenants]   = useState([])
+  const [form, setForm]         = useState({
     full_name:    user.full_name || '',
     new_password: '',
     tenant_id:    user.tenant_id || '',
     role:         user.role || 'member',
   })
-  const [showPass, setShowPass]   = useState(false)
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
 
   useEffect(() => {
     api.get('/admin/tenants').then(({ data }) => setTenants(data || []))
   }, [])
+
+  useEffect(() => {
+    const handleEsc = e => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [onClose])
 
   const handleSubmit = async e => {
     e.preventDefault()
@@ -208,9 +229,9 @@ function EditUserModal({ user, onClose, onDone }) {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" dir="rtl">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-bold text-gray-800 font-arabic">تعديل المستخدم</h2>
+          <h2 className="font-bold text-gray-800 dark:text-gray-100 font-arabic">تعديل المستخدم</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
         </div>
 
@@ -220,21 +241,21 @@ function EditUserModal({ user, onClose, onDone }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الاسم الكامل</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الاسم الكامل</label>
             <input type="text" dir="rtl" value={form.full_name}
               onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+              className="input-base" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">
               كلمة مرور جديدة <span className="text-gray-400 font-normal">(اتركها فارغة لعدم التغيير)</span>
             </label>
             <div className="relative">
               <input type={showPass ? 'text' : 'password'} dir="ltr" value={form.new_password}
                 onChange={e => setForm(f => ({ ...f, new_password: e.target.value }))}
                 placeholder="••••••"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 pl-10" />
+                className="input-base pl-10" />
               <button type="button" onClick={() => setShowPass(p => !p)}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -243,18 +264,18 @@ function EditUserModal({ user, onClose, onDone }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">المستأجر</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">المستأجر</label>
             <select value={form.tenant_id} onChange={e => setForm(f => ({ ...f, tenant_id: e.target.value }))}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
+              className="input-base font-arabic">
               <option value="">بدون مستأجر</option>
               {tenants.map(t => <option key={t.id} value={t.id}>{t.name} ({t.slug})</option>)}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 font-arabic mb-1.5">الدور</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الدور</label>
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-arabic">
+              className="input-base font-arabic">
               <option value="admin">مدير</option>
               <option value="member">مستخدم</option>
             </select>
@@ -262,7 +283,7 @@ function EditUserModal({ user, onClose, onDone }) {
 
           <div className="flex gap-2 pt-1">
             <button type="submit" disabled={loading}
-              className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors font-arabic">
+              className="btn-primary flex-1 disabled:opacity-60">
               {loading ? 'جاري الحفظ...' : 'حفظ التعديلات'}
             </button>
             <button type="button" onClick={onClose}
@@ -279,13 +300,14 @@ function EditUserModal({ user, onClose, onDone }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function Users() {
-  const [users, setUsers]           = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [flash, setFlash]           = useState(null)
+  const [users, setUsers]               = useState([])
+  const [loading, setLoading]           = useState(true)
   const [assignTarget, setAssignTarget] = useState(null)
-  const [editTarget, setEditTarget] = useState(null)
+  const [editTarget, setEditTarget]     = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [showCreate, setShowCreate] = useState(false)
+  const [showCreate, setShowCreate]     = useState(false)
+  const [search, setSearch]             = useState('')
+  const [sort, setSort]                 = useState({ field: null, dir: 'asc' })
 
   useEffect(() => { load() }, [])
 
@@ -294,8 +316,8 @@ export default function Users() {
     try {
       const { data } = await api.get('/admin/users')
       setUsers(data || [])
-    } catch (err) {
-      setFlash({ type: 'error', msg: 'فشل تحميل المستخدمين' })
+    } catch {
+      toast.error('فشل تحميل المستخدمين')
     } finally { setLoading(false) }
   }
 
@@ -304,15 +326,40 @@ export default function Users() {
     setDeleteTarget(null)
     try {
       await api.delete(`/admin/users/${id}`)
-      setFlash({ type: 'success', msg: 'تم حذف المستخدم' })
+      toast.success('تم حذف المستخدم')
       load()
     } catch (err) {
-      setFlash({ type: 'error', msg: err.response?.data?.error || 'فشل الحذف' })
+      toast.error(err.response?.data?.error || 'فشل الحذف')
     }
   }
 
   const pending  = users.filter(u => u.status === 'pending')
-  const assigned = users.filter(u => u.status !== 'pending')
+
+  const filteredSorted = useMemo(() => {
+    let list = users.filter(u => {
+      if (!search) return true
+      const q = search.toLowerCase()
+      return (
+        (u.full_name || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q)
+      )
+    })
+
+    if (sort.field) {
+      list = [...list].sort((a, b) => {
+        if (sort.field === 'registered_at') {
+          const av = a.registered_at ? new Date(a.registered_at).getTime() : 0
+          const bv = b.registered_at ? new Date(b.registered_at).getTime() : 0
+          return sort.dir === 'asc' ? av - bv : bv - av
+        }
+        const av = a[sort.field] ?? ''
+        const bv = b[sort.field] ?? ''
+        const cmp = String(av).localeCompare(String(bv), 'ar')
+        return sort.dir === 'asc' ? cmp : -cmp
+      })
+    }
+    return list
+  }, [users, search, sort])
 
   return (
     <div className="space-y-6">
@@ -326,8 +373,6 @@ export default function Users() {
           <UserPlus size={15} /> مستخدم جديد
         </button>
       </div>
-
-      {flash && <AlertBanner type={flash.type} message={flash.msg} onClose={() => setFlash(null)} />}
 
       {/* Pending users — need attention */}
       {pending.length > 0 && (
@@ -362,17 +407,26 @@ export default function Users() {
         </div>
       )}
 
-      {/* All assigned users */}
+      {/* All users */}
       <div className="card-surface overflow-hidden">
         <div className="section-header">
           <span className="font-semibold text-gray-700 font-arabic text-sm">جميع المستخدمين</span>
           <span className="text-xs text-gray-400 font-arabic">{users.length} مستخدم</span>
         </div>
 
+        <div className="px-4 pt-3">
+          <TableControls
+            value={search}
+            onChange={setSearch}
+            count={filteredSorted.length}
+            total={users.length}
+            placeholder="بحث بالاسم أو البريد..."
+          />
+        </div>
+
         {loading ? (
-          <div className="p-10 text-center">
-            <div className="inline-block w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mb-2" />
-            <p className="text-gray-400 font-arabic text-sm">جاري التحميل...</p>
+          <div className="p-4">
+            <TableSkeleton rows={6} cols={7} />
           </div>
         ) : users.length === 0 ? (
           <div className="p-10 text-center">
@@ -382,19 +436,19 @@ export default function Users() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50/80 text-gray-500 text-xs font-arabic border-b border-gray-100">
+              <thead className="table-head">
                 <tr>
-                  <th className="px-4 py-3 text-right font-medium">الاسم</th>
+                  <SortableHeader field="full_name" sort={sort} onSort={setSort}>الاسم</SortableHeader>
                   <th className="px-4 py-3 text-right font-medium">البريد الإلكتروني</th>
-                  <th className="px-4 py-3 text-right font-medium">الحالة</th>
-                  <th className="px-4 py-3 text-right font-medium">المستأجر</th>
+                  <SortableHeader field="status" sort={sort} onSort={setSort}>الحالة</SortableHeader>
+                  <SortableHeader field="tenant_name" sort={sort} onSort={setSort}>المستأجر</SortableHeader>
                   <th className="px-4 py-3 text-right font-medium">الدور</th>
-                  <th className="px-4 py-3 text-right font-medium">تاريخ التسجيل</th>
+                  <SortableHeader field="registered_at" sort={sort} onSort={setSort}>تاريخ التسجيل</SortableHeader>
                   <th className="px-4 py-3 text-right font-medium">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {users.map(u => (
+                {filteredSorted.map(u => (
                   <tr key={u.id} className="hover:bg-yellow-50/20 transition-colors">
                     <td className="px-4 py-3 font-semibold text-gray-800 font-arabic">{u.full_name || '—'}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs font-mono">{u.email}</td>
@@ -434,7 +488,7 @@ export default function Users() {
         <EditUserModal
           user={editTarget}
           onClose={() => setEditTarget(null)}
-          onDone={() => { setEditTarget(null); setFlash({ type: 'success', msg: 'تم تحديث المستخدم بنجاح' }); load() }}
+          onDone={() => { setEditTarget(null); toast.success('تم تحديث المستخدم بنجاح'); load() }}
         />
       )}
 
@@ -442,14 +496,14 @@ export default function Users() {
         <AssignModal
           user={assignTarget}
           onClose={() => setAssignTarget(null)}
-          onDone={() => { setAssignTarget(null); setFlash({ type: 'success', msg: 'تم تعيين المستخدم بنجاح' }); load() }}
+          onDone={() => { setAssignTarget(null); toast.success('تم تعيين المستخدم بنجاح'); load() }}
         />
       )}
 
       {showCreate && (
         <CreateUserModal
           onClose={() => setShowCreate(false)}
-          onDone={() => { setShowCreate(false); setFlash({ type: 'success', msg: 'تم إنشاء المستخدم بنجاح' }); load() }}
+          onDone={() => { setShowCreate(false); toast.success('تم إنشاء المستخدم بنجاح'); load() }}
         />
       )}
 

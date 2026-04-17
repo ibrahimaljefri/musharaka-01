@@ -1,19 +1,32 @@
 /**
  * Admin: Support Tickets — list/queue view
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/axiosClient'
 import AlertBanner from '../../components/AlertBanner'
 import EmptyState from '../../components/EmptyState'
+import { TableSkeleton } from '../../components/SkeletonLoader'
+import TableControls from '../../components/TableControls'
+import SortableHeader from '../../components/SortableHeader'
 import { Ticket } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, CATEGORY_COLORS, fmtTicketDate } from '../../lib/ticketConstants'
+
+const STATUS_FILTERS = [
+  { value: null,        label: 'الكل' },
+  { value: 'open',      label: 'مفتوح' },
+  { value: 'in_progress', label: 'قيد المعالجة' },
+  { value: 'resolved',  label: 'محلول' },
+]
 
 export default function Tickets() {
   const navigate = useNavigate()
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [flash,   setFlash]   = useState(null)
+  const [search, setSearch]   = useState('')
+  const [statusFilter, setStatusFilter] = useState(null)
+  const [sort, setSort]       = useState({ field: null, dir: 'asc' })
 
   useEffect(() => { load() }, [])
 
@@ -26,6 +39,34 @@ export default function Tickets() {
       setFlash({ type: 'error', msg: err.response?.data?.error || 'فشل تحميل التذاكر' })
     } finally { setLoading(false) }
   }
+
+  const filteredSorted = useMemo(() => {
+    let list = tickets.filter(t => {
+      if (statusFilter && t.status !== statusFilter) return false
+      if (!search) return true
+      const q = search.toLowerCase()
+      return (
+        (t.ticket_number || '').toLowerCase().includes(q) ||
+        (t.submitter_name || '').toLowerCase().includes(q) ||
+        (t.tenant_name || '').toLowerCase().includes(q)
+      )
+    })
+
+    if (sort.field) {
+      list = [...list].sort((a, b) => {
+        if (sort.field === 'created_at') {
+          const av = a.created_at ? new Date(a.created_at).getTime() : 0
+          const bv = b.created_at ? new Date(b.created_at).getTime() : 0
+          return sort.dir === 'asc' ? av - bv : bv - av
+        }
+        const av = a[sort.field] ?? ''
+        const bv = b[sort.field] ?? ''
+        const cmp = String(av).localeCompare(String(bv), 'ar')
+        return sort.dir === 'asc' ? cmp : -cmp
+      })
+    }
+    return list
+  }, [tickets, search, statusFilter, sort])
 
   return (
     <div className="space-y-6">
@@ -42,10 +83,37 @@ export default function Tickets() {
           <span className="text-xs text-gray-400 font-arabic">{tickets.length} تذكرة</span>
         </div>
 
+        <div className="px-4 pt-3 space-y-3">
+          {/* Search */}
+          <TableControls
+            value={search}
+            onChange={setSearch}
+            count={filteredSorted.length}
+            total={tickets.length}
+            placeholder="بحث برقم التذكرة أو العميل أو المستأجر..."
+          />
+
+          {/* Status filter pills */}
+          <div className="flex items-center gap-2 flex-wrap pb-1" dir="rtl">
+            {STATUS_FILTERS.map(f => (
+              <button
+                key={String(f.value)}
+                onClick={() => setStatusFilter(f.value)}
+                className={`px-3 py-1 rounded-full text-xs font-arabic border transition-colors ${
+                  statusFilter === f.value
+                    ? 'bg-yellow-500 text-white border-yellow-500'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-yellow-400'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-gray-400 font-arabic text-sm">جاري التحميل...</p>
+          <div className="p-4">
+            <TableSkeleton rows={5} cols={5} />
           </div>
         ) : tickets.length === 0 ? (
           <EmptyState
@@ -56,17 +124,17 @@ export default function Tickets() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50/80 text-gray-500 text-xs font-arabic border-b border-gray-100">
+              <thead className="table-head">
                 <tr>
                   <th className="px-4 py-3 text-right font-medium">رقم التذكرة والحالة</th>
                   <th className="px-4 py-3 text-right font-medium">المستأجر</th>
                   <th className="px-4 py-3 text-right font-medium">العميل</th>
                   <th className="px-4 py-3 text-right font-medium">التصنيف</th>
-                  <th className="px-4 py-3 text-right font-medium">تاريخ الإنشاء</th>
+                  <SortableHeader field="created_at" sort={sort} onSort={setSort}>تاريخ الإنشاء</SortableHeader>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {tickets.map(t => (
+                {filteredSorted.map(t => (
                   <tr
                     key={t.id}
                     onClick={() => navigate(`/admin/tickets/${t.id}`)}

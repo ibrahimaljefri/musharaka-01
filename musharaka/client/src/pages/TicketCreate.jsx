@@ -5,7 +5,9 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../lib/axiosClient'
-import AlertBanner from '../components/AlertBanner'
+import FormField from '../components/FormField'
+import ButtonSpinner from '../components/ButtonSpinner'
+import { toast } from '../lib/useToast'
 import { Send, Paperclip, X } from 'lucide-react'
 
 const CATEGORIES = ['مبيعات', 'فروع', 'مستخدمون', 'ترخيص', 'تقني', 'أخرى']
@@ -42,30 +44,45 @@ export default function TicketCreate() {
   })
   const [file,    setFile]    = useState(null)
   const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const [errors,  setErrors]  = useState({})
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const validateField = (name, value) => {
+    let err = ''
+    if (name === 'title' && !value?.trim()) err = 'عنوان المشكلة مطلوب'
+    if (name === 'category' && !value) err = 'التصنيف مطلوب'
+    if (name === 'submitter_email' && !value?.trim()) err = 'البريد الإلكتروني مطلوب'
+    if (name === 'description' && !value?.trim()) err = 'وصف المشكلة مطلوب'
+    setErrors(prev => ({ ...prev, [name]: err }))
+    return !err
+  }
 
   const handleFileChange = e => {
     const f = e.target.files[0]
     if (!f) return
     if (!ALLOWED_TYPES.includes(f.type)) {
-      setError('يُسمح فقط بملفات PNG و JPG و PDF')
+      toast.error('يُسمح فقط بملفات PNG و JPG و PDF')
       e.target.value = ''
       return
     }
     if (f.size > MAX_FILE_SIZE) {
-      setError('حجم الملف يتجاوز 5 ميجابايت')
+      toast.error('حجم الملف يتجاوز 5 ميجابايت')
       e.target.value = ''
       return
     }
-    setError('')
     setFile(f)
   }
 
   const handleSubmit = async e => {
     e.preventDefault()
-    setError('')
+
+    const titleValid    = validateField('title',           form.title)
+    const catValid      = validateField('category',        form.category)
+    const emailValid    = validateField('submitter_email', form.submitter_email)
+    const descValid     = validateField('description',     form.description)
+    if (!titleValid || !catValid || !emailValid || !descValid) return
+
     setLoading(true)
     try {
       const submitter_name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'مستخدم'
@@ -80,7 +97,7 @@ export default function TicketCreate() {
       })
       navigate(`/tickets/success?ref=${data.ticket_number}`)
     } catch (err) {
-      setError(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
+      toast.error(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
     } finally { setLoading(false) }
   }
 
@@ -93,8 +110,6 @@ export default function TicketCreate() {
         </p>
       </div>
 
-      {error && <AlertBanner type="error" message={error} />}
-
       <form onSubmit={handleSubmit} className="space-y-5">
 
         {/* Contact email only */}
@@ -102,14 +117,13 @@ export default function TicketCreate() {
           <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
             بيانات التواصل
           </h2>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 font-arabic mb-1.5">
-              البريد الإلكتروني للتواصل <span className="text-red-500">*</span>
-            </label>
-            <input value={form.submitter_email} onChange={e => set('submitter_email', e.target.value)}
+          <FormField label="البريد الإلكتروني للتواصل" required error={errors.submitter_email}>
+            <input value={form.submitter_email}
+              onChange={e => set('submitter_email', e.target.value)}
+              onBlur={e => validateField('submitter_email', e.target.value)}
               required type="email" placeholder="email@example.com" dir="ltr"
-              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-          </div>
+              className="input-base font-mono" />
+          </FormField>
         </div>
 
         {/* Ticket details */}
@@ -118,43 +132,38 @@ export default function TicketCreate() {
             تفاصيل المشكلة
           </h2>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 font-arabic mb-1.5">
-              عنوان المشكلة <span className="text-red-500">*</span>
-            </label>
-            <input value={form.title} onChange={e => set('title', e.target.value)}
+          <FormField label="عنوان المشكلة" required error={errors.title}>
+            <input value={form.title}
+              onChange={e => set('title', e.target.value)}
+              onBlur={e => validateField('title', e.target.value)}
               required placeholder="مثال: التقارير لا تظهر"
-              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-          </div>
+              className="input-base font-arabic" />
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 font-arabic mb-1.5">
-              التصنيف <span className="text-red-500">*</span>
-            </label>
-            <select value={form.category} onChange={e => set('category', e.target.value)} required
-              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+          <FormField label="التصنيف" required error={errors.category}>
+            <select value={form.category}
+              onChange={e => set('category', e.target.value)}
+              onBlur={e => validateField('category', e.target.value)}
+              required
+              className="input-base font-arabic">
               <option value="">— اختر التصنيف —</option>
               {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 font-arabic mb-1.5">
-              وصف المشكلة <span className="text-red-500">*</span>
-            </label>
-            <textarea value={form.description} onChange={e => set('description', e.target.value)}
+          <FormField label="وصف المشكلة" required error={errors.description}>
+            <textarea value={form.description}
+              onChange={e => set('description', e.target.value)}
+              onBlur={e => validateField('description', e.target.value)}
               required rows={4} placeholder="اشرح المشكلة بالتفصيل..."
-              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
-          </div>
+              className="input-base font-arabic resize-none" />
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 font-arabic mb-1.5">
-              خطوات إعادة المشكلة <span className="text-gray-400 dark:text-gray-500">(اختياري)</span>
-            </label>
+          <FormField label="خطوات إعادة المشكلة" hint="اختياري">
             <textarea value={form.steps} onChange={e => set('steps', e.target.value)}
               rows={3} placeholder="مثال: ١- اضغط على التقارير  ٢- اختر الشهر  ٣- الصفحة فارغة"
-              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
-          </div>
+              className="input-base font-arabic resize-none" />
+          </FormField>
         </div>
 
         {/* Attachment */}
@@ -183,7 +192,7 @@ export default function TicketCreate() {
 
         <button type="submit" disabled={loading}
           className="w-full flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-3 rounded-lg transition-colors font-arabic">
-          <Send size={15} />
+          {loading ? <ButtonSpinner /> : <Send size={15} />}
           {loading ? 'جاري الإرسال...' : 'إرسال التذكرة'}
         </button>
       </form>

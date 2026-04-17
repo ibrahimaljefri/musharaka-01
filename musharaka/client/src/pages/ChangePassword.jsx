@@ -4,11 +4,16 @@ import { useAuthStore } from '../store/authStore'
 import { devAuth } from '../lib/devAuth'
 import { KeyRound, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import LogoMark from '../components/LogoMark'
+import AlertBanner from '../components/AlertBanner'
+import ButtonSpinner from '../components/ButtonSpinner'
 
-// Shared glass input style — matches Login/Register
-const glassInput = {
-  background: 'rgba(255,255,255,0.08)',
-  borderColor: 'rgba(255,255,255,0.15)',
+function getPasswordStrength(pwd) {
+  let score = 0
+  if (pwd.length >= 8) score++
+  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++
+  if (/\d/.test(pwd)) score++
+  if (/[^a-zA-Z0-9]/.test(pwd)) score++
+  return score
 }
 
 export default function ChangePassword({ forced = false }) {
@@ -23,6 +28,8 @@ export default function ChangePassword({ forced = false }) {
   const [done, setDone]       = useState(false)
 
   const toggle = key => setShow(s => ({ ...s, [key]: !s[key] }))
+
+  const strength = getPasswordStrength(form.next)
 
   const handleSubmit = async e => {
     e.preventDefault()
@@ -130,14 +137,7 @@ export default function ChangePassword({ forced = false }) {
             )}
           </div>
 
-          {error && (
-            <div
-              className="mb-4 p-3 rounded-lg text-sm font-arabic text-center border"
-              style={{ background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.25)', color: '#FCA5A5' }}
-            >
-              {error}
-            </div>
-          )}
+          <AlertBanner type="error" message={error} dismissible onClose={() => setError('')} />
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {[
@@ -156,7 +156,7 @@ export default function ChangePassword({ forced = false }) {
                     value={form[key]}
                     onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors pl-10"
-                    style={glassInput}
+                    style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }}
                   />
                   <button type="button" onClick={() => toggle(key)}
                     className="absolute left-3 top-1/2 -translate-y-1/2 transition-colors"
@@ -167,6 +167,24 @@ export default function ChangePassword({ forced = false }) {
                     {show[key] ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
+                {key === 'next' && form.next && (
+                  <div className="flex gap-1 mt-1.5">
+                    {[1, 2, 3, 4].map(i => (
+                      <div
+                        key={i}
+                        className={`h-1 flex-1 rounded-full transition-colors ${
+                          i <= strength
+                            ? strength <= 1
+                              ? 'bg-red-400'
+                              : strength === 2
+                              ? 'bg-amber-400'
+                              : 'bg-green-400'
+                            : 'bg-gray-200 dark:bg-gray-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 
@@ -174,7 +192,11 @@ export default function ChangePassword({ forced = false }) {
               className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold disabled:opacity-60 hover:brightness-110 mt-2"
               style={{ background: '#F59E0B', color: '#0a0a0a' }}
             >
-              {loading ? 'جاري الحفظ...' : <><KeyRound size={15} /><span>حفظ كلمة المرور</span></>}
+              {loading ? (
+                <><ButtonSpinner /><span>جاري الحفظ...</span></>
+              ) : (
+                <><KeyRound size={15} /><span>حفظ كلمة المرور</span></>
+              )}
             </button>
 
             {!forced && (

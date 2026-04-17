@@ -3,6 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
+import AlertBanner from '../components/AlertBanner'
+import ButtonSpinner from '../components/ButtonSpinner'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -49,14 +51,7 @@ export default function Login() {
         تسجيل الدخول
       </h1>
 
-      {error && (
-        <div
-          className="mb-4 p-3 rounded-lg text-sm font-arabic text-center border"
-          style={{ background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.25)', color: '#FCA5A5' }}
-        >
-          {error}
-        </div>
-      )}
+      <AlertBanner type="error" message={error} dismissible onClose={() => setError('')} />
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
@@ -102,7 +97,11 @@ export default function Login() {
           className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold disabled:opacity-60 hover:brightness-110"
           style={{ background: '#F59E0B', color: '#0a0a0a' }}
         >
-          {loading ? 'جاري الدخول...' : <><LogIn size={16} /><span>دخول</span></>}
+          {loading ? (
+            <><ButtonSpinner /><span>جاري الدخول...</span></>
+          ) : (
+            <><LogIn size={16} /><span>دخول</span></>
+          )}
         </button>
       </form>
 
@@ -125,4 +124,3 @@ export default function Login() {
     </div>
   )
 }
-

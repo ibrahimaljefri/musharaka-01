@@ -5,6 +5,9 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
 import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
+import FormField from '../components/FormField'
+import ButtonSpinner from '../components/ButtonSpinner'
+import { toast } from '../lib/useToast'
 
 const MONTHS = [
   { v: 1, l: 'يناير' }, { v: 2, l: 'فبراير' }, { v: 3, l: 'مارس' },
@@ -58,8 +61,7 @@ export default function SaleCreate() {
     period_start_date: '', period_end_date: '',
   })
   const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState('')
-  const [success, setSuccess]   = useState('')
+  const [errors, setErrors]     = useState({})
 
   useEffect(() => {
     supabase.from('branches').select('id,code,name').order('name')
@@ -68,20 +70,41 @@ export default function SaleCreate() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  const validateField = (name, value) => {
+    let err = ''
+    if (name === 'branch_id' && !value) err = 'الفرع مطلوب'
+    if (name === 'amount' && (!value || Number(value) <= 0)) err = 'يجب أن يكون المبلغ أكبر من صفر'
+    if (name === 'sale_date' && value) {
+      if (value < minDate || value > maxDate) err = 'التاريخ خارج نطاق الترخيص'
+    }
+    if (name === 'period_start_date' && value) {
+      if (value < minDate || value > maxDate) err = 'التاريخ خارج نطاق الترخيص'
+    }
+    if (name === 'period_end_date' && value) {
+      if (value < minDate || value > maxDate) err = 'التاريخ خارج نطاق الترخيص'
+    }
+    setErrors(prev => ({ ...prev, [name]: err }))
+    return !err
+  }
+
   const handleSubmit = async e => {
     e.preventDefault()
-    setError(''); setSuccess('')
-    if (!form.branch_id) return setError('يرجى اختيار الفرع')
-    if (!form.amount || parseFloat(form.amount) <= 0) return setError('يرجى إدخال مبلغ صحيح أكبر من صفر')
+
+    const branchValid = validateField('branch_id', form.branch_id)
+    const amountValid = validateField('amount', form.amount)
+    if (!branchValid || !amountValid) return
+
+    if (!form.branch_id) return toast.error('يرجى اختيار الفرع')
+    if (!form.amount || parseFloat(form.amount) <= 0) return toast.error('يرجى إدخال مبلغ صحيح أكبر من صفر')
 
     const payload = { ...form, input_type: mode, amount: parseFloat(form.amount) }
     setLoading(true)
     try {
       const { data } = await api.post('/sales', payload)
-      setSuccess(data.message)
+      toast.success(data.message)
       setTimeout(() => navigate('/dashboard'), 1500)
     } catch (err) {
-      setError(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
+      toast.error(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
     } finally { setLoading(false) }
   }
 
@@ -111,8 +134,6 @@ export default function SaleCreate() {
               </span>
             } />
           )}
-          {error   && <AlertBanner type="error"   message={error} />}
-          {success && <AlertBanner type="success" message={success} dismissible={false} />}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Mode selector */}
@@ -133,19 +154,21 @@ export default function SaleCreate() {
 
             {/* Date inputs based on mode */}
             {mode === 'daily' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">التاريخ</label>
-                <input type="date" value={form.sale_date} onChange={e => set('sale_date', e.target.value)} dir="ltr"
+              <FormField label="التاريخ" error={errors.sale_date}>
+                <input type="date" value={form.sale_date}
+                  onChange={e => set('sale_date', e.target.value)}
+                  onBlur={e => validateField('sale_date', e.target.value)}
+                  dir="ltr"
                   min={minDate} max={maxDate}
-                  className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-              </div>
+                  className="input-base" />
+              </FormField>
             )}
             {mode === 'monthly' && (
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الشهر</label>
                   <select value={form.month} onChange={e => set('month', parseInt(e.target.value))}
-                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    className="input-base font-arabic">
                     {MONTHS.map(m => {
                       const isFuture = form.year === currentYear && m.v > currentMonth
                       return (
@@ -159,7 +182,7 @@ export default function SaleCreate() {
                 <div className="w-28">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">السنة</label>
                   <select value={form.year} onChange={e => set('year', parseInt(e.target.value))}
-                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    className="input-base">
                     {YEARS.map(y => (
                       <option key={y} value={y} disabled={y > currentYear}>{y}</option>
                     ))}
@@ -170,54 +193,66 @@ export default function SaleCreate() {
             {mode === 'range' && (
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">من التاريخ</label>
-                  <input type="date" value={form.period_start_date} onChange={e => set('period_start_date', e.target.value)} dir="ltr"
-                    min={minDate} max={maxDate}
-                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                  <FormField label="من التاريخ" error={errors.period_start_date}>
+                    <input type="date" value={form.period_start_date}
+                      onChange={e => set('period_start_date', e.target.value)}
+                      onBlur={e => validateField('period_start_date', e.target.value)}
+                      dir="ltr"
+                      min={minDate} max={maxDate}
+                      className="input-base w-full" />
+                  </FormField>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">إلى التاريخ</label>
-                  <input type="date" value={form.period_end_date} onChange={e => set('period_end_date', e.target.value)} dir="ltr"
-                    min={minDate} max={maxDate}
-                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                  <FormField label="إلى التاريخ" error={errors.period_end_date}>
+                    <input type="date" value={form.period_end_date}
+                      onChange={e => set('period_end_date', e.target.value)}
+                      onBlur={e => validateField('period_end_date', e.target.value)}
+                      dir="ltr"
+                      min={minDate} max={maxDate}
+                      className="input-base w-full" />
+                  </FormField>
                 </div>
               </div>
             )}
 
             {/* Branch */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الفرع <span className="text-red-500">*</span></label>
-              <select value={form.branch_id} onChange={e => set('branch_id', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <FormField label="الفرع" required error={errors.branch_id}>
+              <select value={form.branch_id}
+                onChange={e => set('branch_id', e.target.value)}
+                onBlur={e => validateField('branch_id', e.target.value)}
+                className="input-base font-arabic">
                 <option value="">اختر الفرع</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
               </select>
-            </div>
+            </FormField>
 
             {/* Amount */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">المبلغ (ر.س) <span className="text-red-500">*</span></label>
-              <input type="number" min="0.01" step="0.01" dir="ltr" value={form.amount} onChange={e => set('amount', e.target.value)} placeholder="0.00"
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-            </div>
+            <FormField label="المبلغ (ر.س)" required error={errors.amount}>
+              <input type="number" min="0.01" step="0.01" dir="ltr" value={form.amount}
+                onChange={e => set('amount', e.target.value)}
+                onBlur={e => validateField('amount', e.target.value)}
+                placeholder="0.00"
+                className="input-base" />
+            </FormField>
 
             {/* Invoice number */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">رقم الفاتورة (اختياري)</label>
-              <input type="text" dir="ltr" value={form.invoice_number} onChange={e => set('invoice_number', e.target.value)} placeholder="INV-001"
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-            </div>
+            <FormField label="رقم الفاتورة (اختياري)">
+              <input type="text" dir="ltr" value={form.invoice_number}
+                onChange={e => set('invoice_number', e.target.value)}
+                placeholder="INV-001"
+                className="input-base" />
+            </FormField>
 
             {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">ملاحظات (اختياري)</label>
+            <FormField label="ملاحظات (اختياري)">
               <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
-            </div>
+                className="input-base font-arabic resize-none" />
+            </FormField>
 
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={loading}
-                className="flex-1 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm">
+                className="flex-1 flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm">
+                {loading ? <ButtonSpinner /> : null}
                 {loading ? 'جاري الحفظ...' : 'حفظ المبيعات'}
               </button>
               <button type="button" onClick={() => navigate('/dashboard')}

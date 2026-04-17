@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../lib/axiosClient'
-import AlertBanner from '../../components/AlertBanner'
+import ButtonSpinner from '../../components/ButtonSpinner'
+import { toast } from '../../lib/useToast'
 import { ArrowRight, Paperclip, Save } from 'lucide-react'
 import { STATUS_OPTIONS, STATUS_COLORS, CATEGORY_LABELS, fmtTicketDate } from '../../lib/ticketConstants'
 
@@ -17,8 +18,6 @@ export default function TicketDetail() {
   const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving,  setSaving]  = useState(false)
-  const [error,   setError]   = useState('')
-  const [success, setSuccess] = useState('')
 
   useEffect(() => {
     api.get(`/admin/tickets/${id}`)
@@ -27,19 +26,18 @@ export default function TicketDetail() {
         setStatus(data.status)
         setComment(data.admin_comment || '')
       })
-      .catch(() => setError('تعذّر تحميل التذكرة'))
+      .catch(() => toast.error('تعذّر تحميل التذكرة'))
       .finally(() => setLoading(false))
   }, [id])
 
   const handleSave = async () => {
-    setError(''); setSuccess('')
     setSaving(true)
     try {
       const { data } = await api.put(`/admin/tickets/${id}`, { status, admin_comment: comment })
       setTicket(data)
-      setSuccess('تم حفظ التغييرات بنجاح')
+      toast.success('تم حفظ التغييرات بنجاح')
     } catch (err) {
-      setError(err.response?.data?.error || 'فشل الحفظ')
+      toast.error(err.response?.data?.error || 'فشل الحفظ')
     } finally { setSaving(false) }
   }
 
@@ -50,7 +48,7 @@ export default function TicketDetail() {
   )
 
   if (!ticket) return (
-    <div className="text-center py-20 font-arabic text-gray-500">{error || 'التذكرة غير موجودة'}</div>
+    <div className="text-center py-20 font-arabic text-gray-500">التذكرة غير موجودة</div>
   )
 
   return (
@@ -62,7 +60,7 @@ export default function TicketDetail() {
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-800 font-arabic">{ticket.title}</h1>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-white font-arabic">{ticket.title}</h1>
             <span className={`text-xs px-2 py-0.5 rounded-full font-arabic ${STATUS_COLORS[ticket.status]}`}>
               {STATUS_OPTIONS.find(s => s.v === ticket.status)?.l}
             </span>
@@ -71,29 +69,26 @@ export default function TicketDetail() {
         </div>
       </div>
 
-      {error   && <AlertBanner type="error"   message={error} />}
-      {success && <AlertBanner type="success" message={success} />}
-
       {/* Ticket details */}
       <div className="card-surface p-6 space-y-4">
-        <h2 className="font-semibold text-gray-700 font-arabic text-sm border-b border-gray-100 pb-2">
+        <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
           تفاصيل المشكلة
         </h2>
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">التصنيف</p>
-            <p className="font-arabic text-gray-700">{CATEGORY_LABELS[ticket.category] || ticket.category}</p>
+            <p className="font-arabic text-gray-700 dark:text-gray-200">{CATEGORY_LABELS[ticket.category] || ticket.category}</p>
           </div>
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">تاريخ الإنشاء</p>
-            <p className="font-arabic text-gray-700">{fmtTicketDate(ticket.created_at, true)}</p>
+            <p className="font-arabic text-gray-700 dark:text-gray-200">{fmtTicketDate(ticket.created_at, true)}</p>
           </div>
         </div>
 
         <div>
           <p className="text-xs text-gray-400 font-arabic mb-1">وصف المشكلة</p>
-          <p className="text-sm font-arabic text-gray-800 bg-gray-50 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm font-arabic text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
             {ticket.description}
           </p>
         </div>
@@ -101,7 +96,7 @@ export default function TicketDetail() {
         {ticket.steps && (
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-1">خطوات إعادة المشكلة</p>
-            <p className="text-sm font-arabic text-gray-800 bg-gray-50 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm font-arabic text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
               {ticket.steps}
             </p>
           </div>
@@ -121,32 +116,32 @@ export default function TicketDetail() {
 
       {/* Client info */}
       <div className="card-surface p-6 space-y-3">
-        <h2 className="font-semibold text-gray-700 font-arabic text-sm border-b border-gray-100 pb-2">
+        <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
           بيانات العميل
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">الاسم</p>
-            <p className="font-arabic text-gray-800 font-medium">{ticket.submitter_name}</p>
+            <p className="font-arabic text-gray-800 dark:text-gray-100 font-medium">{ticket.submitter_name}</p>
           </div>
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">البريد الإلكتروني</p>
-            <p className="font-mono text-gray-700 text-xs text-right" dir="ltr">{ticket.submitter_email}</p>
+            <p className="font-mono text-gray-700 dark:text-gray-300 text-xs text-right" dir="ltr">{ticket.submitter_email}</p>
           </div>
           <div>
             <p className="text-xs text-gray-400 font-arabic mb-0.5">المستأجر</p>
-            <p className="font-arabic text-gray-800">{ticket.tenant_name || '—'}</p>
+            <p className="font-arabic text-gray-800 dark:text-gray-100">{ticket.tenant_name || '—'}</p>
           </div>
           {ticket.tenant_phone && (
             <div>
               <p className="text-xs text-gray-400 font-arabic mb-0.5">رقم الجوال</p>
-              <p className="font-mono text-gray-700 text-sm" dir="ltr">{ticket.tenant_phone}</p>
+              <p className="font-mono text-gray-700 dark:text-gray-300 text-sm" dir="ltr">{ticket.tenant_phone}</p>
             </div>
           )}
           {ticket.branch_count != null && (
             <div>
               <p className="text-xs text-gray-400 font-arabic mb-0.5">عدد الفروع</p>
-              <p className="font-arabic text-gray-800 font-medium">{ticket.branch_count} فرع</p>
+              <p className="font-arabic text-gray-800 dark:text-gray-100 font-medium">{ticket.branch_count} فرع</p>
             </div>
           )}
         </div>
@@ -154,30 +149,30 @@ export default function TicketDetail() {
 
       {/* Admin action */}
       <div className="card-surface p-6 space-y-4">
-        <h2 className="font-semibold text-gray-700 font-arabic text-sm border-b border-gray-100 pb-2">
+        <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
           إجراء المشرف
         </h2>
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">الحالة</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">الحالة</label>
           <select value={status} onChange={e => setStatus(e.target.value)}
-            className="w-full sm:w-56 border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            className="input-base w-full sm:w-56 font-arabic">
             {STATUS_OPTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 font-arabic mb-1.5">
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">
             ملاحظات / الحل المقترح
           </label>
           <textarea value={comment} onChange={e => setComment(e.target.value)}
             rows={4} placeholder="اكتب الحل أو الملاحظات الداخلية هنا..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none" />
+            className="input-base font-arabic resize-none" />
         </div>
 
         <button onClick={handleSave} disabled={saving}
           className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium px-6 py-2.5 rounded-lg transition-colors font-arabic text-sm">
-          <Save size={15} />
+          {saving ? <ButtonSpinner /> : <Save size={15} />}
           {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
         </button>
       </div>

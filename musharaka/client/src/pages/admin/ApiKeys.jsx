@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../lib/axiosClient'
-import AlertBanner from '../../components/AlertBanner'
+import ConfirmDialog from '../../components/ConfirmDialog'
+import { toast } from '../../lib/useToast'
 import { Key, Plus, Trash2, Copy, Check, ArrowRight, Power, PowerOff } from 'lucide-react'
 
 function fmtDate(d) {
@@ -26,15 +27,15 @@ function CopyButton({ text }) {
 export default function ApiKeys() {
   const { id }     = useParams()
   const navigate   = useNavigate()
-  const [keys, setKeys]         = useState([])
-  const [allFields, setAllFields] = useState([])
+  const [keys, setKeys]             = useState([])
+  const [allFields, setAllFields]   = useState([])
   const [tenantName, setTenantName] = useState('')
-  const [loading, setLoading]   = useState(true)
-  const [flash, setFlash]       = useState(null)
-  const [newKey, setNewKey]     = useState(null)   // raw key shown once after creation
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm]         = useState({ label: '', allowed_fields: ['contract_number','period_from_date','period_to_date','amount'], expires_at: '' })
-  const [saving, setSaving]     = useState(false)
+  const [loading, setLoading]       = useState(true)
+  const [newKey, setNewKey]         = useState(null)
+  const [showForm, setShowForm]     = useState(false)
+  const [form, setForm]             = useState({ label: '', allowed_fields: ['contract_number','period_from_date','period_to_date','amount'], expires_at: '' })
+  const [saving, setSaving]         = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
 
   useEffect(() => { load() }, [id])
 
@@ -49,7 +50,7 @@ export default function ApiKeys() {
       setAllFields(keysRes.data.all_fields || [])
       setTenantName(tenantRes.data.name || '')
     } catch (err) {
-      setFlash({ type: 'error', msg: err.response?.data?.error || 'فشل التحميل' })
+      toast.error(err.response?.data?.error || 'فشل التحميل')
     } finally { setLoading(false) }
   }
 
@@ -65,7 +66,7 @@ export default function ApiKeys() {
 
   async function handleCreate(e) {
     e.preventDefault()
-    if (!form.label) return setFlash({ type: 'error', msg: 'اسم المفتاح مطلوب' })
+    if (!form.label) return toast.error('اسم المفتاح مطلوب')
     setSaving(true)
     try {
       const { data } = await api.post(`/admin/tenants/${id}/api-keys`, {
@@ -77,7 +78,7 @@ export default function ApiKeys() {
       setShowForm(false)
       setForm({ label: '', allowed_fields: ['contract_number','period_from_date','period_to_date','amount'], expires_at: '' })
     } catch (err) {
-      setFlash({ type: 'error', msg: err.response?.data?.error || 'فشل إنشاء المفتاح' })
+      toast.error(err.response?.data?.error || 'فشل إنشاء المفتاح')
     } finally { setSaving(false) }
   }
 
@@ -85,19 +86,20 @@ export default function ApiKeys() {
     try {
       const { data } = await api.put(`/admin/api-keys/${keyId}`, { is_active: !current })
       setKeys(prev => prev.map(k => k.id === keyId ? { ...k, is_active: data.is_active } : k))
-    } catch (err) {
-      setFlash({ type: 'error', msg: 'فشل تحديث الحالة' })
+    } catch {
+      toast.error('فشل تحديث الحالة')
     }
   }
 
-  async function handleDelete(keyId) {
-    if (!confirm('هل أنت متأكد من حذف هذا المفتاح؟')) return
+  async function handleConfirmedDelete() {
+    const keyId = deleteTarget.id
+    setDeleteTarget(null)
     try {
       await api.delete(`/admin/api-keys/${keyId}`)
       setKeys(prev => prev.filter(k => k.id !== keyId))
-      setFlash({ type: 'success', msg: 'تم حذف المفتاح' })
-    } catch (err) {
-      setFlash({ type: 'error', msg: 'فشل الحذف' })
+      toast.success('تم حذف المفتاح')
+    } catch {
+      toast.error('فشل الحذف')
     }
   }
 
@@ -126,8 +128,6 @@ export default function ApiKeys() {
         </button>
       </div>
 
-      {flash && <AlertBanner type={flash.type} message={flash.msg} />}
-
       {/* One-time key reveal */}
       {newKey && (
         <div className="card-surface p-5 border-green-200 bg-green-50">
@@ -149,12 +149,12 @@ export default function ApiKeys() {
               <label className="block text-xs text-gray-500 font-arabic mb-1.5">اسم المفتاح (للتعريف) <span className="text-red-500">*</span></label>
               <input value={form.label} onChange={e => setForm(f => ({...f, label: e.target.value}))} required
                 placeholder="مثال: ERP Integration"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                className="input-base" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 font-arabic mb-1.5">تاريخ الانتهاء (اختياري)</label>
               <input type="date" value={form.expires_at} onChange={e => setForm(f => ({...f, expires_at: e.target.value}))} dir="ltr"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                className="input-base" />
             </div>
           </div>
           <div>
@@ -175,11 +175,11 @@ export default function ApiKeys() {
           </div>
           <div className="flex gap-3 pt-1">
             <button type="submit" disabled={saving}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors font-arabic">
+              className="btn-primary flex items-center gap-2 disabled:opacity-60">
               <Key size={14} /> {saving ? 'جاري الإنشاء...' : 'إنشاء المفتاح'}
             </button>
             <button type="button" onClick={() => setShowForm(false)}
-              className="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-arabic">
+              className="btn-ghost">
               إلغاء
             </button>
           </div>
@@ -231,7 +231,7 @@ export default function ApiKeys() {
                     title={k.is_active ? 'تعطيل' : 'تفعيل'}>
                     {k.is_active ? <Power size={13} /> : <PowerOff size={13} />}
                   </button>
-                  <button onClick={() => handleDelete(k.id)}
+                  <button onClick={() => setDeleteTarget(k)}
                     className="p-1.5 rounded-lg text-red-400 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors">
                     <Trash2 size={13} />
                   </button>
@@ -252,6 +252,14 @@ export default function ApiKeys() {
           <div className="mt-2 text-gray-400">X-API-Key: msk_your_key_here   # Alternative: header</div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="حذف مفتاح API"
+        message="هل أنت متأكد من حذف هذا المفتاح؟ لا يمكن التراجع عن هذه العملية."
+        onConfirm={handleConfirmedDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import api from '../lib/axiosClient'
-import AlertBanner from '../components/AlertBanner'
+import ButtonSpinner from '../components/ButtonSpinner'
+import { toast } from '../lib/useToast'
 import { Send, FileText } from 'lucide-react'
 
 const MONTHS = [
@@ -12,10 +13,6 @@ const MONTHS = [
   { v: 10, l: 'أكتوبر' }, { v: 11, l: 'نوفمبر' }, { v: 12, l: 'ديسمبر' },
 ]
 const YEARS = Array.from({ length: 6 }, (_, i) => 2021 + i)
-
-const selectCls = `w-full border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm font-arabic
-                   bg-white/70 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100
-                   backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-yellow-400`
 
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5'
 
@@ -27,8 +24,6 @@ export default function Submit() {
     year:   new Date().getFullYear(),
   })
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
-  const [success, setSuccess] = useState('')
 
   useEffect(() => {
     supabase.from('branches').select('id,code,name').order('name')
@@ -39,14 +34,13 @@ export default function Submit() {
 
   const handleSubmit = async e => {
     e.preventDefault()
-    setError(''); setSuccess('')
-    if (!form.branch_id) return setError('يرجى اختيار الفرع')
+    if (!form.branch_id) return toast.error('يرجى اختيار الفرع')
     setLoading(true)
     try {
       const { data } = await api.post('/submit', form)
-      setSuccess(`${data.message} — عدد الفواتير: ${data.submission?.invoice_count || 0}`)
+      toast.success(`${data.message} — عدد الفواتير: ${data.submission?.invoice_count || 0}`)
     } catch (err) {
-      setError(err.response?.data?.error || 'فشل إرسال الفواتير')
+      toast.error(err.response?.data?.error || 'فشل إرسال الفواتير')
     } finally { setLoading(false) }
   }
 
@@ -64,15 +58,12 @@ export default function Submit() {
 
       {/* Glass form card */}
       <div className="card-surface p-6 space-y-5">
-        {error   && <AlertBanner type="error"   message={error} />}
-        {success && <AlertBanner type="success" message={success} dismissible={false} />}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Branch */}
           <div>
             <label className={labelCls}>الفرع <span className="text-red-500">*</span></label>
             <select value={form.branch_id} onChange={e => set('branch_id', e.target.value)}
-              className={selectCls}>
+              className="input-base font-arabic">
               <option value="">اختر الفرع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
             </select>
@@ -83,14 +74,14 @@ export default function Submit() {
             <div className="flex-1">
               <label className={labelCls}>الشهر</label>
               <select value={form.month} onChange={e => set('month', parseInt(e.target.value))}
-                className={selectCls}>
+                className="input-base font-arabic">
                 {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
               </select>
             </div>
             <div className="w-28">
               <label className={labelCls}>السنة</label>
               <select value={form.year} onChange={e => set('year', parseInt(e.target.value))}
-                className={selectCls}>
+                className="input-base">
                 {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
@@ -99,10 +90,10 @@ export default function Submit() {
           {/* Submit button */}
           <button type="submit" disabled={loading}
             className="w-full flex items-center justify-center gap-2
-                       bg-green-600 hover:bg-green-700 active:bg-green-800
+                       bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800
                        disabled:opacity-60 text-white font-medium py-3
                        rounded-xl transition-colors font-arabic text-sm shadow-sm">
-            <Send size={16} />
+            {loading ? <ButtonSpinner /> : <Send size={16} />}
             {loading ? 'جاري الإرسال...' : 'إرسال الفواتير'}
           </button>
         </form>
