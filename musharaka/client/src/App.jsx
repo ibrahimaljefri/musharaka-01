@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import AppLayout from './layouts/AppLayout'
 import GuestLayout from './layouts/GuestLayout'
+import ToastProvider from './components/ToastProvider'
 
 // Public pages
 const LandingPage      = lazy(() => import('./pages/LandingPage'))
@@ -84,6 +85,8 @@ export default function App() {
   )
 
   return (
+    <>
+      <ToastProvider />
     <Suspense fallback={<PageLoader />}>
       <BrowserRouter>
         <Routes>
@@ -134,5 +137,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </Suspense>
+    </>
   )
 }
