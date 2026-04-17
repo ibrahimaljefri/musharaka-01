@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import api from '../lib/axiosClient'
 import BranchBadge from '../components/BranchBadge'
 import ConfirmDialog from '../components/ConfirmDialog'
 import AlertBanner from '../components/AlertBanner'
@@ -17,21 +17,26 @@ export default function Branches() {
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase.from('branches').select('*').order('name')
-    setBranches(data || [])
+    try {
+      const { data } = await api.get('/branches')
+      setBranches(data || [])
+    } catch {
+      setBranches([])
+    }
     setLoading(false)
   }
 
   async function handleDelete() {
     const id = deleteTarget.id
     setDeleteTarget(null)
-    // Check if branch has sales
-    const { count } = await supabase.from('sales').select('id', { count: 'exact', head: true }).eq('branch_id', id)
-    if (count > 0) return setFlash({ type: 'error', msg: 'لا يمكن حذف الفرع لأن لديه سجلات مبيعات مرتبطة به.' })
-    const { error } = await supabase.from('branches').delete().eq('id', id)
-    if (error) return setFlash({ type: 'error', msg: 'فشل حذف الفرع.' })
-    setFlash({ type: 'success', msg: 'تم حذف الفرع بنجاح.' })
-    load()
+    try {
+      await api.delete(`/branches/${id}`)
+      setFlash({ type: 'success', msg: 'تم حذف الفرع بنجاح.' })
+      load()
+    } catch (e) {
+      const msg = e.response?.data?.error || 'فشل حذف الفرع.'
+      setFlash({ type: 'error', msg })
+    }
   }
 
   return (

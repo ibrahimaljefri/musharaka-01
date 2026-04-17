@@ -379,10 +379,118 @@ function handleUpdateUser(userId, body) {
   return { status: 200, data: { message: 'تم تحديث المستخدم' } }
 }
 
+// ── Branch handlers ───────────────────────────────────────────────────────────
+
+function getDevTenantId() {
+  try {
+    const session = JSON.parse(localStorage.getItem('musharaka_dev_session') || 'null')
+    const userId = session?.user?.id
+    if (!userId) return null
+    const membership = getTable('tenant_users').find(r => r.user_id === userId)
+    return membership?.tenant_id || null
+  } catch { return null }
+}
+
+function handleGetBranches() {
+  const tenantId = getDevTenantId()
+  if (!tenantId) return { status: 403, data: { error: 'غير مصرح' } }
+  const branches = getTable('branches').filter(b => b.tenant_id === tenantId)
+  return { status: 200, data: branches.sort((a, b) => a.name.localeCompare(b.name, 'ar')) }
+}
+
+function handleGetBranch(id) {
+  const tenantId = getDevTenantId()
+  const branch = getTable('branches').find(b => b.id === id && b.tenant_id === tenantId)
+  if (!branch) return { status: 404, data: { error: 'الفرع غير موجود' } }
+  return { status: 200, data: branch }
+}
+
+function handleCreateBranch(body) {
+  const tenantId = getDevTenantId()
+  if (!tenantId) return { status: 403, data: { error: 'غير مصرح' } }
+
+  const { code, name, contract_number, brand_name, unit_number, token, location, address } = body || {}
+  if (!code?.trim()) return { status: 422, data: { error: 'كود الفرع مطلوب' } }
+  if (!name?.trim()) return { status: 422, data: { error: 'اسم الفرع مطلوب' } }
+
+  const branches = getTable('branches')
+  if (branches.find(b => b.tenant_id === tenantId && b.code === code.trim()))
+    return { status: 409, data: { error: 'كود الفرع مستخدم مسبقاً. يرجى اختيار كود آخر.' } }
+
+  // Enforce max_branches limit
+  const tenant = getTable('tenants').find(t => t.id === tenantId)
+  const currentCount = branches.filter(b => b.tenant_id === tenantId).length
+  if (tenant?.max_branches != null && currentCount >= tenant.max_branches)
+    return { status: 422, data: { error: `وصلت إلى الحد الأقصى للفروع المسموح بها (${tenant.max_branches} فروع). تواصل مع الإدارة للترقية.` } }
+
+  const branch = {
+    id: newId(), tenant_id: tenantId,
+    code: code.trim(), name: name.trim(),
+    contract_number: contract_number || null,
+    brand_name: brand_name || null,
+    unit_number: unit_number || null,
+    token: token || null,
+    location: location || null,
+    address: address || null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+  saveTable('branches', [...branches, branch])
+  return { status: 201, data: branch }
+}
+
+function handleUpdateBranch(id, body) {
+  const tenantId = getDevTenantId()
+  const branches = getTable('branches')
+  const idx = branches.findIndex(b => b.id === id && b.tenant_id === tenantId)
+  if (idx === -1) return { status: 404, data: { error: 'الفرع غير موجود' } }
+
+  const { code, name, contract_number, brand_name, unit_number, token, location, address } = body || {}
+  if (!code?.trim()) return { status: 422, data: { error: 'كود الفرع مطلوب' } }
+  if (!name?.trim()) return { status: 422, data: { error: 'اسم الفرع مطلوب' } }
+
+  // Duplicate code check (excluding self)
+  if (branches.find(b => b.tenant_id === tenantId && b.code === code.trim() && b.id !== id))
+    return { status: 409, data: { error: 'كود الفرع مستخدم مسبقاً. يرجى اختيار كود آخر.' } }
+
+  branches[idx] = { ...branches[idx], code: code.trim(), name: name.trim(),
+    contract_number: contract_number || null, brand_name: brand_name || null,
+    unit_number: unit_number || null, token: token || null,
+    location: location || null, address: address || null,
+    updated_at: new Date().toISOString() }
+  saveTable('branches', branches)
+  return { status: 200, data: branches[idx] }
+}
+
+function handleDeleteBranch(id) {
+  const tenantId = getDevTenantId()
+  const branches = getTable('branches')
+  const branch = branches.find(b => b.id === id && b.tenant_id === tenantId)
+  if (!branch) return { status: 404, data: { error: 'الفرع غير موجود' } }
+
+  const sales = getTable('sales').filter(s => s.branch_id === id)
+  if (sales.length > 0)
+    return { status: 422, data: { error: 'لا يمكن حذف الفرع لأن لديه سجلات مبيعات مرتبطة به.' } }
+
+  saveTable('branches', branches.filter(b => b.id !== id))
+  return { status: 204, data: null }
+}
+
 // ── Main dispatcher ───────────────────────────────────────────────────────────
 
 export async function devApiCall(method, url, data) {
   const path = url.replace(/^\/api/, '')
+
+  // ── Branches ─────────────────────────────────────────────────
+  if (method === 'get'  && path === '/branches') return handleGetBranches()
+  if (method === 'post' && path === '/branches') return handleCreateBranch(data)
+  const branchMatch = path.match(/^\/branches\/([^/]+)$/)
+  if (branchMatch) {
+    const id = branchMatch[1]
+    if (method === 'get')    return handleGetBranch(id)
+    if (method === 'put')    return handleUpdateBranch(id, data)
+    if (method === 'delete') return handleDeleteBranch(id)
+  }
 
   // ── Sales & Submit ───────────────────────────────────────────
   if (method === 'post' && path === '/sales')

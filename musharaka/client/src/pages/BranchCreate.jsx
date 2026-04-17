@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { useAuthStore } from '../store/authStore'
+import api from '../lib/axiosClient'
 import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
 
@@ -14,7 +13,6 @@ const TIPS = [
 
 export default function BranchCreate() {
   const navigate  = useNavigate()
-  const tenantId  = useAuthStore(s => s.tenantId)
   const [form, setForm] = useState({
     code: '', name: '', contract_number: '', brand_name: '',
     unit_number: '', token: '', location: '', address: '',
@@ -28,42 +26,23 @@ export default function BranchCreate() {
     setError('')
     if (!form.code.trim()) return setError('كود الفرع مطلوب')
     if (!form.name.trim()) return setError('اسم الفرع مطلوب')
-    if (!tenantId) return setError('لم يتم تحديد المستأجر. يرجى تسجيل الخروج والدخول مجدداً.')
     setLoading(true)
     try {
-      // Check branch limit
-      const { count: currentCount } = await supabase
-        .from('branches')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId)
-
-      const { data: tenantData } = await supabase
-        .from('tenants')
-        .select('max_branches')
-        .eq('id', tenantId)
-        .single()
-
-      const maxBranches = tenantData?.max_branches
-      if (maxBranches !== null && maxBranches !== undefined && currentCount >= maxBranches) {
-        setLoading(false)
-        return setError(`لقد وصلت إلى الحد الأقصى للفروع المسموح بها (${maxBranches} فروع). تواصل مع الإدارة للترقية.`)
-      }
-
-      const { error: err } = await supabase.from('branches').insert({
-        tenant_id:       tenantId,
+      // Branch limit is enforced server-side — no client bypass possible
+      await api.post('/branches', {
         code:            form.code.trim(),
         name:            form.name.trim(),
         contract_number: form.contract_number || null,
-        brand_name:      form.brand_name || null,
-        unit_number:     form.unit_number || null,
-        token:           form.token || null,
-        location:        form.location || null,
-        address:         form.address || null,
+        brand_name:      form.brand_name      || null,
+        unit_number:     form.unit_number     || null,
+        token:           form.token           || null,
+        location:        form.location        || null,
+        address:         form.address         || null,
       })
-      if (err) return setError(err.code === '23505' ? 'كود الفرع مستخدم مسبقاً. يرجى اختيار كود آخر.' : err.message)
       navigate('/branches')
     } catch (e) {
-      setError('حدث خطأ غير متوقع. يرجى المحاولة مجدداً.')
+      const msg = e.response?.data?.error
+      setError(msg || 'حدث خطأ غير متوقع. يرجى المحاولة مجدداً.')
     } finally {
       setLoading(false)
     }

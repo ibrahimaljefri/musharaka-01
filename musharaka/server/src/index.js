@@ -12,6 +12,7 @@ const contractsRoutes = require('./routes/contracts')
 const adminRoutes     = require('./routes/admin')
 const botRoutes       = require('./routes/bot')
 const ticketsRoutes   = require('./routes/tickets')
+const branchesRoutes  = require('./routes/branches')
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -66,6 +67,7 @@ app.use('/api/contracts', contractsRoutes)
 app.use('/api/admin',     adminRoutes)
 app.use('/api/bot',       botRoutes)
 app.use('/api/tickets',   ticketsRoutes)
+app.use('/api/branches',  branchesRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

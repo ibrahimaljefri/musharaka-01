@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import api from '../lib/axiosClient'
 import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
 
@@ -21,8 +21,9 @@ export default function BranchEdit() {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   useEffect(() => {
-    supabase.from('branches').select('*').eq('id', id).single()
+    api.get(`/branches/${id}`)
       .then(({ data }) => { if (data) setForm(data); setFetching(false) })
+      .catch(() => setFetching(false))
   }, [id])
 
   const handleSubmit = async e => {
@@ -32,21 +33,21 @@ export default function BranchEdit() {
     if (!form.name?.trim()) return setError('اسم الفرع مطلوب')
     setLoading(true)
     try {
-      const { error: err } = await supabase.from('branches').update({
+      await api.put(`/branches/${id}`, {
         code:            form.code.trim(),
         name:            form.name.trim(),
         contract_number: form.contract_number || null,
-        brand_name:      form.brand_name || null,
-        unit_number:     form.unit_number || null,
-        token:           form.token || null,
-        location:        form.location || null,
-        address:         form.address || null,
-      }).eq('id', id)
-      if (err) return setError(err.code === '23505' ? 'كود الفرع مستخدم مسبقاً.' : err.message)
+        brand_name:      form.brand_name      || null,
+        unit_number:     form.unit_number     || null,
+        token:           form.token           || null,
+        location:        form.location        || null,
+        address:         form.address         || null,
+      })
       setSuccess('تم حفظ التغييرات بنجاح')
       setTimeout(() => navigate('/branches'), 1200)
     } catch (e) {
-      setError('حدث خطأ غير متوقع. يرجى المحاولة مجدداً.')
+      const msg = e.response?.data?.error || 'حدث خطأ غير متوقع. يرجى المحاولة مجدداً.'
+      setError(msg)
     } finally {
       setLoading(false)
     }
