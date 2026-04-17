@@ -116,11 +116,11 @@ export default function AppLayout() {
         <button
           onClick={() => setCollapsed(c => !c)}
           title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
-          className={`flex items-center border-b border-gray-100 dark:border-gray-800 h-14 w-full hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
+          className={`flex items-center justify-center border-b border-gray-100 dark:border-gray-800 h-14 w-full hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors group ${collapsed ? 'px-2' : 'px-4 gap-2'}`}
         >
           {collapsed
-            ? <UrwahLogo width={22} variant="mark" id="sidebar-c" />
-            : <UrwahLogo width={68} variant="full" id="sidebar" />
+            ? <UrwahLogo width={28} variant="mark" id="sidebar-c" />
+            : <UrwahLogo width={60} variant="full" id="sidebar" />
           }
           {!collapsed && (
             <ChevronRight size={14} className="text-gray-300 group-hover:text-yellow-500 transition-colors shrink-0 mr-auto" />
