@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
+import { useAuthStore } from '../store/authStore'
 
 const TIPS = [
   'كود الفرع يجب أن يكون فريداً ويُستخدم في ملفات Excel.',
@@ -12,7 +13,21 @@ const TIPS = [
 ]
 
 export default function BranchCreate() {
-  const navigate  = useNavigate()
+  const navigate     = useNavigate()
+  const maxBranches  = useAuthStore(s => s.maxBranches)
+
+  // Redirect away immediately if already at limit
+  useEffect(() => {
+    async function checkLimit() {
+      if (maxBranches == null) return
+      try {
+        const { data } = await api.get('/branches')
+        if ((data || []).length >= maxBranches) navigate('/branches', { replace: true })
+      } catch { /* ignore */ }
+    }
+    checkLimit()
+  }, [maxBranches, navigate])
+
   const [form, setForm] = useState({
     code: '', name: '', contract_number: '', brand_name: '',
     unit_number: '', token: '', location: '', address: '',

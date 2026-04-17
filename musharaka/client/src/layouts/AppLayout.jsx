@@ -9,7 +9,7 @@ import {
   ShieldCheck, AlertTriangle, Clock, Users, MessageCircle, LifeBuoy, BookOpen,
   Sun, Moon, HelpCircle
 } from 'lucide-react'
-import LogoMark from '../components/LogoMark'
+import UrwahLogo from '../components/UrwahLogo'
 
 const navItems = [
   { to: '/dashboard',    label: 'لوحة التحكم',    icon: LayoutDashboard },
@@ -118,15 +118,12 @@ export default function AppLayout() {
           title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
           className={`flex items-center border-b border-gray-100 dark:border-gray-800 h-14 w-full hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors group ${collapsed ? 'justify-center px-2' : 'px-5 gap-3'}`}
         >
-          <LogoMark size={32} id="sidebar" />
+          {collapsed
+            ? <UrwahLogo width={28} variant="mark" id="sidebar-c" />
+            : <UrwahLogo width={90} variant="full" id="sidebar" />
+          }
           {!collapsed && (
-            <div className="flex-1 text-right">
-              <div className="text-base font-bold text-yellow-700 font-arabic leading-tight">عروة</div>
-              <div className="text-xs text-gray-400 font-arabic">نظام إدارة المبيعات</div>
-            </div>
-          )}
-          {!collapsed && (
-            <ChevronRight size={14} className="text-gray-300 group-hover:text-yellow-500 transition-colors shrink-0" />
+            <ChevronRight size={14} className="text-gray-300 group-hover:text-yellow-500 transition-colors shrink-0 mr-auto" />
           )}
         </button>
 
@@ -212,11 +209,7 @@ export default function AppLayout() {
           <aside className="relative flex flex-col w-full sm:w-72 bg-white dark:bg-gray-950 h-full mr-auto z-50 shadow-xl">
             <div className="flex items-center justify-between px-5 border-b border-yellow-100 dark:border-yellow-900/30 h-14">
               <div className="flex items-center gap-3">
-                <LogoMark size={32} id="mobile" />
-                <div>
-                  <div className="text-base font-bold text-yellow-700 dark:text-yellow-500 font-arabic leading-tight">عروة</div>
-                  <div className="text-xs text-gray-400 font-arabic">نظام إدارة المبيعات</div>
-                </div>
+                <UrwahLogo width={90} variant="full" id="mobile" />
               </div>
               <button onClick={() => setMobileOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>

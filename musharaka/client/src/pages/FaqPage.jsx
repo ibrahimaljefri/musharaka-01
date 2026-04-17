@@ -199,9 +199,6 @@ export default function FaqPage() {
           <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">
             الأسئلة الشائعة
           </h1>
-          <p className="text-xs text-gray-400 font-arabic mt-0.5">
-            {totalVisible} سؤال وجواب
-          </p>
         </div>
       </div>
 

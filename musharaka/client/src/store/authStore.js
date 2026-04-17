@@ -17,6 +17,7 @@ export const useAuthStore = create((set, get) => ({
   activatedAt:            null,  // ISO string — license start date
   expiresAt:              null,  // ISO string — license end date (null = open)
   planName:               null,  // 'basic' | 'professional' | 'enterprise' | null
+  maxBranches:            null,  // number | null — null means unlimited
 
   init: async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -61,7 +62,7 @@ export const useAuthStore = create((set, get) => ({
       // never prevents the user from logging in.
       const { data: membership, error: memberErr } = await supabase
         .from('tenant_users')
-        .select('tenant_id, role, tenants(status, plan, activated_at, expires_at, allowed_input_types, allow_advanced_dashboard, allow_import, allow_reports)')
+        .select('tenant_id, role, tenants(status, plan, activated_at, expires_at, allowed_input_types, allow_advanced_dashboard, allow_import, allow_reports, max_branches)')
         .eq('user_id', userId)
         .maybeSingle()
 
@@ -100,6 +101,7 @@ export const useAuthStore = create((set, get) => ({
           activatedAt:            t.activated_at  || null,
           expiresAt:              t.expires_at    || null,
           planName:               t.plan          || null,
+          maxBranches:            t.max_branches  ?? null,
         })
         return
       }
@@ -132,6 +134,7 @@ export const useAuthStore = create((set, get) => ({
         activatedAt:            tenant.activated_at             || null,
         expiresAt:              tenant.expires_at               || null,
         planName:               tenant.plan                     || null,
+        maxBranches:            tenant.max_branches             ?? null,
       })
     } catch (err) {
       console.error('[auth] _loadTenantContext unexpected error:', err)
