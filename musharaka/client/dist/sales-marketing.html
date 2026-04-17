@@ -77,6 +77,12 @@ body{
   background:radial-gradient(circle,rgba(124,58,237,0.06) 0%,transparent 70%);
   bottom:-10%;left:-10%;pointer-events:none;
 }
+/* Subtle dot grid overlay for all slides */
+.slide-grid{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle,rgba(245,158,11,0.06) 1px,transparent 1px);
+  background-size:36px 36px;
+}
 
 /* Glass card */
 .glass{
@@ -280,6 +286,7 @@ body{
 
 <!-- Slide 1: Cover -->
 <div class="slide active" data-slide="0">
+  <div class="slide-grid"></div>
   <div class="reveal" style="margin-bottom:28px">
     <img src="/urwah-logo.png" alt="عروة" style="height:80px; object-fit:contain;">
   </div>
@@ -329,7 +336,9 @@ body{
       <div class="text-gold fw-700 mb-8">&#129302;</div>
       <div class="fw-600 text-sm">روبوت واتساب</div>
     </div>
-    <div class="orb reveal" style="margin:0 8px">م</div>
+    <div class="reveal" style="margin:0 16px;display:flex;align-items:center;justify-content:center;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(245,158,11,0.18),rgba(245,158,11,0.06));box-shadow:0 0 60px rgba(245,158,11,0.25),0 0 120px rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)">
+      <img src="/urwah-logo.png" alt="عروة" style="height:64px;width:64px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(245,158,11,0.4))">
+    </div>
     <div class="glass-sm text-center" style="width:160px">
       <div class="text-gold fw-700 mb-8">&#128279;</div>
       <div class="fw-600 text-sm">API تكامل</div>
@@ -595,33 +604,39 @@ body{
 <!-- Slide 12: Pricing -->
 <div class="slide" data-slide="11">
   <h2 class="slide-title reveal">باقات الاشتراك</h2>
-  <p class="slide-subtitle reveal">باقات مرنة تناسب جميع الأحجام</p>
-  <div class="grid-3 reveal" style="max-width:840px">
-    <div class="glass text-center" style="display:flex;flex-direction:column;gap:12px;align-items:center">
-      <div class="text-gold fw-700" style="font-size:1.2rem">أساسي</div>
-      <div class="text-sec text-sm">للمستأجرين الجدد</div>
-      <div style="font-size:2rem;font-weight:900;color:var(--text-primary)">مجاني</div>
-      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%">
-        فرع واحد<br>بوابة إلكترونية<br>تقارير أساسية<br>دعم عبر البريد
+  <p class="slide-subtitle reveal">اشتراك سنوي — ثلاث باقات تناسب جميع الأحجام</p>
+  <div class="grid-3 reveal" style="max-width:880px">
+    <div class="glass text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:24px 20px">
+      <div class="text-gold fw-700" style="font-size:1.15rem">أساسي</div>
+      <div class="text-sec text-xs">3 فروع · 3 مستخدمين</div>
+      <div style="font-size:1.8rem;font-weight:900;color:var(--text-primary);line-height:1.1">999<span style="font-size:1rem;font-weight:600;color:var(--text-secondary)"> ر.س</span></div>
+      <div class="text-sec text-xs" style="color:rgba(255,255,255,0.45)">83 ر.س / شهر</div>
+      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%;line-height:1.9">
+        بوابة إلكترونية<br>بوت واتساب + تيليجرام<br>تقارير أساسية<br>دعم عبر التذاكر
       </div>
     </div>
-    <div class="glass text-center pricing-highlight" style="display:flex;flex-direction:column;gap:12px;align-items:center;position:relative">
+    <div class="glass text-center pricing-highlight" style="display:flex;flex-direction:column;gap:10px;align-items:center;position:relative;padding:24px 20px">
       <div class="pricing-tag">الأكثر طلباً</div>
-      <div class="text-gold fw-700" style="font-size:1.2rem">متقدم</div>
-      <div class="text-sec text-sm">للفروع المتعددة</div>
-      <div style="font-size:2rem;font-weight:900;color:var(--gold)">199 <span class="text-sm">ر.س/شهر</span></div>
-      <div class="text-sec text-xs" style="border-top:1px solid rgba(245,158,11,0.2);padding-top:12px;width:100%">
-        حتى 10 فروع<br>بوت واتساب + تيليجرام<br>تقارير متقدمة<br>دعم أولوية
+      <div class="text-gold fw-700" style="font-size:1.15rem">متوسط</div>
+      <div class="text-sec text-xs">8 فروع · 8 مستخدمين</div>
+      <div style="font-size:1.8rem;font-weight:900;color:var(--gold);line-height:1.1">1,999<span style="font-size:1rem;font-weight:600;color:var(--text-secondary)"> ر.س</span></div>
+      <div class="text-sec text-xs" style="color:rgba(255,255,255,0.45)">167 ر.س / شهر</div>
+      <div class="text-sec text-xs" style="border-top:1px solid rgba(245,158,11,0.2);padding-top:12px;width:100%;line-height:1.9">
+        جميع مزايا الأساسي<br>لوحة تحكم متقدمة<br>استيراد Excel<br>دعم أولوية
       </div>
     </div>
-    <div class="glass text-center" style="display:flex;flex-direction:column;gap:12px;align-items:center">
-      <div class="text-gold fw-700" style="font-size:1.2rem">مؤسسي</div>
-      <div class="text-sec text-sm">للشركات الكبرى</div>
-      <div style="font-size:2rem;font-weight:900;color:var(--text-primary)">تواصل معنا</div>
-      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%">
-        فروع غير محدودة<br>API + تكامل مخصص<br>مدير حساب مخصص<br>SLA مضمون
+    <div class="glass text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:24px 20px">
+      <div class="text-gold fw-700" style="font-size:1.15rem">متقدم</div>
+      <div class="text-sec text-xs">15 فرع · 15 مستخدم</div>
+      <div style="font-size:1.8rem;font-weight:900;color:var(--text-primary);line-height:1.1">3,999<span style="font-size:1rem;font-weight:600;color:var(--text-secondary)"> ر.س</span></div>
+      <div class="text-sec text-xs" style="color:rgba(255,255,255,0.45)">333 ر.س / شهر</div>
+      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%;line-height:1.9">
+        جميع مزايا المتوسط<br>API + تكامل مخصص<br>مدير حساب مخصص<br>SLA مضمون
       </div>
     </div>
+  </div>
+  <div class="reveal mt-16">
+    <span class="text-xs" style="color:var(--text-muted)">فرع إضافي: 300 ر.س/سنة &nbsp;·&nbsp; مستخدم إضافي: 240 ر.س/سنة</span>
   </div>
 </div>
 
@@ -806,7 +821,9 @@ body{
 
 <!-- Slide 20: Thank You -->
 <div class="slide" data-slide="19">
-  <div class="orb-lg reveal" style="margin-bottom:32px">م</div>
+  <div class="reveal" style="margin-bottom:32px;display:flex;align-items:center;justify-content:center;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(245,158,11,0.15),rgba(245,158,11,0.04));box-shadow:0 0 80px rgba(245,158,11,0.3),0 0 160px rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.18)">
+    <img src="/urwah-logo.png" alt="عروة" style="height:90px;width:90px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(245,158,11,0.5))">
+  </div>
   <h2 class="reveal" style="font-size:clamp(2rem,4vw,3.5rem);font-weight:900;color:var(--gold);margin-bottom:8px">شكراً لكم</h2>
   <p class="reveal" style="font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text-secondary);margin-bottom:24px">عروة — شريكك في النجاح</p>
   <div class="flex-row reveal" style="gap:20px">
