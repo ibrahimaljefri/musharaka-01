@@ -1,3 +1,5 @@
+import { TrendingUp, TrendingDown } from 'lucide-react'
+
 const colorMap = {
   green:  {
     bg: 'bg-gradient-to-br from-emerald-50 to-emerald-100/60 dark:from-green-900/30 dark:to-emerald-800/30 dark:bg-gray-800/50',
@@ -36,7 +38,7 @@ const colorMap = {
   },
 }
 
-export default function KpiCard({ title, value, subtitle, color = 'green', icon: Icon }) {
+export default function KpiCard({ title, value, subtitle, color = 'green', icon: Icon, trend }) {
   const c = colorMap[color] || colorMap.green
   return (
     <div className={`rounded-xl border p-5 hover-lift ${c.bg} ${c.border}`}>
@@ -50,6 +52,21 @@ export default function KpiCard({ title, value, subtitle, color = 'green', icon:
       </div>
       <div className={`text-2xl font-bold font-arabic ${c.val}`}>{value}</div>
       {subtitle && <div className={`text-xs mt-1.5 font-arabic ${c.text} opacity-80`}>{subtitle}</div>}
+      {trend && (
+        <div className="flex items-center gap-1 mt-2">
+          {trend.dir === 'up' ? (
+            <>
+              <TrendingUp size={11} className="text-green-500" />
+              <span className="text-xs text-green-600 dark:text-green-400 font-arabic">{trend.value}% مقارنة بالشهر الماضي</span>
+            </>
+          ) : (
+            <>
+              <TrendingDown size={11} className="text-red-400" />
+              <span className="text-xs text-red-500 dark:text-red-400 font-arabic">{trend.value}% مقارنة بالشهر الماضي</span>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

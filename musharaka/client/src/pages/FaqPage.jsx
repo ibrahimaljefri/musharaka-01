@@ -120,7 +120,7 @@ const CATEGORIES = [
 // ── Accordion Item ─────────────────────────────────────────────────────────────
 function AccordionItem({ question, answer, isOpen, onToggle }) {
   return (
-    <div className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+    <div className={`border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors ${isOpen ? 'border-r-2 border-yellow-400' : ''}`}>
       <button
         type="button"
         onClick={onToggle}
@@ -153,6 +153,12 @@ export default function FaqPage() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [openItem, setOpenItem]             = useState(null)   // 'catId-index'
   const [searchQuery, setSearchQuery]       = useState('')
+
+  const categoryCounts = useMemo(() => {
+    const counts = {}
+    CATEGORIES.forEach(cat => { counts[cat.id] = cat.items.length })
+    return counts
+  }, [])
 
   const filteredCategories = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
@@ -208,7 +214,7 @@ export default function FaqPage() {
           onChange={e => { setSearchQuery(e.target.value); setOpenItem(null) }}
           placeholder="ابحث في الأسئلة..."
           dir="rtl"
-          className="w-full pr-9 pl-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 rounded-lg text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          className="input-base w-full pr-9 pl-4"
         />
       </div>
 
@@ -218,13 +224,16 @@ export default function FaqPage() {
           role="tab"
           aria-selected={activeCategory === 'all'}
           onClick={() => handleCategoryChange('all')}
-          className={`px-4 py-1.5 rounded-full text-sm font-arabic border transition-colors ${
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-arabic border transition-colors ${
             activeCategory === 'all'
               ? 'bg-yellow-600 text-white border-yellow-600'
               : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-yellow-400 hover:text-yellow-700'
           }`}
         >
           الكل
+          <span className="ml-1.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
+            {CATEGORIES.reduce((s, c) => s + c.items.length, 0)}
+          </span>
         </button>
         {CATEGORIES.map(cat => {
           const Icon = cat.icon
@@ -242,6 +251,9 @@ export default function FaqPage() {
             >
               <Icon size={13} />
               {cat.label}
+              <span className="ml-1.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
+                {categoryCounts[cat.id] || 0}
+              </span>
             </button>
           )
         })}

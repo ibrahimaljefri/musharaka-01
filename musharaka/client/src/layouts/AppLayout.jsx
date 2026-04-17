@@ -94,7 +94,7 @@ export default function AppLayout() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-colors font-arabic ${
               isActive
-                ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-r-2 border-r-yellow-500 dark:border-r-yellow-400'
+                ? 'bg-yellow-50 dark:bg-yellow-900/20 bg-gradient-to-l from-yellow-50/80 to-transparent dark:from-yellow-900/20 dark:to-transparent text-yellow-700 dark:text-yellow-400 border-r-2 border-r-yellow-500 dark:border-r-yellow-400'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
             } ${c ? 'justify-center' : ''}`
           }
@@ -146,11 +146,13 @@ export default function AppLayout() {
 
           {/* Admin nav — only for super-admin */}
           {isSuperAdmin && (
-            <NavSection
-              items={adminNavItems}
-              label="الإدارة"
-              collapsed={collapsed}
-            />
+            <>
+              {!collapsed && <div className="nav-group-label">الإدارة</div>}
+              <NavSection
+                items={adminNavItems}
+                collapsed={collapsed}
+              />
+            </>
           )}
         </nav>
 
@@ -181,7 +183,7 @@ export default function AppLayout() {
           {/* User avatar + name */}
           {!collapsed && (
             <div className="flex items-center gap-2.5 px-2.5 py-2 mb-1">
-              <div className="w-7 h-7 rounded-full bg-yellow-500 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 ring-2 ring-yellow-200 dark:ring-yellow-800/50 flex items-center justify-center shrink-0">
                 <span className="text-white text-xs font-bold">
                   {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
                 </span>
@@ -252,7 +254,12 @@ export default function AppLayout() {
 
       {/* ── Main area ────────────────────────────────────────────── */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'md:mr-16' : 'md:mr-64'}`}>
-        <SubscriptionBanner status={tenantStatus} />
+        {tenantStatus && tenantStatus !== 'active' && (
+          <div style={{ animation: 'slideDown 0.3s ease-out' }}>
+            <SubscriptionBanner status={tenantStatus} />
+          </div>
+        )}
+        {(!tenantStatus || tenantStatus === 'active') && <SubscriptionBanner status={tenantStatus} />}
 
         {/* Topbar */}
         <header className="sticky top-0 z-20 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 h-14 flex items-center justify-between gap-4">

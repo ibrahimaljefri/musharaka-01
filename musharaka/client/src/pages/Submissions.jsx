@@ -118,9 +118,11 @@ function SubmissionCard({ sub }) {
       {open && (
         <div className="border-t border-black/[0.06] dark:border-white/[0.06] px-5 py-4">
           {loadingSales ? (
-            <p className="text-sm text-gray-400 dark:text-gray-500 font-arabic text-center py-4">
-              جاري التحميل...
-            </p>
+            <div className="flex flex-col gap-3 py-2">
+              {[1,2,3].map(i => (
+                <div key={i} className="card-surface h-16 skeleton rounded-2xl" />
+              ))}
+            </div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -178,10 +180,6 @@ export default function Submissions() {
     setLoading(false)
   }
 
-  const selectCls = `border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-arabic
-                     bg-white/70 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100
-                     backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-yellow-400`
-
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -201,7 +199,7 @@ export default function Submissions() {
             <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">الفرع</label>
             <select value={filters.branch_id}
               onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))}
-              className={selectCls}>
+              className="input-base">
               <option value="">جميع الفروع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -210,7 +208,7 @@ export default function Submissions() {
             <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">الشهر</label>
             <select value={filters.month}
               onChange={e => setFilters(f => ({...f, month: e.target.value}))}
-              className={selectCls}>
+              className="input-base">
               <option value="">الكل</option>
               {[...Array(12)].map((_,i) => <option key={i+1} value={i+1}>{MONTHS_AR[i+1]}</option>)}
             </select>
@@ -219,7 +217,7 @@ export default function Submissions() {
             <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">السنة</label>
             <select value={filters.year}
               onChange={e => setFilters(f => ({...f, year: e.target.value}))}
-              className={selectCls}>
+              className="input-base">
               <option value="">الكل</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -234,7 +232,11 @@ export default function Submissions() {
 
       {/* Submission cards */}
       {loading ? (
-        <div className="text-center text-gray-400 dark:text-gray-500 font-arabic py-12">جاري التحميل...</div>
+        <div className="flex flex-col gap-3">
+          {[1,2,3].map(i => (
+            <div key={i} className="card-surface h-16 skeleton rounded-2xl" />
+          ))}
+        </div>
       ) : submissions.length === 0 ? (
         <EmptyState
           icon={AlertCircle}

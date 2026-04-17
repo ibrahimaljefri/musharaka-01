@@ -2,11 +2,15 @@ import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
+import { toast } from '../lib/useToast'
 import KpiCard from '../components/KpiCard'
+import PageHeader from '../components/PageHeader'
+import { TableSkeleton, KpiSkeleton } from '../components/SkeletonLoader'
 import {
   DollarSign, TrendingUp, Hash, Lock, Trash2,
   ChevronLeft, ChevronRight, PlusCircle, Clock,
-  CheckCircle2, BarChart2, ArrowUpRight, BadgeCheck, CalendarDays
+  CheckCircle2, BarChart2, ArrowUpRight, BadgeCheck, CalendarDays,
+  Send, Ticket, ChevronDown,
 } from 'lucide-react'
 import ConfirmDialog from '../components/ConfirmDialog'
 import AlertBanner from '../components/AlertBanner'
@@ -293,11 +297,11 @@ export default function Dashboard() {
   const [branchId, setBranchId]   = useState('')
   const [sales, setSales]         = useState([])
   const [kpis, setKpis]           = useState({ total: 0, month: 0, count: 0, pendingCount: 0, confirmedCount: 0 })
+  const [kpisLoading, setKpisLoading] = useState(true)
   const [page, setPage]           = useState(0)
   const [totalRows, setTotalRows] = useState(0)
   const [loading, setLoading]     = useState(true)
   const [deleteId, setDeleteId]   = useState(null)
-  const [flash, setFlash]         = useState(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [branchQuota, setBranchQuota] = useState(null)
 
@@ -320,6 +324,7 @@ export default function Dashboard() {
 
   async function load() {
     setLoading(true)
+    setKpisLoading(true)
     const now     = new Date()
     const m       = now.getMonth() + 1
     const y       = now.getFullYear()
@@ -346,6 +351,7 @@ export default function Dashboard() {
     const month = (mRes.data || []).reduce((s, r) => s + parseFloat(r.amount || 0), 0)
 
     setKpis({ total, month, count: cRes.count || 0, pendingCount: pRes.count || 0, confirmedCount: cfRes.count || 0 })
+    setKpisLoading(false)
 
     // Paginated sales list
     let rq = supabase
@@ -363,8 +369,11 @@ export default function Dashboard() {
   async function handleDelete() {
     const { error } = await supabase.from('sales').delete().eq('id', deleteId).eq('status', 'pending')
     setDeleteId(null)
-    if (error) return setFlash({ type: 'error', msg: 'لا يمكن حذف هذا السجل' })
-    setFlash({ type: 'success', msg: 'تم حذف السجل بنجاح' })
+    if (error) {
+      toast.error('لا يمكن حذف هذا السجل')
+      return
+    }
+    toast.success('تم حذف السجل بنجاح')
     load()
   }
 
@@ -375,20 +384,7 @@ export default function Dashboard() {
     <div className="space-y-6">
 
       {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">لوحة التحكم</h1>
-          <p className="text-xs text-gray-400 font-arabic mt-0.5">
-            {now.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-        <Link to="/sales/create"
-          className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic shadow-sm">
-          <PlusCircle size={15} /> إضافة مبيعات
-        </Link>
-      </div>
-
-      {flash && <AlertBanner type={flash.type} message={flash.msg} />}
+      <PageHeader title="لوحة القيادة" />
 
       {/* License widget — hidden for super-admins (they have no tenant license) */}
       {!isSuperAdmin && (activatedAt || expiresAt || planName) && (
@@ -439,12 +435,32 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards — 5 cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <KpiCard title="إجمالي المبيعات"      value={`${fmt(kpis.total)} ر.س`}                   subtitle="جميع السجلات"          color="green"  icon={DollarSign} />
-        <KpiCard title={`مبيعات ${MONTHS_AR[now.getMonth()]}`} value={`${fmt(kpis.month)} ر.س`} subtitle="الشهر الحالي"          color="pink"   icon={TrendingUp} />
-        <KpiCard title="إجمالي السجلات"       value={kpis.count.toLocaleString('ar-SA')}           subtitle="جميع الإدخالات"        color="purple" icon={Hash} />
-        <KpiCard title="فواتير معلقة"         value={kpis.pendingCount.toLocaleString('ar-SA')}    subtitle="في انتظار الإرسال"     color="yellow" icon={Clock} />
-        <KpiCard title="فواتير مؤكدة"         value={kpis.confirmedCount.toLocaleString('ar-SA')}  subtitle="تم إرسالها بنجاح"      color="cyan"   icon={CheckCircle2} />
+      {kpisLoading ? (
+        <KpiSkeleton count={5} />
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <KpiCard title="إجمالي المبيعات"      value={`${fmt(kpis.total)} ر.س`}                   subtitle="جميع السجلات"          color="green"  icon={DollarSign} />
+          <KpiCard title={`مبيعات ${MONTHS_AR[now.getMonth()]}`} value={`${fmt(kpis.month)} ر.س`} subtitle="الشهر الحالي"          color="pink"   icon={TrendingUp} />
+          <KpiCard title="إجمالي السجلات"       value={kpis.count.toLocaleString('ar-SA')}           subtitle="جميع الإدخالات"        color="purple" icon={Hash} />
+          <KpiCard title="فواتير معلقة"         value={kpis.pendingCount.toLocaleString('ar-SA')}    subtitle="في انتظار الإرسال"     color="yellow" icon={Clock} />
+          <KpiCard title="فواتير مؤكدة"         value={kpis.confirmedCount.toLocaleString('ar-SA')}  subtitle="تم إرسالها بنجاح"      color="cyan"   icon={CheckCircle2} />
+        </div>
+      )}
+
+      {/* Quick Action Row */}
+      <div className="grid grid-cols-3 gap-3 mb-6" dir="rtl">
+        {[
+          { icon: PlusCircle, label: 'إضافة مبيعات',  to: '/sales/create',    color: 'text-yellow-600 dark:text-yellow-400' },
+          { icon: Send,       label: 'إرسال الفواتير', to: '/submit',          color: 'text-blue-600 dark:text-blue-400' },
+          { icon: Ticket,     label: 'رفع تذكرة',      to: '/tickets/create',  color: 'text-purple-600 dark:text-purple-400' },
+        ].map(({ icon: Icon, label, to, color }) => (
+          <Link key={to} to={to}
+            className="card-surface hover:shadow-md active:scale-95 transition-all p-3 flex items-center gap-3 rounded-xl cursor-pointer"
+          >
+            <Icon size={18} className={color} />
+            <span className="text-sm font-medium font-arabic text-gray-700 dark:text-gray-200">{label}</span>
+          </Link>
+        ))}
       </div>
 
       {/* Advanced Analytics (subscription-gated) */}
@@ -456,8 +472,13 @@ export default function Dashboard() {
               <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">التحليلات المتقدمة</h2>
             </div>
             <button onClick={() => setShowAdvanced(s => !s)}
-              className="text-xs text-yellow-600 hover:underline font-arabic">
+              className="text-xs text-yellow-600 hover:underline font-arabic flex items-center gap-1">
               {showAdvanced ? 'إخفاء' : 'إظهار'}
+              <ChevronDown
+                size={13}
+                className="transition-transform"
+                style={{ transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              />
             </button>
           </div>
           {showAdvanced && <AdvancedDashboard branchId={branchId} />}
@@ -472,9 +493,8 @@ export default function Dashboard() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-gray-400 font-arabic text-sm">جاري التحميل...</p>
+          <div className="p-4">
+            <TableSkeleton rows={8} cols={7} />
           </div>
         ) : sales.length === 0 ? (
           <EmptyState
