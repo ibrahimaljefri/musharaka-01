@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { devAuth } from '../lib/devAuth'
 import { KeyRound, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import LogoMark from '../components/LogoMark'
 
 // Shared glass input style — matches Login/Register
 const glassInput = {
@@ -97,8 +98,12 @@ export default function ChangePassword({ forced = false }) {
 
       <div className="relative w-full max-w-md">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <img src="/urwah-logo.png" alt="عروة" className="h-16 object-contain mb-1" />
+        <div className="text-center mb-8 flex flex-col items-center gap-2">
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ position: 'absolute', inset: -8, borderRadius: 24, background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.20)', boxShadow: '0 0 30px rgba(245,158,11,0.15)' }} />
+            <LogoMark size={64} id="cp-top" />
+          </div>
+          <div className="font-bold font-arabic text-xl" style={{ background: 'linear-gradient(135deg,#FBBF24,#D97706)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>عروة</div>
           <div className="text-sm font-arabic" style={{ color: 'rgba(255,255,255,0.45)' }}>نظام إدارة المبيعات</div>
         </div>
 

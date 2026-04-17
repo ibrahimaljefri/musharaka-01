@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
-import LogoMark from '../components/LogoMark'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -42,16 +41,13 @@ export default function Login() {
   }
 
   return (
-    <div
-      className="backdrop-blur-xl rounded-2xl p-8 border shadow-2xl"
-      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
-    >
-      {/* Brand mark */}
-      <div className="flex justify-center items-center mb-6">
-        <LogoMark size={56} id="login" />
-      </div>
-
-      <h1 className="text-xl font-bold text-white font-arabic mb-6 text-center">تسجيل الدخول</h1>
+    <div>
+      <h1
+        className="text-xl font-bold text-white font-arabic mb-6 text-center"
+        style={{ letterSpacing: '-0.01em' }}
+      >
+        تسجيل الدخول
+      </h1>
 
       {error && (
         <div
@@ -129,3 +125,4 @@ export default function Login() {
     </div>
   )
 }
+

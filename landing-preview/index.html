@@ -3,749 +3,882 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مشاركة — نظام إدارة المبيعات</title>
+  <title>عروة — نظام إدارة وإرسال مبيعات الفروع</title>
+  <meta name="description" content="عروة: نظام B2B SaaS احترافي لإدارة المبيعات اليومية للفروع وإرسالها لمنصة سينومي، مع بوت واتساب وتيليجرام، تقارير حية، وإدارة مستخدمين." />
+  <link rel="icon" type="image/png" href="./urwah-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --gold:          #F59E0B;
-      --gold-dark:     #D97706;
-      --gold-glow:     rgba(245,158,11,0.25);
-      --bg:            #080E1A;
-      --bg-card:       rgba(255,255,255,0.06);
-      --bg-card-hover: rgba(255,255,255,0.10);
-      --glass-border:  rgba(255,255,255,0.10);
-      --glass-border-gold: rgba(245,158,11,0.3);
-      --text-primary:  #F8FAFC;
-      --text-secondary: rgba(255,255,255,0.60);
-      --text-muted:    rgba(255,255,255,0.35);
-      --green:         #10B981;
-      --green-glass:   rgba(16,185,129,0.15);
-      --red-glass:     rgba(239,68,68,0.15);
-      --purple:        #8B5CF6;
-      --purple-glass:  rgba(139,92,246,0.15);
-      --blue-glass:    rgba(59,130,246,0.15);
-      --cyan:          #06B6D4;
+    :root{
+      --gold:#F59E0B; --gold-light:#FBBF24; --gold-dark:#D97706;
+      --bg:#080E1A; --bg-2:#0A1220;
+      --glass:rgba(255,255,255,0.05); --border:rgba(255,255,255,0.09);
+      --gold-glass:rgba(245,158,11,0.12); --gold-border:rgba(245,158,11,0.35);
+      --text:#F8FAFC; --text-sec:rgba(255,255,255,0.6); --text-muted:rgba(255,255,255,0.35);
+      --green:#10B981; --purple:#8B5CF6; --blue:#60A5FA;
     }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Tajawal', sans-serif;
-      color: var(--text-primary);
-      background: #080E1A;
-      background-image:
-        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(245,158,11,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(139,92,246,0.08) 0%, transparent 50%);
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:var(--bg);color:var(--text);font-family:'Cairo',system-ui,sans-serif;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 
-    /* ── NAVBAR ─────────────────────────────────────────────────────────────── */
-    nav {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(8,14,26,0.75);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      height: 68px; display: flex; align-items: center;
-      padding: 0 48px; gap: 32px;
-      box-shadow: 0 1px 40px rgba(0,0,0,0.4);
-    }
-    .nav-logo { display: flex; flex-direction: column; margin-right: auto; }
-    .nav-logo strong { font-size: 22px; font-weight: 800; color: var(--gold); line-height: 1; }
-    .nav-logo span   { font-size: 11px; color: var(--text-muted); }
-    .nav-links { display: flex; gap: 28px; }
-    .nav-links a { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.7); text-decoration: none; transition: color .15s; }
-    .nav-links a:hover { color: var(--gold); }
-    .nav-btns  { display: flex; gap: 10px; margin-right: auto; }
-    .btn-outline { padding: 8px 18px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); background: rgba(255,255,255,0.06); cursor: pointer; transition: border-color .15s, color .15s; }
-    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
-    .btn-primary { padding: 8px 20px; background: var(--gold); border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 700; color: #0a0a0a; cursor: pointer; transition: background .15s; }
-    .btn-primary:hover { background: var(--gold-dark); }
+    /* Keyframes */
+    @keyframes floatOrb{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+    @keyframes shimmerGold{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    @keyframes marqueeRTL{0%{transform:translateX(0)}100%{transform:translateX(50%)}}
+    @keyframes bounceArrow{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes counterPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}50%{box-shadow:0 0 0 8px rgba(16,185,129,0)}}
+    @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-    /* ── HERO ────────────────────────────────────────────────────────────────── */
-    .hero {
-      background: transparent;
-      padding: 100px 48px 80px;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
-      min-height: 560px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);
-      top: -100px; left: -100px;
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    .hero-orb {
-      position: absolute;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 70%);
-      border-radius: 50%;
-      top: -150px; right: -150px;
-      animation: orbFloat 8s ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes orbFloat {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50%       { transform: translateY(30px) scale(1.05); }
-    }
-    .hero-text h1 { font-size: 46px; font-weight: 800; line-height: 1.15; color: var(--text-primary); }
-    .hero-text h1 span { color: var(--gold); }
-    .hero-text p  { margin-top: 16px; font-size: 16px; color: var(--text-secondary); line-height: 1.7; }
-    .hero-btns    { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-hero-primary { padding: 14px 28px; background: var(--gold); border: none; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 800; color: #0a0a0a; cursor: pointer; transition: background .15s, box-shadow .15s; white-space: nowrap; box-shadow: 0 4px 20px rgba(245,158,11,0.3); }
-    .btn-hero-primary:hover { background: var(--gold-dark); box-shadow: 0 6px 28px rgba(245,158,11,0.4); }
-    .btn-hero-outline { padding: 14px 24px; border: 2px solid rgba(255,255,255,0.25); border-radius: 12px; background: transparent; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text-primary); cursor: pointer; transition: background .15s, border-color .15s; white-space: nowrap; }
-    .btn-hero-outline:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.4); }
-    .hero-trust { margin-top: 16px; font-size: 13px; color: var(--text-muted); display: flex; gap: 20px; flex-wrap: wrap; }
-    .hero-trust span::before { content: "✓ "; color: var(--green); font-weight: 700; }
+    .container{max-width:1200px;margin:0 auto;padding:0 24px}
 
-    /* Dashboard mockup */
-    .dashboard-mockup {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 20px;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
-      overflow: hidden;
-    }
-    .mockup-topbar {
-      background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding: 10px 16px; display: flex; align-items: center; gap: 10px;
-    }
-    .mockup-topbar .logo-sm { font-size: 13px; font-weight: 700; color: var(--gold); margin-right: auto; }
-    .online-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.5;} }
-    .online-label { font-size: 11px; color: var(--green); }
-    .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 12px; }
-    .kpi-card { border-radius: 10px; padding: 10px 12px; }
-    .kpi-card .kpi-label { font-size: 9px; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
-    .kpi-card .kpi-val   { font-size: 13px; font-weight: 700; }
-    .kpi-green  { background: var(--green-glass);  } .kpi-green  .kpi-val { color: var(--green);  }
-    .kpi-red    { background: var(--red-glass); }    .kpi-red    .kpi-val { color: #F87171; }
-    .kpi-purple { background: var(--purple-glass); } .kpi-purple .kpi-val { color: var(--purple); }
-    .kpi-cyan   { background: rgba(6,182,212,0.15); } .kpi-cyan  .kpi-val { color: var(--cyan);   }
-    .mock-table { padding: 0 12px 12px; }
-    .mock-table-header { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .mock-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 8px; font-size: 11px; border-radius: 6px; }
-    .mock-row:nth-child(odd) { background: rgba(255,255,255,0.04); }
-    .mock-row .branch { color: var(--text-primary); font-weight: 500; }
-    .mock-row .amount { color: var(--green); font-weight: 700; }
-    .mock-row .date   { color: rgba(255,255,255,0.4); font-size: 10px; }
+    /* Announce */
+    .announce{position:fixed;top:0;left:0;right:0;height:36px;z-index:1000;
+      background:linear-gradient(90deg,#D97706,#F59E0B,#FBBF24,#F59E0B,#D97706);
+      background-size:200% 100%;animation:shimmerGold 6s linear infinite;
+      overflow:hidden;border-bottom:1px solid rgba(0,0,0,0.2)}
+    .announce-track{display:flex;gap:0;white-space:nowrap;animation:marqueeRTL 30s linear infinite;
+      height:36px;align-items:center;color:#0A1220;font-weight:800;font-size:13px}
+    .announce-track span{padding:0 28px}
 
-    /* ── SECTION WRAPPER ─────────────────────────────────────────────────────── */
-    section { padding: 80px 48px; }
-    .section-title { text-align: center; font-size: 30px; font-weight: 800; color: var(--text-primary); margin-bottom: 12px; }
-    .section-sub   { text-align: center; font-size: 15px; color: var(--text-secondary); margin-bottom: 48px; }
+    /* Nav */
+    .nav{position:sticky;top:36px;z-index:900;
+      background:rgba(8,14,26,0.72);backdrop-filter:blur(20px) saturate(150%);
+      -webkit-backdrop-filter:blur(20px) saturate(150%);
+      border-bottom:1px solid rgba(255,255,255,0.06)}
+    .nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;
+      padding:14px 24px;gap:24px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;
+      background:linear-gradient(135deg,#FBBF24,#D97706);-webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent;color:transparent}
+    .logo-seal{border-radius:14px;overflow:hidden;border:1px solid var(--gold-border);
+      box-shadow:0 0 30px rgba(245,158,11,0.25),inset 0 0 0 1px rgba(255,255,255,0.1);
+      background:#fff;padding:4px;display:inline-flex}
+    .logo-seal img{display:block;object-fit:contain}
+    .nav-links{display:flex;gap:30px}
+    .nav-links a{color:rgba(255,255,255,0.72);font-size:15px;font-weight:600;position:relative;transition:color .2s}
+    .nav-links a::after{content:'';position:absolute;bottom:-6px;right:0;width:0;height:2px;background:var(--gold);transition:width .25s}
+    .nav-links a:hover{color:var(--gold-light)}
+    .nav-links a:hover::after{width:100%}
+    .nav-cta{display:flex;gap:10px;align-items:center}
+    @media (max-width:900px){.nav-links{display:none}}
 
-    /* ── FEATURES ────────────────────────────────────────────────────────────── */
-    .features-section { background: transparent; }
-    .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1100px; margin: 0 auto; }
-    .feature-card {
-      display: flex; gap: 16px; align-items: flex-start;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 16px; padding: 24px;
-      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-    }
-    .feature-card:hover {
-      background: rgba(255,255,255,0.09);
-      border-color: rgba(245,158,11,0.35);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-      transform: translateY(-3px);
-    }
-    .feature-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
-    .feature-text h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-    .feature-text p  { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
-    .feat-green  { background: var(--green-glass);  }
-    .feat-blue   { background: var(--blue-glass);   }
-    .feat-purple { background: var(--purple-glass); }
-    .feat-yellow { background: rgba(245,158,11,0.15); }
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;
+      font-weight:700;font-size:15px;border:1px solid transparent;
+      transition:transform .2s,box-shadow .25s,background .2s,border-color .2s;cursor:pointer}
+    .btn-lg{padding:15px 30px;font-size:17px;border-radius:14px}
+    .btn-block{width:100%;justify-content:center}
+    .btn-primary{background:linear-gradient(135deg,#F59E0B,#D97706);color:#0A1220;
+      box-shadow:0 10px 30px rgba(245,158,11,0.35),inset 0 1px 0 rgba(255,255,255,0.25)}
+    .btn-primary:hover{transform:translateY(-2px);
+      box-shadow:0 16px 40px rgba(245,158,11,0.5),inset 0 1px 0 rgba(255,255,255,0.3)}
+    .btn-ghost{background:rgba(255,255,255,0.04);color:var(--text);border-color:var(--gold-border)}
+    .btn-ghost:hover{background:rgba(245,158,11,0.1);border-color:var(--gold)}
+    .arrow{display:inline-block;transition:transform .25s}
+    .btn-primary:hover .arrow{transform:translateX(-4px)}
 
-    /* ── HOW IT WORKS ────────────────────────────────────────────────────────── */
-    .how-section { background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .steps-row { display: flex; justify-content: center; gap: 0; max-width: 900px; margin: 0 auto; }
-    .step { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px; position: relative; }
-    .step:not(:last-child)::before {
-      content: "←"; position: absolute; left: -16px; top: 36px;
-      font-size: 28px; color: rgba(255,255,255,0.2); font-weight: 700;
-    }
-    .step-num {
-      width: 52px; height: 52px; border-radius: 50%; background: var(--gold);
-      color: #0a0a0a; font-size: 22px; font-weight: 800;
-      display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(245,158,11,.35);
-    }
-    .step-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 20px 16px; width: 100%; }
-    .step-icon { font-size: 28px; margin-bottom: 8px; }
-    .step h3   { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
-    .step p    { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    /* Hero */
+    .hero{position:relative;min-height:calc(100vh - 36px);display:flex;align-items:center;justify-content:center;
+      padding:100px 24px 80px;overflow:hidden}
+    .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at top,#0F1A2E 0%,#080E1A 60%)}
+    .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.55;animation:floatOrb 12s ease-in-out infinite}
+    .orb-1{width:500px;height:500px;background:radial-gradient(circle,#F59E0B 0%,transparent 70%);top:-120px;right:-100px}
+    .orb-2{width:420px;height:420px;background:radial-gradient(circle,#8B5CF6 0%,transparent 70%);bottom:-80px;left:-80px;animation-delay:-4s}
+    .orb-3{width:320px;height:320px;background:radial-gradient(circle,#FBBF24 0%,transparent 70%);top:40%;left:30%;animation-delay:-7s;opacity:.3}
+    .dotgrid{position:absolute;inset:0;
+      background-image:radial-gradient(rgba(255,255,255,0.07) 1px,transparent 1px);
+      background-size:28px 28px;
+      mask-image:radial-gradient(ellipse at center,black 40%,transparent 75%);
+      -webkit-mask-image:radial-gradient(ellipse at center,black 40%,transparent 75%)}
+    .hero-content{position:relative;z-index:1;text-align:center;max-width:880px;animation:fadeUp .8s ease both}
+    .hero-logo{margin-bottom:32px}
+    .hero-logo .logo-glass-card{
+      position:relative;display:inline-flex;align-items:center;justify-content:center;
+      padding:20px 32px;border-radius:24px;
+      background:rgba(10,18,32,0.65);
+      backdrop-filter:blur(20px) saturate(130%);-webkit-backdrop-filter:blur(20px) saturate(130%);
+      box-shadow:0 8px 40px rgba(0,0,0,0.65),0 0 80px rgba(245,158,11,0.18);
+      border:1px solid rgba(245,158,11,0.25)}
+    .hero-logo .logo-glass-card::before{
+      content:'';position:absolute;top:0;left:12%;right:12%;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(245,158,11,0.65),rgba(251,191,36,0.45),rgba(245,158,11,0.65),transparent)}
+    .hero-logo .logo-glass-card::after{
+      content:'';position:absolute;inset:-1px;border-radius:25px;pointer-events:none;
+      box-shadow:0 0 60px rgba(245,158,11,0.20),0 0 120px rgba(245,158,11,0.08)}
+    .hero-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 18px;border-radius:999px;
+      background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);color:var(--green);
+      font-size:13px;font-weight:700;margin-bottom:28px}
+    .dot-live{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulseDot 2s ease-in-out infinite}
+    .hero-title{font-size:clamp(40px,7vw,78px);font-weight:900;line-height:1.1;margin-bottom:24px;letter-spacing:-0.02em}
+    .gradient-gold{background:linear-gradient(135deg,#FBBF24 0%,#F59E0B 40%,#D97706 100%);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+    .hero-sub{font-size:clamp(16px,2vw,20px);color:rgba(255,255,255,0.7);max-width:640px;margin:0 auto 40px;line-height:1.7}
+    .hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+    .hero-trust{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;color:rgba(255,255,255,0.5);font-size:14px}
+    .scroll-arrow{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+      color:rgba(245,158,11,0.7);font-size:24px;animation:bounceArrow 1.8s ease-in-out infinite}
 
-    /* ── PRICING ─────────────────────────────────────────────────────────────── */
-    .pricing-section { background: transparent; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; max-width: 1060px; margin: 0 auto; }
-    .pricing-card {
-      border-radius: 20px; border: 1px solid rgba(255,255,255,0.09);
-      padding: 32px 28px;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      position: relative;
-      transition: box-shadow .2s;
-    }
-    .pricing-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
-    .pricing-card.highlight { background: rgba(245,158,11,0.08); border: 1.5px solid rgba(245,158,11,0.4); box-shadow: 0 0 60px rgba(245,158,11,0.15); }
-    .rec-badge {
-      position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
-      background: var(--gold); color: #0a0a0a;
-      font-size: 12px; font-weight: 700; padding: 4px 20px; border-radius: 20px;
-      white-space: nowrap;
-    }
-    .plan-name  { font-size: 18px; font-weight: 800; color: var(--text-primary); text-align: right; }
-    .plan-price { font-size: 34px; font-weight: 800; text-align: right; margin: 8px 0 4px; color: var(--text-primary); }
-    .highlight .plan-price { color: var(--gold); }
-    .plan-period { font-size: 13px; color: var(--text-secondary); text-align: right; margin-bottom: 20px; }
-    .plan-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0 0 20px; }
-    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-    .plan-features li { font-size: 13px; color: rgba(255,255,255,0.75); display: flex; gap: 8px; align-items: flex-start; }
-    .plan-features li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; }
-    .plan-btn {
-      width: 100%; padding: 12px; border-radius: 10px; font-family: inherit;
-      font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s;
-    }
-    .plan-btn.primary { background: var(--gold); color: #0a0a0a; border: none; }
-    .plan-btn.primary:hover { background: var(--gold-dark); }
-    .plan-btn.secondary { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.12); }
-    .plan-btn.secondary:hover { border-color: var(--gold); color: var(--gold); }
+    /* Stats */
+    .stats{padding:70px 0;
+      background:linear-gradient(180deg,transparent 0%,rgba(245,158,11,0.05) 50%,transparent 100%),#080E1A;
+      border-top:1px solid rgba(245,158,11,0.1);border-bottom:1px solid rgba(245,158,11,0.1)}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+    @media (max-width:720px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+    .stat{text-align:center}
+    .stat-value{font-size:clamp(32px,5vw,52px);font-weight:900;
+      background:linear-gradient(135deg,#FBBF24,#D97706);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+      margin-bottom:4px}
+    .stat-label{color:rgba(255,255,255,0.55);font-size:14px;font-weight:600;letter-spacing:0.02em}
 
-    /* ── PRICING: single-plan default ─────────────────────────────────────── */
-    #plan-basic, #plan-enterprise { display: none; }
-    .pricing-grid.single-plan { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-    .toggle-plans-btn {
-      display: block; margin: 1.5rem auto 0;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary);
-      padding: 8px 22px; border-radius: 8px; cursor: pointer;
-      font-family: 'Tajawal', sans-serif; font-size: 13px; transition: all .2s;
-    }
-    .toggle-plans-btn:hover { border-color: var(--gold); color: var(--gold); }
+    /* Platform Preview */
+    .platform-preview{padding:100px 0 80px;position:relative}
+    .platform-preview .section-head{text-align:center;max-width:720px;margin:0 auto 56px}
+    .preview-browser{position:relative;border-radius:16px;overflow:hidden;
+      box-shadow:0 32px 80px rgba(0,0,0,0.70),0 0 120px rgba(245,158,11,0.08);
+      border:1px solid rgba(255,255,255,0.10)}
+    .preview-browser-chrome{
+      background:rgba(15,22,40,0.95);padding:10px 16px;
+      display:flex;align-items:center;gap:10px;
+      border-bottom:1px solid rgba(255,255,255,0.08)}
+    .browser-dots{display:flex;gap:6px}
+    .browser-dot{width:12px;height:12px;border-radius:50%}
+    .browser-dot:nth-child(1){background:#FF5F57}
+    .browser-dot:nth-child(2){background:#FFBD2E}
+    .browser-dot:nth-child(3){background:#28CA41}
+    .browser-url{flex:1;background:rgba(255,255,255,0.06);border-radius:6px;
+      padding:4px 12px;font-size:12px;color:rgba(255,255,255,0.40);font-family:monospace;
+      border:1px solid rgba(255,255,255,0.08)}
+    .preview-body{background:#080E1A;padding:20px}
+    /* Dashboard mockup elements */
+    .dash-header{display:flex;align-items:center;justify-content:space-between;
+      padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:20px}
+    .dash-title{font-size:16px;font-weight:700;color:#fff;font-family:inherit}
+    .dash-status{display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;
+      background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.30);color:#10b981}
+    .dash-status::before{content:'';display:inline-block;width:7px;height:7px;
+      border-radius:50%;background:#10b981;animation:pulseDot 2s ease-in-out infinite}
+    .dash-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    @media(max-width:640px){.dash-kpis{grid-template-columns:repeat(2,1fr)}}
+    .kpi-card{border-radius:10px;padding:14px 16px;border:1px solid rgba(255,255,255,0.08)}
+    .kpi-card-green{background:rgba(6,78,59,0.35)}
+    .kpi-card-red{background:rgba(127,29,29,0.35)}
+    .kpi-card-purple{background:rgba(88,28,135,0.35)}
+    .kpi-card-teal{background:rgba(19,78,74,0.35)}
+    .kpi-label{font-size:11px;color:rgba(255,255,255,0.55);text-align:left;margin-bottom:8px}
+    .kpi-value{font-size:clamp(18px,2.5vw,26px);font-weight:900;text-align:left}
+    .kpi-green{color:#34d399}.kpi-red{color:#f87171}.kpi-purple{color:#c084fc}.kpi-teal{color:#2dd4bf}
+    .dash-table-head{font-size:11px;color:rgba(255,255,255,0.40);text-align:right;
+      margin-bottom:10px;padding-right:4px}
+    .dash-row{display:flex;align-items:center;justify-content:space-between;
+      padding:10px 4px;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .dash-row:last-child{border-bottom:none}
+    .dash-branch{font-size:13px;font-weight:700;color:#fff}
+    .dash-date{font-size:12px;color:rgba(255,255,255,0.40)}
+    .dash-amount{font-size:13px;font-weight:700;color:#FBBF24}
+    .preview-glow{position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(245,158,11,0.06) 0%,transparent 70%)}
 
-    /* ── BOT SHOWCASE ────────────────────────────────────────────────────────── */
-    .bot-section {
-      background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding: 80px 48px;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
-    }
-    .bot-badge {
-      display: inline-block; background: rgba(245,158,11,0.15); color: var(--gold);
-      border: 1px solid rgba(245,158,11,0.3); border-radius: 20px;
-      padding: 4px 14px; font-size: 12px; font-weight: 600; margin-bottom: 12px;
-    }
-    .bot-text h2 { font-size: 28px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; }
-    .bot-text h2 span { color: var(--gold); }
-    .bot-text p  { font-size: 14px; color: var(--text-secondary); margin-top: 12px; line-height: 1.7; }
-    .bot-platforms { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-    .platform-badge {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px;
-    }
-    .platform-badge.tg { background: rgba(59,130,246,0.1); color: #60A5FA; border: 1px solid rgba(59,130,246,0.25); }
-    .platform-badge.wa { background: rgba(16,185,129,0.1); color: #34D399; border: 1px solid rgba(16,185,129,0.25); }
-    .bot-btns { margin-top: 24px; display: flex; gap: 12px; }
-    .btn-bot-request {
-      padding: 11px 22px; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
-      font-family: inherit; font-size: 13px; font-weight: 700; color: var(--text-primary); cursor: pointer;
-      transition: background .15s;
-    }
-    .btn-bot-request:hover { background: rgba(255,255,255,0.14); }
+    /* Sections */
+    .section{padding:110px 0;position:relative}
+    .section-alt{background:linear-gradient(180deg,transparent 0%,#0A1220 50%,transparent 100%)}
+    .section-head{text-align:center;max-width:720px;margin:0 auto 64px}
+    .eyebrow{display:inline-block;padding:5px 14px;border-radius:999px;
+      background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold-light);
+      font-size:12px;font-weight:800;letter-spacing:0.08em;margin-bottom:18px;text-transform:uppercase}
+    .section-title{font-size:clamp(30px,4.5vw,50px);font-weight:900;line-height:1.2;margin-bottom:16px;letter-spacing:-0.02em}
+    .section-sub{color:rgba(255,255,255,0.6);font-size:17px;line-height:1.7}
 
-    /* Chat mockup */
-    .chat-card {
-      background: rgba(14,20,32,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.10); border-radius: 20px; overflow: hidden;
-      box-shadow: 0 24px 60px rgba(0,0,0,.5);
-    }
-    .chat-header {
-      background: rgba(8,12,22,0.8); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 20px;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .chat-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
-    .chat-header-text .name   { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-    .chat-header-text .status { font-size: 11px; color: var(--green); }
-    .chat-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; min-height: 240px; }
-    .bubble-out {
-      align-self: flex-start; background: var(--gold); color: #0a0a0a;
-      padding: 10px 16px; border-radius: 16px 16px 4px 16px;
-      font-size: 13px; font-weight: 600; max-width: 70%;
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    .bubble-out .time { font-size: 10px; color: rgba(0,0,0,0.5); text-align: left; }
-    .bubble-in {
-      align-self: flex-end; background: rgba(42,51,69,0.8); color: var(--text-primary);
-      padding: 12px 16px; border-radius: 16px 16px 16px 4px;
-      border: 1px solid rgba(255,255,255,0.08);
-      font-size: 12px; max-width: 85%;
-    }
-    .bubble-in .reply-line { display: flex; gap: 8px; margin-bottom: 3px; }
-    .bubble-in .reply-line .val { font-weight: 700; }
-    .bubble-in .success { color: var(--green); font-weight: 700; font-size: 13px; margin-bottom: 10px; }
-    .bubble-in .amount  { color: #4ADE80; font-weight: 700; }
+    .reveal{opacity:0;transform:translateY(32px);transition:opacity .7s ease,transform .7s ease}
+    .reveal.visible{opacity:1;transform:translateY(0)}
 
-    /* ── STATS ───────────────────────────────────────────────────────────────── */
-    .stats-section {
-      background: rgba(245,158,11,0.06); border-top: 1px solid rgba(245,158,11,0.15); border-bottom: 1px solid rgba(245,158,11,0.15); padding: 48px;
-      display: flex; justify-content: center; gap: 0;
-    }
-    .stat-item { text-align: center; padding: 0 52px; position: relative; }
-    .stat-item:not(:last-child)::after { content: ""; position: absolute; left: 0; top: 10%; height: 80%; width: 1px; background: rgba(245,158,11,0.2); }
-    .stat-val   { font-size: 38px; font-weight: 800; color: var(--gold); }
-    .stat-label { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+    /* Features */
+    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    @media (max-width:980px){.features-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:620px){.features-grid{grid-template-columns:1fr}}
+    .feature{position:relative;padding:32px 28px;border-radius:20px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.08);overflow:hidden;
+      transition:transform .35s,border-color .35s,box-shadow .35s}
+    .feature:hover{transform:translateY(-4px);border-color:rgba(245,158,11,0.4);
+      box-shadow:0 20px 50px rgba(0,0,0,0.4),0 0 0 1px rgba(245,158,11,0.15)}
+    .feature-icon{width:56px;height:56px;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;font-size:28px;
+      border:1px solid rgba(255,255,255,0.1);margin-bottom:22px}
+    .feature h3{font-size:19px;font-weight:800;margin-bottom:10px}
+    .feature p{color:rgba(255,255,255,0.58);font-size:14.5px;line-height:1.75}
+    .feature-shine{position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:linear-gradient(115deg,transparent 40%,rgba(245,158,11,0.08) 50%,transparent 60%);
+      opacity:0;transition:opacity .5s;pointer-events:none}
+    .feature:hover .feature-shine{opacity:1}
 
-    /* ── TESTIMONIALS ────────────────────────────────────────────────────────── */
-    .testimonials-section { background: transparent; }
-    .testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; max-width: 1060px; margin: 0 auto; }
-    .testimonial-card {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 24px;
-      transition: box-shadow .2s, border-color .2s;
-    }
-    .testimonial-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.3); border-color: rgba(245,158,11,0.25); }
-    .stars { color: var(--gold); font-size: 14px; margin-bottom: 12px; }
-    .quote-icon { font-size: 24px; color: var(--gold); font-weight: 800; margin-bottom: 8px; }
-    .testimonial-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 18px; }
-    .testimonial-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
-    .testimonial-author .name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-    .testimonial-author .role { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    /* Steps */
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;position:relative}
+    .steps-line{position:absolute;top:36px;left:15%;right:15%;height:2px;
+      background:linear-gradient(90deg,transparent,#F59E0B 20%,#F59E0B 80%,transparent);opacity:.5}
+    @media (max-width:820px){.steps{grid-template-columns:1fr}.steps-line{display:none}}
+    .step{text-align:center;padding:24px 20px;background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.08);border-radius:20px;position:relative;backdrop-filter:blur(10px)}
+    .step-num{display:inline-block;font-size:13px;font-weight:900;color:#0A1220;
+      background:linear-gradient(135deg,#FBBF24,#D97706);padding:4px 12px;border-radius:999px;margin-bottom:14px}
+    .step-icon{font-size:40px;margin-bottom:14px}
+    .step h3{font-size:20px;font-weight:800;margin-bottom:10px}
+    .step p{color:rgba(255,255,255,0.6);font-size:14.5px;line-height:1.7}
 
-    /* ── CTA BANNER ──────────────────────────────────────────────────────────── */
-    .cta-section {
-      background: rgba(245,158,11,0.10); border-top: 1px solid rgba(245,158,11,0.2); padding: 56px 48px; text-align: center;
-    }
-    .cta-section h2 { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; }
-    .cta-section p  { font-size: 14px; color: var(--text-secondary); margin-bottom: 28px; }
-    .cta-section p span { margin: 0 8px; }
-    .btn-cta { padding: 14px 36px; background: var(--gold); border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 700; color: #0a0a0a; cursor: pointer; transition: box-shadow .2s, background .15s; box-shadow: 0 4px 20px rgba(245,158,11,0.3); }
-    .btn-cta:hover { background: var(--gold-dark); box-shadow: 0 8px 28px rgba(245,158,11,0.4); }
+    /* Bot */
+    .bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+    @media (max-width:900px){.bot-grid{grid-template-columns:1fr}}
+    .bot-text h2{text-align:right}
+    .bot-text .section-sub{text-align:right;margin:16px 0 28px}
+    .bot-badges{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+    .badge-green,.badge-blue,.badge-gold{display:inline-flex;align-items:center;gap:8px;
+      padding:7px 14px;border-radius:10px;font-size:13px;font-weight:700}
+    .badge-green{background:rgba(16,185,129,0.14);color:var(--green);border:1px solid rgba(16,185,129,0.3)}
+    .badge-blue{background:rgba(59,130,246,0.14);color:var(--blue);border:1px solid rgba(59,130,246,0.3)}
+    .badge-gold{background:rgba(245,158,11,0.14);color:var(--gold-light);border:1px solid rgba(245,158,11,0.3)}
+    .phone-frame{max-width:340px;margin:0 auto;background:#0F1A2E;
+      border:8px solid #1A2438;border-radius:40px;padding:20px 14px 18px;
+      box-shadow:0 30px 80px rgba(0,0,0,0.55),0 0 0 1px rgba(245,158,11,0.2),0 0 60px rgba(245,158,11,0.15);
+      position:relative}
+    .phone-notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);
+      width:100px;height:18px;background:#1A2438;border-radius:0 0 14px 14px}
+    .phone-header{display:flex;align-items:center;gap:10px;padding:10px 6px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:14px}
+    .phone-avatar{width:38px;height:38px;border-radius:50%;
+      background:linear-gradient(135deg,#FBBF24,#D97706);
+      display:flex;align-items:center;justify-content:center;font-weight:900;color:#0A1220;font-size:18px}
+    .phone-body{display:flex;flex-direction:column;gap:10px;padding:6px 4px;max-height:360px;overflow:hidden}
+    .msg{padding:9px 13px;border-radius:14px;font-size:13.5px;line-height:1.65;max-width:85%;animation:msgIn .45s ease both}
+    .msg-bot{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+      border-top-right-radius:4px;align-self:flex-start}
+    .msg-user{background:linear-gradient(135deg,#F59E0B,#D97706);color:#0A1220;font-weight:700;
+      border-top-left-radius:4px;align-self:flex-end}
+    .msg-success{background:rgba(16,185,129,0.12) !important;
+      border:1px solid rgba(16,185,129,0.4) !important;color:var(--green)}
+    .msg:nth-child(1){animation-delay:0s}
+    .msg:nth-child(2){animation-delay:.4s}
+    .msg:nth-child(3){animation-delay:.9s}
+    .msg:nth-child(4){animation-delay:1.4s}
+    .msg:nth-child(5){animation-delay:1.9s}
 
-    /* ── FOOTER ──────────────────────────────────────────────────────────────── */
-    footer {
-      background: #060C18; border-top: 1px solid rgba(255,255,255,0.06); padding: 28px 48px;
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
-    }
-    .footer-logo strong { font-size: 18px; font-weight: 800; color: var(--gold); }
-    .footer-logo span   { font-size: 11px; color: var(--text-muted); display: block; }
-    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
-    .footer-links a { font-size: 12px; color: var(--text-muted); text-decoration: none; transition: color .15s; }
-    .footer-links a:hover { color: var(--gold); }
-    .footer-copy { font-size: 11px; color: var(--text-muted); }
+    /* Pricing */
+    .pricing-toggle{display:flex;justify-content:center;margin-bottom:40px;gap:8px}
+    .pricing-toggle button{padding:9px 20px;border-radius:10px;font-weight:700;font-size:14px;
+      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);transition:all .25s}
+    .pricing-toggle button.active{background:linear-gradient(135deg,#FBBF24,#D97706);color:#0A1220;border-color:transparent;
+      box-shadow:0 8px 20px rgba(245,158,11,0.35)}
+    .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+    @media (max-width:900px){.pricing-grid{grid-template-columns:1fr}}
+    .price-card{position:relative;padding:36px 30px;border-radius:22px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.09);display:flex;flex-direction:column;
+      transition:transform .3s,border-color .3s}
+    .price-card:hover{transform:translateY(-4px);border-color:rgba(245,158,11,0.3)}
+    .price-highlight{border-color:var(--gold);
+      background:linear-gradient(180deg,rgba(245,158,11,0.08),rgba(245,158,11,0.02));
+      box-shadow:0 20px 60px rgba(245,158,11,0.2),0 0 0 1px rgba(245,158,11,0.4);transform:scale(1.03)}
+    .price-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+      padding:6px 16px;border-radius:999px;background:linear-gradient(135deg,#FBBF24,#D97706);
+      color:#0A1220;font-size:12.5px;font-weight:900;white-space:nowrap;
+      box-shadow:0 8px 20px rgba(245,158,11,0.35)}
+    .price-name{font-size:18px;font-weight:800;color:rgba(255,255,255,0.85);margin-bottom:10px}
+    .price-amount{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}
+    .price-num{font-size:48px;font-weight:900;
+      background:linear-gradient(135deg,#FBBF24,#D97706);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+      letter-spacing:-0.02em}
+    .price-cur{font-size:18px;font-weight:700;color:rgba(255,255,255,0.7)}
+    .price-period{color:rgba(255,255,255,0.5);font-size:13.5px;margin-bottom:20px}
+    .price-quota{display:flex;gap:14px;padding:12px 0;
+      border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);
+      margin-bottom:20px;font-size:14px;color:rgba(255,255,255,0.75);font-weight:600}
+    .price-feats{list-style:none;margin-bottom:24px;flex:1}
+    .price-feats li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;
+      color:rgba(255,255,255,0.72);font-size:14.5px}
+    .check{color:var(--green);font-weight:900;flex-shrink:0}
+    .extras{display:flex;justify-content:center;align-items:center;margin-top:40px;gap:24px;flex-wrap:wrap}
+    .extra{display:flex;align-items:center;gap:12px;padding:12px 22px;
+      background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px}
+    .extra-label{color:rgba(255,255,255,0.55);font-size:14px}
+    .extra-val{color:var(--gold-light);font-weight:800;font-size:15px}
+    .extra-sep{width:1px;height:30px;background:rgba(255,255,255,0.1)}
 
-    /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
-    @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; padding: 80px 20px 60px; }
-      .dashboard-mockup { display: none; }
-      .features-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
-      .bot-section { grid-template-columns: 1fr; padding: 60px 20px; }
-      .steps-row { flex-direction: column; align-items: center; gap: 20px; }
-      .step:not(:last-child)::before { display: none; }
-      nav { padding: 0 20px; }
-      .nav-links { display: none; }
-      section { padding: 60px 20px; }
-    }
+    /* Testimonials */
+    .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    @media (max-width:900px){.testi-grid{grid-template-columns:1fr}}
+    .testi{position:relative;padding:32px 28px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.08);border-radius:20px}
+    .testi-quote{font-size:64px;line-height:0.6;color:rgba(245,158,11,0.3);
+      font-family:Georgia,serif;margin-bottom:14px}
+    .testi blockquote{color:rgba(255,255,255,0.82);font-size:15.5px;line-height:1.85;font-weight:500;margin-bottom:22px}
+    .testi figcaption{display:flex;align-items:center;gap:12px;padding-top:18px;
+      border-top:1px solid rgba(255,255,255,0.06)}
+    .testi-avatar{width:44px;height:44px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#0A1220}
+    .testi-name{font-weight:800;font-size:15px}
+    .testi-role{font-size:12.5px;color:rgba(255,255,255,0.5);margin-top:2px}
+
+    /* CTA */
+    .cta{position:relative;padding:70px 40px;border-radius:28px;
+      background:radial-gradient(ellipse at top,rgba(245,158,11,0.12),transparent 60%),
+        linear-gradient(180deg,#0F1A2E,#0A1220);
+      border:1px solid rgba(245,158,11,0.3);text-align:center;overflow:hidden}
+    .cta::before{content:'';position:absolute;inset:0;
+      background:linear-gradient(135deg,transparent 30%,rgba(245,158,11,0.1) 50%,transparent 70%);
+      background-size:200% 200%;animation:shimmerGold 8s linear infinite;pointer-events:none}
+    .cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      width:500px;height:500px;
+      background:radial-gradient(circle,rgba(245,158,11,0.25) 0%,transparent 65%);
+      filter:blur(80px);pointer-events:none}
+    .cta h2{position:relative;z-index:1;font-size:clamp(28px,4vw,44px);font-weight:900;margin-bottom:16px}
+    .cta p{position:relative;z-index:1;color:rgba(255,255,255,0.7);font-size:17px;line-height:1.7;
+      max-width:560px;margin:0 auto 30px}
+    .cta-btns{position:relative;z-index:1;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
+    .cta-trust{position:relative;z-index:1;display:flex;gap:22px;justify-content:center;flex-wrap:wrap;
+      color:rgba(255,255,255,0.5);font-size:13.5px}
+
+    /* Footer */
+    .footer{padding:60px 0 30px;border-top:1px solid rgba(255,255,255,0.06);background:#050810}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;
+      padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,0.06)}
+    @media (max-width:820px){.footer-grid{grid-template-columns:1fr 1fr;gap:30px}}
+    .footer-brand p{color:rgba(255,255,255,0.5);font-size:14px;line-height:1.7;margin-top:16px;max-width:320px}
+    .footer h4{font-size:14px;font-weight:800;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.08em}
+    .footer a, .footer button{display:block;color:rgba(255,255,255,0.55);font-size:14.5px;
+      padding:6px 0;transition:color .2s;text-align:right;width:100%}
+    .footer a:hover, .footer button:hover{color:var(--gold-light)}
+    .footer-bar{display:flex;justify-content:space-between;padding-top:28px;
+      color:rgba(255,255,255,0.4);font-size:13px;flex-wrap:wrap;gap:12px}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(4,8,16,0.75);
+      backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;
+      padding:20px;animation:fadeUp .25s ease}
+    .modal-overlay.open{display:flex}
+    .modal{background:linear-gradient(180deg,#0F1626 0%,#0A1220 100%);
+      border:1px solid var(--gold-border);border-radius:20px;max-width:440px;width:100%;padding:32px;
+      box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 60px rgba(245,158,11,0.15)}
+    .modal h3{color:var(--gold);font-size:22px;font-weight:800;margin:0}
+    .modal-head{display:flex;justify-content:space-between;margin-bottom:24px}
+    .modal-close{color:var(--text-sec);font-size:24px;line-height:1}
+    .modal p{color:var(--text-sec);font-size:15px;line-height:1.7;margin-bottom:24px}
+    .modal-link{display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:14px;font-weight:600;margin-bottom:12px}
+    .modal-link-wa{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35)}
+    .modal-link-em{background:var(--gold-glass);border:1px solid var(--gold-border)}
+    .modal-link-icon{font-size:24px}
+    .modal-link-sub{font-size:13px;color:var(--text-sec);font-weight:400;margin-top:2px}
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     NAVBAR
-════════════════════════════════════════════════════════════════════════════ -->
-<nav>
-  <div class="nav-logo">
-    <strong>مشاركة</strong>
-    <span>نظام إدارة المبيعات</span>
+  <!-- Announce -->
+  <div class="announce">
+    <div class="announce-track">
+      <span>🚀 عروة — نظام إدارة المبيعات الاحترافي &nbsp;|&nbsp; متاح الآن للمستأجرين في المملكة العربية السعودية &nbsp;•&nbsp;</span>
+      <span>🚀 عروة — نظام إدارة المبيعات الاحترافي &nbsp;|&nbsp; متاح الآن للمستأجرين في المملكة العربية السعودية &nbsp;•&nbsp;</span>
+      <span>🚀 عروة — نظام إدارة المبيعات الاحترافي &nbsp;|&nbsp; متاح الآن للمستأجرين في المملكة العربية السعودية &nbsp;•&nbsp;</span>
+    </div>
   </div>
-  <div class="nav-links">
-    <a href="#features">الميزات</a>
-    <a href="#pricing">الأسعار</a>
-    <a href="#how">كيف يعمل؟</a>
-    <a href="#bot">البوت</a>
-    <a href="#contact">تواصل معنا</a>
-  </div>
-  <div class="nav-btns">
-    <button class="btn-outline" onclick="goToLogin()">تسجيل الدخول</button>
-    <button class="btn-primary" onclick="goToRegister()">ابدأ مجاناً</button>
-  </div>
-</nav>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     HERO
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="hero">
-  <div class="hero-orb"></div>
-  <div class="hero-text">
-    <h1>نظام إدارة مبيعات<br/><span>الفروع والفواتير</span></h1>
-    <p>ربط سلس بين فروعك ومنصة سينومي للفواتير الإلكترونية.<br/>إدارة المبيعات اليومية، التقارير، والإرسالات في مكان واحد.</p>
-    <div class="hero-btns">
-      <button class="btn-hero-primary" onclick="goToRegister()">ابدأ تجربة مجانية — 14 يوماً</button>
-      <button class="btn-hero-outline" onclick="scrollToFeatures()">شاهد كيف يعمل ▶</button>
-    </div>
-    <div class="hero-trust">
-      <span>لا يُطلب بطاقة ائتمانية</span>
-      <span>إلغاء في أي وقت</span>
-      <span>دعم عربي كامل</span>
-    </div>
-  </div>
-  <div class="dashboard-mockup">
-    <div class="mockup-topbar">
-      <span class="logo-sm">مشاركة — لوحة التحكم</span>
-      <div class="online-dot"></div>
-      <span class="online-label">متصل بسينومي</span>
-    </div>
-    <div class="kpi-grid">
-      <div class="kpi-card kpi-green"><div class="kpi-label">إجمالي المبيعات</div><div class="kpi-val">125,450 ر.س</div></div>
-      <div class="kpi-card kpi-red"><div class="kpi-label">مبيعات الشهر</div><div class="kpi-val">38,500 ر.س</div></div>
-      <div class="kpi-card kpi-purple"><div class="kpi-label">الفواتير المُرسلة</div><div class="kpi-val">156</div></div>
-      <div class="kpi-card kpi-cyan"><div class="kpi-label">أيام مفقودة</div><div class="kpi-val">3 أيام</div></div>
-    </div>
-    <div class="mock-table">
-      <div class="mock-table-header">آخر المبيعات</div>
-      <div class="mock-row"><span class="branch">فرع الرياض — يومي</span><span class="date">2026-04-09</span><span class="amount">4,500 ر.س</span></div>
-      <div class="mock-row"><span class="branch">فرع جدة — شهري</span><span class="date">2026-04-08</span><span class="amount">31,200 ر.س</span></div>
-      <div class="mock-row"><span class="branch">فرع الدمام — يومي</span><span class="date">2026-04-08</span><span class="amount">2,800 ر.س</span></div>
-      <div class="mock-row"><span class="branch">فرع مكة — فترة</span><span class="date">2026-04-01</span><span class="amount" style="color:var(--gold)">18,000 ر.س</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     FEATURES
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="features-section" id="features">
-  <h2 class="section-title">لماذا تختار مشاركة؟</h2>
-  <p class="section-sub">كل الأدوات التي تحتاجها لإدارة مبيعاتك، في منصة عربية واحدة</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon feat-green">📊</div>
-      <div class="feature-text">
-        <h3>إدارة مبيعات متعددة الفروع</h3>
-        <p>أضف مبيعات يومية، شهرية، أو بفترات مخصصة لجميع فروعك. استورد بيانات Excel بضغطة واحدة مع كشف التكرارات تلقائياً.</p>
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <span>عروة</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">الميزات</a>
+        <a href="#pricing">الأسعار</a>
+        <a href="#how">كيف يعمل؟</a>
+      </div>
+      <div class="nav-cta">
+        <a id="login-link" href="#" class="btn btn-ghost">تسجيل الدخول</a>
+        <a id="register-link" href="#" class="btn btn-primary">ابدأ الآن</a>
       </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon feat-blue">🔄</div>
-      <div class="feature-text">
-        <h3>تكامل تلقائي مع سينومي</h3>
-        <p>إرسال الفواتير مباشرةً إلى منصة سينومي للفواتير الإلكترونية. تتبع كل إرسال وتنبيهات فورية للأيام المفقودة.</p>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+      <div class="dotgrid"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-logo">
+        <div class="logo-glass-card">
+          <!-- Full Urwah calligraphic mark — gold gradient on transparent background -->
+          <svg width="210" height="184" viewBox="350 140 325 295" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شعار عروة">
+            <defs>
+              <linearGradient id="hg" x1="512" y1="140" x2="512" y2="440" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stop-color="#FFFDE7"/>
+                <stop offset="10%"  stop-color="#FDE68A"/>
+                <stop offset="40%"  stop-color="#F59E0B"/>
+                <stop offset="75%"  stop-color="#D97706"/>
+                <stop offset="100%" stop-color="#92400E"/>
+              </linearGradient>
+              <radialGradient id="hrg" cx="512" cy="260" r="200" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stop-color="#FBBF24" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <!-- Ambient glow -->
+            <ellipse cx="512" cy="255" rx="230" ry="160" fill="url(#hrg)"/>
+            <!-- Arabic calligraphy عروة -->
+            <g fill="url(#hg)">
+              <path d="M428.109741,308.062500 C448.252167,303.688812 463.935150,292.184570 478.893982,279.506531 C497.342896,263.870483 513.617004,245.912170 531.592224,229.767548 C546.534424,216.347137 562.293457,204.081390 581.419067,197.053467 C595.298706,191.953232 609.478821,190.154388 624.063232,193.939819 C653.639465,201.616455 663.741516,226.418884 658.878113,251.379181 C658.359314,254.041916 658.276428,256.980682 655.790955,260.006836 C655.450317,256.014160 655.177673,252.748520 654.892151,249.483994 C653.137573,229.421875 639.162720,215.670181 619.272705,213.145767 C596.501221,210.255661 577.976196,219.570038 560.615662,232.369461 C544.345703,244.364822 530.170349,258.756226 515.848633,272.949402 C500.918365,287.745605 485.542084,302.027222 467.671082,313.304199 C453.401306,322.308716 438.159546,328.753021 421.109192,329.944550 C384.898102,332.475098 358.177185,306.386932 357.680817,274.173035 C357.322998,250.951004 367.502075,232.862686 385.321564,218.638031 C387.134308,217.190964 389.023834,215.840012 390.852325,214.463547 C384.869843,204.779770 393.771088,198.624039 395.314545,190.137436 C400.361359,192.710297 403.551727,196.151352 406.834808,199.245850 C410.692841,202.882278 413.924805,202.803116 417.555969,199.362732 C420.212555,196.845749 422.916168,194.378387 425.597992,191.888016 C426.763550,190.805618 427.523651,189.180588 430.002350,188.717926 C429.784851,197.426392 425.101044,203.072540 418.707947,208.151810 C421.833740,211.570679 424.858215,214.785324 427.780304,218.090515 C442.655914,234.916351 434.529297,270.913361 410.321808,277.442474 C390.891754,282.683044 376.220215,269.675049 380.107819,249.960770 C381.566040,242.566177 383.992126,235.508133 387.011810,228.429092 C382.244232,230.805710 379.170013,235.030060 376.246429,239.170074 C356.552155,267.058716 370.345093,301.433746 403.967224,308.592529 C411.930695,310.288116 419.826996,310.131805 428.109741,308.062500 M394.061249,251.254227 C399.086792,259.671692 412.348450,257.227814 419.537933,251.799484 C422.727448,249.391296 423.353729,246.638855 421.360291,243.145081 C416.983429,235.473969 410.323242,230.096466 403.730469,224.446304 C398.876770,228.418381 396.285278,233.255569 393.892151,238.165619 C391.926727,242.198074 391.387360,246.421738 394.061249,251.254227 z"/>
+              <path d="M576.357117,289.720032 C581.971436,291.678497 587.302185,292.243591 592.672607,291.302307 C593.070740,290.001831 592.387878,289.433350 591.816345,288.877380 C582.726807,280.034668 581.746826,269.901550 586.896729,258.718628 C592.100098,247.419662 598.905334,237.902390 612.173828,235.340103 C623.994263,233.057419 640.485046,243.305099 643.721375,254.916306 C644.101807,256.281250 644.366516,257.601410 643.164124,258.593048 C641.706421,259.795197 640.299805,258.795837 638.997253,258.147827 C628.586243,252.968658 617.812012,252.809647 606.935303,256.138092 C597.922668,258.896088 597.074280,262.418915 603.265747,269.618744 C612.329407,280.158386 624.713440,283.647034 637.865234,279.028320 C646.027954,276.161652 654.037415,272.859863 662.126038,269.780365 C663.962036,269.081360 665.797668,268.079163 667.833435,269.149872 C668.761353,277.365448 661.081970,290.011444 653.538635,292.796906 C638.088623,298.502045 623.543396,306.548035 607.550781,310.825836 C592.372009,314.885956 577.353699,315.687653 562.958374,307.680237 C556.138611,303.886749 551.007324,298.294373 545.753784,291.455322 C543.585449,304.266907 539.333252,315.313232 531.551331,324.742340 C525.570679,331.988953 518.527039,337.565216 508.798279,338.842468 C504.215607,339.444092 499.839783,338.459106 495.512543,337.284912 C488.557800,335.397766 482.209320,332.040802 475.874207,328.702576 C473.874237,327.648712 471.996399,326.165802 473.046204,323.597565 C474.012085,321.234589 476.253235,321.526855 478.237244,322.131134 C492.827911,326.575165 505.008087,321.622498 516.173767,312.533600 C522.834167,307.112030 528.270386,300.678131 532.713135,293.332794 C535.257019,289.126953 535.310486,285.309509 533.280457,280.663757 C527.429016,267.272614 526.915222,271.732758 537.022156,261.807983 C539.611389,259.265350 542.352661,256.877411 545.808899,253.695984 C552.321899,269.158051 559.869263,283.147614 576.357117,289.720032 z"/>
+              <path d="M460.696899,261.690094 C448.874115,256.856354 444.183502,248.285339 446.545380,236.115051 C448.743439,224.788910 453.471405,214.592346 460.851532,205.724289 C471.427490,193.016129 484.579987,193.730453 493.830322,207.369049 C500.527740,217.243668 503.871643,228.277573 505.246124,240.015289 C505.719513,244.058014 504.836975,247.379868 501.634460,250.286636 C496.831299,254.646225 492.413971,259.429199 487.781555,263.980225 C486.896301,264.849915 486.199829,266.211761 484.516815,265.893890 C483.305664,264.217377 485.690765,262.912384 484.898712,261.011902 C477.075256,263.641846 469.112427,264.564697 460.696899,261.690094 M472.851074,240.929062 C477.976929,241.102432 483.088379,241.190582 488.139069,238.484772 C486.093658,231.855240 483.004822,226.058197 478.102966,221.410095 C475.783386,219.210632 472.901459,217.851959 469.432098,218.917328 C464.441132,220.449982 459.441437,226.363358 459.412292,230.897507 C459.385406,235.082794 463.444031,238.975662 469.498566,240.519775 C470.297974,240.723648 471.144653,240.741928 472.851074,240.929062 z"/>
+              <path d="M382.481873,161.486572 C388.508118,153.710754 388.534882,153.674393 396.099915,159.241898 C398.623077,161.098846 400.970703,163.194275 403.543152,165.298935 C406.839874,163.066238 408.771912,159.706848 411.103241,156.762924 C412.906372,154.485931 414.646973,153.975250 416.993561,155.749420 C417.786987,156.349289 418.666626,156.833694 419.486877,157.399811 C434.590240,167.824112 430.314941,169.322388 421.531799,180.377075 C419.682190,182.705017 417.997375,182.787796 415.750031,180.716675 C412.223755,177.466934 408.442078,174.494370 404.464203,171.148392 C401.772369,174.355118 399.133362,177.078995 396.997162,180.152344 C394.452789,183.812943 392.316071,183.339478 389.477753,180.502945 C386.903778,177.930573 383.944275,175.732300 381.076324,173.468414 C376.222015,169.636627 376.167786,169.424118 380.080292,164.496826 C380.803772,163.585678 381.536163,162.681625 382.481873,161.486572 z"/>
+              <path d="M598.817017,175.773315 C602.242554,173.725784 605.659302,172.304947 608.178589,169.555847 C602.521545,162.847595 602.983154,157.105087 609.391174,153.046036 C611.321838,151.823090 613.356873,151.162094 615.506653,152.302658 C617.662354,153.446365 618.291626,155.486755 618.256531,157.790604 C618.208618,160.935760 616.871826,163.973099 619.744080,167.082062 C620.931458,168.367340 619.235535,172.682281 616.218811,172.016800 C613.102844,171.329437 611.994080,173.028107 610.359192,174.497040 C603.873169,180.324524 595.722717,183.353653 588.486816,182.193817 C591.222656,178.609512 595.348511,177.991287 598.817017,175.773315 z"/>
+            </g>
+            <!-- URWAH Latin serif text -->
+            <g fill="url(#hg)">
+              <path d="M507.902527,404.792236 C506.407623,409.087341 505.085327,413.029968 503.701965,416.951019 C503.106262,418.639496 502.767944,420.760132 500.404236,420.780090 C498.091400,420.799591 497.560577,418.778503 496.931580,417.073822 C492.440857,404.903259 487.984863,392.719910 483.499115,380.547516 C481.293610,374.562653 479.876892,368.090668 472.621033,365.133789 C479.117920,361.342133 487.598145,363.970551 490.324615,370.255066 C493.959747,378.634216 496.907562,387.310699 500.193939,395.842773 C500.837738,397.514191 501.071320,399.413666 502.563782,400.710358 C511.086945,382.654724 515.424255,376.457520 500.849335,364.856293 C504.528503,361.831055 513.241028,363.803009 516.802246,368.483459 C518.647217,370.908295 519.533813,373.778564 520.576233,376.589020 C523.635803,384.837952 526.767151,393.060303 530.110229,401.929321 C532.135010,399.434021 532.850403,396.972107 533.711243,394.612762 C537.018127,385.549866 540.306213,376.479919 543.550354,367.394379 C544.500122,364.734558 545.808228,362.929169 549.007080,364.191010 C550.179504,365.914948 549.203125,367.445801 548.672791,368.946960 C543.021240,384.943390 537.340149,400.929382 531.658386,416.915161 C531.056458,418.608673 530.746887,420.723724 528.343445,420.687439 C525.806824,420.649200 525.312317,418.481079 524.618042,416.606720 C521.231140,407.463226 517.837341,398.322235 513.946777,387.834808 C511.671082,394.240082 509.860718,399.335571 507.902527,404.792236 z"/>
+              <path d="M444.896423,363.692932 C449.430878,363.530029 453.326965,364.229431 457.109009,365.690643 C463.156982,368.027313 466.785614,372.407745 466.896240,378.854340 C467.003815,385.124969 464.176392,390.082489 458.207855,392.838593 C457.177338,393.314484 456.170166,393.840942 454.332306,394.749329 C460.051239,402.327728 462.508301,411.790741 471.285919,416.640350 C472.212402,417.152252 473.102234,417.563293 473.001099,418.765472 C472.878052,420.227814 471.686981,420.641144 470.536438,420.825836 C464.432892,421.805634 459.154419,420.093994 455.537842,415.048431 C451.859894,409.917236 448.670929,404.433746 445.310181,399.077942 C444.057526,397.081726 442.970093,394.686401 440.042236,395.507751 C437.037415,396.350708 438.246918,399.082062 438.181976,401.033691 C438.015808,406.025482 438.005249,411.029205 438.144440,416.022247 C438.261597,420.226166 435.652344,420.323334 432.553497,420.353912 C429.424957,420.384735 427.528290,419.738739 427.571686,415.985260 C427.712250,403.827209 427.591949,391.666443 427.638428,379.506958 C427.659973,373.871216 428.538635,367.904419 419.810608,366.032349 C424.399170,362.334137 428.627960,364.035187 432.424683,363.755096 C436.400696,363.461731 440.415222,363.690918 444.896423,363.692932 M451.526398,370.860443 C449.347168,369.624756 447.047913,368.691162 444.547241,368.415405 C439.624481,367.872559 438.194214,369.095001 438.128815,373.938507 C438.075165,377.911255 438.103851,381.885681 438.148041,385.858826 C438.166626,387.528046 438.239197,389.109222 440.353088,389.777985 C444.830414,391.194519 451.753296,388.993713 454.223267,385.201599 C456.928101,381.048889 456.070953,375.292542 451.526398,370.860443 z"/>
+              <path d="M661.812927,365.459839 C662.072876,379.882812 662.207764,393.869171 662.238586,407.855743 C662.247437,411.848602 662.192566,415.692963 667.224609,416.850616 C668.160156,417.065796 668.525513,417.882935 668.387146,418.782288 C668.241943,419.726105 667.477051,420.000946 666.618835,420.249603 C657.141724,422.995361 651.763062,418.962585 651.729126,409.038177 C651.716003,405.207489 651.636230,401.374146 651.749695,397.546844 C651.838928,394.538330 650.494202,393.344635 647.560120,393.394836 C642.565063,393.480286 637.564880,393.511658 632.571777,393.379547 C629.272827,393.292267 628.176025,394.821289 628.242920,397.928894 C628.357666,403.256042 628.146912,408.591034 628.299377,413.916229 C628.411682,417.839874 628.144531,420.569244 622.851990,420.462555 C617.904846,420.362823 617.630493,417.863953 617.660950,414.123230 C617.765381,401.299377 617.698120,388.474152 617.697510,375.649445 C617.697327,371.859589 617.640320,368.120667 612.733582,367.188751 C611.802979,367.012024 611.323181,366.278839 611.429077,365.353851 C611.536438,364.416534 612.285828,364.070160 613.128235,363.795624 C622.158203,360.853180 628.079407,364.968201 628.214966,374.329651 C628.263184,377.660065 628.286072,380.992157 628.236145,384.322235 C628.198730,386.821503 629.355103,388.017334 631.833130,388.014221 C637.162537,388.007477 642.492126,387.984863 647.821167,388.026794 C650.512695,388.047974 651.772522,386.887512 651.717407,384.114563 C651.628113,379.619446 651.693848,375.121094 651.706238,370.624176 C651.726562,363.249451 654.549072,361.661926 661.812927,365.459839 z"/>
+              <path d="M572.921875,368.976868 C574.331543,366.638641 574.497375,363.573853 577.951660,363.790863 C581.030151,363.984283 581.337769,366.672882 582.219177,368.688263 C587.879028,381.628754 593.472168,394.598663 599.035217,407.581146 C600.634216,411.312622 602.367554,414.871521 606.382507,416.601349 C607.355591,417.020630 608.178772,417.566681 607.981689,418.787720 C607.735718,420.311859 606.453918,420.329834 605.309387,420.492645 C598.605286,421.446350 592.604004,418.571045 589.759094,411.489594 C587.341614,405.472198 583.587341,404.593750 577.673340,404.015961 C567.109192,402.983795 560.539551,406.019440 558.169983,416.767273 C557.500610,419.803131 555.374634,421.166382 551.151978,419.336700 C558.367737,402.635193 565.563293,385.980530 572.921875,368.976868 M570.155518,399.008972 C574.375549,398.732483 578.679504,399.625000 583.606750,398.094513 C580.936035,391.892609 578.388794,385.977509 575.414001,379.069458 C571.604004,385.228119 569.570068,390.792694 567.225586,396.198639 C566.325684,398.273712 567.588257,398.850220 570.155518,399.008972 z"/>
+              <path d="M410.212952,369.202271 C409.786896,381.142426 411.251495,392.669556 409.341431,404.074799 C407.424500,415.520935 399.767639,421.374878 387.301544,421.286316 C374.750793,421.197174 366.641388,414.898254 364.638336,403.817047 C363.082550,395.210236 364.060791,386.542084 363.873840,377.904327 C363.768463,373.036041 364.347107,368.018951 358.025696,366.342621 C357.799896,366.282745 357.773804,365.469757 357.659851,365.028015 C367.501099,360.173645 374.279724,364.085052 374.312866,374.543823 C374.339264,382.869720 374.085175,391.207123 374.438477,399.518890 C374.978210,412.218262 384.438202,418.905151 395.373596,414.574799 C402.775299,411.643677 404.316956,405.054047 404.572784,398.250122 C404.941650,388.438934 404.633270,378.603577 404.722839,368.779510 C404.740814,366.806854 403.961670,363.937836 407.363007,363.927338 C410.635071,363.917206 410.023224,366.660431 410.212952,369.202271 z"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="hero-badge"><span class="dot-live"></span> جاهز للإطلاق في المملكة العربية السعودية</div>
+      <h1 class="hero-title">
+        <span class="gradient-gold">نظام إدارة مبيعات</span><br />
+        <span>الفروع الاحترافي</span>
+      </h1>
+      <p class="hero-sub">
+        ربط سلس بين فروعك ومنصة سينومي — إدارة المبيعات اليومية، التقارير، والإرسالات في مكان واحد.
+      </p>
+      <div class="hero-ctas">
+        <a id="register-link-2" href="#" class="btn btn-primary btn-lg">ابدأ تجربة مجانية <span class="arrow">←</span></a>
+        <a href="#how" class="btn btn-ghost btn-lg">شاهد كيف يعمل ▶</a>
+      </div>
+      <div class="hero-trust">
+        <span>✓ دعم عربي كامل</span>
       </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon feat-purple">🤖</div>
-      <div class="feature-text">
-        <h3>بوت واتساب وتيليجرام</h3>
-        <p>مندوبو الفروع يرسلون مبيعاتهم برسالة واحدة ويستلمون تأكيداً فورياً بتفاصيل الفرع، العقد، والمبلغ.</p>
+    <div class="scroll-arrow">↓</div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats" id="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-value" data-target="500" data-suffix="+">0</div><div class="stat-label">فرع نشط</div></div>
+        <div class="stat"><div class="stat-value" data-target="10000" data-suffix="+">0</div><div class="stat-label">فاتورة شهرياً</div></div>
+        <div class="stat"><div class="stat-value" data-target="99.9" data-suffix="%" data-decimals="1">0</div><div class="stat-label">وقت التشغيل</div></div>
+        <div class="stat"><div class="stat-value" data-target="24" data-suffix="/7">0</div><div class="stat-label">دعم عربي</div></div>
       </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon feat-yellow">📈</div>
-      <div class="feature-text">
-        <h3>تقارير وتحليلات فورية</h3>
-        <p>لوحة تحكم مباشرة بإجمالي المبيعات، الفواتير المعلقة، الأيام المفقودة، ومؤشرات الأداء الرئيسية لكل فرع.</p>
+  </section>
+
+  <!-- Platform Preview -->
+  <section class="platform-preview">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">معاينة المنصة</div>
+        <h2 class="section-title">لوحة تحكم احترافية<br/><span class="gradient-gold">بتصميم عربي أصيل</span></h2>
+        <p class="section-sub">كل ما تحتاجه لإدارة مبيعات فروعك في مكان واحد — بيانات لحظية، تقارير فورية، وإرسال تلقائي لسينومي.</p>
+      </div>
+
+      <!-- Browser mockup frame -->
+      <div class="preview-browser" style="max-width:860px;margin:0 auto;position:relative">
+        <div class="preview-glow"></div>
+        <!-- Browser chrome bar -->
+        <div class="preview-browser-chrome">
+          <div class="browser-dots">
+            <div class="browser-dot"></div>
+            <div class="browser-dot"></div>
+            <div class="browser-dot"></div>
+          </div>
+          <div class="browser-url">apps.stepup2you.com/dashboard</div>
+        </div>
+        <!-- Dashboard body -->
+        <div class="preview-body" dir="rtl">
+          <!-- Header -->
+          <div class="dash-header">
+            <span class="dash-title">مشاركة — لوحة التحكم</span>
+            <span class="dash-status">متصل بالمنصة</span>
+          </div>
+          <!-- KPI cards -->
+          <div class="dash-kpis">
+            <div class="kpi-card kpi-card-green">
+              <div class="kpi-label">إجمالي المبيعات</div>
+              <div class="kpi-value kpi-green">ر.س 125,450</div>
+            </div>
+            <div class="kpi-card kpi-card-red">
+              <div class="kpi-label">مبيعات الشهر</div>
+              <div class="kpi-value kpi-red">ر.س 38,500</div>
+            </div>
+            <div class="kpi-card kpi-card-purple">
+              <div class="kpi-label">الفواتير المرسلة</div>
+              <div class="kpi-value kpi-purple">156</div>
+            </div>
+            <div class="kpi-card kpi-card-teal">
+              <div class="kpi-label">أيام مفقودة</div>
+              <div class="kpi-value kpi-teal">3 أيام</div>
+            </div>
+          </div>
+          <!-- Recent sales table -->
+          <div class="dash-table-head">آخر المبيعات</div>
+          <div class="dash-row">
+            <span class="dash-branch">فرع الرياض – يومي</span>
+            <span class="dash-date">2026-04-09</span>
+            <span class="dash-amount">ر.س 4,500</span>
+          </div>
+          <div class="dash-row">
+            <span class="dash-branch">فرع جدة – شهري</span>
+            <span class="dash-date">2026-04-08</span>
+            <span class="dash-amount">ر.س 31,200</span>
+          </div>
+          <div class="dash-row">
+            <span class="dash-branch">فرع الدمام – يومي</span>
+            <span class="dash-date">2026-04-08</span>
+            <span class="dash-amount">ر.س 2,800</span>
+          </div>
+          <div class="dash-row">
+            <span class="dash-branch">فرع مكة – فترة</span>
+            <span class="dash-date">2026-04-01</span>
+            <span class="dash-amount">ر.س 18,000</span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     HOW IT WORKS
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="how-section" id="how">
-  <h2 class="section-title">كيف يعمل النظام؟</h2>
-  <p class="section-sub">ثلاث خطوات بسيطة للبدء</p>
-  <div class="steps-row">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-card">
-        <div class="step-icon">📝</div>
-        <h3>أضف مبيعاتك</h3>
-        <p>أدخل مبيعات الفرع يومياً أو استورد ملف Excel دفعةً واحدة لكل الفروع</p>
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">الميزات</div>
+        <h2 class="section-title">كل ما تحتاجه <span class="gradient-gold">لإدارة مبيعاتك</span></h2>
+        <p class="section-sub">ست قدرات أساسية تم تصميمها من الصفر لسوق التجزئة السعودي، وللتكامل الكامل مع منظومة سينومي.</p>
+      </div>
+      <div class="features-grid">
+        <article class="feature reveal">
+          <div class="feature-icon" style="background:rgba(245,158,11,0.18)">🏢</div>
+          <h3>إدارة مبيعات متعددة الفروع</h3>
+          <p>تحكم كامل في مبيعات جميع فروعك من لوحة واحدة — بصلاحيات دقيقة لكل مستخدم.</p>
+          <div class="feature-shine"></div>
+        </article>
+        <article class="feature reveal">
+          <div class="feature-icon" style="background:rgba(16,185,129,0.18)">🔗</div>
+          <h3>تكامل سينومي الكامل</h3>
+          <p>أرسل الفواتير لمنصة سينومي بنقرة واحدة — متزامن، مؤرشف، وآمن.</p>
+          <div class="feature-shine"></div>
+        </article>
+        <article class="feature reveal">
+          <div class="feature-icon" style="background:rgba(139,92,246,0.18)">💬</div>
+          <h3>بوت واتساب و تيليجرام</h3>
+          <p>استلم وأرسل المبيعات عبر المحادثة — البوت يفهم اللغة العربية بطلاقة.</p>
+          <div class="feature-shine"></div>
+        </article>
+        <article class="feature reveal">
+          <div class="feature-icon" style="background:rgba(59,130,246,0.18)">📊</div>
+          <h3>استيراد Excel بضغطة</h3>
+          <p>ارفع ملفات Excel الجاهزة من أنظمة POS الخاصة بك — استيراد ذكي بدون أخطاء.</p>
+          <div class="feature-shine"></div>
+        </article>
+        <article class="feature reveal">
+          <div class="feature-icon" style="background:rgba(236,72,153,0.18)">📈</div>
+          <h3>تقارير ولوحة تحكم</h3>
+          <p>رسوم بيانية حية، تقارير يومية/شهرية، وتنبيهات لحظية لكل فرع.</p>
+          <div class="feature-shine"></div>
+        </article>
+        <article class="feature reveal">
+          <div class="feature-icon" style="background:rgba(245,158,11,0.18)">👥</div>
+          <h3>إدارة المستخدمين</h3>
+          <p>أنشئ حسابات لمشرفي الفروع والمحاسبين — كل صلاحية في مكانها.</p>
+          <div class="feature-shine"></div>
+        </article>
       </div>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-card">
-        <div class="step-icon">📋</div>
-        <h3>راجع الفواتير</h3>
-        <p>تحقق من السجلات والتقارير قبل الإرسال وتتبع الأيام المفقودة تلقائياً</p>
+  </section>
+
+  <!-- How -->
+  <section class="section section-alt" id="how">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">كيف يعمل</div>
+        <h2 class="section-title">من المبيعات الخام <span class="gradient-gold">إلى سينومي</span> في ثلاث خطوات</h2>
+      </div>
+      <div class="steps">
+        <div class="steps-line"></div>
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div class="step-icon">📝</div>
+          <h3>أضف مبيعاتك</h3>
+          <p>يدوياً، أو عبر استيراد Excel، أو مباشرة من البوت — المرونة الكاملة.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <div class="step-icon">✓</div>
+          <h3>راجع الفواتير</h3>
+          <p>تحقق من كل فاتورة، عدّل إن احتجت، وأكد الأرقام قبل الإرسال.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <div class="step-icon">🚀</div>
+          <h3>أرسل لسينومي</h3>
+          <p>بنقرة واحدة تُرسل الدفعة كاملة إلى منصة سينومي وتُؤرشف لديك.</p>
+        </div>
       </div>
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-card">
-        <div class="step-icon">🚀</div>
-        <h3>أرسل إلى سينومي</h3>
-        <p>أرسل الفواتير إلى سينومي بضغطة واحدة وتتبع حالة كل إرسال لحظياً</p>
+  </section>
+
+  <!-- Pricing -->
+  <section class="section section-alt" id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">الأسعار</div>
+        <h2 class="section-title">اختر الخطة <span class="gradient-gold">المناسبة لك</span></h2>
+        <p class="section-sub">أسعار سنوية شفافة. فروع ومستخدمين إضافيين متاحين حسب الحاجة.</p>
+      </div>
+
+      <div class="pricing-toggle">
+        <button id="bill-annual" class="active" onclick="togglePricing('annual')">سنوي</button>
+        <button id="bill-monthly" onclick="togglePricing('monthly')">شهري (تقديري)</button>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="price-card reveal">
+          <div class="price-name">أساسي</div>
+          <div class="price-amount">
+            <span class="price-num" data-annual="999" data-monthly="83">999</span>
+            <span class="price-cur">ر.س</span>
+          </div>
+          <div class="price-period" data-period>سنوياً · ما يعادل 83 ر.س/شهر</div>
+          <div class="price-quota"><span>🏢 3 فروع</span><span>👤 1 مستخدم</span></div>
+          <ul class="price-feats">
+            <li><span class="check">✓</span>إدارة 3 فروع</li>
+            <li><span class="check">✓</span>مستخدم واحد</li>
+            <li><span class="check">✓</span>تكامل سينومي الأساسي</li>
+            <li><span class="check">✓</span>بوت واتساب/تيليجرام</li>
+            <li><span class="check">✓</span>استيراد Excel</li>
+            <li><span class="check">✓</span>تقارير شهرية</li>
+            <li><span class="check">✓</span>دعم عبر البريد</li>
+          </ul>
+          <a href="#" class="btn btn-ghost btn-block register-link">ابدأ الآن</a>
+        </div>
+
+        <div class="price-card price-highlight reveal">
+          <div class="price-badge">⭐ الأكثر طلباً</div>
+          <div class="price-name">متوسط</div>
+          <div class="price-amount">
+            <span class="price-num" data-annual="1999" data-monthly="167">1,999</span>
+            <span class="price-cur">ر.س</span>
+          </div>
+          <div class="price-period" data-period>سنوياً · ما يعادل 167 ر.س/شهر</div>
+          <div class="price-quota"><span>🏢 8 فروع</span><span>👤 1 مستخدم</span></div>
+          <ul class="price-feats">
+            <li><span class="check">✓</span>إدارة 8 فروع</li>
+            <li><span class="check">✓</span>مستخدم واحد</li>
+            <li><span class="check">✓</span>تكامل سينومي كامل</li>
+            <li><span class="check">✓</span>بوت متقدم مع الذكاء الاصطناعي</li>
+            <li><span class="check">✓</span>استيراد Excel ذكي</li>
+            <li><span class="check">✓</span>تقارير يومية + لوحة تحكم حية</li>
+            <li><span class="check">✓</span>دعم ذو أولوية عبر واتساب</li>
+            <li><span class="check">✓</span>تصدير PDF للفواتير</li>
+          </ul>
+          <a href="#" class="btn btn-primary btn-block register-link">الخطة الأكثر طلباً</a>
+        </div>
+
+        <div class="price-card reveal">
+          <div class="price-name">متقدم</div>
+          <div class="price-amount">
+            <span class="price-num" data-annual="3999" data-monthly="333">3,999</span>
+            <span class="price-cur">ر.س</span>
+          </div>
+          <div class="price-period" data-period>سنوياً · ما يعادل 333 ر.س/شهر</div>
+          <div class="price-quota"><span>🏢 15 فرع</span><span>👤 1 مستخدم</span></div>
+          <ul class="price-feats">
+            <li><span class="check">✓</span>إدارة 15 فرع</li>
+            <li><span class="check">✓</span>مستخدم واحد</li>
+            <li><span class="check">✓</span>جميع ميزات الخطة المتوسطة</li>
+            <li><span class="check">✓</span>تحليلات AI للمبيعات</li>
+            <li><span class="check">✓</span>تقارير مخصصة</li>
+            <li><span class="check">✓</span>API خاص بالدمج</li>
+            <li><span class="check">✓</span>مدير حساب مخصص</li>
+            <li><span class="check">✓</span>دعم 24/7 هاتفي</li>
+          </ul>
+          <button class="btn btn-ghost btn-block" onclick="openContact()">تواصل معنا</button>
+        </div>
+      </div>
+
+      <div class="extras" style="justify-content:center;gap:10px">
+        <span class="extra-label">فروع ومستخدمين إضافيين متاحين —</span>
+        <span class="extra-val" style="font-size:14px">تواصل معنا للاستفسار</span>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     PRICING
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="pricing-section" id="pricing">
-  <h2 class="section-title">خطط الاشتراك</h2>
-  <p class="section-sub">ابدأ مجاناً لمدة 14 يوماً — لا يُطلب بطاقة ائتمانية</p>
-  <div class="pricing-grid single-plan" id="pricing-grid">
-
-    <div class="pricing-card" id="plan-basic">
-      <div class="plan-name">أساسي</div>
-      <div class="plan-price">299</div>
-      <div class="plan-period">ر.س / شهر</div>
-      <hr class="plan-divider"/>
-      <ul class="plan-features">
-        <li>3 فروع</li>
-        <li>إدخال يومي وشهري</li>
-        <li>تقارير أساسية</li>
-        <li>دعم بالبريد الإلكتروني</li>
-      </ul>
-      <button class="plan-btn secondary" onclick="goToRegister()">ابدأ بالخطة الأساسية</button>
-    </div>
-
-    <div class="pricing-card highlight">
-      <div class="rec-badge">⭐ موصى به</div>
-      <div class="plan-name">احترافي</div>
-      <div class="plan-price">599</div>
-      <div class="plan-period">ر.س / شهر</div>
-      <hr class="plan-divider"/>
-      <ul class="plan-features">
-        <li>10 فروع</li>
-        <li>جميع أنواع الإدخال</li>
-        <li>استيراد Excel</li>
-        <li>تقارير متقدمة</li>
-        <li>دعم ذو أولوية</li>
-      </ul>
-      <button class="plan-btn primary" onclick="goToRegister()">ابدأ الآن</button>
-    </div>
-
-    <div class="pricing-card" id="plan-enterprise">
-      <div class="plan-name">مؤسسي</div>
-      <div class="plan-price" style="font-size:26px;padding-top:6px">تواصل معنا</div>
-      <div class="plan-period">حسب الاتفاق</div>
-      <hr class="plan-divider"/>
-      <ul class="plan-features">
-        <li>فروع غير محدودة</li>
-        <li>API مخصصة</li>
-        <li>تدريب مخصص</li>
-        <li>مدير حساب مخصص</li>
-        <li>اتفاقية SLA مضمونة</li>
-      </ul>
-      <button class="plan-btn secondary" onclick="openContactModal()">تواصل مع فريق المبيعات</button>
-    </div>
-
-  </div>
-  <button class="toggle-plans-btn" id="toggle-plans-btn" onclick="togglePricingPlans()">عرض جميع الخطط ▼</button>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     BOT SHOWCASE
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="bot-section" id="bot">
-  <div class="bot-text">
-    <span class="bot-badge">متاح عند الطلب</span>
-    <h2>مساعد المبيعات الذكي<br/><span>عبر واتساب وتيليجرام</span></h2>
-    <p>إمكانية إرسال مبيعات الفروع برسالة واحدة واستلام تأكيد فوري بتفاصيل الفرع والمبلغ — بدون تطبيق إضافي. اطلب التفعيل لفرعك.</p>
-    <div class="bot-platforms">
-      <span class="platform-badge tg">📱 تيليجرام</span>
-      <span class="platform-badge wa">💬 واتساب</span>
-    </div>
-    <div class="bot-btns">
-      <button class="btn-bot-request" onclick="openContactModal()">اطلب التفعيل ←</button>
-    </div>
-  </div>
-  <div class="chat-card">
-    <div class="chat-header">
-      <div class="chat-avatar">م</div>
-      <div class="chat-header-text">
-        <div class="name">مشاركة — بوت المبيعات</div>
-        <div class="status">● متصل الآن</div>
+  <!-- CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <div class="cta-glow"></div>
+        <h2>جاهز للبدء؟ <span class="gradient-gold">انضم إلى عروة اليوم</span></h2>
+        <p>جرّب النظام مجاناً — بدون بطاقة ائتمانية، وبدون التزامات. ستشعر بالفرق من اليوم الأول.</p>
+        <div class="cta-btns">
+          <a href="#" class="btn btn-primary btn-lg register-link">ابدأ التجربة المجانية</a>
+          <button class="btn btn-ghost btn-lg" onclick="openContact()">تحدث مع المبيعات</button>
+        </div>
+        <div class="cta-trust">
+          <span>🔒 بيانات مشفّرة</span>
+          <span>🇸🇦 مستضاف في المملكة</span>
+          <span>⚡ إعداد خلال 5 دقائق</span>
+        </div>
       </div>
     </div>
-    <div class="chat-body">
-      <div class="bubble-out">
-        <span>مبيعات اليوم 4500</span>
-        <span class="time">✓✓ 10:32</span>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="brand">
+            <span>عروة</span>
+          </div>
+          <p>نظام إدارة المبيعات الاحترافي لإدارة فروعك وفواتيرك.</p>
+        </div>
+        <div>
+          <h4>المنتج</h4>
+          <a href="#features">الميزات</a>
+          <a href="#pricing">الأسعار</a>
+          <a href="#how">كيف يعمل؟</a>
+        </div>
+        <div>
+          <h4>الشركة</h4>
+          <button onclick="openContact()">تواصل معنا</button>
+          <a href="#">عن عروة</a>
+          <a href="#">الخصوصية</a>
+        </div>
+        <div>
+          <h4>حسابي</h4>
+          <a href="#" class="login-link">تسجيل الدخول</a>
+          <a href="#" class="register-link">إنشاء حساب</a>
+        </div>
       </div>
-      <div class="bubble-in">
-        <div class="success">✅ تم تسجيل المبيعات بنجاح</div>
-        <div class="reply-line"><span>🏢</span><span>شركة الرياض للتجارة</span></div>
-        <div class="reply-line"><span>📋</span><span style="color:#94A3B8">رقم العقد: CNT-2024-001</span></div>
-        <div class="reply-line"><span>🏪</span><span>فرع الرياض (BR-001)</span></div>
-        <div class="reply-line"><span>📅</span><span style="color:#94A3B8">التاريخ: 2026-04-09</span></div>
-        <div class="reply-line"><span>💰</span><span class="amount">المبلغ: 4,500.00 ر.س</span></div>
+      <div class="footer-bar">
+        <span>© 2026 عروة — جميع الحقوق محفوظة</span>
+        <span>صُنع بعناية في المملكة العربية السعودية 🇸🇦</span>
       </div>
     </div>
-  </div>
-</section>
+  </footer>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     STATS
-════════════════════════════════════════════════════════════════════════════ -->
-<div class="stats-section">
-  <div class="stat-item"><div class="stat-val">500+</div><div class="stat-label">فرع نشط</div></div>
-  <div class="stat-item"><div class="stat-val">10,000+</div><div class="stat-label">فاتورة مُرسلة شهرياً</div></div>
-  <div class="stat-item"><div class="stat-val">99.9%</div><div class="stat-label">وقت التشغيل</div></div>
-  <div class="stat-item"><div class="stat-val">24/7</div><div class="stat-label">دعم عربي</div></div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     TESTIMONIALS
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="testimonials-section">
-  <h2 class="section-title">ماذا يقول عملاؤنا</h2>
-  <p class="section-sub">آراء حقيقية من مدراء المبيعات والعمليات</p>
-  <div class="testimonials-grid">
-    <div class="testimonial-card">
-      <div class="stars">★★★★★</div>
-      <div class="quote-icon">❝</div>
-      <p class="testimonial-text">وفّر علينا النظام ساعات من العمل اليدوي في إرسال الفواتير لسينومي. واجهة عربية كاملة وسهلة الاستخدام.</p>
-      <hr class="testimonial-divider"/>
-      <div class="testimonial-author"><div class="name">أحمد الزهراني</div><div class="role">مدير مبيعات — شركة الرياض للتجارة</div></div>
-    </div>
-    <div class="testimonial-card">
-      <div class="stars">★★★★★</div>
-      <div class="quote-icon">❝</div>
-      <p class="testimonial-text">استيراد Excel والبوت جعلا إدخال مبيعات 8 فروع أمراً في دقائق بدلاً من ساعات. موصى به بشدة.</p>
-      <hr class="testimonial-divider"/>
-      <div class="testimonial-author"><div class="name">سارة العتيبي</div><div class="role">مشرفة عمليات — مجموعة جدة</div></div>
-    </div>
-    <div class="testimonial-card">
-      <div class="stars">★★★★★</div>
-      <div class="quote-icon">❝</div>
-      <p class="testimonial-text">التقارير الفورية والتنبيهات عن الأيام المفقودة ساعدتنا على ضمان اكتمال الفواتير كل شهر دون أي إغفال.</p>
-      <hr class="testimonial-divider"/>
-      <div class="testimonial-author"><div class="name">محمد الغامدي</div><div class="role">مدير تقنية — فروع الشمال</div></div>
+  <!-- Contact Modal -->
+  <div class="modal-overlay" id="contactModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>تواصل معنا</h3>
+        <button class="modal-close" onclick="closeContact()">×</button>
+      </div>
+      <p>فريق عروة جاهز للرد عليك خلال دقائق. اختر القناة التي تفضلها:</p>
+      <a href="https://wa.me/966500000000" target="_blank" rel="noreferrer" class="modal-link modal-link-wa">
+        <span class="modal-link-icon">💬</span>
+        <div>
+          <div>واتساب</div>
+          <div class="modal-link-sub">+966 50 000 0000</div>
+        </div>
+      </a>
+      <a href="mailto:info@urwah.sa" class="modal-link modal-link-em">
+        <span class="modal-link-icon">✉️</span>
+        <div>
+          <div>البريد الإلكتروني</div>
+          <div class="modal-link-sub">info@urwah.sa</div>
+        </div>
+      </a>
     </div>
   </div>
-</section>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     CTA BANNER
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="cta-section" id="contact">
-  <h2>جاهز للبدء؟ جرّب مشاركة مجاناً لمدة 14 يوماً</h2>
-  <p>
-    <span>لا يُطلب بطاقة ائتمانية</span>•
-    <span>إلغاء في أي وقت</span>•
-    <span>دعم عربي كامل</span>
-  </p>
-  <button class="btn-cta" onclick="goToRegister()">ابدأ الآن مجاناً</button>
-</section>
+  <script>
+    const APP_URL = 'https://apps.stepup2you.com';
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     FOOTER
-════════════════════════════════════════════════════════════════════════════ -->
-<footer>
-  <div class="footer-logo">
-    <strong>مشاركة</strong>
-    <span>نظام إدارة المبيعات</span>
-  </div>
-  <div class="footer-links">
-    <a href="#features">الميزات</a>
-    <a href="#pricing">الأسعار</a>
-    <a href="#how">كيف يعمل؟</a>
-    <a href="#bot">البوت</a>
-    <a href="#">سياسة الخصوصية</a>
-    <a href="#">شروط الاستخدام</a>
-  </div>
-  <div class="footer-copy">© 2026 مشاركة — جميع الحقوق محفوظة • مصنوع بـ ♥ في المملكة العربية السعودية</div>
-</footer>
+    // Wire login/register links
+    document.querySelectorAll('.login-link, #login-link').forEach(el => el.href = APP_URL + '/login');
+    document.querySelectorAll('.register-link, #register-link, #register-link-2').forEach(el => el.href = APP_URL + '/register');
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     CONTACT MODAL
-════════════════════════════════════════════════════════════════════════════ -->
-<div id="contact-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55);
-     z-index:9999; align-items:center; justify-content:center;">
-  <div style="background:rgba(12,20,40,0.98); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:2.25rem 2rem; max-width:400px; width:90%;
-              text-align:center; direction:rtl; box-shadow:0 24px 60px rgba(0,0,0,.6);">
-    <div style="width:52px;height:52px;border-radius:14px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);
-                display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 1rem;">
-      💬
-    </div>
-    <h3 style="font-size:1.2rem;font-weight:800;color:#F8FAFC;margin-bottom:0.5rem;font-family:'Tajawal',sans-serif;">تواصل معنا</h3>
-    <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:1.5rem;line-height:1.6;font-family:'Tajawal',sans-serif;">
-      سيتواصل معك فريقنا خلال 24 ساعة عمل لمناقشة احتياجاتك وتفعيل الخدمة
-    </p>
-    <a href="https://wa.me/966500000000?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A9%20%D9%85%D8%B4%D8%A7%D8%B1%D9%83%D8%A9"
-       target="_blank"
-       style="display:block;background:#25D366;color:#fff;padding:13px;border-radius:12px;
-              text-decoration:none;margin-bottom:10px;font-weight:700;font-size:14px;
-              font-family:'Tajawal',sans-serif;">
-      💬 واتساب
-    </a>
-    <a href="mailto:info@digital-unitedtools.com?subject=استفسار عن مشاركة"
-       style="display:block;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.8);padding:13px;border-radius:12px;
-              border:1px solid rgba(255,255,255,0.12);text-decoration:none;font-weight:600;font-size:14px;font-family:'Tajawal',sans-serif;">
-      ✉️ البريد الإلكتروني
-    </a>
-    <button onclick="closeContactModal()"
-            style="margin-top:1rem;background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;
-                   font-family:'Tajawal',sans-serif;font-size:13px;">
-      إغلاق
-    </button>
-  </div>
-</div>
+    // Modal
+    const modal = document.getElementById('contactModal');
+    function openContact() { modal.classList.add('open'); }
+    function closeContact() { modal.classList.remove('open'); }
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeContact();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeContact();
+    });
 
-<script>
-  // ── CONFIG ────────────────────────────────────────────────────────────────
-  const APP_URL = 'http://localhost:5173'  // ← change to production URL before deploy
+    // Reveal on scroll
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, idx) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), (idx % 6) * 80);
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-  // ── NAVIGATION ────────────────────────────────────────────────────────────
-  function goToLogin()    { window.location.href = APP_URL + '/login' }
-  function goToRegister() { window.location.href = APP_URL + '/register' }
-  function scrollToFeatures() {
-    document.getElementById('features').scrollIntoView({ behavior: 'smooth' })
-  }
+    // Counters
+    const animateCounter = (el) => {
+      const target = parseFloat(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      const decimals = parseInt(el.dataset.decimals || '0', 10);
+      const duration = 1800;
+      const startTime = performance.now();
+      const tick = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = target * eased;
+        el.textContent = (decimals > 0 ? value.toFixed(decimals) : Math.floor(value).toLocaleString('en-US')) + suffix;
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = (decimals > 0 ? target.toFixed(decimals) : Math.floor(target).toLocaleString('en-US')) + suffix;
+      };
+      requestAnimationFrame(tick);
+    };
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('.stat-value').forEach(animateCounter);
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    const statsSection = document.getElementById('stats');
+    if (statsSection) statsObserver.observe(statsSection);
 
-  // ── CONTACT MODAL ─────────────────────────────────────────────────────────
-  function openContactModal() {
-    document.getElementById('contact-modal').style.display = 'flex'
-    document.body.style.overflow = 'hidden'
-  }
-  function closeContactModal() {
-    document.getElementById('contact-modal').style.display = 'none'
-    document.body.style.overflow = ''
-  }
-  // Close on backdrop click
-  document.getElementById('contact-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeContactModal()
-  })
-  // Close on Escape key
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeContactModal() })
-
-  // ── PRICING TOGGLE ────────────────────────────────────────────────────────
-  let plansExpanded = false
-  function togglePricingPlans() {
-    plansExpanded = !plansExpanded
-    const basic      = document.getElementById('plan-basic')
-    const enterprise = document.getElementById('plan-enterprise')
-    const grid       = document.getElementById('pricing-grid')
-    const btn        = document.getElementById('toggle-plans-btn')
-    basic.style.display      = plansExpanded ? '' : 'none'
-    enterprise.style.display = plansExpanded ? '' : 'none'
-    if (plansExpanded) {
-      grid.classList.remove('single-plan')
-    } else {
-      grid.classList.add('single-plan')
+    // Pricing toggle
+    function togglePricing(mode) {
+      document.getElementById('bill-annual').classList.toggle('active', mode === 'annual');
+      document.getElementById('bill-monthly').classList.toggle('active', mode === 'monthly');
+      document.querySelectorAll('.price-num').forEach(el => {
+        const annual = parseFloat(el.dataset.annual);
+        const monthly = parseFloat(el.dataset.monthly);
+        el.textContent = mode === 'annual' ? annual.toLocaleString('en-US') : monthly.toLocaleString('en-US');
+      });
+      document.querySelectorAll('[data-period]').forEach(el => {
+        const card = el.closest('.price-card');
+        const num = card.querySelector('.price-num');
+        const annual = parseFloat(num.dataset.annual);
+        const monthly = parseFloat(num.dataset.monthly);
+        el.textContent = mode === 'annual'
+          ? 'سنوياً · ما يعادل ' + monthly + ' ر.س/شهر'
+          : 'شهرياً تقديرياً · السعر الفعلي ' + annual.toLocaleString('en-US') + ' ر.س سنوياً';
+      });
     }
-    btn.textContent = plansExpanded ? 'إخفاء الخطط الأخرى ▲' : 'عرض جميع الخطط ▼'
-  }
-</script>
-
+  </script>
 </body>
 </html>
