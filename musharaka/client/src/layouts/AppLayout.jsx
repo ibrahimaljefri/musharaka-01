@@ -59,6 +59,13 @@ export default function AppLayout() {
     try { localStorage.setItem('sidebar_collapsed', String(collapsed)) } catch {}
   }, [collapsed])
 
+  // Keep-alive ping — prevents cPanel Node.js from going cold/idle between interactions
+  useEffect(() => {
+    const ping = () => fetch('/api/health').catch(() => {})
+    const id = setInterval(ping, 90_000) // every 90 seconds
+    return () => clearInterval(id)
+  }, [])
+
   const handleSignOut = () => signOut()
 
   if (loading) return (

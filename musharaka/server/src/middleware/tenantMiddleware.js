@@ -5,6 +5,21 @@
  */
 const { supabase } = require('../config/supabase')
 
+// In-memory cache for super-admin lookups — avoids a DB round-trip on every request
+const _saCache   = new Map()   // userId → true
+const SA_TTL_MS  = 5 * 60 * 1000   // 5 minutes
+
+function isCachedSuperAdmin(userId) {
+  const entry = _saCache.get(userId)
+  if (!entry) return false
+  if (Date.now() - entry.at > SA_TTL_MS) { _saCache.delete(userId); return false }
+  return true
+}
+
+// In-memory cache for tenant membership lookups
+const _tenantCache  = new Map()   // userId → { tenantId, role, status, activated_at, expires_at, allowed_input_types, at }
+const TENANT_TTL_MS = 2 * 60 * 1000   // 2 minutes
+
 async function tenantMiddleware(req, res, next) {
   const userId = req.user?.id
   if (!userId) return res.status(401).json({ error: 'غير مصرح' })
@@ -23,7 +38,14 @@ async function tenantMiddleware(req, res, next) {
     return next()
   }
 
-  // ── Super admin check ───────────────────────────────────────────────────
+  // ── Super admin check (cached) ──────────────────────────────────────────
+  if (isCachedSuperAdmin(userId)) {
+    req.isSuperAdmin = true
+    req.tenantId     = null
+    req.userRole     = 'super_admin'
+    return next()
+  }
+
   const { data: superAdmin } = await supabase
     .from('super_admins')
     .select('user_id')
@@ -31,13 +53,30 @@ async function tenantMiddleware(req, res, next) {
     .maybeSingle()
 
   if (superAdmin) {
+    _saCache.set(userId, { at: Date.now() })
     req.isSuperAdmin = true
     req.tenantId     = null
     req.userRole     = 'super_admin'
     return next()
   }
 
-  // ── Regular user — look up tenant membership ────────────────────────────
+  // ── Regular user — look up tenant membership (cached) ──────────────────
+  const cachedTenant = _tenantCache.get(userId)
+  if (cachedTenant && Date.now() - cachedTenant.at < TENANT_TTL_MS) {
+    const t = cachedTenant
+    if (t.status === 'suspended')
+      return res.status(403).json({ error: 'تم تعليق حساب المؤسسة، يرجى التواصل مع الدعم' })
+    if (t.expires_at && new Date(t.expires_at) < new Date())
+      return res.status(402).json({ error: 'انتهت صلاحية الاشتراك، يرجى التجديد للمتابعة' })
+    req.isSuperAdmin      = false
+    req.tenantId          = t.tenantId
+    req.userRole          = t.role
+    req.allowedInputTypes = t.allowed_input_types || ['daily']
+    req.tenantActivatedAt = t.activated_at || null
+    req.tenantExpiresAt   = t.expires_at   || null
+    return next()
+  }
+
   const { data: membership, error } = await supabase
     .from('tenant_users')
     .select('tenant_id, role, tenants(id, status, activated_at, expires_at, allowed_input_types)')
@@ -57,12 +96,23 @@ async function tenantMiddleware(req, res, next) {
     return res.status(402).json({ error: 'انتهت صلاحية الاشتراك، يرجى التجديد للمتابعة' })
   }
 
+  // Cache tenant membership for 2 minutes
+  _tenantCache.set(userId, {
+    tenantId:             membership.tenant_id,
+    role:                 membership.role,
+    status:               tenant.status,
+    activated_at:         tenant.activated_at,
+    expires_at:           tenant.expires_at,
+    allowed_input_types:  tenant.allowed_input_types,
+    at:                   Date.now(),
+  })
+
   req.isSuperAdmin         = false
   req.tenantId             = membership.tenant_id
   req.userRole             = membership.role
   req.allowedInputTypes    = tenant.allowed_input_types || ['daily']
-  req.tenantActivatedAt    = tenant.activated_at   || null   // ISO string or null
-  req.tenantExpiresAt      = tenant.expires_at     || null   // ISO string or null
+  req.tenantActivatedAt    = tenant.activated_at   || null
+  req.tenantExpiresAt      = tenant.expires_at     || null
   next()
 }
 
