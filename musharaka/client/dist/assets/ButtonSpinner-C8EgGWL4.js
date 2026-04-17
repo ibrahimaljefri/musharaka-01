@@ -1,1 +1,0 @@
-import{j as n}from"./index-C4n7YQ6m.js";function t({size:r=14}){return n.jsx("span",{"aria-hidden":"true",style:{width:r,height:r},className:"inline-block border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0"})}export{t as B};
