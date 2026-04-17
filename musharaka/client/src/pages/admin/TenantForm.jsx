@@ -45,15 +45,11 @@ export default function TenantForm({ mode = 'create' }) {
   const [userForm, setUserForm] = useState({
     user_email: '', user_password: '', user_name: '',
   })
-  const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(isEdit)
   const [error, setError]   = useState('')
   const [success, setSuccess] = useState('')
 
-  useEffect(() => {
-    api.get('/admin/plans').then(({ data }) => setPlans(data)).catch(() => {})
-  }, [])
 
   useEffect(() => {
     if (!isEdit) return
@@ -288,29 +284,6 @@ export default function TenantForm({ mode = 'create' }) {
             <p className="text-xs text-gray-400 font-arabic mt-1.5">
               حدد الأنواع التي يمكن للمستأجر استخدامها عند إدخال المبيعات
             </p>
-          </div>
-
-          {/* Subscription plan */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 font-arabic mb-1">باقة الاشتراك</label>
-            <select
-              value={form.plan_id}
-              onChange={e => {
-                const selected = plans.find(p => p.id === e.target.value)
-                set('plan_id', e.target.value)
-                if (selected && selected.max_branches) {
-                  set('max_branches', selected.max_branches)
-                }
-              }}
-              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            >
-              <option value="">-- بدون باقة محددة --</option>
-              {plans.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name_ar} — {(p.monthly_sar ?? Math.round(p.price_sar / 12)).toLocaleString('ar-SA')} ر.س/شهر ({p.price_sar.toLocaleString('ar-SA')} ر.س/سنة) — {p.max_branches} فرع / {p.max_users} مستخدم{p.extra_branch_sar ? ` (+${p.extra_branch_sar} فرع إضافي)` : ''}{p.extra_user_sar ? ` (+${p.extra_user_sar} مستخدم إضافي)` : ''}
-                </option>
-              ))}
-            </select>
           </div>
 
           {/* Max branches override */}
