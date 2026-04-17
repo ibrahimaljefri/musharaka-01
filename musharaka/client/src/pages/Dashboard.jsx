@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../lib/useToast'
@@ -10,7 +10,7 @@ import {
   DollarSign, TrendingUp, Hash, Lock, Trash2,
   ChevronLeft, ChevronRight, PlusCircle, Clock,
   CheckCircle2, BarChart2, ArrowUpRight, BadgeCheck, CalendarDays,
-  Send, Ticket, ChevronDown,
+  Send, ChevronDown,
 } from 'lucide-react'
 import ConfirmDialog from '../components/ConfirmDialog'
 import AlertBanner from '../components/AlertBanner'
@@ -279,7 +279,6 @@ function AdvancedDashboard({ branchId }) {
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const navigate               = useNavigate()
   const allowAdvancedDashboard = useAuthStore(s => s.allowAdvancedDashboard)
   const tenantId               = useAuthStore(s => s.tenantId)
   const isSuperAdmin           = useAuthStore(s => s.isSuperAdmin)
@@ -399,14 +398,7 @@ export default function Dashboard() {
       {!isSuperAdmin && daysLeft !== null && daysLeft < 30 && (
         <AlertBanner type="warning" message={
           <span className="font-arabic">
-            ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم.{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/tickets/create?category=license')}
-              className="underline font-semibold hover:no-underline"
-            >
-              سجّل طلب تجديد الآن ←
-            </button>
+            ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم. تواصل مع الإدارة للتجديد.
           </span>
         } />
       )}
@@ -448,11 +440,10 @@ export default function Dashboard() {
       )}
 
       {/* Quick Action Row */}
-      <div className="grid grid-cols-3 gap-3 mb-6" dir="rtl">
+      <div className="grid grid-cols-2 gap-3 mb-6" dir="rtl">
         {[
           { icon: PlusCircle, label: 'إضافة مبيعات',  to: '/sales/create',    color: 'text-yellow-600 dark:text-yellow-400' },
           { icon: Send,       label: 'إرسال الفواتير', to: '/submit',          color: 'text-blue-600 dark:text-blue-400' },
-          { icon: Ticket,     label: 'رفع تذكرة',      to: '/tickets/create',  color: 'text-purple-600 dark:text-purple-400' },
         ].map(({ icon: Icon, label, to, color }) => (
           <Link key={to} to={to}
             className="card-surface hover:shadow-md active:scale-95 transition-all p-3 flex items-center gap-3 rounded-xl cursor-pointer"
