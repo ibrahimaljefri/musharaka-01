@@ -19,12 +19,20 @@ function getPasswordStrength(pwd) {
 export default function Register() {
   const navigate = useNavigate()
   const init = useAuthStore(s => s.init)
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
 
   const strength = getPasswordStrength(form.password)
+
+  // Normalize a Saudi mobile number by stripping spaces/dashes and the +/00 prefix.
+  // Accepts: 0512345678, 512345678, 966512345678, +966512345678, 00966512345678
+  const normalizePhone = (v) => (v || '').replace(/[\s\-()]/g, '').replace(/^(\+|00)/, '')
+  const isValidSaPhone = (v) => {
+    const n = normalizePhone(v)
+    return /^(966)?5\d{8}$/.test(n) || /^0?5\d{8}$/.test(n)
+  }
 
   const validateField = (key, value) => {
     if (key === 'name') {
@@ -33,6 +41,11 @@ export default function Register() {
     if (key === 'email') {
       if (!value.trim()) return 'البريد الإلكتروني مطلوب'
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'صيغة البريد الإلكتروني غير صحيحة'
+      return ''
+    }
+    if (key === 'phone') {
+      if (!value.trim())      return 'رقم الجوال مطلوب'
+      if (!isValidSaPhone(value)) return 'صيغة رقم الجوال غير صحيحة (مثال: 05xxxxxxxx)'
       return ''
     }
     if (key === 'password') {
@@ -54,6 +67,8 @@ export default function Register() {
     if (!form.name.trim())    e.name    = 'الاسم الكامل مطلوب'
     if (!form.email.trim())   e.email   = 'البريد الإلكتروني مطلوب'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'صيغة البريد الإلكتروني غير صحيحة'
+    if (!form.phone.trim())   e.phone   = 'رقم الجوال مطلوب'
+    else if (!isValidSaPhone(form.phone)) e.phone = 'صيغة رقم الجوال غير صحيحة (مثال: 05xxxxxxxx)'
     if (!form.password)       e.password = 'كلمة المرور مطلوبة'
     else if (form.password.length < 8) e.password = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'
     if (form.password !== form.confirm) e.confirm = 'كلمة المرور غير متطابقة'
@@ -67,9 +82,16 @@ export default function Register() {
     setErrors({})
     setGeneralError('')
     setLoading(true)
+    // Normalize to canonical Saudi format: 9665xxxxxxxx (no +, no leading 0)
+    const canonicalPhone = (() => {
+      const n = normalizePhone(form.phone)
+      if (/^966/.test(n)) return n
+      if (/^0/.test(n))   return '966' + n.slice(1)
+      return '966' + n
+    })()
     const { error: err } = await supabase.auth.signUp({
       email: form.email, password: form.password,
-      options: { data: { full_name: form.name } },
+      options: { data: { full_name: form.name, phone: canonicalPhone } },
     })
     setLoading(false)
     if (err) {
@@ -109,6 +131,20 @@ export default function Register() {
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
             onBlur={() => handleBlur('email')}
             placeholder="example@email.com"
+            className="input-base"
+          />
+        </FormField>
+
+        <FormField label="رقم الجوال" error={errors.phone} required>
+          <input
+            type="tel"
+            dir="ltr"
+            inputMode="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+            onBlur={() => handleBlur('phone')}
+            placeholder="05xxxxxxxx"
             className="input-base"
           />
         </FormField>

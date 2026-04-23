@@ -381,6 +381,7 @@ router.get('/users', async (req, res, next) => {
           id:            u.id,
           email:         u.email,
           full_name:     u.user_metadata?.full_name || u.user_metadata?.name || null,
+          phone:         u.user_metadata?.phone || u.phone || null,
           status:        a ? 'assigned' : 'pending',
           tenant_id:     a?.tenant_id   || null,
           tenant_name:   a?.tenant_name || null,
@@ -396,13 +397,13 @@ router.get('/users', async (req, res, next) => {
 // Create user (by admin — email auto-confirmed)
 router.post('/users', async (req, res, next) => {
   try {
-    const { email, password, full_name } = req.body
+    const { email, password, full_name, phone } = req.body
     if (!email)    return res.status(422).json({ error: 'البريد الإلكتروني مطلوب' })
     if (!password) return res.status(422).json({ error: 'كلمة المرور مطلوبة' })
 
     const { data, error } = await supabase.auth.admin.createUser({
       email, password,
-      user_metadata: { full_name: full_name || '' },
+      user_metadata: { full_name: full_name || '', phone: phone || '' },
       email_confirm: true,
     })
     if (error) throw error
@@ -433,12 +434,12 @@ router.post('/users/:id/assign', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
-// Update user (name, password, tenant assignment, role)
+// Update user (name, phone, password, tenant assignment, role)
 router.put('/users/:id', async (req, res, next) => {
   try {
-    const { full_name, new_password, tenant_id, role } = req.body
+    const { full_name, phone, new_password, tenant_id, role } = req.body
 
-    const updates = { user_metadata: { full_name: full_name || '' } }
+    const updates = { user_metadata: { full_name: full_name || '', phone: phone || '' } }
     if (new_password) updates.password = new_password
 
     const { error: authErr } = await supabase.auth.admin.updateUserById(req.params.id, updates)

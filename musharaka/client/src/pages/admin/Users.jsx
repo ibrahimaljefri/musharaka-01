@@ -106,7 +106,7 @@ function AssignModal({ user, onClose, onDone }) {
 
 // ── Create User Modal ─────────────────────────────────────────────────────────
 function CreateUserModal({ onClose, onDone }) {
-  const [form, setForm]         = useState({ email: '', password: '', full_name: '' })
+  const [form, setForm]         = useState({ email: '', password: '', full_name: '', phone: '' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
@@ -117,13 +117,24 @@ function CreateUserModal({ onClose, onDone }) {
     return () => document.removeEventListener('keydown', handleEsc)
   }, [onClose])
 
+  // Saudi mobile validator — same logic as the public Register page
+  const normalizePhone = (v) => (v || '').replace(/[\s\-()]/g, '').replace(/^(\+|00)/, '')
+  const isValidSaPhone = (v) => {
+    const n = normalizePhone(v)
+    return /^(966)?5\d{8}$/.test(n) || /^0?5\d{8}$/.test(n)
+  }
+
   const handleSubmit = async e => {
     e.preventDefault()
     if (!form.email) return setError('البريد الإلكتروني مطلوب')
+    if (!form.phone.trim()) return setError('رقم الجوال مطلوب')
+    if (!isValidSaPhone(form.phone)) return setError('صيغة رقم الجوال غير صحيحة (مثال: 05xxxxxxxx)')
     if (!form.password || form.password.length < 6) return setError('كلمة المرور 6 أحرف على الأقل')
     setLoading(true)
     try {
-      await api.post('/admin/users', form)
+      const n = normalizePhone(form.phone)
+      const canonicalPhone = /^966/.test(n) ? n : /^0/.test(n) ? '966' + n.slice(1) : '966' + n
+      await api.post('/admin/users', { ...form, phone: canonicalPhone })
       onDone()
     } catch (err) {
       setError(err.response?.data?.error || 'فشل إنشاء المستخدم')
@@ -153,6 +164,15 @@ function CreateUserModal({ onClose, onDone }) {
             <input type="email" dir="ltr" value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               placeholder="user@example.com"
+              className="input-base" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">
+              رقم الجوال <span className="text-red-500">*</span>
+            </label>
+            <input type="tel" dir="ltr" inputMode="tel" value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              placeholder="05xxxxxxxx"
               className="input-base" />
           </div>
           <div>
@@ -191,6 +211,7 @@ function EditUserModal({ user, onClose, onDone }) {
   const [tenants, setTenants]   = useState([])
   const [form, setForm]         = useState({
     full_name:    user.full_name || '',
+    phone:        user.phone || '',
     new_password: '',
     tenant_id:    user.tenant_id || '',
     role:         user.role || 'member',
@@ -209,14 +230,28 @@ function EditUserModal({ user, onClose, onDone }) {
     return () => document.removeEventListener('keydown', handleEsc)
   }, [onClose])
 
+  const normalizePhone = (v) => (v || '').replace(/[\s\-()]/g, '').replace(/^(\+|00)/, '')
+  const isValidSaPhone = (v) => {
+    if (!v) return true // phone optional for existing records during update
+    const n = normalizePhone(v)
+    return /^(966)?5\d{8}$/.test(n) || /^0?5\d{8}$/.test(n)
+  }
+
   const handleSubmit = async e => {
     e.preventDefault()
     if (form.new_password && form.new_password.length < 6)
       return setError('كلمة المرور 6 أحرف على الأقل')
+    if (!isValidSaPhone(form.phone))
+      return setError('صيغة رقم الجوال غير صحيحة (مثال: 05xxxxxxxx)')
     setLoading(true)
     try {
+      const n = normalizePhone(form.phone)
+      const canonicalPhone = form.phone
+        ? (/^966/.test(n) ? n : /^0/.test(n) ? '966' + n.slice(1) : '966' + n)
+        : ''
       await api.put(`/admin/users/${user.id}`, {
         full_name:    form.full_name,
+        phone:        canonicalPhone,
         new_password: form.new_password || undefined,
         tenant_id:    form.tenant_id || null,
         role:         form.role,
@@ -244,6 +279,14 @@ function EditUserModal({ user, onClose, onDone }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الاسم الكامل</label>
             <input type="text" dir="rtl" value={form.full_name}
               onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
+              className="input-base" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">رقم الجوال</label>
+            <input type="tel" dir="ltr" inputMode="tel" value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              placeholder="05xxxxxxxx"
               className="input-base" />
           </div>
 
@@ -341,7 +384,8 @@ export default function Users() {
       const q = search.toLowerCase()
       return (
         (u.full_name || '').toLowerCase().includes(q) ||
-        (u.email || '').toLowerCase().includes(q)
+        (u.email || '').toLowerCase().includes(q) ||
+        (u.phone || '').toLowerCase().includes(q)
       )
     })
 
@@ -389,6 +433,7 @@ export default function Users() {
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-gray-800 font-arabic truncate">{u.full_name || '—'}</p>
                   <p className="text-xs text-gray-400 font-mono">{u.email}</p>
+                  {u.phone && <p className="text-xs text-gray-400 font-mono mt-0.5" dir="ltr">{u.phone}</p>}
                   <p className="text-xs text-gray-300 font-arabic mt-0.5">سجّل في {fmtDate(u.registered_at)}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -420,13 +465,13 @@ export default function Users() {
             onChange={setSearch}
             count={filteredSorted.length}
             total={users.length}
-            placeholder="بحث بالاسم أو البريد..."
+            placeholder="بحث بالاسم أو البريد أو الجوال..."
           />
         </div>
 
         {loading ? (
           <div className="p-4">
-            <TableSkeleton rows={6} cols={7} />
+            <TableSkeleton rows={6} cols={8} />
           </div>
         ) : users.length === 0 ? (
           <div className="p-10 text-center">
@@ -440,6 +485,7 @@ export default function Users() {
                 <tr>
                   <SortableHeader field="full_name" sort={sort} onSort={setSort}>الاسم</SortableHeader>
                   <th className="px-4 py-3 text-right font-medium">البريد الإلكتروني</th>
+                  <SortableHeader field="phone" sort={sort} onSort={setSort}>رقم الجوال</SortableHeader>
                   <SortableHeader field="status" sort={sort} onSort={setSort}>الحالة</SortableHeader>
                   <SortableHeader field="tenant_name" sort={sort} onSort={setSort}>المستأجر</SortableHeader>
                   <th className="px-4 py-3 text-right font-medium">الدور</th>
@@ -452,6 +498,7 @@ export default function Users() {
                   <tr key={u.id} className="hover:bg-yellow-50/20 transition-colors">
                     <td className="px-4 py-3 font-semibold text-gray-800 font-arabic">{u.full_name || '—'}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs font-mono">{u.email}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs font-mono" dir="ltr">{u.phone || <span className="text-gray-300 font-arabic">—</span>}</td>
                     <td className="px-4 py-3">{statusBadge(u.status)}</td>
                     <td className="px-4 py-3 text-gray-600 font-arabic text-xs">{u.tenant_name || <span className="text-gray-300">غير مُعيَّن</span>}</td>
                     <td className="px-4 py-3 text-gray-500 font-arabic text-xs">
