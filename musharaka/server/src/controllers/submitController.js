@@ -12,6 +12,7 @@ async function submitInvoices(req, res, next) {
       branch_id,
       parseInt(month),
       parseInt(year),
+      req.tenantId,
     )
 
     if (!result.success) {

@@ -7,7 +7,7 @@ import api from '../../lib/axiosClient'
 import PageHeader from '../../components/PageHeader'
 import ButtonSpinner from '../../components/ButtonSpinner'
 import { toast } from '../../lib/useToast'
-import { Save, UserPlus } from 'lucide-react'
+import { Save, UserPlus, Eye, EyeOff } from 'lucide-react'
 
 const PLANS = [
   { v: 'basic',        l: 'أساسي' },
@@ -43,7 +43,9 @@ export default function TenantForm({ mode = 'create' }) {
     allow_reports:            false,
     max_branches: 3,
     plan_id:      '',
+    cenomi_api_token: '',
   })
+  const [showCenomiToken, setShowCenomiToken] = useState(false)
   const [userForm, setUserForm] = useState({
     user_email: '', user_password: '', user_name: '',
   })
@@ -71,6 +73,7 @@ export default function TenantForm({ mode = 'create' }) {
         allow_reports:            data.allow_reports            || false,
         max_branches:             data.max_branches || 3,
         plan_id:                  data.plan_id || '',
+        cenomi_api_token:         data.cenomi_api_token || '',
       })
       setFetching(false)
     }).catch(() => setFetching(false))
@@ -297,6 +300,38 @@ export default function TenantForm({ mode = 'create' }) {
               onChange={e => set('max_branches', Math.max(3, parseInt(e.target.value) || 3))}
               className="input-base"
             />
+          </div>
+        </div>
+
+        {/* Cenomi / Seinomy integration */}
+        <div className="card-surface p-6 space-y-4">
+          <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">تكامل سينومي</h2>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">
+              توكن سينومي (Cenomi API Token)
+              <span className="text-gray-400 font-normal mr-1">(اختياري)</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showCenomiToken ? 'text' : 'password'}
+                dir="ltr"
+                value={form.cenomi_api_token}
+                onChange={e => set('cenomi_api_token', e.target.value)}
+                placeholder="••••••••••••••••"
+                className="input-base font-mono pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCenomiToken(v => !v)}
+                className="absolute inset-y-0 left-0 flex items-center px-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                tabIndex={-1}
+              >
+                {showCenomiToken ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 font-arabic mt-1">
+              يُصدر سينومي توكناً واحداً لكل حساب. يُستخدم لإرسال بيانات المبيعات تلقائياً.
+            </p>
           </div>
         </div>
 

@@ -7,9 +7,9 @@ import { useAuthStore } from '../store/authStore'
 
 const TIPS = [
   'كود الفرع يجب أن يكون فريداً ويُستخدم في ملفات Excel.',
-  'توكن الفرع يُستخدم للمصادقة مع المنصة.',
+  'رقم العقد يُستخدم لربط الفرع بمنصة سينومي.',
   'رقم الوحدة ورقم العقد حقول اختيارية للتتبع الداخلي.',
-  'لا تشارك توكن الفرع مع أطراف غير مصرح لها.',
+  'توكن سينومي يُدار على مستوى الحساب من قِبل الإدارة.',
 ]
 
 export default function BranchCreate() {
@@ -30,7 +30,7 @@ export default function BranchCreate() {
 
   const [form, setForm] = useState({
     code: '', name: '', contract_number: '', brand_name: '',
-    unit_number: '', token: '', location: '', address: '',
+    unit_number: '', location: '', address: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
@@ -50,7 +50,6 @@ export default function BranchCreate() {
         contract_number: form.contract_number || null,
         brand_name:      form.brand_name      || null,
         unit_number:     form.unit_number     || null,
-        token:           form.token           || null,
         location:        form.location        || null,
         address:         form.address         || null,
       })
@@ -85,7 +84,6 @@ export default function BranchCreate() {
             {field('contract_number', 'رقم العقد',          false, 'ltr', 'CNT-2024-001')}
             {field('brand_name',      'اسم البراند',        false, 'rtl')}
             {field('unit_number',     'رقم الوحدة',         false, 'ltr')}
-            {field('token',           'توكن الفرع (سري)',   false, 'ltr', '', 'password')}
             {field('location',        'الموقع',             false, 'rtl', 'الرياض، حي العليا')}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">العنوان</label>

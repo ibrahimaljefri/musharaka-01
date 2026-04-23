@@ -10,13 +10,17 @@ const { decrypt }  = require('../utils/crypto')
  * @param {string} branchId
  * @param {number} month - 1-12
  * @param {number} year
+ * @param {string} tenantId - needed to fetch the tenant-level Cenomi API token
  * @returns {Promise<{success: boolean, submission?: object, error?: string}>}
  */
-async function submit(branchId, month, year) {
-  // 1. Fetch branch (need token)
-  const { data: branch, error: branchErr } = await supabase
-    .from('branches').select('id, code, name, contract_number, token').eq('id', branchId).single()
+async function submit(branchId, month, year, tenantId) {
+  // 1. Fetch branch and tenant in parallel
+  const [{ data: branch, error: branchErr }, { data: tenant, error: tenantErr }] = await Promise.all([
+    supabase.from('branches').select('id, code, name, contract_number').eq('id', branchId).single(),
+    supabase.from('tenants').select('cenomi_api_token').eq('id', tenantId).single(),
+  ])
   if (branchErr || !branch) return { success: false, error: 'الفرع غير موجود' }
+  if (tenantErr || !tenant) return { success: false, error: 'المستأجر غير موجود' }
 
   // 2. Fetch pending sales for this period
   const { data: sales, error: salesErr } = await supabase
@@ -33,7 +37,7 @@ async function submit(branchId, month, year) {
   const totalAmount  = sales.reduce((sum, s) => sum + parseFloat(s.amount), 0)
   const invoiceCount = sales.length
 
-  if (!branch.contract_number) return { success: false, error: 'لم يتم تعيين رقم العقد (lease_code) للفرع' }
+  if (!branch.contract_number) return { success: false, error: 'لم يتم تعيين رقم العقد للفرع' }
 
   // Build the period date range (YYYY-MM-DD) from month/year
   const mm         = String(month).padStart(2, '0')
@@ -43,7 +47,7 @@ async function submit(branchId, month, year) {
 
   // Cenomi API payload: array with one entry per lease/period
   const payload = [{
-    lease_code:         branch.contract_number,
+    lease_id:           branch.contract_number,   // Cenomi spec key (was: lease_code)
     sales_period_start: periodStart,
     sales_period_end:   periodEnd,
     sales_amt:          totalAmount,
@@ -55,11 +59,12 @@ async function submit(branchId, month, year) {
     console.log('[SEINOMY MOCK] Payload:', JSON.stringify(payload))
   } else {
     // 4. Real API call — Cenomi Direct Share spec (v1.2)
+    // Token lives at the tenant level; one token per Cenomi customer account.
     let token
-    try { token = branch.token ? decrypt(branch.token) : null }
-    catch { return { success: false, error: 'فشل في فك تشفير توكن الفرع' } }
+    try { token = tenant.cenomi_api_token ? decrypt(tenant.cenomi_api_token) : null }
+    catch { return { success: false, error: 'فشل في فك تشفير توكن سينومي للمستأجر' } }
 
-    if (!token) return { success: false, error: 'لم يتم تعيين توكن للفرع' }
+    if (!token) return { success: false, error: 'لم يتم تعيين توكن سينومي للمستأجر' }
 
     try {
       await axios.post(

@@ -54,7 +54,6 @@ export default function BranchEdit() {
         contract_number: form.contract_number || null,
         brand_name:      form.brand_name      || null,
         unit_number:     form.unit_number     || null,
-        token:           form.token           || null,
         location:        form.location        || null,
         address:         form.address         || null,
       })
@@ -115,7 +114,6 @@ export default function BranchEdit() {
               {field('contract_number', 'رقم العقد',          'ltr')}
               {field('brand_name',      'اسم البراند',        'rtl')}
               {field('unit_number',     'رقم الوحدة',         'ltr')}
-              {field('token',           'توكن الفرع',         'ltr', 'password')}
               {field('location',        'الموقع',             'rtl')}
             </div>
             <div>

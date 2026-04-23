@@ -50,7 +50,8 @@ router.get('/:id', async (req, res, next) => {
 // ── POST /api/branches ─────────────────────────────────────────────────────
 router.post('/', async (req, res, next) => {
   try {
-    const { code, name, contract_number, brand_name, unit_number, token, location, address } = req.body
+    const { code, name, contract_number, brand_name, unit_number, location, address } = req.body
+    // token intentionally excluded — Cenomi token is now on the tenant, not the branch
 
     if (!code?.trim()) return res.status(422).json({ error: 'كود الفرع مطلوب' })
     if (!name?.trim()) return res.status(422).json({ error: 'اسم الفرع مطلوب' })
@@ -84,7 +85,6 @@ router.post('/', async (req, res, next) => {
         contract_number: contract_number || null,
         brand_name:      brand_name      || null,
         unit_number:     unit_number     || null,
-        token:           token           || null,
         location:        location        || null,
         address:         address         || null,
       })
@@ -105,7 +105,8 @@ router.post('/', async (req, res, next) => {
 // ── PUT /api/branches/:id ──────────────────────────────────────────────────
 router.put('/:id', async (req, res, next) => {
   try {
-    const { code, name, contract_number, brand_name, unit_number, token, location, address } = req.body
+    const { code, name, contract_number, brand_name, unit_number, location, address } = req.body
+    // token intentionally excluded — Cenomi token is now on the tenant, not the branch
 
     if (!code?.trim()) return res.status(422).json({ error: 'كود الفرع مطلوب' })
     if (!name?.trim()) return res.status(422).json({ error: 'اسم الفرع مطلوب' })
@@ -119,7 +120,6 @@ router.put('/:id', async (req, res, next) => {
         contract_number: contract_number || null,
         brand_name:      brand_name      || null,
         unit_number:     unit_number     || null,
-        token:           token           || null,
         location:        location        || null,
         address:         address         || null,
       })

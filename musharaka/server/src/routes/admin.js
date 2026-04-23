@@ -157,6 +157,8 @@ router.post('/tenants', async (req, res, next) => {
       return res.status(422).json({ error: 'اسم المستأجر والرمز المختصر مطلوبان' })
     }
 
+    const { cenomi_api_token } = req.body
+
     // Create tenant
     const { data: tenant, error: tErr } = await supabase
       .from('tenants')
@@ -166,6 +168,7 @@ router.post('/tenants', async (req, res, next) => {
         expires_at: expires_at || null,
         notes: notes || null,
         allowed_input_types,
+        cenomi_api_token: cenomi_api_token || null,
       })
       .select()
       .single()
@@ -223,6 +226,7 @@ router.put('/tenants/:id', async (req, res, next) => {
       'notes','allowed_input_types','allow_advanced_dashboard',
       'allow_import','allow_reports',
       'commercial_registration','primary_phone','account_number',
+      'cenomi_api_token',
     ]
     const updates = {}
     for (const k of allowed) {
