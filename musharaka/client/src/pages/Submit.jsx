@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import api from '../lib/axiosClient'
 import ButtonSpinner from '../components/ButtonSpinner'
 import { toast } from '../lib/useToast'
-import { Send, FileText } from 'lucide-react'
+import { Send, FileText, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 const MONTHS = [
   { v: 1, l: 'يناير' }, { v: 2, l: 'فبراير' }, { v: 3, l: 'مارس' },
@@ -23,26 +23,75 @@ export default function Submit() {
     month:  new Date().getMonth() + 1,
     year:   new Date().getFullYear(),
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]     = useState(false)
+  const [lastError, setLastError] = useState('')
+  // Preflight state — tells the user whether the submit would succeed before they click
+  const [preflight, setPreflight] = useState({ checking: false, count: null, branchOk: null, reason: '' })
 
   useEffect(() => {
-    supabase.from('branches').select('id,code,name').order('name')
+    supabase.from('branches').select('id,code,name,contract_number,token').order('name')
       .then(({ data }) => setBranches(data || []))
   }, [])
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  // When the user picks a branch+month+year, preflight:
+  //   - check pending sales count for that period
+  //   - check that the selected branch has a contract_number + token
+  // This surfaces the same conditions the server checks, inline, before the user clicks submit.
+  useEffect(() => {
+    if (!form.branch_id) {
+      setPreflight({ checking: false, count: null, branchOk: null, reason: '' })
+      return
+    }
+    const branch = branches.find(b => b.id === form.branch_id)
+    if (!branch) return
+
+    let cancelled = false
+    setPreflight(p => ({ ...p, checking: true, reason: '' }))
+
+    const mm        = String(form.month).padStart(2, '0')
+    const lastDay   = new Date(form.year, form.month, 0).getDate()
+    const fromDate  = `${form.year}-${mm}-01`
+    const toDate    = `${form.year}-${mm}-${String(lastDay).padStart(2, '0')}`
+
+    supabase.from('sales')
+      .select('id', { count: 'exact', head: true })
+      .eq('branch_id', form.branch_id)
+      .eq('status', 'pending')
+      .gte('sale_date', fromDate)
+      .lte('sale_date', toDate)
+      .then(({ count }) => {
+        if (cancelled) return
+        const branchOk = !!(branch.contract_number && branch.token)
+        let reason = ''
+        if (!branch.contract_number) reason = 'الفرع بدون رقم عقد (lease_code) — اطلب من الإدارة إضافته'
+        else if (!branch.token)      reason = 'الفرع بدون توكن سينومي — اطلب من الإدارة إضافته'
+        else if ((count ?? 0) === 0) reason = 'لا توجد فواتير معلقة لهذه الفترة'
+        setPreflight({ checking: false, count: count ?? 0, branchOk, reason })
+      })
+    return () => { cancelled = true }
+  }, [form.branch_id, form.month, form.year, branches])
+
+  const set = (k, v) => {
+    setLastError('')
+    setForm(f => ({ ...f, [k]: v }))
+  }
 
   const handleSubmit = async e => {
     e.preventDefault()
-    if (!form.branch_id) return toast.error('يرجى اختيار الفرع')
+    setLastError('')
+    if (!form.branch_id) return setLastError('يرجى اختيار الفرع')
     setLoading(true)
     try {
       const { data } = await api.post('/submit', form)
       toast.success(`${data.message} — عدد الفواتير: ${data.submission?.invoice_count || 0}`)
+      setPreflight(p => ({ ...p, count: 0, reason: 'لا توجد فواتير معلقة لهذه الفترة' }))
     } catch (err) {
-      toast.error(err.response?.data?.error || 'فشل إرسال الفواتير')
+      const msg = err.response?.data?.error || 'فشل إرسال الفواتير'
+      setLastError(msg)
     } finally { setLoading(false) }
   }
+
+  const canSubmit = !!form.branch_id && preflight.branchOk !== false && (preflight.count ?? 0) > 0 && !loading
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -87,11 +136,39 @@ export default function Submit() {
             </div>
           </div>
 
+          {/* Preflight status — shows the exact reason the submit would fail */}
+          {form.branch_id && (
+            <div className={`flex items-start gap-2 p-3 rounded-lg text-sm font-arabic border ${
+              preflight.checking
+                ? 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300'
+                : preflight.reason
+                  ? 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-700/50 dark:text-amber-300'
+                  : 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-700/50 dark:text-green-300'
+            }`}>
+              {preflight.checking ? (
+                <><ButtonSpinner /><span>جارٍ التحقق من جاهزية الإرسال…</span></>
+              ) : preflight.reason ? (
+                <><AlertCircle size={16} className="shrink-0 mt-0.5" /><span>{preflight.reason}</span></>
+              ) : (
+                <><CheckCircle2 size={16} className="shrink-0 mt-0.5" />
+                  <span>جاهز للإرسال — {preflight.count} فاتورة معلقة لهذه الفترة</span></>
+              )}
+            </div>
+          )}
+
+          {/* Last submission error (from server) */}
+          {lastError && (
+            <div className="flex items-start gap-2 p-3 rounded-lg text-sm font-arabic bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-700/50 dark:text-red-300">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <span>{lastError}</span>
+            </div>
+          )}
+
           {/* Submit button */}
-          <button type="submit" disabled={loading}
+          <button type="submit" disabled={!canSubmit}
             className="w-full flex items-center justify-center gap-2
                        bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800
-                       disabled:opacity-60 text-white font-medium py-3
+                       disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3
                        rounded-xl transition-colors font-arabic text-sm shadow-sm">
             {loading ? <ButtonSpinner /> : <Send size={16} />}
             {loading ? 'جاري الإرسال...' : 'إرسال الفواتير'}
