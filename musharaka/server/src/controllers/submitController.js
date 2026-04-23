@@ -15,6 +15,15 @@ async function submitInvoices(req, res, next) {
     )
 
     if (!result.success) {
+      // Diagnostic: surface why the Seinomy submission was rejected so we can
+      // distinguish token/contract/Cenomi/RPC failures from Render logs.
+      console.warn('[submit] rejected', {
+        user:     req.user?.id,
+        tenant:   req.tenantId,
+        branch:   branch_id,
+        period:   `${year}-${String(month).padStart(2, '0')}`,
+        reason:   result.error,
+      })
       return res.status(400).json({ error: result.error })
     }
 
