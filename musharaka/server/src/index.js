@@ -19,13 +19,22 @@ const PORT = process.env.PORT || 3001
 
 // Security headers — CSP disabled: frontend may be served from this server or from cPanel.
 // We strip CSP entirely so the frontend can call the Render API without browser blocks.
+// Everything else (HSTS, X-Frame-Options, nosniff, Referrer-Policy) stays on.
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
+  // HSTS: 1 year, include subdomains, preload-ready
+  strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  frameguard: { action: 'deny' },
 }))
 
-// Belt-and-suspenders: remove CSP even if any upstream middleware re-adds it.
+// Additional headers Helmet 8 doesn't set by default
 app.use((_req, res, next) => {
+  // Deny browser access to powerful APIs unless we explicitly opt in
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()')
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none')
+  // Belt-and-suspenders: strip any CSP re-added upstream
   res.removeHeader('Content-Security-Policy')
   res.removeHeader('X-Content-Security-Policy')
   res.removeHeader('X-WebKit-CSP')

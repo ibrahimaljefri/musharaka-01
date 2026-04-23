@@ -21,10 +21,12 @@ const router   = express.Router()
 const { supabase }       = require('../config/supabase')
 const { authMiddleware } = require('../middleware/auth')
 const { tenantMiddleware, superAdminOnly } = require('../middleware/tenantMiddleware')
-const { standardLimiter } = require('../middleware/rateLimiter')
+const { standardLimiter, adminWriteOnly } = require('../middleware/rateLimiter')
 
-// All admin routes require auth + super-admin
-router.use(standardLimiter, authMiddleware, tenantMiddleware, superAdminOnly)
+// All admin routes require auth + super-admin. Writes get an extra,
+// tighter bucket (30/min) to slow down bulk-destructive actions if a token
+// is ever stolen.
+router.use(standardLimiter, adminWriteOnly, authMiddleware, tenantMiddleware, superAdminOnly)
 
 // ── PLATFORM STATS ────────────────────────────────────────────────────────────
 

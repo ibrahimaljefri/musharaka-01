@@ -39,6 +39,23 @@ export const useAuthStore = create((set, get) => ({
       }
     })
     set({ _authSubscription: subscription })
+
+    // Detect localStorage tampering (DevTools clear, malicious script, another tab)
+    // Supabase's onAuthStateChange does not fire when the token key is removed
+    // externally, so the app would otherwise stay "logged in" in memory until
+    // the next API 401. We force a clean logout when the token disappears.
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e) => {
+        const isSupabaseToken = e.key && e.key.startsWith('sb-') && e.key.endsWith('-auth-token')
+        if (isSupabaseToken && !e.newValue) {
+          set({ session: null, user: null, isSuperAdmin: false, tenantId: null, tenantStatus: null,
+                allowedInputTypes: ['daily'], allowAdvancedDashboard: false,
+                allowImport: false, allowReports: false, mustChangePassword: false,
+                activatedAt: null, expiresAt: null, planName: null })
+          window.location.replace('/login')
+        }
+      })
+    }
   },
 
   _loadTenantContext: async (userId) => {

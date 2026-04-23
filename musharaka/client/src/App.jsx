@@ -45,7 +45,18 @@ const PageLoader = () => (
 
 function ProtectedRoute({ children }) {
   const session = useAuthStore(s => s.session)
-  if (!session) return <Navigate to="/login" replace />
+  const loading = useAuthStore(s => s.loading)
+  if (loading) return <PageLoader />
+  if (!session) {
+    // Synchronous redirect — updates URL before React Router's <Navigate>
+    // would, so typing /dashboard while unauthenticated moves to /login
+    // immediately instead of flashing the protected layout.
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      window.location.replace('/login')
+      return null
+    }
+    return <Navigate to="/login" replace />
+  }
   return children
 }
 
@@ -63,10 +74,24 @@ function FeatureRoute({ flag, children }) {
 }
 
 function AdminRoute({ children }) {
-  const session     = useAuthStore(s => s.session)
+  const session      = useAuthStore(s => s.session)
   const isSuperAdmin = useAuthStore(s => s.isSuperAdmin)
-  if (!session)     return <Navigate to="/login" replace />
-  if (!isSuperAdmin) return <Navigate to="/dashboard" replace />
+  const loading      = useAuthStore(s => s.loading)
+  if (loading) return <PageLoader />
+  if (!session) {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      window.location.replace('/login')
+      return null
+    }
+    return <Navigate to="/login" replace />
+  }
+  if (!isSuperAdmin) {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
+      window.location.replace('/dashboard')
+      return null
+    }
+    return <Navigate to="/dashboard" replace />
+  }
   return children
 }
 

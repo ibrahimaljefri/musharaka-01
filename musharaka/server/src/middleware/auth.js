@@ -24,7 +24,19 @@ async function authMiddleware(req, res, next) {
   }
   const token = authHeader.split(' ')[1]
   const { data: { user }, error } = await supabase.auth.getUser(token)
-  if (error || !user) return res.status(401).json({ error: 'جلسة منتهية، يرجى تسجيل الدخول مجدداً' })
+
+  if (error || !user) {
+    // Diagnostic: log the reason Supabase rejected the token so production
+    // 401s can be distinguished (bad env key, expired token, wrong project).
+    // The token itself is never logged — only the Supabase error and metadata.
+    console.warn('[auth] getUser rejected token', {
+      route:  req.originalUrl,
+      reason: error?.message || 'no user returned',
+      status: error?.status,
+    })
+    return res.status(401).json({ error: 'جلسة منتهية، يرجى تسجيل الدخول مجدداً' })
+  }
+
   req.user = user
   next()
 }
