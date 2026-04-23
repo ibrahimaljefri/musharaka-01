@@ -9,6 +9,8 @@ import TableControls from '../../components/TableControls'
 import { toast } from '../../lib/useToast'
 import { Plus, Edit2, Trash2, MessageCircle, CheckCircle2, XCircle } from 'lucide-react'
 
+// Label/color maps kept for legacy whatsapp rows in the DB; the UI no longer
+// offers WhatsApp as a create option but will still render existing rows correctly.
 const PLATFORM_LABELS = { telegram: 'تيليجرام', whatsapp: 'واتساب' }
 const PLATFORM_COLORS = {
   telegram: 'bg-blue-100 text-blue-700',
@@ -66,7 +68,7 @@ export default function BotSubscribers() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-800 font-arabic">مشتركو الروبوت</h1>
-          <p className="text-xs text-gray-400 font-arabic mt-0.5">إدارة حسابات واتساب وتيليجرام المرتبطة بالفروع</p>
+          <p className="text-xs text-gray-400 font-arabic mt-0.5">إدارة حسابات تيليجرام المرتبطة بالفروع</p>
         </div>
         <Link to="/admin/bot-subscribers/create"
           className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic shadow-sm">
@@ -98,7 +100,7 @@ export default function BotSubscribers() {
           <EmptyState
             icon={MessageCircle}
             title="لا يوجد مشتركون بعد"
-            description="أضف مشتركاً لربط رقم واتساب أو تيليجرام بفرع وتفعيل التسجيل عبر الروبوت"
+            description="أضف مشتركاً لربط حساب تيليجرام بفرع وتفعيل التسجيل عبر الروبوت"
             action={
               <Link to="/admin/bot-subscribers/create"
                 className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic">

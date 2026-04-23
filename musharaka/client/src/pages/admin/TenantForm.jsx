@@ -181,7 +181,7 @@ export default function TenantForm({ mode = 'create' }) {
               <input value={form.primary_phone} onChange={e => set('primary_phone', e.target.value)}
                 dir="ltr" placeholder="05XXXXXXXX"
                 className="input-base font-mono" />
-              <p className="text-xs text-gray-400 font-arabic mt-1">للتواصل عبر واتساب</p>
+              <p className="text-xs text-gray-400 font-arabic mt-1">للتواصل مع المستأجر</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">

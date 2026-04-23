@@ -10,9 +10,10 @@ import ButtonSpinner from '../../components/ButtonSpinner'
 import { toast } from '../../lib/useToast'
 import { Save, ArrowRight, MessageCircle, Info } from 'lucide-react'
 
+// WhatsApp is temporarily hidden from the UI per product direction; keep the
+// value list single-entry so it's trivial to restore ({ v: 'whatsapp', l: 'واتساب' }).
 const PLATFORMS = [
   { v: 'telegram', l: 'تيليجرام' },
-  { v: 'whatsapp', l: 'واتساب' },
 ]
 
 export default function BotSubscriberForm({ mode = 'create' }) {
@@ -106,7 +107,7 @@ export default function BotSubscriberForm({ mode = 'create' }) {
             {isEdit ? 'تعديل مشترك' : 'إضافة مشترك جديد'}
           </h1>
           <p className="text-xs text-gray-400 font-arabic mt-0.5">
-            ربط رقم واتساب أو تيليجرام بمستأجر لتفعيل تسجيل المبيعات عبر الروبوت
+            ربط حساب تيليجرام بمستأجر لتفعيل تسجيل المبيعات عبر الروبوت
           </p>
         </div>
       </div>

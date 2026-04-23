@@ -35,7 +35,7 @@ const FEATURES = [
   },
   {
     icon: '💬',
-    title: 'بوت واتساب و تيليجرام',
+    title: 'بوت تيليجرام',
     desc: 'استلم وأرسل المبيعات عبر المحادثة — البوت يفهم اللغة العربية بطلاقة.',
     tint: 'rgba(139,92,246,0.18)',
   },
@@ -98,7 +98,7 @@ const PRICING = [
       'إدارة 3 فروع',
       'مستخدم واحد',
       'تكامل أساسي مع المنصات',
-      'بوت واتساب/تيليجرام',
+      'بوت تيليجرام',
       'استيراد Excel',
       'تقارير شهرية',
       'دعم عبر البريد',
@@ -119,7 +119,7 @@ const PRICING = [
       'بوت متقدم مع الذكاء الاصطناعي',
       'استيراد Excel ذكي',
       'تقارير يومية + لوحة تحكم حية',
-      'دعم ذو أولوية عبر واتساب',
+      'دعم ذو أولوية عبر البريد وتيليجرام',
       'تصدير PDF للفواتير',
     ],
     cta: 'الخطة الأكثر طلباً',
@@ -271,7 +271,7 @@ function ContactModal({ open, onClose }) {
           فريق عروة جاهز للرد عليك خلال دقائق. اختر القناة التي تفضلها:
         </p>
         <a
-          href="https://wa.me/966500000000"
+          href="https://t.me/urwah_support_bot"
           target="_blank"
           rel="noreferrer"
           style={{
@@ -280,8 +280,8 @@ function ContactModal({ open, onClose }) {
             gap: 14,
             padding: '16px 20px',
             borderRadius: 14,
-            background: 'rgba(16,185,129,0.12)',
-            border: '1px solid rgba(16,185,129,0.35)',
+            background: 'rgba(59,130,246,0.12)',
+            border: '1px solid rgba(59,130,246,0.35)',
             color: TOKENS.text,
             textDecoration: 'none',
             marginBottom: 12,
@@ -290,8 +290,8 @@ function ContactModal({ open, onClose }) {
         >
           <span style={{ fontSize: 24 }}>💬</span>
           <div>
-            <div>واتساب</div>
-            <div style={{ fontSize: 13, color: TOKENS.textSec, fontWeight: 400 }}>+966 50 000 0000</div>
+            <div>تيليجرام</div>
+            <div style={{ fontSize: 13, color: TOKENS.textSec, fontWeight: 400 }}>@urwah_support_bot</div>
           </div>
         </a>
         <a
