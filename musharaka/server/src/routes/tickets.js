@@ -56,7 +56,13 @@ router.post(
       if (!submitter_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitter_email))
         return res.status(422).json({ error: 'البريد الإلكتروني غير صحيح' })
       if (!title)           return res.status(422).json({ error: 'عنوان المشكلة مطلوب' })
-      if (!category || !['integration', 'license', 'technical', 'reporting'].includes(category))
+      // Accept both the 6 Arabic categories the UI sends today and the 4 legacy
+      // English codes (so older tickets and API clients keep working).
+      const ALLOWED_CATEGORIES = [
+        'مبيعات', 'فروع', 'مستخدمون', 'ترخيص', 'تقني', 'أخرى',
+        'integration', 'license', 'technical', 'reporting',
+      ]
+      if (!category || !ALLOWED_CATEGORIES.includes(category))
         return res.status(422).json({ error: 'يرجى اختيار تصنيف صحيح' })
       if (!description)     return res.status(422).json({ error: 'وصف المشكلة مطلوب' })
 
