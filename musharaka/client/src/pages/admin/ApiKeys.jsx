@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../lib/axiosClient'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import { toast } from '../../lib/useToast'
-import { Key, Plus, Trash2, Copy, Check, ArrowRight, Power, PowerOff } from 'lucide-react'
+import { Key, Plus, Trash2, Copy, Check, ArrowRight, Power, PowerOff, Shield, Zap, BookOpen } from 'lucide-react'
 
 function fmtDate(d) {
   if (!d) return '—'
@@ -112,22 +112,68 @@ export default function ApiKeys() {
     amount: 'المبلغ', status: 'الحالة',
   }
 
+  // Stats derived from the keys list — drives the sidebar metric tiles
+  const activeCount   = keys.filter(k => k.is_active).length
+  const disabledCount = keys.length - activeCount
+  const lastUsed      = keys.reduce((acc, k) => {
+    if (!k.last_used_at) return acc
+    const t = new Date(k.last_used_at).getTime()
+    return !acc || t > acc ? t : acc
+  }, 0)
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate('/admin/tenants')} className="text-gray-400 hover:text-gray-600">
           <ArrowRight size={20} />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-800 font-arabic">مفاتيح API</h1>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">مفاتيح API</h1>
           <p className="text-xs text-gray-400 font-arabic mt-0.5">{tenantName}</p>
         </div>
         <button onClick={() => setShowForm(s => !s)}
-          className="mr-auto inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic">
+          className="mr-auto inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic shadow-sm">
           <Plus size={14} /> مفتاح جديد
         </button>
       </div>
 
+      {/* Metric tiles — fill the header strip, give the page immediate hierarchy */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <Key size={13} className="text-blue-600 dark:text-blue-400" />
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">إجمالي</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{keys.length}</p>
+        </div>
+        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <Power size={13} className="text-green-600" />
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">نشط</span>
+          </div>
+          <p className="text-2xl font-bold text-green-700 dark:text-green-400">{activeCount}</p>
+        </div>
+        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <PowerOff size={13} className="text-gray-400" />
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">معطّل</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">{disabledCount}</p>
+        </div>
+        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1">
+            <Zap size={13} className="text-yellow-600" />
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">آخر استخدام</span>
+          </div>
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 font-arabic truncate">
+            {lastUsed ? fmtDate(new Date(lastUsed)) : 'لم يُستخدم بعد'}
+          </p>
+        </div>
+      </div>
+
+      {/* 2-col layout on lg+: main content + sticky sidebar with docs */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="space-y-6 min-w-0">
       {/* One-time key reveal */}
       {newKey && (
         <div className="card-surface p-5 border-green-200 bg-green-50">
@@ -242,16 +288,49 @@ export default function ApiKeys() {
         )}
       </div>
 
-      {/* Usage example */}
-      <div className="card-surface p-5">
-        <h3 className="font-semibold text-gray-700 font-arabic text-sm mb-3">مثال على الاستخدام</h3>
-        <div className="bg-gray-900 rounded-lg p-4 text-xs font-mono text-green-400 overflow-x-auto" dir="ltr">
-          <div>GET /api/contracts?api_key=msk_your_key_here</div>
-          <div className="mt-1 text-gray-500"># Optional filters:</div>
-          <div>GET /api/contracts?api_key=msk_...&from=2026-01-01&to=2026-03-31&status=sent</div>
-          <div className="mt-2 text-gray-400">X-API-Key: msk_your_key_here   # Alternative: header</div>
-        </div>
-      </div>
+        </div>{/* /main column */}
+
+        {/* Sidebar — sticky on lg+ so docs stay in view while scrolling the keys list */}
+        <aside className="space-y-4 lg:sticky lg:top-6 self-start">
+          {/* Usage example */}
+          <div className="card-surface rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen size={14} className="text-blue-600 dark:text-blue-400" />
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-200 font-arabic">مثال على الاستخدام</h3>
+            </div>
+            <div className="bg-gray-900 rounded-lg p-4 text-xs font-mono text-green-400 overflow-x-auto" dir="ltr">
+              <div>GET /api/contracts?api_key=msk_your_key_here</div>
+              <div className="mt-1 text-gray-500"># Optional filters:</div>
+              <div className="break-all">GET /api/contracts?api_key=msk_...&amp;from=2026-01-01&amp;to=2026-03-31</div>
+              <div className="mt-2 text-gray-400 break-all">X-API-Key: msk_your_key_here</div>
+              <div className="mt-0.5 text-gray-500"># Alternative: request header</div>
+            </div>
+          </div>
+
+          {/* Security guidance — vendor-neutral best practices */}
+          <div className="rounded-xl border border-blue-200 dark:border-blue-700/50 p-4 bg-blue-50 dark:bg-blue-900/20">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+                <Shield size={13} className="text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-sm font-bold text-blue-800 dark:text-blue-300 font-arabic">إرشادات الأمان</span>
+            </div>
+            <ul className="space-y-2.5">
+              {[
+                'انسخ المفتاح الآن — لن يُعرض مجدداً بعد الإغلاق.',
+                'لا تشارك المفتاح في مستودعات Git أو رسائل غير آمنة.',
+                'أنشئ مفتاحاً منفصلاً لكل تكامل، وعطّل غير المستخدم.',
+                'راقب حقل "آخر استخدام" لاكتشاف أي نشاط غير متوقع.',
+              ].map((t, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-blue-800 dark:text-blue-200 font-arabic leading-relaxed">
+                  <span className="mt-0.5 shrink-0 w-4 h-4 rounded-full bg-blue-200 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>{/* /grid */}
 
       <ConfirmDialog
         open={!!deleteTarget}
