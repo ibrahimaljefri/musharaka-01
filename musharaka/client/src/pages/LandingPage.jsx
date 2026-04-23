@@ -29,8 +29,8 @@ const FEATURES = [
   },
   {
     icon: '🔗',
-    title: 'تكامل سينومي الكامل',
-    desc: 'أرسل الفواتير لمنصة سينومي بنقرة واحدة — متزامن، مؤرشف، وآمن.',
+    title: 'تكامل كامل مع المنصات',
+    desc: 'أرسل الفواتير إلى منصات الدفع بنقرة واحدة — متزامن، مؤرشف، وآمن.',
     tint: 'rgba(16,185,129,0.18)',
   },
   {
@@ -69,7 +69,7 @@ const STATS = [
 const STEPS = [
   {
     num: '01',
-    title: 'أضف مبيعاتك',
+    title: 'مشاركة مبيعات بكل سلاسة',
     desc: 'يدوياً، أو عبر استيراد Excel، أو مباشرة من البوت — المرونة الكاملة.',
     icon: '📝',
   },
@@ -81,8 +81,8 @@ const STEPS = [
   },
   {
     num: '03',
-    title: 'أرسل لسينومي',
-    desc: 'بنقرة واحدة تُرسل الدفعة كاملة إلى منصة سينومي وتُؤرشف لديك.',
+    title: 'أرسل الدفعة',
+    desc: 'بنقرة واحدة تُرسل الدفعة كاملة إلى المنصة وتُؤرشف لديك.',
     icon: '🚀',
   },
 ]
@@ -97,7 +97,7 @@ const PRICING = [
     features: [
       'إدارة 3 فروع',
       'مستخدم واحد',
-      'تكامل سينومي الأساسي',
+      'تكامل أساسي مع المنصات',
       'بوت واتساب/تيليجرام',
       'استيراد Excel',
       'تقارير شهرية',
@@ -115,7 +115,7 @@ const PRICING = [
     features: [
       'إدارة 8 فروع',
       'مستخدم واحد',
-      'تكامل سينومي كامل',
+      'تكامل كامل مع المنصات',
       'بوت متقدم مع الذكاء الاصطناعي',
       'استيراد Excel ذكي',
       'تقارير يومية + لوحة تحكم حية',
@@ -439,7 +439,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="lp-hero-sub">
-            ربط سلس بين فروعك ومنصة سينومي — إدارة المبيعات اليومية، التقارير، والإرسالات في مكان واحد.
+            ربط سلس بين فروعك والمنصات — إدارة المبيعات اليومية، التقارير، والإرسالات في مكان واحد.
           </p>
 
           <div className="lp-hero-ctas">
@@ -484,7 +484,7 @@ export default function LandingPage() {
           <div className="lp-section-head" style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 56px' }}>
             <div className="lp-eyebrow">معاينة المنصة</div>
             <h2 className="lp-section-title">لوحة تحكم احترافية<br /><span className="lp-gradient-gold">بتصميم عربي أصيل</span></h2>
-            <p className="lp-section-sub">كل ما تحتاجه لإدارة مبيعات فروعك في مكان واحد — بيانات لحظية، تقارير فورية، وإرسال تلقائي لسينومي.</p>
+            <p className="lp-section-sub">كل ما تحتاجه لإدارة مبيعات فروعك في مكان واحد — بيانات لحظية، تقارير فورية، وإرسال تلقائي للمنصات.</p>
           </div>
 
           {/* Browser chrome frame */}
@@ -559,7 +559,7 @@ export default function LandingPage() {
               كل ما تحتاجه <span className="lp-gradient-gold">لإدارة مبيعاتك</span>
             </h2>
             <p className="lp-section-sub">
-              ست قدرات أساسية تم تصميمها من الصفر لسوق التجزئة السعودي، وللتكامل الكامل مع منظومة سينومي.
+              ست قدرات أساسية تم تصميمها من الصفر لسوق التجزئة السعودي، وللتكامل الكامل مع منظومات الدفع.
             </p>
           </div>
 
@@ -584,7 +584,7 @@ export default function LandingPage() {
           <div className="lp-section-head">
             <div className="lp-eyebrow">كيف يعمل</div>
             <h2 className="lp-section-title">
-              من المبيعات الخام <span className="lp-gradient-gold">إلى سينومي</span> في ثلاث خطوات
+              من المبيعات الخام <span className="lp-gradient-gold">إلى الإرسال</span> في ثلاث خطوات
             </h2>
           </div>
 
