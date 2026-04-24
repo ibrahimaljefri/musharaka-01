@@ -285,7 +285,9 @@
 .feature-card {
   padding: 18px 20px;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
+  border-top-width: 3px;
+  border-right-width: 3px;
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm), var(--ring-top);
   display: grid;
@@ -303,11 +305,15 @@
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg), var(--ring-top);
 }
-/* Each card hover border matches its icon color */
-.feature-card:nth-child(1):hover { border-color: #B45309; box-shadow: 0 12px 32px rgba(180, 83, 9, 0.22), var(--ring-top); }
-.feature-card:nth-child(2):hover { border-color: #047857; box-shadow: 0 12px 32px rgba(4, 120, 87, 0.22), var(--ring-top); }
-.feature-card:nth-child(3):hover { border-color: #1E40AF; box-shadow: 0 12px 32px rgba(30, 64, 175, 0.22), var(--ring-top); }
-.feature-card:nth-child(4):hover { border-color: #BE185D; box-shadow: 0 12px 32px rgba(190, 24, 93, 0.22), var(--ring-top); }
+/* L-frame on top + right edges colored to match icon (corner emphasis) */
+.feature-card:nth-child(1) { border-top-color: #FBBF24; border-right-color: #FBBF24; }
+.feature-card:nth-child(2) { border-top-color: #34D399; border-right-color: #34D399; }
+.feature-card:nth-child(3) { border-top-color: #60A5FA; border-right-color: #60A5FA; }
+.feature-card:nth-child(4) { border-top-color: #F472B6; border-right-color: #F472B6; }
+.feature-card:nth-child(1):hover { border-top-color: #B45309; border-right-color: #B45309; box-shadow: 0 12px 32px rgba(180, 83, 9, 0.22), var(--ring-top); }
+.feature-card:nth-child(2):hover { border-top-color: #047857; border-right-color: #047857; box-shadow: 0 12px 32px rgba(4, 120, 87, 0.22), var(--ring-top); }
+.feature-card:nth-child(3):hover { border-top-color: #1E40AF; border-right-color: #1E40AF; box-shadow: 0 12px 32px rgba(30, 64, 175, 0.22), var(--ring-top); }
+.feature-card:nth-child(4):hover { border-top-color: #BE185D; border-right-color: #BE185D; box-shadow: 0 12px 32px rgba(190, 24, 93, 0.22), var(--ring-top); }
 .feature-card:hover .feature-arrow { transform: translateX(-4px); opacity: 1; }
 .feature-icon {
   width: 44px;
