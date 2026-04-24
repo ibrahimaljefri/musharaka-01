@@ -342,7 +342,25 @@ section.alt {
 }
 .app-shell.collapsed .side-item.active::before { display: none; }
 
-.collapse-toggle { display: none; }
+.collapse-toggle {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  border-radius: var(--r-md);
+  color: var(--text-sec);
+  cursor: pointer;
+  font: 500 13px 'Tajawal', sans-serif;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.collapse-toggle:hover { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+.collapse-toggle svg { width: 14px; height: 14px; transition: transform var(--dur-base) var(--ease-out); }
+.app-shell.collapsed .collapse-toggle .label { display: none; }
+.app-shell.collapsed .collapse-toggle svg { transform: rotate(180deg); }
 
 .app-main {
   min-width: 0;
@@ -391,6 +409,9 @@ section.alt {
   .app-shell.mobile-open .app-main { pointer-events: none; }
   .app-shell.mobile-open .app-sidebar,
   .app-shell.mobile-open .hamburger { pointer-events: auto; }
+
+  /* Hide desktop-only collapse button on mobile/tablet — hamburger replaces it */
+  .collapse-toggle { display: none; }
   .hamburger { display: inline-flex; }
 }
 
