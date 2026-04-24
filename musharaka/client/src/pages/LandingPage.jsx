@@ -511,7 +511,7 @@ export default function LandingPage() {
             <div style={{ background: '#080E1A', padding: 20 }} dir="rtl">
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: 20 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'inherit' }}>مشاركة — لوحة التحكم</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'inherit' }}>عروة — لوحة التحكم</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.30)', color: '#10b981' }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
                   متصل بالمنصة

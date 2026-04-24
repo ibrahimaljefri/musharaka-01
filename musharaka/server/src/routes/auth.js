@@ -38,7 +38,7 @@ async function sendMail(to, subject, html) {
     return
   }
   await transporter.sendMail({
-    from:    process.env.SMTP_FROM || `"مشاركة" <${process.env.SMTP_USER}>`,
+    from:    process.env.SMTP_FROM || `"عروة" <${process.env.SMTP_USER}>`,
     to, subject, html,
   })
 }
@@ -183,7 +183,7 @@ router.post('/forgot-password', authLimiter, async (req, res, next) => {
 
     await sendMail(
       email,
-      'إعادة تعيين كلمة المرور — مشاركة',
+      'إعادة تعيين كلمة المرور — عروة',
       `<div dir="rtl" style="font-family:sans-serif">
         <h2>إعادة تعيين كلمة المرور</h2>
         <p>مرحباً ${user.full_name || ''}،</p>
