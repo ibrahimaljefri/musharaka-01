@@ -12,7 +12,7 @@
  * 6. Parse sales message, expand into rows, insert into DB
  * 7. Return Arabic confirmation
  */
-const { supabase }        = require('../config/supabase')
+const { pool, selectMany, insertMany, updateOne } = require('../db/query')
 const { parseSaleMessage }        = require('./saleNlpService')
 const { expandSale }      = require('./saleDistributionService')
 
@@ -232,12 +232,7 @@ function extractBranchHint(message) {
 
 // ── Branch lookup from tenant ─────────────────────────────────────────────────
 async function fetchTenantBranches(tenantId) {
-  const { data } = await supabase
-    .from('branches')
-    .select('id, name, code, contract_number')
-    .eq('tenant_id', tenantId)
-    .order('name')
-  return data || []
+  return await selectMany('branches', { tenant_id: tenantId }, { orderBy: 'name' })
 }
 
 function matchBranch(branches, text) {
@@ -280,17 +275,15 @@ async function processSale(sub, branch, message) {
     period_end_date:   parsed.period_end_date,
   })
 
-  const { error: insertErr } = await supabase.from('sales').insert(rows)
-  if (insertErr) {
-    console.error('[bot] insert error:', insertErr)
+  try {
+    await insertMany('sales', rows)
+  } catch (insertErr) {
+    console.error('[bot] insert error:', insertErr.message)
     return 'حدث خطأ أثناء حفظ المبيعات. يرجى المحاولة مجدداً أو التواصل مع الدعم.'
   }
 
-  supabase
-    .from('bot_subscribers')
-    .update({ last_message_at: new Date().toISOString() })
-    .eq('id', sub.id)
-    .then(({ error }) => { if (error) console.error('[bot] last_message_at update failed:', error.message) })
+  updateOne('bot_subscribers', { id: sub.id }, { last_message_at: new Date().toISOString() })
+    .catch(err => console.error('[bot] last_message_at update failed:', err.message))
 
   const dateLabel = parsed.input_type === 'monthly'
     ? `${MONTHS_AR[parsed.month] || parsed.month} ${parsed.year}`
@@ -319,13 +312,13 @@ async function processSale(sub, branch, message) {
  */
 async function processMessage(platform, chatId, message) {
   // 1. Look up subscriber
-  const { data: sub } = await supabase
-    .from('bot_subscribers')
-    .select('*')
-    .eq('platform', platform)
-    .eq('chat_id', chatId)
-    .eq('is_active', true)
-    .maybeSingle()
+  const { rows: subs } = await pool.query(
+    `SELECT * FROM bot_subscribers
+     WHERE platform = $1 AND chat_id = $2 AND is_active = true
+     LIMIT 1`,
+    [platform, chatId]
+  )
+  const sub = subs[0]
 
   if (!sub) {
     return 'عذراً، رقمك غير مسجل في النظام. يرجى التواصل مع المشرف لتفعيل الحساب.'

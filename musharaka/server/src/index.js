@@ -61,7 +61,7 @@ app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: false, limit: '1mb' }))
 
 // Global API timeout — if any route handler takes > 12 s, respond immediately
-// instead of hanging the connection indefinitely (shared hosting / slow Supabase)
+// instead of hanging the connection indefinitely (shared hosting safety net)
 app.use('/api', (req, res, next) => {
   res.setTimeout(12000, () => {
     if (!res.headersSent) {

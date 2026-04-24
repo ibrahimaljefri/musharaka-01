@@ -21,7 +21,7 @@ async function processImport(req, res, next) {
     if (!branchId) {
       return res.status(422).json({ error: 'يرجى اختيار الفرع' })
     }
-    const result = await importService.import(req.file.buffer, branchId)
+    const result = await importService.import(req.file.buffer, branchId, req.tenantId)
     res.json({
       message:  `تم إضافة ${result.queued} سجل إلى قائمة المعالجة`,
       queued:   result.queued,

@@ -1,5 +1,9 @@
-// In test mode return a controllable stub so integration tests
-// never make real network calls. Tests replace methods via testSupabase.
+// Supabase config — kept ONLY for legacy test files that use the inert stub.
+// Production code now uses pg.Pool via src/config/db.js.
+//
+// In production, SUPABASE_URL/KEY are not required; this module returns a
+// benign stub instead of crashing.
+
 if (process.env.NODE_ENV === 'test') {
   const noop = () => Promise.resolve({ data: [], error: null })
   const chainable = () => {
@@ -29,7 +33,8 @@ if (process.env.NODE_ENV === 'test') {
     _setAuthAdmin: (overrides) => { testSupabase.auth.admin = { ...testSupabase.auth.admin, ...overrides } },
   }
   module.exports = { supabase: testSupabase }
-} else {
+} else if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  // Legacy: Supabase still configured (pre-migration). Safe to leave loaded.
   const { createClient } = require('@supabase/supabase-js')
   const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -37,4 +42,12 @@ if (process.env.NODE_ENV === 'test') {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
   module.exports = { supabase }
+} else {
+  // Post-migration: Supabase no longer used. Export a no-op stub that throws if accessed.
+  const handler = {
+    get() {
+      throw new Error('Supabase client is no longer available. Use pg.Pool via config/db.js.')
+    }
+  }
+  module.exports = { supabase: new Proxy({}, handler) }
 }

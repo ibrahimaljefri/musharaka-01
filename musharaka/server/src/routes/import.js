@@ -2,6 +2,7 @@ const express = require('express')
 const router  = express.Router()
 const multer  = require('multer')
 const { authMiddleware } = require('../middleware/auth')
+const { tenantMiddleware } = require('../middleware/tenantMiddleware')
 const { previewImport, processImport } = require('../controllers/importController')
 const { standardLimiter, strictLimiter } = require('../middleware/rateLimiter')
 
@@ -40,7 +41,7 @@ function handleMulterError(err, req, res, next) {
   next(err)
 }
 
-router.post('/import/preview', standardLimiter, authMiddleware, upload.single('file'), handleMulterError, previewImport)
-router.post('/import',         strictLimiter,   authMiddleware, upload.single('file'), handleMulterError, processImport)
+router.post('/import/preview', standardLimiter, authMiddleware, tenantMiddleware, upload.single('file'), handleMulterError, previewImport)
+router.post('/import',         strictLimiter,   authMiddleware, tenantMiddleware, upload.single('file'), handleMulterError, processImport)
 
 module.exports = router

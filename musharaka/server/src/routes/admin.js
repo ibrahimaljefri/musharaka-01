@@ -1,31 +1,16 @@
 /**
  * Admin routes — super-admin only
- *
- * Tenants:
- *   GET    /api/admin/tenants
- *   POST   /api/admin/tenants
- *   GET    /api/admin/tenants/:id
- *   PUT    /api/admin/tenants/:id
- *   DELETE /api/admin/tenants/:id
- *
- * API Keys (per tenant):
- *   GET    /api/admin/tenants/:id/api-keys
- *   POST   /api/admin/tenants/:id/api-keys
- *   PUT    /api/admin/api-keys/:keyId
- *   DELETE /api/admin/api-keys/:keyId
  */
 
 const express  = require('express')
 const crypto   = require('crypto')
 const router   = express.Router()
-const { supabase }       = require('../config/supabase')
+const { pool, selectOne, selectMany, insertOne, updateOne, deleteWhere } = require('../db/query')
+const { hashPassword } = require('../services/authService')
 const { authMiddleware } = require('../middleware/auth')
 const { tenantMiddleware, superAdminOnly } = require('../middleware/tenantMiddleware')
 const { standardLimiter, adminWriteOnly } = require('../middleware/rateLimiter')
 
-// All admin routes require auth + super-admin. Writes get an extra,
-// tighter bucket (30/min) to slow down bulk-destructive actions if a token
-// is ever stolen.
 router.use(standardLimiter, adminWriteOnly, authMiddleware, tenantMiddleware, superAdminOnly)
 
 // ── PLATFORM STATS ────────────────────────────────────────────────────────────
@@ -37,31 +22,25 @@ router.get('/stats', async (req, res, next) => {
     const in6  = new Date(now); in6.setMonth(in6.getMonth() + 6)
     const in11 = new Date(now); in11.setMonth(in11.getMonth() + 11)
 
-    const [r0, r1, r2, r3, r4, r5, r6] = await Promise.all([
-      supabase.from('tenants').select('*', { count: 'exact', head: true }),
-      supabase.from('tenants').select('id, name, status, expires_at'),
-      supabase.from('branches').select('*', { count: 'exact', head: true }),
-      supabase.from('tenant_users').select('*', { count: 'exact', head: true }),
-      supabase.auth.admin.listUsers({ perPage: 1000 }),
-      supabase.from('tenant_users').select('user_id, tenants(id, name)'),
-      supabase.from('branches').select('tenant_id, tenants(name)'),
+    const [tenantCountQ, tenantsQ, branchCountQ, tenantUserCountQ, authUsersQ, tuWithTenantQ, branchesWithTenantQ] = await Promise.all([
+      pool.query(`SELECT count(*)::int AS n FROM tenants`),
+      pool.query(`SELECT id, name, status, expires_at FROM tenants`),
+      pool.query(`SELECT count(*)::int AS n FROM branches`),
+      pool.query(`SELECT count(*)::int AS n FROM tenant_users`),
+      pool.query(`SELECT id FROM app_users`),
+      pool.query(`SELECT tu.user_id, t.id AS tenant_id, t.name AS tenant_name
+                  FROM tenant_users tu LEFT JOIN tenants t ON t.id = tu.tenant_id`),
+      pool.query(`SELECT b.tenant_id, t.name AS tenant_name
+                  FROM branches b LEFT JOIN tenants t ON t.id = b.tenant_id`),
     ])
 
-    if (r0.error) throw r0.error
-    if (r1.error) throw r1.error
-    if (r2.error) throw r2.error
-    if (r3.error) throw r3.error
-    if (r4.error) throw r4.error
-    if (r5.error) throw r5.error
-    if (r6.error) throw r6.error
-
-    const totalTenants     = r0.count     || 0
-    const tenants          = r1.data      || []
-    const totalBranches    = r2.count     || 0
-    const totalTenantUsers = r3.count     || 0
-    const authUsers        = r4.data?.users || []
-    const tuRows           = r5.data      || []
-    const branchRows       = r6.data      || []
+    const totalTenants     = tenantCountQ.rows[0].n
+    const tenants          = tenantsQ.rows
+    const totalBranches    = branchCountQ.rows[0].n
+    const totalTenantUsers = tenantUserCountQ.rows[0].n
+    const authUsersCount   = authUsersQ.rows.length
+    const tuRows           = tuWithTenantQ.rows
+    const branchRows       = branchesWithTenantQ.rows
 
     const active   = tenants.filter(t => t.status === 'active')
     const exp3     = active.filter(t => t.expires_at && new Date(t.expires_at) <= in3)
@@ -71,14 +50,14 @@ router.get('/stats', async (req, res, next) => {
     const noExpiry = active.filter(t => !t.expires_at)
 
     const usersPerTenant = {}
-    for (const row of tuRows || []) {
-      const key = row.tenants?.name || row.user_id
+    for (const row of tuRows) {
+      const key = row.tenant_name || row.user_id
       usersPerTenant[key] = (usersPerTenant[key] || 0) + 1
     }
 
     const branchesPerTenant = {}
-    for (const row of branchRows || []) {
-      const key = row.tenants?.name || row.tenant_id
+    for (const row of branchRows) {
+      const key = row.tenant_name || row.tenant_id
       branchesPerTenant[key] = (branchesPerTenant[key] || 0) + 1
     }
 
@@ -87,8 +66,8 @@ router.get('/stats', async (req, res, next) => {
         tenants:       totalTenants,
         branches:      totalBranches,
         tenant_users:  totalTenantUsers,
-        auth_users:    authUsers.length,
-        pending_users: Math.max(0, authUsers.length - totalTenantUsers),
+        auth_users:    authUsersCount,
+        pending_users: Math.max(0, authUsersCount - totalTenantUsers),
       },
       subscriptions: {
         expiring_3m:       exp3.length,
@@ -107,118 +86,121 @@ router.get('/stats', async (req, res, next) => {
 
 router.get('/plans', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('subscription_plans')
-      .select('id, name_ar, name_en, price_sar, billing_period, max_users, max_branches, extra_branch_sar, extra_user_sar')
-      .eq('is_active', true)
-      .order('price_sar', { ascending: true })
-
-    if (error) throw error
-
-    // Compute monthly_sar: annual plans divide by 12, monthly plans keep as-is
-    const plans = (data || []).map(p => ({
+    const { rows } = await pool.query(
+      `SELECT id, name_ar, name_en, price_sar, billing_period, max_users, max_branches,
+              extra_branch_sar, extra_user_sar
+       FROM subscription_plans WHERE is_active = true ORDER BY price_sar ASC`
+    )
+    const plans = rows.map(p => ({
       ...p,
       monthly_sar: p.billing_period === 'annual'
         ? Math.round(p.price_sar / 12)
         : p.price_sar,
     }))
-
     res.json(plans)
-  } catch (err) {
-    next(err)
-  }
+  } catch (err) { next(err) }
 })
 
 // ── TENANTS ───────────────────────────────────────────────────────────────────
 
-// List all tenants
 router.get('/tenants', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('*, tenant_users(count)')
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    res.json(data)
+    const { rows } = await pool.query(
+      `SELECT t.*,
+              (SELECT count(*)::int FROM tenant_users tu WHERE tu.tenant_id = t.id) AS user_count,
+              (SELECT count(*)::int FROM branches b WHERE b.tenant_id = t.id) AS branch_count
+       FROM tenants t ORDER BY t.created_at DESC`
+    )
+    res.json(rows)
   } catch (err) { next(err) }
 })
 
-// Create tenant + optionally create its first user
 router.post('/tenants', async (req, res, next) => {
+  const client = await pool.connect()
   try {
     const {
       name, slug, plan = 'basic', activated_at, expires_at, notes,
       allowed_input_types = ['daily'],
-      // optional user to create
       user_email, user_password, user_name,
+      cenomi_api_token,
     } = req.body
 
     if (!name || !slug) {
       return res.status(422).json({ error: 'اسم المستأجر والرمز المختصر مطلوبان' })
     }
 
-    const { cenomi_api_token } = req.body
+    await client.query('BEGIN')
 
     // Create tenant
-    const { data: tenant, error: tErr } = await supabase
-      .from('tenants')
-      .insert({
-        name, slug, plan,
-        activated_at: activated_at || new Date().toISOString(),
-        expires_at: expires_at || null,
-        notes: notes || null,
-        allowed_input_types,
-        cenomi_api_token: cenomi_api_token || null,
-      })
-      .select()
-      .single()
-    if (tErr) {
-      if (tErr.code === '23505') return res.status(409).json({ error: 'الرمز المختصر مستخدم مسبقاً' })
-      throw tErr
+    let tenant
+    try {
+      const { rows } = await client.query(
+        `INSERT INTO tenants (name, slug, plan, activated_at, expires_at, notes,
+                              allowed_input_types, cenomi_api_token)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
+         RETURNING *`,
+        [
+          name, slug, plan,
+          activated_at || new Date().toISOString(),
+          expires_at || null,
+          notes || null,
+          JSON.stringify(allowed_input_types),
+          cenomi_api_token || null,
+        ]
+      )
+      tenant = rows[0]
+    } catch (e) {
+      await client.query('ROLLBACK')
+      if (e.code === '23505') return res.status(409).json({ error: 'الرمز المختصر مستخدم مسبقاً' })
+      throw e
     }
 
     // Optionally create user
     let createdUser = null
     if (user_email && user_password) {
-      const { data: authData, error: uErr } = await supabase.auth.admin.createUser({
-        email: user_email,
-        password: user_password,
-        email_confirm: true,
-        user_metadata: { full_name: user_name || name },
-      })
-      if (uErr) {
-        // Roll back tenant
-        await supabase.from('tenants').delete().eq('id', tenant.id)
-        return res.status(422).json({ error: `فشل إنشاء المستخدم: ${uErr.message}` })
-      }
-      createdUser = authData.user
+      try {
+        const passwordHash = await hashPassword(user_password)
+        const { rows: uRows } = await client.query(
+          `INSERT INTO app_users (email, password_hash, full_name, email_confirmed_at)
+           VALUES ($1, $2, $3, now()) RETURNING id, email`,
+          [user_email, passwordHash, user_name || name]
+        )
+        createdUser = uRows[0]
 
-      // Link user to tenant
-      await supabase.from('tenant_users').insert({
-        tenant_id: tenant.id,
-        user_id:   createdUser.id,
-        role:      'admin',
-      })
+        await client.query(
+          `INSERT INTO tenant_users (tenant_id, user_id, role) VALUES ($1, $2, 'admin')`,
+          [tenant.id, createdUser.id]
+        )
+      } catch (e) {
+        await client.query('ROLLBACK')
+        if (e.code === '23505') return res.status(422).json({ error: 'البريد الإلكتروني مستخدم مسبقاً' })
+        throw e
+      }
     }
 
+    await client.query('COMMIT')
     res.status(201).json({ tenant, user: createdUser })
-  } catch (err) { next(err) }
+  } catch (err) {
+    try { await client.query('ROLLBACK') } catch { /* ignore */ }
+    next(err)
+  } finally {
+    client.release()
+  }
 })
 
-// Get single tenant
 router.get('/tenants/:id', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('*, tenant_users(id, user_id, role)')
-      .eq('id', req.params.id)
-      .single()
-    if (error) return res.status(404).json({ error: 'المستأجر غير موجود' })
-    res.json(data)
+    const tenant = await selectOne('tenants', { id: req.params.id })
+    if (!tenant) return res.status(404).json({ error: 'المستأجر غير موجود' })
+
+    const { rows: users } = await pool.query(
+      `SELECT id, user_id, role FROM tenant_users WHERE tenant_id = $1`,
+      [req.params.id]
+    )
+    res.json({ ...tenant, tenant_users: users })
   } catch (err) { next(err) }
 })
 
-// Update tenant (subscription dates, status, allowed_input_types, etc.)
 router.put('/tenants/:id', async (req, res, next) => {
   try {
     const allowed = [
@@ -228,28 +210,30 @@ router.put('/tenants/:id', async (req, res, next) => {
       'commercial_registration','primary_phone','account_number',
       'cenomi_api_token',
     ]
-    const updates = {}
+    const patch = {}
     for (const k of allowed) {
-      if (req.body[k] !== undefined) updates[k] = req.body[k]
+      if (req.body[k] !== undefined) {
+        patch[k] = k === 'allowed_input_types' ? JSON.stringify(req.body[k]) : req.body[k]
+      }
     }
-    if (req.body.max_branches !== undefined) updates.max_branches = parseInt(req.body.max_branches) || 5
-    if (req.body.plan_id !== undefined) updates.plan_id = req.body.plan_id || null
-    const { data, error } = await supabase
-      .from('tenants')
-      .update(updates)
-      .eq('id', req.params.id)
-      .select()
-      .single()
-    if (error) return res.status(400).json({ error: error.message })
+    if (req.body.max_branches !== undefined) patch.max_branches = parseInt(req.body.max_branches) || 5
+    if (req.body.plan_id !== undefined)      patch.plan_id      = req.body.plan_id || null
+
+    if (!Object.keys(patch).length) return res.status(422).json({ error: 'لا توجد تحديثات' })
+
+    const data = await updateOne('tenants', { id: req.params.id }, patch)
+    if (!data) return res.status(404).json({ error: 'المستأجر غير موجود' })
     res.json(data)
-  } catch (err) { next(err) }
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'الرمز المختصر مستخدم مسبقاً' })
+    next(err)
+  }
 })
 
-// Delete tenant
 router.delete('/tenants/:id', async (req, res, next) => {
   try {
-    const { error } = await supabase.from('tenants').delete().eq('id', req.params.id)
-    if (error) return res.status(400).json({ error: error.message })
+    const n = await deleteWhere('tenants', { id: req.params.id })
+    if (!n) return res.status(404).json({ error: 'المستأجر غير موجود' })
     res.json({ message: 'تم حذف المستأجر بنجاح' })
   } catch (err) { next(err) }
 })
@@ -262,251 +246,232 @@ const ALL_FIELDS = [
   'sale_date','month','year','amount','status',
 ]
 
-// List API keys for a tenant
 router.get('/tenants/:id/api-keys', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('id,tenant_id,label,key_prefix,allowed_fields,is_active,last_used_at,expires_at,created_at')
-      .eq('tenant_id', req.params.id)
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    res.json({ keys: data, all_fields: ALL_FIELDS })
+    const { rows } = await pool.query(
+      `SELECT id, tenant_id, label, key_prefix, allowed_fields, is_active,
+              last_used_at, expires_at, created_at
+       FROM api_keys WHERE tenant_id = $1 ORDER BY created_at DESC`,
+      [req.params.id]
+    )
+    res.json({ keys: rows, all_fields: ALL_FIELDS })
   } catch (err) { next(err) }
 })
 
-// Create new API key for a tenant
 router.post('/tenants/:id/api-keys', async (req, res, next) => {
   try {
     const { label, allowed_fields, expires_at } = req.body
     if (!label) return res.status(422).json({ error: 'اسم المفتاح مطلوب' })
 
-    // Generate key: msk_ + 32 random hex chars
-    const rawKey   = 'msk_' + crypto.randomBytes(20).toString('hex')
-    const prefix   = rawKey.slice(0, 12)
-    const keyHash  = crypto.createHash('sha256').update(rawKey).digest('hex')
+    const rawKey  = 'msk_' + crypto.randomBytes(20).toString('hex')
+    const prefix  = rawKey.slice(0, 12)
+    const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex')
 
-    const { data, error } = await supabase
-      .from('api_keys')
-      .insert({
-        tenant_id:      req.params.id,
-        label,
-        key_prefix:     prefix,
-        key_hash:       keyHash,
-        allowed_fields: allowed_fields || ['contract_number','period_from_date','period_to_date','amount'],
-        is_active:      true,
-        expires_at:     expires_at || null,
-      })
-      .select('id,tenant_id,label,key_prefix,allowed_fields,is_active,expires_at,created_at')
-      .single()
-    if (error) throw error
-
-    // Return the raw key ONCE — never stored in DB
-    res.status(201).json({ ...data, raw_key: rawKey, all_fields: ALL_FIELDS })
+    const { rows } = await pool.query(
+      `INSERT INTO api_keys
+         (tenant_id, label, key_prefix, key_hash, allowed_fields, is_active, expires_at)
+       VALUES ($1, $2, $3, $4, $5::jsonb, true, $6)
+       RETURNING id, tenant_id, label, key_prefix, allowed_fields, is_active, expires_at, created_at`,
+      [
+        req.params.id, label, prefix, keyHash,
+        JSON.stringify(allowed_fields || ['contract_number','period_from_date','period_to_date','amount']),
+        expires_at || null,
+      ]
+    )
+    res.status(201).json({ ...rows[0], raw_key: rawKey, all_fields: ALL_FIELDS })
   } catch (err) { next(err) }
 })
 
-// Update API key (allowed_fields, is_active, expires_at, label)
 router.put('/api-keys/:keyId', async (req, res, next) => {
   try {
     const allowed = ['label','allowed_fields','is_active','expires_at']
-    const updates = {}
+    const patch = {}
     for (const k of allowed) {
-      if (req.body[k] !== undefined) updates[k] = req.body[k]
+      if (req.body[k] !== undefined) {
+        patch[k] = k === 'allowed_fields' ? JSON.stringify(req.body[k]) : req.body[k]
+      }
     }
-    const { data, error } = await supabase
-      .from('api_keys')
-      .update(updates)
-      .eq('id', req.params.keyId)
-      .select('id,tenant_id,label,key_prefix,allowed_fields,is_active,expires_at,created_at')
-      .single()
-    if (error) return res.status(400).json({ error: error.message })
+    if (!Object.keys(patch).length) return res.status(422).json({ error: 'لا توجد تحديثات' })
+
+    const data = await updateOne(
+      'api_keys',
+      { id: req.params.keyId },
+      patch,
+      'id, tenant_id, label, key_prefix, allowed_fields, is_active, expires_at, created_at'
+    )
+    if (!data) return res.status(404).json({ error: 'المفتاح غير موجود' })
     res.json(data)
   } catch (err) { next(err) }
 })
 
-// Revoke / delete API key
 router.delete('/api-keys/:keyId', async (req, res, next) => {
   try {
-    const { error } = await supabase.from('api_keys').delete().eq('id', req.params.keyId)
-    if (error) return res.status(400).json({ error: error.message })
+    const n = await deleteWhere('api_keys', { id: req.params.keyId })
+    if (!n) return res.status(404).json({ error: 'المفتاح غير موجود' })
     res.json({ message: 'تم حذف المفتاح بنجاح' })
   } catch (err) { next(err) }
 })
 
-// ── TENANT BRANCHES (for BotSubscriberForm branch dropdown) ──────────────────
+// ── TENANT BRANCHES ──────────────────────────────────────────────────────────
 
-// List branches belonging to a tenant
 router.get('/tenants/:id/branches', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('branches')
-      .select('id, code, name, brand_name')
-      .eq('tenant_id', req.params.id)
-      .order('code', { ascending: true })
-    if (error) throw error
-    res.json(data || [])
+    const { rows } = await pool.query(
+      `SELECT id, code, name, brand_name FROM branches
+       WHERE tenant_id = $1 ORDER BY code ASC`,
+      [req.params.id]
+    )
+    res.json(rows)
   } catch (err) { next(err) }
 })
 
 // ── USER MANAGEMENT ───────────────────────────────────────────────────────────
 
-// List ALL registered users (assigned + pending) — super-admins excluded
 router.get('/users', async (req, res, next) => {
   try {
-    const [usersResult, tenantUsersResult, superAdminsResult] = await Promise.all([
-      supabase.auth.admin.listUsers(),
-      supabase.from('tenant_users').select('user_id, role, tenants(id, name)'),
-      supabase.from('super_admins').select('user_id'),
-    ])
+    const { rows } = await pool.query(
+      `SELECT
+         u.id, u.email, u.full_name, u.phone, u.created_at AS registered_at,
+         tu.role,
+         t.id   AS tenant_id,
+         t.name AS tenant_name,
+         EXISTS(SELECT 1 FROM super_admins sa WHERE sa.user_id = u.id) AS is_super_admin
+       FROM app_users u
+       LEFT JOIN tenant_users tu ON tu.user_id = u.id
+       LEFT JOIN tenants t       ON t.id = tu.tenant_id`
+    )
 
-    if (usersResult.error) throw usersResult.error
-    if (tenantUsersResult.error) throw tenantUsersResult.error
-    // super_admins errors are non-fatal — if it fails, just show all users
-
-    const authUsers = usersResult.data?.users || []
-    const tenantUsers = tenantUsersResult.data || []
-    const superAdminIds = new Set((superAdminsResult.data || []).map(sa => sa.user_id))
-
-    const assignmentMap = {}
-    for (const tu of tenantUsers) {
-      assignmentMap[tu.user_id] = {
-        tenant_id:   tu.tenants?.id,
-        tenant_name: tu.tenants?.name,
-        role:        tu.role,
-      }
-    }
-
-    const result = authUsers
-      .filter(u => !superAdminIds.has(u.id))   // hide super-admins from the list
-      .map(u => {
-        const a = assignmentMap[u.id] || null
-        return {
-          id:            u.id,
-          email:         u.email,
-          full_name:     u.user_metadata?.full_name || u.user_metadata?.name || null,
-          phone:         u.user_metadata?.phone || u.phone || null,
-          status:        a ? 'assigned' : 'pending',
-          tenant_id:     a?.tenant_id   || null,
-          tenant_name:   a?.tenant_name || null,
-          role:          a?.role        || null,
-          registered_at: u.created_at,
-        }
-      })
+    const result = rows
+      .filter(u => !u.is_super_admin)
+      .map(u => ({
+        id:            u.id,
+        email:         u.email,
+        full_name:     u.full_name || null,
+        phone:         u.phone || null,
+        status:        u.tenant_id ? 'assigned' : 'pending',
+        tenant_id:     u.tenant_id   || null,
+        tenant_name:   u.tenant_name || null,
+        role:          u.role        || null,
+        registered_at: u.registered_at,
+      }))
 
     res.json(result)
   } catch (err) { next(err) }
 })
 
-// Create user (by admin — email auto-confirmed)
 router.post('/users', async (req, res, next) => {
   try {
     const { email, password, full_name, phone } = req.body
     if (!email)    return res.status(422).json({ error: 'البريد الإلكتروني مطلوب' })
     if (!password) return res.status(422).json({ error: 'كلمة المرور مطلوبة' })
 
-    const { data, error } = await supabase.auth.admin.createUser({
-      email, password,
-      user_metadata: { full_name: full_name || '', phone: phone || '' },
-      email_confirm: true,
-    })
-    if (error) throw error
-    res.status(201).json({ id: data.user.id, email: data.user.email })
-  } catch (err) { next(err) }
+    const passwordHash = await hashPassword(password)
+    const { rows } = await pool.query(
+      `INSERT INTO app_users (email, password_hash, full_name, phone, email_confirmed_at)
+       VALUES ($1, $2, $3, $4, now()) RETURNING id, email`,
+      [email, passwordHash, full_name || '', phone || '']
+    )
+    res.status(201).json(rows[0])
+  } catch (err) {
+    if (err.code === '23505') return res.status(422).json({ error: 'البريد الإلكتروني مستخدم مسبقاً' })
+    next(err)
+  }
 })
 
-// Assign user to tenant
 router.post('/users/:id/assign', async (req, res, next) => {
+  const client = await pool.connect()
   try {
     const { tenant_id, role } = req.body
     if (!tenant_id) return res.status(422).json({ error: 'يرجى اختيار المستأجر' })
 
-    // Remove any existing assignment first, then insert the new one.
-    // Using delete+insert avoids the ON CONFLICT constraint requirement.
-    const { error: delErr } = await supabase
-      .from('tenant_users')
-      .delete()
-      .eq('user_id', req.params.id)
-    if (delErr) throw delErr
-
-    const { error: insErr } = await supabase
-      .from('tenant_users')
-      .insert({ user_id: req.params.id, tenant_id, role: role || 'member' })
-    if (insErr) throw insErr
+    await client.query('BEGIN')
+    await client.query(`DELETE FROM tenant_users WHERE user_id = $1`, [req.params.id])
+    await client.query(
+      `INSERT INTO tenant_users (user_id, tenant_id, role) VALUES ($1, $2, $3)`,
+      [req.params.id, tenant_id, role || 'member']
+    )
+    await client.query('COMMIT')
 
     res.json({ message: 'تم تعيين المستخدم بنجاح' })
-  } catch (err) { next(err) }
+  } catch (err) {
+    try { await client.query('ROLLBACK') } catch { /* ignore */ }
+    next(err)
+  } finally {
+    client.release()
+  }
 })
 
-// Update user (name, phone, password, tenant assignment, role)
 router.put('/users/:id', async (req, res, next) => {
+  const client = await pool.connect()
   try {
     const { full_name, phone, new_password, tenant_id, role } = req.body
 
-    const updates = { user_metadata: { full_name: full_name || '', phone: phone || '' } }
-    if (new_password) updates.password = new_password
+    await client.query('BEGIN')
 
-    const { error: authErr } = await supabase.auth.admin.updateUserById(req.params.id, updates)
-    if (authErr) throw authErr
+    const patch = {}
+    if (full_name !== undefined) patch.full_name = full_name
+    if (phone !== undefined)     patch.phone = phone
+    if (new_password)            patch.password_hash = await hashPassword(new_password)
 
-    if (tenant_id) {
-      // delete+insert to avoid ON CONFLICT constraint requirement
-      const { error: delErr } = await supabase
-        .from('tenant_users')
-        .delete()
-        .eq('user_id', req.params.id)
-      if (delErr) throw delErr
-
-      const { error: tuErr } = await supabase
-        .from('tenant_users')
-        .insert({ user_id: req.params.id, tenant_id, role: role || 'member' })
-      if (tuErr) throw tuErr
-    } else {
-      await supabase.from('tenant_users').delete().eq('user_id', req.params.id)
+    if (Object.keys(patch).length) {
+      const cols = Object.keys(patch)
+      const setSql = cols.map((c, i) => `${c} = $${i + 1}`).join(', ')
+      await client.query(
+        `UPDATE app_users SET ${setSql}, updated_at = now() WHERE id = $${cols.length + 1}`,
+        [...cols.map(c => patch[c]), req.params.id]
+      )
     }
 
+    if (tenant_id) {
+      await client.query(`DELETE FROM tenant_users WHERE user_id = $1`, [req.params.id])
+      await client.query(
+        `INSERT INTO tenant_users (user_id, tenant_id, role) VALUES ($1, $2, $3)`,
+        [req.params.id, tenant_id, role || 'member']
+      )
+    } else {
+      await client.query(`DELETE FROM tenant_users WHERE user_id = $1`, [req.params.id])
+    }
+
+    await client.query('COMMIT')
     res.json({ message: 'تم تحديث المستخدم بنجاح' })
-  } catch (err) { next(err) }
+  } catch (err) {
+    try { await client.query('ROLLBACK') } catch { /* ignore */ }
+    next(err)
+  } finally {
+    client.release()
+  }
 })
 
-// Delete user
 router.delete('/users/:id', async (req, res, next) => {
   try {
-    await supabase.from('tenant_users').delete().eq('user_id', req.params.id)
-    const { error } = await supabase.auth.admin.deleteUser(req.params.id)
-    if (error) throw error
+    // Cascades via FK ON DELETE CASCADE on tenant_users.user_id
+    const n = await deleteWhere('app_users', { id: req.params.id })
+    if (!n) return res.status(404).json({ error: 'المستخدم غير موجود' })
     res.json({ message: 'تم حذف المستخدم' })
   } catch (err) { next(err) }
 })
 
 // ── BOT SUBSCRIBERS ───────────────────────────────────────────────────────────
 
-// List all bot subscribers
 router.get('/bot-subscribers', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('bot_subscribers')
-      .select('id,tenant_id,tenant_name,platform,chat_id,contact_name,is_active,last_message_at,created_at')
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    res.json(data || [])
+    const { rows } = await pool.query(
+      `SELECT id, tenant_id, tenant_name, platform, chat_id, contact_name,
+              is_active, last_message_at, created_at
+       FROM bot_subscribers ORDER BY created_at DESC`
+    )
+    res.json(rows)
   } catch (err) { next(err) }
 })
 
-// Get single subscriber
 router.get('/bot-subscribers/:id', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('bot_subscribers')
-      .select('*')
-      .eq('id', req.params.id)
-      .single()
-    if (error) return res.status(404).json({ error: 'المشترك غير موجود' })
-    res.json(data)
+    const sub = await selectOne('bot_subscribers', { id: req.params.id })
+    if (!sub) return res.status(404).json({ error: 'المشترك غير موجود' })
+    res.json(sub)
   } catch (err) { next(err) }
 })
 
-// Create subscriber
 router.post('/bot-subscribers', async (req, res, next) => {
   try {
     const { tenant_id, platform, chat_id, contact_name, tenant_name } = req.body
@@ -515,105 +480,90 @@ router.post('/bot-subscribers', async (req, res, next) => {
     if (!chat_id)     return res.status(422).json({ error: 'معرّف المحادثة مطلوب' })
     if (!tenant_name) return res.status(422).json({ error: 'اسم المستأجر مطلوب' })
 
-    const { data, error } = await supabase
-      .from('bot_subscribers')
-      .insert({ tenant_id, platform, chat_id, contact_name: contact_name || null, tenant_name })
-      .select()
-      .single()
-    if (error) {
-      if (error.code === '23505') return res.status(409).json({ error: 'هذا المشترك مسجّل مسبقاً على نفس المنصة' })
-      throw error
+    try {
+      const data = await insertOne('bot_subscribers', {
+        tenant_id, platform, chat_id,
+        contact_name: contact_name || null,
+        tenant_name,
+      })
+      res.status(201).json(data)
+    } catch (e) {
+      if (e.code === '23505') return res.status(409).json({ error: 'هذا المشترك مسجّل مسبقاً على نفس المنصة' })
+      throw e
     }
-    res.status(201).json(data)
   } catch (err) { next(err) }
 })
 
-// Update subscriber (is_active, contact_name, branch reassignment, etc.)
 router.put('/bot-subscribers/:id', async (req, res, next) => {
   try {
     const allowed = ['platform', 'chat_id', 'contact_name', 'is_active', 'tenant_name']
-    const updates = {}
+    const patch = {}
     for (const k of allowed) {
-      if (req.body[k] !== undefined) updates[k] = req.body[k]
+      if (req.body[k] !== undefined) patch[k] = req.body[k]
     }
-    const { data, error } = await supabase
-      .from('bot_subscribers')
-      .update(updates)
-      .eq('id', req.params.id)
-      .select()
-      .single()
-    if (error) return res.status(400).json({ error: error.message })
+    if (!Object.keys(patch).length) return res.status(422).json({ error: 'لا توجد تحديثات' })
+
+    const data = await updateOne('bot_subscribers', { id: req.params.id }, patch)
+    if (!data) return res.status(404).json({ error: 'المشترك غير موجود' })
     res.json(data)
   } catch (err) { next(err) }
 })
 
-// Delete subscriber
 router.delete('/bot-subscribers/:id', async (req, res, next) => {
   try {
-    const { error } = await supabase.from('bot_subscribers').delete().eq('id', req.params.id)
-    if (error) return res.status(400).json({ error: error.message })
+    const n = await deleteWhere('bot_subscribers', { id: req.params.id })
+    if (!n) return res.status(404).json({ error: 'المشترك غير موجود' })
     res.json({ message: 'تم حذف المشترك بنجاح' })
   } catch (err) { next(err) }
 })
 
 // ── SUPPORT TICKETS ────────────────────────────────────────────────────────
 
-// List all tickets
 router.get('/tickets', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .select('id,ticket_number,tenant_id,tenant_name,submitter_name,submitter_email,title,category,status,created_at')
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    res.json(data)
+    const { rows } = await pool.query(
+      `SELECT id, ticket_number, tenant_id, tenant_name, submitter_name,
+              submitter_email, title, category, status, created_at
+       FROM support_tickets ORDER BY created_at DESC`
+    )
+    res.json(rows)
   } catch (err) { next(err) }
 })
 
-// Get single ticket (enriched with tenant phone + branch count)
 router.get('/tickets/:id', async (req, res, next) => {
   try {
-    const { data: ticket, error } = await supabase
-      .from('support_tickets')
-      .select('*')
-      .eq('id', req.params.id)
-      .single()
-    if (error) return res.status(404).json({ error: 'التذكرة غير موجودة' })
+    const ticket = await selectOne('support_tickets', { id: req.params.id })
+    if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' })
 
-    // Enrich with tenant phone and branch count if tenant_id is known
     let tenant_phone = null
     let branch_count = null
     if (ticket.tenant_id) {
-      const [{ data: tenant }, { count }] = await Promise.all([
-        supabase.from('tenants').select('primary_phone').eq('id', ticket.tenant_id).single(),
-        supabase.from('branches').select('id', { count: 'exact', head: true }).eq('tenant_id', ticket.tenant_id),
+      const [tenantRes, branchRes] = await Promise.all([
+        pool.query(`SELECT primary_phone FROM tenants WHERE id = $1`, [ticket.tenant_id]),
+        pool.query(`SELECT count(*)::int AS n FROM branches WHERE tenant_id = $1`, [ticket.tenant_id]),
       ])
-      tenant_phone = tenant?.primary_phone || null
-      branch_count = count ?? null
+      tenant_phone = tenantRes.rows[0]?.primary_phone || null
+      branch_count = branchRes.rows[0]?.n ?? null
     }
 
     res.json({ ...ticket, tenant_phone, branch_count })
   } catch (err) { next(err) }
 })
 
-// Update ticket (status, admin_comment)
 router.put('/tickets/:id', async (req, res, next) => {
   try {
     const allowed = ['status', 'admin_comment']
-    const updates = { updated_at: new Date().toISOString() }
+    const patch = {}
     for (const k of allowed) {
-      if (req.body[k] !== undefined) updates[k] = req.body[k]
+      if (req.body[k] !== undefined) patch[k] = req.body[k]
     }
-    if (updates.status && !['new', 'in_progress', 'resolved'].includes(updates.status)) {
+    if (patch.status && !['new', 'in_progress', 'resolved'].includes(patch.status)) {
       return res.status(422).json({ error: 'حالة غير صحيحة' })
     }
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .update(updates)
-      .eq('id', req.params.id)
-      .select()
-      .single()
-    if (error) return res.status(400).json({ error: error.message })
+    if (!Object.keys(patch).length) return res.status(422).json({ error: 'لا توجد تحديثات' })
+
+    const data = await updateOne('support_tickets', { id: req.params.id }, patch)
+    if (!data) return res.status(404).json({ error: 'التذكرة غير موجودة' })
     res.json(data)
   } catch (err) { next(err) }
 })

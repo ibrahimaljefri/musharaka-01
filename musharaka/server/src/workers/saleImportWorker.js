@@ -1,13 +1,13 @@
 const { Worker } = require('bullmq')
 const { connection } = require('../config/queue')
 const { saleDistributionService } = require('../services/saleDistributionService')
-const { supabase } = require('../config/supabase')
+const { insertMany } = require('../db/query')
 
 const worker = new Worker('sale-import', async job => {
-  const { rowData, branchId } = job.data
+  const { rowData, branchId, tenantId } = job.data
   const rows = saleDistributionService.expand({ ...rowData, branch_id: branchId })
-  const { error } = await supabase.from('sales').insert(rows)
-  if (error) throw new Error(error.message)
+  const rowsWithTenant = tenantId ? rows.map(r => ({ ...r, tenant_id: tenantId })) : rows
+  await insertMany('sales', rowsWithTenant)
 }, { connection, concurrency: 5 })
 
 worker.on('failed', (job, err) => {

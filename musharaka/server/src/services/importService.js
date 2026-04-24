@@ -1,7 +1,7 @@
 const XLSX = require('xlsx')
 const { z } = require('zod')
 const { saleImportQueue } = require('../config/queue')
-const { supabase } = require('../config/supabase')
+const { pool } = require('../db/query')
 
 const COLUMN_MAP = {
   'input_type':        'input_type',
@@ -57,16 +57,20 @@ function preview(buffer) {
   return rows.slice(0, 100)
 }
 
-async function importFile(buffer, branchId) {
+async function importFile(buffer, branchId, tenantId) {
   const rows     = parseBuffer(buffer)
   const errors   = []
   const warnings = []
   let queued     = 0
 
   // Check for existing sale_dates for this branch (duplicate detection)
-  const { data: existingSales } = await supabase
-    .from('sales').select('sale_date').eq('branch_id', branchId)
-  const existingDates = new Set((existingSales || []).map(s => s.sale_date))
+  const { rows: existingSales } = await pool.query(
+    `SELECT sale_date FROM sales WHERE branch_id = $1`,
+    [branchId]
+  )
+  const existingDates = new Set(existingSales.map(s => s.sale_date instanceof Date
+    ? s.sale_date.toISOString().slice(0, 10)
+    : s.sale_date))
 
   for (let i = 0; i < rows.length; i++) {
     const rowNum = i + 2 // 1-indexed, row 1 is header
@@ -88,7 +92,7 @@ async function importFile(buffer, branchId) {
     try {
       await saleImportQueue.add(
         'import-row',
-        { rowData: data, branchId },
+        { rowData: data, branchId, tenantId },
         { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
       )
       queued++
