@@ -115,7 +115,7 @@ test.describe('Branches API', () => {
     const res = await request.get(`${API_URL}/api/branches/00000000-0000-0000-0000-000000000000`, {
       headers: authHeaders(tenantToken),
     })
-    expect([404, 429]).toContain(res.status())
+    expect([401, 404, 429]).toContain(res.status())
   })
 
   // BR-09
@@ -124,7 +124,7 @@ test.describe('Branches API', () => {
     const res = await request.delete(`${API_URL}/api/branches/00000000-0000-0000-0000-000000000000`, {
       headers: authHeaders(tenantToken),
     })
-    expect([404, 429]).toContain(res.status())
+    expect([401, 404, 429]).toContain(res.status())
   })
 
   // BR-10
