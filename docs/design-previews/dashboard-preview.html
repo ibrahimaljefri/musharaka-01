@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عروة — معاينة لوحة التحكم</title>
+<link rel="stylesheet" href="preview-shared.css">
+<style>
+  .dash-wrap { padding: var(--space-5); }
+  .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); }
+  .dash-title { font-size: 1.5rem; font-weight: 700; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+  .kpi { padding: var(--space-4); }
+  .kpi-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+  .kpi-trend { font-size: 0.75rem; color: var(--success); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .kpi-trend.down { color: var(--error); }
+  .kpi-spark { height: 24px; margin-top: 8px; }
+  .chart-card { margin-bottom: var(--space-5); padding: var(--space-5); }
+  .chart-header { display: flex; justify-content: space-between; margin-bottom: var(--space-4); }
+  .chart-title { font-weight: 600; }
+  .chart-area { height: 200px; background:
+    linear-gradient(180deg, rgba(184,134,11,0.08) 0%, transparent 100%),
+    repeating-linear-gradient(0deg, transparent 0, transparent 39px, var(--border) 39px, var(--border) 40px);
+    border-radius: var(--r-md); position: relative; }
+  .chart-line { position: absolute; inset: 0; }
+  .recent-table { width: 100%; border-collapse: collapse; }
+  .recent-table th { text-align: right; padding: var(--space-3); font-size: 0.75rem; font-weight: 500; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .recent-table td { padding: var(--space-3); font-size: 0.875rem; border-bottom: 1px solid var(--border); }
+  .recent-table tr:hover { background: var(--bg-subtle); }
+  .status-pill { display: inline-block; padding: 2px 10px; border-radius: var(--r-pill); font-size: 0.7rem; font-weight: 500; }
+  .status-pending { background: #FEF3C7; color: #92400E; }
+  .status-submitted { background: #DCFCE7; color: #15803D; }
+  .dark .status-pending { background: #3F2D0F; color: #FBBF24; }
+  .dark .status-submitted { background: #052E16; color: #4ADE80; }
+  @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .kpi-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">🌓 تبديل السمة</button>
+
+<div class="dash-wrap">
+  <div class="dash-header">
+    <div>
+      <div class="dash-title">مرحباً، أحمد 👋</div>
+      <div class="t-small">لوحة تحكم عروة — تنظيمك اليومي</div>
+    </div>
+    <a class="btn btn-primary btn-sm" href="#">+ إضافة مبيعة</a>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi surface brand-edge">
+      <div class="kpi-label">إجمالي المبيعات (الشهر)</div>
+      <div class="kpi-value">١٢٤,٥٨٠ ر.س</div>
+      <div class="kpi-trend">▲ ١٢٪ عن الشهر السابق</div>
+      <svg class="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+        <polyline points="0,18 15,14 30,16 45,10 60,12 75,6 90,8 100,4" fill="none" stroke="#B8860B" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="kpi surface">
+      <div class="kpi-label">عدد الفواتير</div>
+      <div class="kpi-value">٣٤٢</div>
+      <div class="kpi-trend">▲ ٨٪</div>
+      <svg class="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+        <polyline points="0,20 15,16 30,18 45,12 60,14 75,8 90,10 100,6" fill="none" stroke="#B8860B" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="kpi surface">
+      <div class="kpi-label">الفروع النشطة</div>
+      <div class="kpi-value">٨</div>
+      <div class="kpi-trend">▲ فرعان جديدان</div>
+      <svg class="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+        <polyline points="0,22 15,22 30,18 45,18 60,12 75,12 90,8 100,8" fill="none" stroke="#B8860B" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="kpi surface">
+      <div class="kpi-label">بانتظار الإرسال</div>
+      <div class="kpi-value">١٨</div>
+      <div class="kpi-trend down">▼ يحتاج مراجعة</div>
+      <svg class="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+        <polyline points="0,6 15,8 30,12 45,10 60,14 75,12 90,16 100,18" fill="none" stroke="#B91C1C" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="surface chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">المبيعات الشهرية</div>
+        <div class="t-micro">آخر ٣٠ يوم</div>
+      </div>
+      <div style="display:flex; gap: 6px;">
+        <button class="btn btn-ghost btn-sm">يومي</button>
+        <button class="btn btn-ghost btn-sm" style="background: var(--brand-soft); color: var(--brand-ink);">شهري</button>
+        <button class="btn btn-ghost btn-sm">سنوي</button>
+      </div>
+    </div>
+    <div class="chart-area">
+      <svg class="chart-line" viewBox="0 0 600 200" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#B8860B" stop-opacity="0.3"/>
+            <stop offset="1" stop-color="#B8860B" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,150 L60,130 L120,140 L180,90 L240,110 L300,60 L360,75 L420,40 L480,55 L540,30 L600,45 L600,200 L0,200 Z" fill="url(#grad)"/>
+        <polyline points="0,150 60,130 120,140 180,90 240,110 300,60 360,75 420,40 480,55 540,30 600,45" fill="none" stroke="#B8860B" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="surface" style="padding: 0; overflow: hidden;">
+    <div style="padding: var(--space-4) var(--space-5); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
+      <div class="chart-title">آخر المبيعات</div>
+      <a href="#" class="t-small" style="color: var(--brand);">عرض الكل ←</a>
+    </div>
+    <table class="recent-table">
+      <thead>
+        <tr><th>الفرع</th><th>رقم الفاتورة</th><th>المبلغ</th><th>التاريخ</th><th>الحالة</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>فرع الرياض — مول العرب</td><td>INV-2026-342</td><td class="t-mono">٥,٨٤٠ ر.س</td><td>٢٤ أبريل</td><td><span class="status-pill status-submitted">مُرسل</span></td></tr>
+        <tr><td>فرع جدة — النخيل</td><td>INV-2026-341</td><td class="t-mono">٣,٢٠٠ ر.س</td><td>٢٤ أبريل</td><td><span class="status-pill status-submitted">مُرسل</span></td></tr>
+        <tr><td>فرع الدمام — الظهران</td><td>INV-2026-340</td><td class="t-mono">٧,١٢٠ ر.س</td><td>٢٣ أبريل</td><td><span class="status-pill status-pending">معلّق</span></td></tr>
+        <tr><td>فرع الرياض — الرياض بارك</td><td>INV-2026-339</td><td class="t-mono">٤,٥٦٠ ر.س</td><td>٢٣ أبريل</td><td><span class="status-pill status-pending">معلّق</span></td></tr>
+        <tr><td>فرع مكة — أبراج البيت</td><td>INV-2026-338</td><td class="t-mono">٩,٨٠٠ ر.س</td><td>٢٣ أبريل</td><td><span class="status-pill status-submitted">مُرسل</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

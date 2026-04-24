@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عروة — معاينات التصميم</title>
+<link rel="stylesheet" href="preview-shared.css">
+<style>
+  body { direction: rtl; }
+  .hub { max-width: 1400px; margin: 0 auto; padding: var(--space-6) var(--space-5); }
+  .hub-header { margin-bottom: var(--space-6); }
+  .hub-title { font-size: 2rem; font-weight: 800; margin-bottom: var(--space-2); }
+  .hub-sub { color: var(--text-sec); max-width: 700px; line-height: 1.7; }
+  .preview-nav { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
+  .nav-tab { padding: 8px 16px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--border); cursor: pointer; font: 500 0.875rem 'Tajawal'; color: var(--text-sec); text-decoration: none; }
+  .nav-tab.active { background: var(--brand); color: white; border-color: var(--brand); }
+  .viewport-toolbar { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); align-items: center; flex-wrap: wrap; }
+  .vp-btn { padding: 6px 14px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface); cursor: pointer; font: 500 0.8rem 'Tajawal'; }
+  .vp-btn.active { background: var(--brand-soft); color: var(--brand-ink); border-color: var(--brand); }
+  .frame-grid { display: grid; gap: var(--space-5); grid-template-columns: 375px 768px 1fr; }
+  .frame { background: var(--surface); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+  .frame-label { padding: 8px 12px; background: #27272A; color: #E4E4E7; font-size: 12px; font-weight: 500; text-align: left; direction: ltr; }
+  .frame-label .size { color: #A1A1AA; margin-inline-start: 8px; }
+  .frame iframe { width: 100%; flex: 1; border: 0; background: #FFF; min-height: 600px; }
+  .frame.desktop iframe { min-height: 800px; }
+  .notes { padding: var(--space-4); background: var(--brand-soft); color: var(--brand-ink); border-radius: var(--r-md); margin-bottom: var(--space-5); font-size: 0.9rem; }
+  .notes strong { display: block; margin-bottom: 6px; }
+  @media (max-width: 1400px) {
+    .frame-grid { grid-template-columns: 1fr; }
+    .frame-grid .frame { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">🌓 تبديل السمة</button>
+
+<div class="hub">
+  <div class="hub-header">
+    <div class="hub-title">معاينات التصميم — عروة</div>
+    <p class="hub-sub">
+      نسخة أولية من التصميم الجديد قبل التطبيق على الكود الفعلي. كل معاينة معروضة بثلاثة أحجام (موبايل ٣٧٥بكسل، جهاز لوحي ٧٦٨بكسل، سطح مكتب كامل) وتدعم السمة الفاتحة والداكنة. راجع كل صفحة واتخذ قراراً بالموافقة أو طلب تعديلات قبل الشروع في تنفيذ الواجهات الكاملة.
+    </p>
+  </div>
+
+  <div class="notes">
+    <strong>⚠ ملاحظات مهمة قبل المراجعة</strong>
+    • أرقام WhatsApp للمبيعات المسبقة في معاينة الصفحة الرئيسية هي أرقام احتياطية (‎+966 5X XXX XXXX‎) — يُرجى تزويدنا بالأرقام الفعلية.<br>
+    • الأيقونات مخصصة (SVG) وليست emoji — تحل محل المظهر الآلي الحالي.<br>
+    • التصميم فاتح افتراضياً مع إمكانية التبديل للداكن (زر أعلى الشاشة).<br>
+    • جميع الملفات مستقلة (HTML + CSS فقط) ويمكن فتحها بدون خادم.
+  </div>
+
+  <div class="preview-nav">
+    <a class="nav-tab active" data-preview="landing-preview.html">الصفحة الرئيسية</a>
+    <a class="nav-tab" data-preview="dashboard-preview.html">لوحة التحكم</a>
+    <a class="nav-tab" data-preview="sale-create-preview.html">إضافة مبيعة</a>
+    <a class="nav-tab" data-preview="admin-tenants-preview.html">إدارة العملاء</a>
+    <a class="nav-tab" data-preview="login-preview.html">تسجيل الدخول</a>
+  </div>
+
+  <div class="frame-grid">
+    <div class="frame">
+      <div class="frame-label">📱 Mobile<span class="size">375 × 720</span></div>
+      <iframe data-frame="mobile" src="landing-preview.html" style="width: 375px;"></iframe>
+    </div>
+    <div class="frame">
+      <div class="frame-label">📱 Tablet<span class="size">768 × 900</span></div>
+      <iframe data-frame="tablet" src="landing-preview.html" style="width: 768px;"></iframe>
+    </div>
+    <div class="frame desktop">
+      <div class="frame-label">💻 Desktop<span class="size">1440+ × 900</span></div>
+      <iframe data-frame="desktop" src="landing-preview.html"></iframe>
+    </div>
+  </div>
+
+  <div style="margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.875rem;">
+    معاينات المرحلة ٠ · فرع git: <code>redesign</code> · مولد في ٢٠٢٦/٠٤/٢٤
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const src = tab.dataset.preview;
+      document.querySelectorAll('iframe').forEach(f => f.src = src);
+    });
+  });
+</script>
+</body>
+</html>
