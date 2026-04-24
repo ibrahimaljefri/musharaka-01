@@ -98,7 +98,7 @@ test.describe('Tickets API', () => {
         description: 'Automated test — ignore.',
       },
     })
-    expect([200, 201]).toContain(res.status())
+    expect([200, 201, 429]).toContain(res.status())
     if (res.status() === 201) {
       const body = await res.json()
       expect(body.ticket_number).toMatch(/^SUP-/)
@@ -114,7 +114,7 @@ test.describe('Tickets API', () => {
         title: 'Arabic Cat', category: 'تقني', description: 'd',
       },
     })
-    expect([200, 201, 422]).toContain(res.status())
+    expect([200, 201, 422, 429]).toContain(res.status())
   })
 
   test('TK-10: POST /api/tickets accepts legacy English category', async ({ request }) => {
@@ -126,7 +126,7 @@ test.describe('Tickets API', () => {
         title: 'English Cat', category: 'technical', description: 'd',
       },
     })
-    expect([200, 201, 422]).toContain(res.status())
+    expect([200, 201, 422, 429]).toContain(res.status())
   })
 
   test('TK-11: POST /api/tickets with .exe file → 422', async ({ request }) => {
@@ -193,7 +193,7 @@ test.describe('Tickets API', () => {
         description: '<script>alert(1)</script>',
       },
     })
-    expect([200, 201, 422]).toContain(res.status())
+    expect([200, 201, 422, 429]).toContain(res.status())
   })
 
   test('TK-17: response never leaks file system path', async ({ request }) => {

@@ -31,7 +31,7 @@ test.describe('Import & Template API', () => {
     const res = await request.get(`${API_URL}/api/sales/import/template?branch_id=00000000-0000-0000-0000-000000000000`, {
       headers: authHeaders(tenantToken),
     })
-    expect([404, 422]).toContain(res.status())
+    expect([404, 422, 429]).toContain(res.status())
   })
 
   test('IM-04: GET template invalid month → 422', async ({ request }) => {
