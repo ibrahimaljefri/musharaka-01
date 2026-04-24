@@ -388,16 +388,35 @@
   display: flex;
   flex-direction: column;
   padding: 28px 24px;
-  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+  background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-md), var(--ring-top);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+  cursor: pointer;
 }
+.pricing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(184, 134, 11, 0.25), var(--ring-top);
+  border-color: var(--brand);
+}
+.pricing-card:nth-child(1) { background: linear-gradient(180deg, #FEFCE8 0%, #FEF3C7 100%); }
+.pricing-card:nth-child(2) { background: linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%); border-color: var(--brand); }
+.pricing-card:nth-child(3) { background: linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%); }
+.dark .pricing-card:nth-child(1) { background: linear-gradient(180deg, #1F1A07 0%, #2D2410 100%); }
+.dark .pricing-card:nth-child(2) { background: linear-gradient(180deg, #2D2410 0%, #3F2D0F 100%); border-color: var(--brand); }
+.dark .pricing-card:nth-child(3) { background: linear-gradient(180deg, #1F1A07 0%, #3D2914 100%); }
 .pricing-card.highlight {
-  background: linear-gradient(180deg, var(--surface) 0%, var(--brand-soft) 100%);
-  border: 1.5px solid var(--brand);
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(184, 134, 11, 0.2), var(--ring-top);
+  box-shadow: 0 12px 40px rgba(184, 134, 11, 0.25), var(--ring-top);
+}
+.pricing-card.highlight:hover {
+  transform: translateY(-10px);
+}
+.pricing-cta-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
 }
 .pricing-card .badge {
   align-self: flex-start;
@@ -916,7 +935,6 @@
       <p class="desc">للمراكز الصغيرة</p>
       <div class="price"><span class="amount">999</span><span class="currency">ر.س / سنة</span></div>
       <p class="monthly">83 ر.س / شهر</p>
-      <button class="btn btn-ghost">ابدأ الآن</button>
     </div>
 
     <div class="pricing-card highlight">
@@ -924,7 +942,6 @@
       <p class="desc">للسلاسل المتنامية</p>
       <div class="price"><span class="amount">1,999</span><span class="currency">ر.س / سنة</span></div>
       <p class="monthly">167 ر.س / شهر</p>
-      <button class="btn btn-primary">ابدأ الآن</button>
     </div>
 
     <div class="pricing-card">
@@ -932,8 +949,13 @@
       <p class="desc">للشبكات الكبيرة</p>
       <div class="price"><span class="amount">3,999</span><span class="currency">ر.س / سنة</span></div>
       <p class="monthly">333 ر.س / شهر</p>
-      <button class="btn btn-ghost" onclick="document.getElementById('contactModal').classList.add('open')">تواصل معنا</button>
     </div>
+  </div>
+
+  <div class="pricing-cta-row">
+    <button class="btn btn-primary" onclick="document.getElementById('contactModal').classList.add('open')" style="padding: 14px 32px; font-size: 1rem;">
+      تواصل معنا للاشتراك
+    </button>
   </div>
 </section>
 
