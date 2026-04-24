@@ -561,7 +561,7 @@
     <div class="nav-links">
       <a href="#features" class="nav-link">الميزات</a>
       <a href="#how" class="nav-link">كيف يعمل؟</a>
-      <a href="#contact" class="nav-link">تواصل معنا</a>
+      <a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('contactModal').classList.add('open')">تواصل معنا</a>
       <a href="#pricing" class="nav-link">الأسعار</a>
     </div>
     <div class="nav-cta">
@@ -824,7 +824,7 @@
         <li>مدير حساب مخصص</li>
         <li>دعم 24/7 هاتفي</li>
       </ul>
-      <button class="btn btn-ghost">تواصل معنا</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('contactModal').classList.add('open')">تواصل معنا</button>
     </div>
   </div>
 </section>
@@ -844,19 +844,8 @@
   };
 </script>
 
-<!-- ───────── Contact (inline section) ─────────────────────────────────────── -->
-<section class="contact" id="contact">
-  <div class="contact-inner">
-    <h2>تواصل مع فريق المبيعات</h2>
-    <p>فريق ما قبل البيع جاهز للإجابة على استفساراتك خلال ساعات العمل</p>
-
-    <div class="contact-cards" id="contactCards"><!-- injected by JS --></div>
-
-    <p class="email-note">
-      أو راسلنا على: <a id="contactEmailLink" href="#" style="color: var(--brand); font-weight: 600; text-decoration: none;"></a>
-    </p>
-  </div>
-</section>
+<!-- Inline contact section removed — contact is reachable only via the nav
+     "تواصل معنا" button which opens #contactModal. -->
 
 <!-- ───────── Footer (simplified) ──────────────────────────────────────────── -->
 <footer class="footer">
@@ -868,7 +857,7 @@
     <div class="links">
       <a href="#features">الميزات</a>
       <a href="#pricing">الأسعار</a>
-      <a href="#contact">تواصل معنا</a>
+      <a href="#" onclick="event.preventDefault(); document.getElementById('contactModal').classList.add('open')">تواصل معنا</a>
       <a href="#">الأسئلة الشائعة</a>
     </div>
     <div class="copy">© 2026 عروة. جميع الحقوق محفوظة.</div>
@@ -893,23 +882,6 @@
     var c = window.URWA_CONTACT || { email: "", phones: [] };
     var phoneIcon = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
     var mailIcon = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
-
-    // ---- Cards in contact section ------
-    var cards = document.getElementById('contactCards');
-    if (cards) {
-      cards.innerHTML = c.phones.map(function (p) {
-        var telHref = 'tel:' + p.number.replace(/\s/g, '');
-        return '<div class="contact-card">' +
-          '<div class="contact-avatar">' + phoneIcon + '</div>' +
-          '<div><p class="name">' + p.label + '</p></div>' +
-          '<p class="number">' + p.number + '</p>' +
-          '<a href="' + telHref + '" class="btn btn-primary btn-sm">' + phoneIcon + ' اتصل الآن</a>' +
-        '</div>';
-      }).join('');
-    }
-
-    var emailLink = document.getElementById('contactEmailLink');
-    if (emailLink && c.email) { emailLink.href = 'mailto:' + c.email; emailLink.textContent = c.email; }
 
     // ---- Modal actions ------
     var modalActions = document.getElementById('modalActions');
