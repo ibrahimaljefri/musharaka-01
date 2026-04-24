@@ -46,9 +46,26 @@ function makeChainable() {
   return q
 }
 
+// Realtime stub — no-op channel that responds to every method chainably
+function makeChannel() {
+  const ch = {
+    on:                () => ch,
+    subscribe:         (cb) => { if (typeof cb === 'function') cb('SUBSCRIBED'); return ch },
+    unsubscribe:       () => Promise.resolve('ok'),
+    track:             () => Promise.resolve('ok'),
+    untrack:           () => Promise.resolve('ok'),
+    send:              () => Promise.resolve('ok'),
+    presenceState:     () => ({}),
+  }
+  return ch
+}
+
 export const supabase = {
-  from: () => makeChainable(),
-  rpc:  () => Promise.resolve({ data: null, error: { message: 'supabase disabled' } }),
+  from:          () => makeChainable(),
+  rpc:           () => Promise.resolve({ data: null, error: { message: 'supabase disabled' } }),
+  channel:       () => makeChannel(),
+  removeChannel: () => Promise.resolve('ok'),
+  getChannels:   () => [],
   storage: {
     from: () => ({
       upload:        () => Promise.resolve({ data: null, error: { message: 'supabase storage disabled' } }),
