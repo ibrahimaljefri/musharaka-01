@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { supabase } from '../lib/supabaseClient'
 import api from '../lib/axiosClient'
 import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
-import { Upload, Eye, X } from 'lucide-react'
+import { Upload, Eye, X, Download } from 'lucide-react'
 
 export default function SaleImport() {
   const [branches, setBranches]     = useState([])
@@ -19,9 +18,36 @@ export default function SaleImport() {
   const fileRef = useRef()
 
   useEffect(() => {
-    supabase.from('branches').select('id,code,name').order('name')
-      .then(({ data }) => setBranches(data || []))
+    api.get('/branches').then(({ data }) => setBranches(data || []))
+      .catch(() => setBranches([]))
   }, [])
+
+  const now         = new Date()
+  const [tplMonth, setTplMonth] = useState(now.getMonth() + 1)
+  const [tplYear,  setTplYear]  = useState(now.getFullYear())
+
+  const handleDownloadTemplate = async () => {
+    if (!branchId) return setError('يرجى اختيار الفرع أولاً لتحميل النموذج')
+    setError('')
+    try {
+      const res = await api.get('/sales/import/template', {
+        params: { branch_id: branchId, month: tplMonth, year: tplYear },
+        responseType: 'blob',
+      })
+      const branch = branches.find(b => b.id === branchId)
+      const mm     = String(tplMonth).padStart(2, '0')
+      const name   = `template-${branch?.code || 'branch'}-${tplYear}-${mm}.xlsx`
+      const blob   = new Blob([res.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+      const url    = URL.createObjectURL(blob)
+      const a      = document.createElement('a')
+      a.href = url; a.download = name; a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setError(err.response?.data?.error || 'فشل تحميل النموذج')
+    }
+  }
 
   const handlePreview = async () => {
     if (!file) return setError('يرجى اختيار ملف أولاً')
@@ -82,6 +108,31 @@ export default function SaleImport() {
               <option value="">اختر الفرع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
             </select>
+          </div>
+
+          {/* Template download — select period + download prefilled template */}
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm font-semibold font-arabic text-gray-700 mb-2">تحميل نموذج فارغ للمبيعات</p>
+            <p className="text-xs font-arabic text-gray-500 mb-3">اختر الفرع والشهر، ثم نزّل نموذج Excel معبّأ بأيام الشهر — فقط أدخل قيمة المبيعات لكل يوم وأعد رفع الملف.</p>
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <label className="block text-xs font-arabic text-gray-600 mb-1">الشهر</label>
+                <select value={tplMonth} onChange={e => setTplMonth(parseInt(e.target.value))}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                  {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-arabic text-gray-600 mb-1">السنة</label>
+                <input type="number" min="2020" max="2100" value={tplYear}
+                  onChange={e => setTplYear(parseInt(e.target.value) || new Date().getFullYear())}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm font-arabic focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+              </div>
+              <button onClick={handleDownloadTemplate} disabled={!branchId}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 border border-yellow-600 rounded-lg transition-colors font-arabic">
+                <Download size={14} /> تحميل
+              </button>
+            </div>
           </div>
 
           {/* File picker */}
