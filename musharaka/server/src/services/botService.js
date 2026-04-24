@@ -62,6 +62,25 @@ function isInstruction(message) {
   return INSTRUCTION_TRIGGERS.some(t => m === t || m.startsWith(t + ' '))
 }
 
+// ── Chat-ID request triggers ─────────────────────────────────────────────────
+// Lets any Telegram user (registered or not) discover their chat_id so they
+// can forward it to an admin for subscriber registration.
+const ID_TRIGGERS = ['/id', '/myid', 'my id', 'chat id', 'رقمي', 'معرفي', 'ايدي', 'آيدي']
+
+function isIdRequest(message) {
+  const m = message.trim().toLowerCase()
+  return ID_TRIGGERS.some(t => m === t || m.startsWith(t + ' '))
+}
+
+function idReplyMessage(chatId) {
+  return [
+    '🆔 معرّف المحادثة الخاص بك:',
+    `${chatId}`,
+    '',
+    'أرسل هذا الرقم للمشرف لتفعيل حسابك في النظام.',
+  ].join('\n')
+}
+
 // ── User-guide triggers ───────────────────────────────────────────────────────
 const GUIDE_TRIGGERS = [
   '/guide', 'دليل', 'دليل المستخدم', 'شرح', 'شرح النظام', 'كيف استخدم',
@@ -311,6 +330,12 @@ async function processSale(sub, branch, message) {
  * @returns {Promise<string>} Arabic reply
  */
 async function processMessage(platform, chatId, message) {
+  // 0. Chat-ID self-service — answer before the subscriber check so that
+  //    unregistered users can discover their chat_id and share it with an admin.
+  if (isIdRequest(message)) {
+    return idReplyMessage(chatId)
+  }
+
   // 1. Look up subscriber
   const { rows: subs } = await pool.query(
     `SELECT * FROM bot_subscribers
@@ -321,7 +346,7 @@ async function processMessage(platform, chatId, message) {
   const sub = subs[0]
 
   if (!sub) {
-    return 'عذراً، رقمك غير مسجل في النظام. يرجى التواصل مع المشرف لتفعيل الحساب.'
+    return 'عذراً، رقمك غير مسجل في النظام.\nأرسل /id لمعرفة رقم محادثتك ثم أرسله للمشرف لتفعيل الحساب.'
   }
 
   // 2. Instruction keywords
