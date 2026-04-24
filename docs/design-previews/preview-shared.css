@@ -95,13 +95,15 @@
 /* ---- Base ---------------------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
 
+html { font-size: 17px; }
+@media (min-width: 1024px) { html { font-size: 18px; } }
 html, body {
   margin: 0;
   padding: 0;
   font-family: 'Tajawal', system-ui, -apple-system, 'Segoe UI', sans-serif;
   direction: rtl;
   text-align: right;
-  line-height: 1.65;
+  line-height: 1.7;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -256,6 +258,101 @@ section.alt {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ---- App shell — sidebar + main (used by internal-page mockups) --------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns var(--dur-base) var(--ease-out);
+}
+.app-shell.collapsed { grid-template-columns: 64px 1fr; }
+
+.app-sidebar {
+  background: var(--surface);
+  border-inline-end: 1px solid var(--border);
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 10;
+}
+.app-sidebar .brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.app-sidebar .brand img { height: 30px; width: auto; }
+.app-shell.collapsed .app-sidebar .brand img { height: 24px; }
+
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  font: 500 14px 'Tajawal', sans-serif;
+  color: var(--text-sec);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.side-item:hover { background: var(--bg-subtle); color: var(--text); }
+.side-item.active { background: var(--brand-soft); color: var(--brand-ink); font-weight: 600; }
+.side-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.app-shell.collapsed .side-item { justify-content: center; padding: 9px 0; }
+.app-shell.collapsed .side-item .label { display: none; }
+
+.collapse-toggle {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  border-radius: var(--r-md);
+  color: var(--text-sec);
+  cursor: pointer;
+  font: 500 12px 'Tajawal', sans-serif;
+}
+.collapse-toggle:hover { background: var(--surface); color: var(--text); }
+.app-shell.collapsed .collapse-toggle .label { display: none; }
+.app-shell.collapsed .collapse-toggle svg { transform: rotate(180deg); }
+
+.app-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hamburger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .app-sidebar { display: none; }
+  .app-shell.mobile-open .app-sidebar { display: flex; position: fixed; inset-inline-end: 0; top: 0; width: 240px; box-shadow: var(--shadow-lg); }
+  .hamburger { display: inline-flex; }
 }
 
 /* ---- App shell (header used by internal-page mockups) ------------------- */
