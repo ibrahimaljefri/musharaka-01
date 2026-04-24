@@ -342,23 +342,7 @@ section.alt {
 }
 .app-shell.collapsed .side-item.active::before { display: none; }
 
-.collapse-toggle {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 9px;
-  border: 1px solid var(--border);
-  background: var(--bg-subtle);
-  border-radius: var(--r-md);
-  color: var(--text-sec);
-  cursor: pointer;
-  font: 500 12px 'Tajawal', sans-serif;
-}
-.collapse-toggle:hover { background: var(--surface); color: var(--text); }
-.app-shell.collapsed .collapse-toggle .label { display: none; }
-.app-shell.collapsed .collapse-toggle svg { transform: rotate(180deg); }
+.collapse-toggle { display: none; }
 
 .app-main {
   min-width: 0;
