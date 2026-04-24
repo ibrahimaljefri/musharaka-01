@@ -344,38 +344,47 @@
 /* ---- How it works ------------------------------------------------------- */
 .how {
   padding: 80px 24px;
+  background: transparent;
+}
+.how-header { text-align: center; margin-bottom: 40px; }
+.how-header h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 12px; }
+.how-header p { color: var(--text-sec); }
+
+/* Contained clay panel — only wraps the cards, not the whole section */
+.how-stage {
   background: linear-gradient(135deg, #C97B4A 0%, #A0552B 100%);
-  color: #FFF7ED;
+  border-radius: var(--r-xl);
+  padding: 56px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
   position: relative;
   overflow: hidden;
 }
-.dark .how { background: linear-gradient(135deg, #6B3A1F 0%, #3F2010 100%); }
-.how-header { text-align: center; margin-bottom: 56px; position: relative; z-index: 2; }
-.how-header h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 12px; color: #FFF7ED; }
-.how-header p { color: rgba(255, 247, 237, 0.85); }
+.dark .how-stage { background: linear-gradient(135deg, #6B3A1F 0%, #3F2010 100%); }
+
 .how-steps {
   position: relative;
-  max-width: 1100px;
+  height: 280px;
+  max-width: 980px;
   margin: 0 auto;
-  height: 320px;
 }
 .how-step {
   position: absolute;
-  width: 360px;
-  padding: 24px;
+  width: 320px;
+  padding: 22px 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18), var(--ring-top);
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), z-index 0s;
   color: var(--text);
 }
-.how-step:hover { transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28), var(--ring-top); z-index: 10; }
-.how-step:nth-child(1) { top: 0; inset-inline-end: 0; transform: rotate(-2deg); z-index: 3; }
-.how-step:nth-child(2) { top: 40px; inset-inline-end: 280px; z-index: 2; }
-.how-step:nth-child(3) { top: 80px; inset-inline-end: 560px; transform: rotate(2deg); z-index: 1; }
-.how-step:nth-child(1):hover,
-.how-step:nth-child(3):hover { transform: translateY(-6px) rotate(0deg); }
+/* RTL flow: step 01 on the right, 02 middle, 03 left — slight overlap */
+.how-step:nth-child(1) { top: 0;   inset-inline-end: 0;   z-index: 3; }
+.how-step:nth-child(2) { top: 30px; inset-inline-end: 240px; z-index: 2; }
+.how-step:nth-child(3) { top: 60px; inset-inline-end: 480px; z-index: 1; }
+.how-step:hover { transform: translateY(-8px); box-shadow: 0 28px 64px rgba(0, 0, 0, 0.32), var(--ring-top); z-index: 10; }
+
 .how-step .num {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
@@ -387,8 +396,9 @@
 .how-step h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; }
 .how-step p { font-size: 14px; color: var(--text-sec); margin: 0; }
 
-@media (max-width: 1100px) {
-  .how-steps { height: auto; display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 480px; }
+@media (max-width: 900px) {
+  .how-stage { padding: 32px 20px; }
+  .how-steps { height: auto; display: grid; grid-template-columns: 1fr; gap: 14px; max-width: 420px; }
   .how-step { position: static; width: auto; transform: none !important; }
 }
 
@@ -894,21 +904,23 @@
     <h2>كيف يعمل؟</h2>
     <p style="color: var(--text-sec); max-width: 600px; margin: 0 auto;">ثلاث خطوات بسيطة من تسجيل المبيعات إلى إرسال الدفعة</p>
   </div>
-  <div class="how-steps">
-    <div class="how-step">
-      <div class="num">01</div>
-      <h3>شارك المبيعات بسلاسة</h3>
-      <p>يدوياً أو عبر استيراد Excel أو عبر المساعد الذكي — المرونة الكاملة لأسلوبك المفضل</p>
-    </div>
-    <div class="how-step">
-      <div class="num">02</div>
-      <h3>راجع الفواتير</h3>
-      <p>تحقق من كل فاتورة، عدّل إن احتجت، وأكّد الأرقام قبل الإرسال النهائي</p>
-    </div>
-    <div class="how-step">
-      <div class="num">03</div>
-      <h3>أرسل الدفعة بضغطة</h3>
-      <p>تُرسل الدفعة كاملة إلى منصة التكامل وتُؤرشف لديك بنسخة قابلة للتدقيق</p>
+  <div class="how-stage">
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="num">01</div>
+        <h3>شارك المبيعات بسلاسة</h3>
+        <p>يدوياً أو عبر استيراد Excel أو عبر المساعد الذكي — المرونة الكاملة لأسلوبك المفضل</p>
+      </div>
+      <div class="how-step">
+        <div class="num">02</div>
+        <h3>راجع الفواتير</h3>
+        <p>تحقق من كل فاتورة، عدّل إن احتجت، وأكّد الأرقام قبل الإرسال النهائي</p>
+      </div>
+      <div class="how-step">
+        <div class="num">03</div>
+        <h3>أرسل الدفعة بضغطة</h3>
+        <p>تُرسل الدفعة كاملة إلى منصة التكامل وتُؤرشف لديك بنسخة قابلة للتدقيق</p>
+      </div>
     </div>
   </div>
 </section>
