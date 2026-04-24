@@ -265,6 +265,11 @@
 /* ---- Feature grid ------------------------------------------------------- */
 .features {
   padding: 80px 24px;
+  background: linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%);
+  position: relative;
+}
+.dark .features {
+  background: linear-gradient(180deg, #2D2410 0%, #3F2D0F 100%);
 }
 .features-header { text-align: center; margin-bottom: 48px; }
 .features-header h2 {
@@ -318,48 +323,6 @@
 .feature-card:nth-child(2) .feature-icon { background: linear-gradient(135deg, #34D399, #047857); }
 .feature-card:nth-child(3) .feature-icon { background: linear-gradient(135deg, #60A5FA, #1E40AF); }
 .feature-card:nth-child(4) .feature-icon { background: linear-gradient(135deg, #F472B6, #BE185D); }
-
-/* Tinted radial backgrounds — gradient from icon corner (top-right in RTL) */
-.feature-card:nth-child(1) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(251, 191, 36, 0.28) 0%, transparent 65%),
-    var(--surface);
-}
-.feature-card:nth-child(2) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(52, 211, 153, 0.28) 0%, transparent 65%),
-    var(--surface);
-}
-.feature-card:nth-child(3) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(96, 165, 250, 0.28) 0%, transparent 65%),
-    var(--surface);
-}
-.feature-card:nth-child(4) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(244, 114, 182, 0.28) 0%, transparent 65%),
-    var(--surface);
-}
-.dark .feature-card:nth-child(1) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(251, 191, 36, 0.18) 0%, transparent 65%),
-    var(--surface);
-}
-.dark .feature-card:nth-child(2) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(52, 211, 153, 0.18) 0%, transparent 65%),
-    var(--surface);
-}
-.dark .feature-card:nth-child(3) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(96, 165, 250, 0.18) 0%, transparent 65%),
-    var(--surface);
-}
-.dark .feature-card:nth-child(4) {
-  background:
-    radial-gradient(ellipse 90% 90% at top right, rgba(244, 114, 182, 0.18) 0%, transparent 65%),
-    var(--surface);
-}
 .feature-card h3 {
   font-size: 0.95rem;
   font-weight: 700;
