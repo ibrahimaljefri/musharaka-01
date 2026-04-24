@@ -1,0 +1,1 @@
+import{j as e}from"./index-B9LBhGBs.js";function a({name:n,subtext:t}){return e.jsxs("div",{className:"inline-flex flex-col leading-tight",children:[e.jsx("span",{className:"text-sm font-semibold text-gray-800 font-arabic",children:n}),t&&e.jsx("span",{className:"text-xs text-gray-400 font-mono mt-0.5",children:t})]})}export{a as T};
