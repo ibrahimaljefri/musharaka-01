@@ -299,7 +299,7 @@ section.alt {
 .theme-toggle {
   position: fixed;
   top: 16px;
-  inset-inline-start: 16px;
+  inset-inline-end: 16px;  /* LEFT in RTL pages, RIGHT in LTR */
   z-index: 100;
   width: 40px;
   height: 40px;

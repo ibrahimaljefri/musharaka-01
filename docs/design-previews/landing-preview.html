@@ -89,6 +89,23 @@
 }
 .hero-content { position: relative; max-width: 880px; margin: 0 auto; }
 
+/* ---- Doodle decorations (Notion-style playful sketches) ----------------- */
+.doodle {
+  position: absolute;
+  pointer-events: none;
+  color: var(--brand);
+  opacity: 0.55;
+  z-index: 1;
+}
+.dark .doodle { opacity: 0.4; }
+.doodle-spin { animation: doodle-spin 14s linear infinite; transform-origin: center; }
+@keyframes doodle-spin { to { transform: rotate(360deg); } }
+.doodle-bob  { animation: doodle-bob  3.5s ease-in-out infinite; }
+@keyframes doodle-bob { 50% { transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .doodle-spin, .doodle-bob { animation: none; }
+}
+
 .hero .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -171,10 +188,50 @@
   background: var(--border-strong);
 }
 .hero-preview-body {
-  padding: 20px;
-  min-height: 280px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 380px;
   background:
     linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+}
+.hp-sidebar {
+  border-inline-end: 1px solid var(--border);
+  background: var(--bg-alt);
+  padding: 14px 10px;
+  font-size: 12px;
+}
+.hp-sidebar .brand-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 8px 12px; font-weight: 700; color: var(--text);
+}
+.hp-sidebar .brand-row .dot { width: 22px; height: 22px; border-radius: 6px;
+  background: linear-gradient(135deg, #FBBF24, #B8860B); display: grid; place-items: center;
+  color: white; font-weight: 800; font-size: 11px; }
+.hp-nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px;
+  color: var(--text-sec); margin-bottom: 2px; }
+.hp-nav-item.active { background: var(--brand-soft); color: var(--brand-ink); font-weight: 600; }
+.hp-nav-item .ic { width: 14px; height: 14px; opacity: 0.7; }
+.hp-nav-item.active .ic { opacity: 1; }
+.hp-section { padding: 16px; }
+.hp-section-title { display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--text); }
+.hp-section-title .pill {
+  background: var(--brand-soft); color: var(--brand-ink); padding: 2px 8px;
+  border-radius: var(--r-pill); font-size: 10px; font-weight: 600;
+}
+.hp-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 11px; }
+.hp-table th, .hp-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+.hp-table th { background: var(--bg-alt); color: var(--text-muted); font-weight: 500; font-size: 10px; }
+.hp-table td .badge {
+  font-size: 9px; padding: 1px 7px; border-radius: var(--r-pill); font-weight: 600;
+}
+.hp-badge-ok { background: #DCFCE7; color: #15803D; }
+.hp-badge-pending { background: #FEF3C7; color: #92400E; }
+.dark .hp-badge-ok { background: #052E16; color: #4ADE80; }
+.dark .hp-badge-pending { background: #3F2D0F; color: #FBBF24; }
+@media (max-width: 760px) {
+  .hero-preview-body { grid-template-columns: 1fr; }
+  .hp-sidebar { display: none; }
 }
 .hero-kpis {
   display: grid;
@@ -572,6 +629,39 @@
 
 <!-- ───────── Hero ─────────────────────────────────────────────────────────── -->
 <header class="hero">
+  <!-- ── Doodles (decorative SVG sprinkles) ────────────────────────────── -->
+  <svg class="doodle doodle-bob" style="top: 80px; inset-inline-start: 6%; width: 56px; height: 56px;" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- sparkle -->
+    <path d="M32 6v14M32 44v14M6 32h14M44 32h14M14 14l10 10M40 40l10 10M14 50l10-10M40 24l10-10"/>
+  </svg>
+  <svg class="doodle doodle-spin" style="top: 120px; inset-inline-end: 8%; width: 48px; height: 48px;" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+    <!-- gear-ish star -->
+    <path d="M32 8l5 13 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1z"/>
+  </svg>
+  <svg class="doodle" style="top: 280px; inset-inline-start: 4%; width: 70px; height: 50px;" viewBox="0 0 80 60" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- mini chart -->
+    <path d="M6 50L22 30L36 38L52 18L74 12"/>
+    <circle cx="22" cy="30" r="3" fill="currentColor"/>
+    <circle cx="52" cy="18" r="3" fill="currentColor"/>
+    <circle cx="74" cy="12" r="3" fill="currentColor"/>
+  </svg>
+  <svg class="doodle doodle-bob" style="top: 320px; inset-inline-end: 5%; width: 44px; height: 44px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- arrow swirl -->
+    <path d="M6 36c0-12 8-22 20-22s20 10 20 22"/>
+    <path d="M40 28l6 8-10 4"/>
+  </svg>
+  <svg class="doodle" style="top: 460px; inset-inline-start: 10%; width: 36px; height: 36px;" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+    <!-- dot constellation -->
+    <circle cx="6" cy="6" r="2.5"/><circle cx="20" cy="10" r="2"/>
+    <circle cx="12" cy="20" r="2"/><circle cx="26" cy="22" r="2.5"/>
+    <path d="M6 6L20 10L12 20L26 22" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.5"/>
+  </svg>
+  <svg class="doodle doodle-spin" style="top: 520px; inset-inline-end: 12%; width: 38px; height: 38px;" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <!-- circle plus -->
+    <circle cx="16" cy="16" r="13"/>
+    <path d="M16 9v14M9 16h14"/>
+  </svg>
+
   <div class="hero-content">
     <span class="eyebrow">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
@@ -615,50 +705,111 @@
       <span style="font-size: 12px; color: var(--text-muted); margin-inline-start: 12px;">apps.stepup2you.com/dashboard</span>
     </div>
     <div class="hero-preview-body">
-      <div class="hero-kpis">
-        <div class="hero-kpi">
-          <div class="label">إجمالي المبيعات</div>
-          <div class="value">2,184,500</div>
-          <div class="trend">+12.4% ↑</div>
+      <!-- Sidebar nav (looks like the real app) -->
+      <aside class="hp-sidebar">
+        <div class="brand-row"><span class="dot">ع</span><span>عروة</span></div>
+        <div class="hp-nav-item active">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          لوحة التحكم
         </div>
-        <div class="hero-kpi">
-          <div class="label">الشهر الحالي</div>
-          <div class="value">512,300</div>
-          <div class="trend">+3.8% ↑</div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M5 9l7-7 7 7"/></svg>
+          المبيعات
         </div>
-        <div class="hero-kpi">
-          <div class="label">فواتير مرسلة</div>
-          <div class="value">182</div>
-          <div class="trend" style="color: var(--text-muted);">هذا الشهر</div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14M9 21V12h6v9"/></svg>
+          الفروع
         </div>
-        <div class="hero-kpi">
-          <div class="label">معلقة</div>
-          <div class="value">14</div>
-          <div class="trend" style="color: var(--warning);">بانتظار الإرسال</div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          التقارير
         </div>
-      </div>
-      <div class="hero-chart">
-        <svg viewBox="0 0 600 140" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stop-color="#B8860B" stop-opacity="0.3"/>
-              <stop offset="100%" stop-color="#B8860B" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d="M 0 100 Q 50 80, 100 70 T 200 60 T 300 55 T 400 35 T 500 45 T 600 25 L 600 140 L 0 140 Z"
-                fill="url(#chartFill)"/>
-          <path d="M 0 100 Q 50 80, 100 70 T 200 60 T 300 55 T 400 35 T 500 45 T 600 25"
-                fill="none" stroke="#B8860B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="600" cy="25"  r="4" fill="#B8860B"/>
-          <circle cx="500" cy="45"  r="3" fill="#B8860B" opacity="0.5"/>
-        </svg>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11H5a2 2 0 00-2 2v7h18v-7a2 2 0 00-2-2h-4M9 11V7a3 3 0 116 0v4M9 11h6"/></svg>
+          الإرسال
+        </div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a4 4 0 014-4h6a4 4 0 014 4v2"/></svg>
+          المستخدمين
+        </div>
+      </aside>
+
+      <!-- Main content area -->
+      <div class="hp-section">
+        <div class="hero-kpis">
+          <div class="hero-kpi">
+            <div class="label">إجمالي المبيعات</div>
+            <div class="value">٢,١٨٤,٥٠٠</div>
+            <div class="trend">+12.4% ↑</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="label">هذا الشهر</div>
+            <div class="value">٥١٢,٣٠٠</div>
+            <div class="trend">+3.8% ↑</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="label">فواتير مرسلة</div>
+            <div class="value">١٨٢</div>
+            <div class="trend" style="color: var(--text-muted);">هذا الشهر</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="label">معلقة</div>
+            <div class="value">١٤</div>
+            <div class="trend" style="color: var(--warning);">بانتظار الإرسال</div>
+          </div>
+        </div>
+
+        <div class="hero-chart">
+          <svg viewBox="0 0 600 140" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#B8860B" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#B8860B" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M 0 100 Q 50 80, 100 70 T 200 60 T 300 55 T 400 35 T 500 45 T 600 25 L 600 140 L 0 140 Z"
+                  fill="url(#chartFill)"/>
+            <path d="M 0 100 Q 50 80, 100 70 T 200 60 T 300 55 T 400 35 T 500 45 T 600 25"
+                  fill="none" stroke="#B8860B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="600" cy="25"  r="4" fill="#B8860B"/>
+            <circle cx="500" cy="45"  r="3" fill="#B8860B" opacity="0.5"/>
+          </svg>
+        </div>
+
+        <div class="hp-section-title" style="margin-top: 16px;">
+          آخر المبيعات
+          <span class="pill">٥ جديدة</span>
+        </div>
+        <table class="hp-table">
+          <thead><tr><th>الفرع</th><th>الفاتورة</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+          <tbody>
+            <tr><td>الرياض — مول العرب</td><td>INV-342</td><td>٥,٨٤٠</td><td><span class="badge hp-badge-ok">مُرسل</span></td></tr>
+            <tr><td>جدة — النخيل</td><td>INV-341</td><td>٣,٢٠٠</td><td><span class="badge hp-badge-ok">مُرسل</span></td></tr>
+            <tr><td>الدمام — الظهران</td><td>INV-340</td><td>٧,١٢٠</td><td><span class="badge hp-badge-pending">معلّق</span></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </header>
 
 <!-- ───────── Features ──────────────────────────────────────────────────────── -->
-<section class="features" id="features">
+<section class="features" id="features" style="position: relative;">
+  <svg class="doodle" style="top: 40px; inset-inline-start: 3%; width: 50px; height: 50px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- check sparkle -->
+    <circle cx="24" cy="24" r="18"/>
+    <path d="M16 24l6 6 12-12"/>
+  </svg>
+  <svg class="doodle doodle-bob" style="bottom: 60px; inset-inline-end: 4%; width: 60px; height: 60px;" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- target -->
+    <circle cx="32" cy="32" r="24"/>
+    <circle cx="32" cy="32" r="14"/>
+    <circle cx="32" cy="32" r="5" fill="currentColor"/>
+  </svg>
+  <svg class="doodle doodle-spin" style="top: 50%; inset-inline-end: 2%; width: 32px; height: 32px;" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+    <path d="M16 2l3 11h11l-9 7 3 11-8-7-8 7 3-11-9-7h11z"/>
+  </svg>
+
   <div class="features-header">
     <h2>كل ما تحتاجه لإدارة مبيعات المستأجرين</h2>
     <p>منصة متكاملة صُممت خصيصاً لعمليات تحصيل المبيعات ومطابقتها مع الإيجار المتغير</p>
@@ -745,7 +896,17 @@
 </section>
 
 <!-- ───────── How it works ─────────────────────────────────────────────────── -->
-<section class="how" id="how">
+<section class="how" id="how" style="position: relative;">
+  <svg class="doodle doodle-bob" style="top: 50px; inset-inline-end: 5%; width: 44px; height: 44px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- lightbulb -->
+    <path d="M24 6a12 12 0 00-7 21v5h14v-5a12 12 0 00-7-21z"/>
+    <path d="M19 38h10M21 42h6"/>
+  </svg>
+  <svg class="doodle" style="bottom: 80px; inset-inline-start: 4%; width: 52px; height: 52px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- arrow swoosh -->
+    <path d="M6 36c8-14 22-22 36-24"/>
+    <path d="M36 18l6-6-2 8"/>
+  </svg>
   <div class="how-header">
     <h2>كيف يعمل؟</h2>
     <p style="color: var(--text-sec); max-width: 600px; margin: 0 auto;">ثلاث خطوات بسيطة من تسجيل المبيعات إلى إرسال الدفعة</p>
