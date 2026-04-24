@@ -363,27 +363,26 @@
 .dark .how-stage { background: linear-gradient(135deg, #6B3A1F 0%, #3F2010 100%); }
 
 .how-steps {
-  position: relative;
-  height: 280px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
   max-width: 980px;
   margin: 0 auto;
 }
 .how-step {
-  position: absolute;
-  width: 320px;
   padding: 22px 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18), var(--ring-top);
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), z-index 0s;
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
   color: var(--text);
 }
-/* RTL flow: step 01 on the right (inline-start), 02 middle, 03 left — slight overlap */
-.how-step:nth-child(1) { top: 0;   inset-inline-start: 0;   z-index: 3; }
-.how-step:nth-child(2) { top: 30px; inset-inline-start: 240px; z-index: 2; }
-.how-step:nth-child(3) { top: 60px; inset-inline-start: 480px; z-index: 1; }
-.how-step:hover { transform: translateY(-8px); box-shadow: 0 28px 64px rgba(0, 0, 0, 0.32), var(--ring-top); z-index: 10; }
+/* Staggered vertical offset (no overlap, small gap) — 01 right, 02 middle, 03 left in RTL */
+.how-step:nth-child(1) { transform: translateY(0); }
+.how-step:nth-child(2) { transform: translateY(28px); }
+.how-step:nth-child(3) { transform: translateY(56px); }
+.how-step:hover { transform: translateY(-6px); box-shadow: 0 28px 64px rgba(0, 0, 0, 0.32), var(--ring-top); }
 
 .how-step .num {
   font-family: 'JetBrains Mono', monospace;
@@ -398,8 +397,8 @@
 
 @media (max-width: 900px) {
   .how-stage { padding: 32px 20px; }
-  .how-steps { height: auto; display: grid; grid-template-columns: 1fr; gap: 14px; max-width: 420px; }
-  .how-step { position: static; width: auto; transform: none !important; }
+  .how-steps { grid-template-columns: 1fr; gap: 14px; max-width: 420px; }
+  .how-step { transform: none !important; }
 }
 
 /* ---- Pricing ------------------------------------------------------------ */
