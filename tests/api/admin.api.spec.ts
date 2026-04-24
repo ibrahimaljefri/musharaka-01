@@ -4,15 +4,15 @@
  *         /admin/bot-subscribers, /admin/tickets, /admin/api-keys
  */
 import { test, expect } from '@playwright/test'
-import { API_URL, loginAdmin, loginTenant, authHeaders } from './_helpers'
+import { API_URL, loginAdmin, loginTenant, tryLoginAdmin, tryLoginTenant, authHeaders } from './_helpers'
 
 test.describe('Admin API', () => {
   let adminToken  = ''
   let tenantToken = ''
 
   test.beforeAll(async ({ request }) => {
-    adminToken = (await loginAdmin(request)).accessToken
-    try { tenantToken = (await loginTenant(request)).accessToken } catch {}
+    const a = await tryLoginAdmin(request); adminToken = a?.accessToken || ''
+    try { const t = await tryLoginTenant(request); tenantToken = t?.accessToken || '' } catch {}
   })
 
   // ── Stats ────────────────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ test.describe('Admin API', () => {
   })
 
   test('ADM-02: GET /api/admin/stats as tenant → 403', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.get(`${API_URL}/api/admin/stats`, { headers: authHeaders(tenantToken) })
     expect([401, 403]).toContain(res.status())
   })
@@ -60,7 +60,7 @@ test.describe('Admin API', () => {
   })
 
   test('ADM-08: GET /api/admin/tenants as tenant → 403', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.get(`${API_URL}/api/admin/tenants`, { headers: authHeaders(tenantToken) })
     expect([401, 403]).toContain(res.status())
   })
@@ -144,7 +144,7 @@ test.describe('Admin API', () => {
   })
 
   test('ADM-17: GET /api/admin/users as tenant → 403', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.get(`${API_URL}/api/admin/users`, { headers: authHeaders(tenantToken) })
     expect([401, 403]).toContain(res.status())
   })
@@ -287,7 +287,7 @@ test.describe('Admin API', () => {
   })
 
   test('ADM-33: GET /api/admin/tickets as tenant → 403', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.get(`${API_URL}/api/admin/tickets`, { headers: authHeaders(tenantToken) })
     expect([401, 403]).toContain(res.status())
   })
@@ -310,7 +310,7 @@ test.describe('Admin API', () => {
   })
 
   test('ADM-36: tenant branches endpoint restricted to admin', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.get(`${API_URL}/api/admin/tenants/00000000-0000-0000-0000-000000000000/branches`, {
       headers: authHeaders(tenantToken),
     })

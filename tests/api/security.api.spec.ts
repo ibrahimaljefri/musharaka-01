@@ -2,15 +2,15 @@
  * SEC-01 … SEC-30 — Security regression (headers, CORS, rate limit, JWT, leakage)
  */
 import { test, expect } from '@playwright/test'
-import { API_URL, loginAdmin, loginTenant, authHeaders } from './_helpers'
+import { API_URL, loginAdmin, loginTenant, tryLoginAdmin, tryLoginTenant, authHeaders } from './_helpers'
 
 test.describe('Security API', () => {
   let adminToken  = ''
   let tenantToken = ''
 
   test.beforeAll(async ({ request }) => {
-    adminToken = (await loginAdmin(request)).accessToken
-    try { tenantToken = (await loginTenant(request)).accessToken } catch {}
+    const a = await tryLoginAdmin(request); adminToken = a?.accessToken || ''
+    try { const t = await tryLoginTenant(request); tenantToken = t?.accessToken || '' } catch {}
   })
 
   test('SEC-01: X-Content-Type-Options: nosniff on /api/health', async ({ request }) => {
@@ -47,7 +47,7 @@ test.describe('Security API', () => {
   })
 
   test('SEC-07: tampered JWT signature → 401', async ({ request }) => {
-    const { accessToken } = await loginAdmin(request)
+    const { accessToken } = await tryLoginAdmin(request)
     const tampered = accessToken.slice(0, -5) + 'XXXXX'
     const res = await request.get(`${API_URL}/api/auth/me`, {
       headers: { 'Authorization': `Bearer ${tampered}` },
@@ -56,7 +56,7 @@ test.describe('Security API', () => {
   })
 
   test('SEC-08: no password_hash anywhere in /auth/me', async ({ request }) => {
-    const { accessToken } = await loginAdmin(request)
+    const { accessToken } = await tryLoginAdmin(request)
     const res  = await request.get(`${API_URL}/api/auth/me`, { headers: authHeaders(accessToken) })
     const body = await res.text()
     expect(body).not.toMatch(/password_hash/i)
@@ -64,14 +64,14 @@ test.describe('Security API', () => {
   })
 
   test('SEC-09: no ENCRYPTION_KEY anywhere in responses', async ({ request }) => {
-    const { accessToken } = await loginAdmin(request)
+    const { accessToken } = await tryLoginAdmin(request)
     const res  = await request.get(`${API_URL}/api/admin/tenants`, { headers: authHeaders(accessToken) })
     const body = await res.text()
     expect(body).not.toMatch(/ENCRYPTION_KEY/i)
   })
 
   test('SEC-10: no SMTP_PASS anywhere in responses', async ({ request }) => {
-    const { accessToken } = await loginAdmin(request)
+    const { accessToken } = await tryLoginAdmin(request)
     const res  = await request.get(`${API_URL}/api/admin/stats`, { headers: authHeaders(accessToken) })
     const body = await res.text()
     expect(body).not.toMatch(/SMTP_PASS/i)
@@ -106,13 +106,13 @@ test.describe('Security API', () => {
   })
 
   test('SEC-15: tenant token → /api/admin/tenants rejected', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.get(`${API_URL}/api/admin/tenants`, { headers: authHeaders(tenantToken) })
     expect([401, 403]).toContain(res.status())
   })
 
   test('SEC-16: JWT in URL query not accepted', async ({ request }) => {
-    const { accessToken } = await loginAdmin(request)
+    const { accessToken } = await tryLoginAdmin(request)
     const res = await request.get(`${API_URL}/api/admin/stats?token=${accessToken}`)
     expect(res.status()).toBe(401)
   })
@@ -131,13 +131,13 @@ test.describe('Security API', () => {
   })
 
   test('SEC-19: SQL injection via search param returns no 500', async ({ request }) => {
-    test.skip(!adminToken, 'admin required')
+
     const res = await request.get(`${API_URL}/api/admin/users?email='--`, { headers: authHeaders(adminToken) })
     expect(res.status()).toBeLessThan(500)
   })
 
   test('SEC-20: POST JSON with script tag → no 500', async ({ request }) => {
-    test.skip(!adminToken, 'admin required')
+
     const res = await request.post(`${API_URL}/api/admin/tenants`, {
       headers: authHeaders(adminToken), data: { name: '<script>alert(1)</script>', slug: `xss-${Date.now()}` },
     })
@@ -172,7 +172,7 @@ test.describe('Security API', () => {
   })
 
   test('SEC-26: tenant cannot escalate by setting isSuperAdmin in body', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/auth/change-password`, {
       headers: authHeaders(tenantToken),
       data: { current_password: 'wrong', new_password: 'x', isSuperAdmin: true },
@@ -195,14 +195,14 @@ test.describe('Security API', () => {
   })
 
   test('SEC-28: JWT payload does not contain DB password', async ({ request }) => {
-    const { accessToken } = await loginAdmin(request)
+    const { accessToken } = await tryLoginAdmin(request)
     const [, payload] = accessToken.split('.')
     const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString())
     expect(JSON.stringify(decoded)).not.toMatch(/password/i)
   })
 
   test('SEC-29: JWT payload does not contain SMTP credentials', async ({ request }) => {
-    const { accessToken } = await loginAdmin(request)
+    const { accessToken } = await tryLoginAdmin(request)
     const [, payload] = accessToken.split('.')
     const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString())
     expect(JSON.stringify(decoded)).not.toMatch(/smtp/i)

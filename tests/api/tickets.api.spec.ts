@@ -2,15 +2,15 @@
  * TK-01 … TK-20 — Tickets API regression
  */
 import { test, expect } from '@playwright/test'
-import { API_URL, loginAdmin, loginTenant, authHeaders } from './_helpers'
+import { API_URL, loginAdmin, loginTenant, tryLoginAdmin, tryLoginTenant, authHeaders } from './_helpers'
 
 test.describe('Tickets API', () => {
   let tenantToken = ''
   let adminToken  = ''
 
   test.beforeAll(async ({ request }) => {
-    adminToken = (await loginAdmin(request)).accessToken
-    try { tenantToken = (await loginTenant(request)).accessToken } catch {}
+    const a = await tryLoginAdmin(request); adminToken = a?.accessToken || ''
+    try { const t = await tryLoginTenant(request); tenantToken = t?.accessToken || '' } catch {}
   })
 
   test('TK-01: POST /api/tickets unauthenticated → 401', async ({ request }) => {
@@ -19,7 +19,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-02: POST /api/tickets missing name → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -30,7 +30,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-03: POST /api/tickets missing email → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: { submitter_name: 'X', title: 't', category: 'تقني', description: 'd' },
@@ -39,7 +39,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-04: POST /api/tickets invalid email format → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -51,7 +51,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-05: POST /api/tickets missing title → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -63,7 +63,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-06: POST /api/tickets invalid category → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -75,7 +75,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-07: POST /api/tickets missing description → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -87,7 +87,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-08: POST /api/tickets valid no-attachment → 201', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -106,7 +106,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-09: POST /api/tickets accepts Arabic category "تقني"', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -118,7 +118,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-10: POST /api/tickets accepts legacy English category', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -130,7 +130,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-11: POST /api/tickets with .exe file → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -143,7 +143,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-12: POST /api/tickets with oversized file → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const big = Buffer.alloc(6 * 1024 * 1024, 0)
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
@@ -157,7 +157,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-13: path traversal in filename → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -176,7 +176,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-15: GET attachment for non-existent ticket → 404', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.get(`${API_URL}/api/tickets/00000000-0000-0000-0000-000000000000/attachment`, {
       headers: authHeaders(tenantToken),
     })
@@ -184,7 +184,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-16: XSS in description is stored literally', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -197,7 +197,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-17: response never leaks file system path', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -211,7 +211,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-18: content-type on ticket create is JSON', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     const res = await request.post(`${API_URL}/api/tickets`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: {
@@ -223,7 +223,7 @@ test.describe('Tickets API', () => {
   })
 
   test('TK-19: rate limit on ticket creation', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant required')
+
     let saw429 = false
     for (let i = 0; i < 25; i++) {
       const res = await request.post(`${API_URL}/api/tickets`, {

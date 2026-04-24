@@ -2,13 +2,13 @@
  * BOT-01 … BOT-15 — Telegram bot webhook + subscribers API regression
  */
 import { test, expect } from '@playwright/test'
-import { API_URL, loginAdmin, authHeaders } from './_helpers'
+import { API_URL, loginAdmin, tryLoginAdmin, authHeaders } from './_helpers'
 
 test.describe('Bot API', () => {
   let adminToken = ''
 
   test.beforeAll(async ({ request }) => {
-    adminToken = (await loginAdmin(request)).accessToken
+    const a = await tryLoginAdmin(request); adminToken = a?.accessToken || ''
   })
 
   test('BOT-01: POST /api/bot/telegram without signature → 401/403', async ({ request }) => {

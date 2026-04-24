@@ -47,21 +47,12 @@ test.describe('Auth API', () => {
     expect([400, 422]).toContain(res.status())
   })
 
-  // AUTH-05 — Rate limit
-  test('AUTH-05: brute-force 12× rapid → 429 at some point', async ({ request }) => {
-    let sawRateLimit = false
-    for (let i = 0; i < 12; i++) {
-      const res = await request.post(`${API_URL}/api/auth/login`, {
-        data: { email: ADMIN_EMAIL, password: 'WrongPass' + i },
-      })
-      if (res.status() === 429) { sawRateLimit = true; break }
-    }
-    expect(sawRateLimit).toBeTruthy()
-  })
+  // AUTH-05 — Rate limit (runs LAST in this suite to avoid tripping other beforeAlls)
+  // See end of file.
 
   // AUTH-06
   test('AUTH-06: valid tenant login → 200', async ({ request }) => {
-    test.skip(!CLIENT_EMAIL, 'tenant user not configured')
+
     const res = await request.post(`${API_URL}/api/auth/login`, {
       data: { email: CLIENT_EMAIL, password: CLIENT_PASSWORD },
     })
@@ -208,7 +199,7 @@ test.describe('Auth API', () => {
 
   // AUTH-24 — Cross-role token — tenant token should not have isSuperAdmin=true
   test('AUTH-24: tenant login → user.isSuperAdmin !== true', async ({ request }) => {
-    test.skip(!CLIENT_EMAIL, 'tenant user not configured')
+
     const res = await request.post(`${API_URL}/api/auth/login`, {
       data: { email: CLIENT_EMAIL, password: CLIENT_PASSWORD },
     })
@@ -247,7 +238,7 @@ test.describe('Auth API', () => {
 
   // AUTH-28 — Login response includes tenant context for tenant user
   test('AUTH-28: tenant login includes tenantId in user', async ({ request }) => {
-    test.skip(!CLIENT_EMAIL, 'tenant user not configured')
+
     const res = await request.post(`${API_URL}/api/auth/login`, {
       data: { email: CLIENT_EMAIL, password: CLIENT_PASSWORD },
     })
@@ -271,5 +262,18 @@ test.describe('Auth API', () => {
     const body = await res.text()
     expect(body).not.toMatch(/at Object/)
     expect(body).not.toMatch(/\.js:\d+:\d+/)
+  })
+
+  // AUTH-05 — Rate limit (runs LAST so we don't trip the limiter for other tests)
+  test('AUTH-05: brute-force 12× rapid → 429 at some point', async ({ request }) => {
+    test.setTimeout(60_000)
+    let sawRateLimit = false
+    for (let i = 0; i < 12; i++) {
+      const res = await request.post(`${API_URL}/api/auth/login`, {
+        data: { email: `bad-${Date.now()}-${i}@example.com`, password: 'WrongPass' + i },
+      })
+      if (res.status() === 429) { sawRateLimit = true; break }
+    }
+    expect(sawRateLimit).toBeTruthy()
   })
 })

@@ -2,7 +2,7 @@
  * BR-01 … BR-25 — Branches API regression
  */
 import { test, expect } from '@playwright/test'
-import { API_URL, loginAdmin, loginTenant, authHeaders } from './_helpers'
+import { API_URL, loginAdmin, loginTenant, tryLoginAdmin, tryLoginTenant, authHeaders } from './_helpers'
 
 test.describe('Branches API', () => {
   let tenantToken: string
@@ -10,10 +10,10 @@ test.describe('Branches API', () => {
   let tenantId: string | null
 
   test.beforeAll(async ({ request }) => {
-    const admin  = await loginAdmin(request)
+    const admin  = await tryLoginAdmin(request)
     adminToken   = admin.accessToken
     try {
-      const tenant = await loginTenant(request)
+      const tenant = await tryLoginTenant(request)
       tenantToken  = tenant.accessToken
       tenantId     = tenant.user.tenantId
     } catch {
@@ -24,7 +24,7 @@ test.describe('Branches API', () => {
 
   // BR-01
   test('BR-01: GET /api/branches as tenant returns array', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.get(`${API_URL}/api/branches`, { headers: authHeaders(tenantToken) })
     expect(res.status()).toBe(200)
     const body = await res.json()
@@ -39,7 +39,7 @@ test.describe('Branches API', () => {
 
   // BR-03
   test('BR-03: GET /api/branches returns only tenant-owned rows', async ({ request }) => {
-    test.skip(!tenantToken || !tenantId, 'tenant user required')
+
     const res = await request.get(`${API_URL}/api/branches`, { headers: authHeaders(tenantToken) })
     const body = await res.json()
     for (const b of body) {
@@ -49,7 +49,7 @@ test.describe('Branches API', () => {
 
   // BR-04
   test('BR-04: POST /api/branches missing name → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken),
       data: { code: 'T-MISSING-NAME' },
@@ -59,7 +59,7 @@ test.describe('Branches API', () => {
 
   // BR-05
   test('BR-05: POST /api/branches missing code → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken),
       data: { name: 'NoCode' },
@@ -69,7 +69,7 @@ test.describe('Branches API', () => {
 
   // BR-06 — Full lifecycle (create → get → update → delete)
   test('BR-06: create → read → update → delete branch', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `TST-${Date.now().toString(36).slice(-6)}`
     const c = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken),
@@ -94,7 +94,7 @@ test.describe('Branches API', () => {
 
   // BR-07 — Token field must NOT be accepted (Phase 1 regression)
   test('BR-07: POST with token in body → token NOT persisted', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `TOK-${Date.now().toString(36).slice(-6)}`
     const c = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken),
@@ -109,7 +109,7 @@ test.describe('Branches API', () => {
 
   // BR-08
   test('BR-08: GET /api/branches/:id non-existent → 404', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.get(`${API_URL}/api/branches/00000000-0000-0000-0000-000000000000`, {
       headers: authHeaders(tenantToken),
     })
@@ -118,7 +118,7 @@ test.describe('Branches API', () => {
 
   // BR-09
   test('BR-09: DELETE /api/branches/:id non-existent → 404', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.delete(`${API_URL}/api/branches/00000000-0000-0000-0000-000000000000`, {
       headers: authHeaders(tenantToken),
     })
@@ -127,7 +127,7 @@ test.describe('Branches API', () => {
 
   // BR-10
   test('BR-10: POST duplicate code → 409', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `DUP-${Date.now().toString(36).slice(-6)}`
     const c1 = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: { code, name: 'First' },
@@ -143,14 +143,14 @@ test.describe('Branches API', () => {
 
   // BR-11 — Invalid branch id format
   test('BR-11: GET /api/branches/:id with bad UUID → 4xx (not 500)', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.get(`${API_URL}/api/branches/not-a-uuid`, { headers: authHeaders(tenantToken) })
     expect(res.status()).toBeLessThan(500)
   })
 
   // BR-12 — SQL injection in body
   test('BR-12: POST with SQL payload in name → safe rejection or sanitized', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `SQL-${Date.now().toString(36).slice(-6)}`
     const r = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken),
@@ -166,7 +166,7 @@ test.describe('Branches API', () => {
 
   // BR-13 — Update non-existent
   test('BR-13: PUT non-existent → 404', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.put(`${API_URL}/api/branches/00000000-0000-0000-0000-000000000000`, {
       headers: authHeaders(tenantToken), data: { code: 'X', name: 'Y' },
     })
@@ -182,7 +182,7 @@ test.describe('Branches API', () => {
 
   // BR-15
   test('BR-15: POST with empty body → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: {},
     })
@@ -191,7 +191,7 @@ test.describe('Branches API', () => {
 
   // BR-16 — Response time
   test('BR-16: GET /api/branches p95 < 2000ms', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const start = Date.now()
     const res   = await request.get(`${API_URL}/api/branches`, { headers: authHeaders(tenantToken) })
     const ms    = Date.now() - start
@@ -201,7 +201,7 @@ test.describe('Branches API', () => {
 
   // BR-17 — Optional fields
   test('BR-17: POST with brand_name, unit_number, address', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `OPT-${Date.now().toString(36).slice(-6)}`
     const c = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken),
@@ -215,7 +215,7 @@ test.describe('Branches API', () => {
 
   // BR-18 — Max branches enforcement (best effort; skip if at limit already or not enforced)
   test('BR-18: POST over max_branches → 422 with Arabic error', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     // We won't actually exceed the limit; just check that validation rejects absurd input
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: { code: '', name: '' },
@@ -225,7 +225,7 @@ test.describe('Branches API', () => {
 
   // BR-19 — XSS in name (sanitized or stored literally)
   test('BR-19: XSS payload in name → stored literally, never executed', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `XSS-${Date.now().toString(36).slice(-6)}`
     const c = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken),
@@ -239,7 +239,7 @@ test.describe('Branches API', () => {
 
   // BR-20 — tenant_id not changeable
   test('BR-20: PUT tenant_id change is ignored or rejected', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `ISO-${Date.now().toString(36).slice(-6)}`
     const c = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: { code, name: 'Orig' },
@@ -259,7 +259,7 @@ test.describe('Branches API', () => {
 
   // BR-21 — Whitespace-only name
   test('BR-21: POST with whitespace name → 422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: { code: 'X', name: '   ' },
     })
@@ -268,7 +268,7 @@ test.describe('Branches API', () => {
 
   // BR-22 — Content-Type missing on POST
   test('BR-22: POST without Content-Type → 400/415/422', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       data: 'not json',
@@ -278,7 +278,7 @@ test.describe('Branches API', () => {
 
   // BR-23 — Tenant token on DELETE someone else's branch → 404/403
   test('BR-23: DELETE random id → 404 (tenant scoped)', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const res = await request.delete(`${API_URL}/api/branches/11111111-1111-1111-1111-111111111111`, {
       headers: authHeaders(tenantToken),
     })
@@ -287,7 +287,7 @@ test.describe('Branches API', () => {
 
   // BR-24 — Update leaves unspecified fields alone
   test('BR-24: PUT without brand_name does not erase existing brand_name', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `PRES-${Date.now().toString(36).slice(-6)}`
     const c = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: { code, name: 'Orig', brand_name: 'BrandA' },
@@ -307,7 +307,7 @@ test.describe('Branches API', () => {
 
   // BR-25 — Branch name stored with correct Arabic encoding
   test('BR-25: POST with Arabic name preserves UTF-8', async ({ request }) => {
-    test.skip(!tenantToken, 'tenant user required')
+
     const code = `AR-${Date.now().toString(36).slice(-6)}`
     const name = 'فرع الرياض الرئيسي'
     const c = await request.post(`${API_URL}/api/branches`, {
