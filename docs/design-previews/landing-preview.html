@@ -344,28 +344,38 @@
 /* ---- How it works ------------------------------------------------------- */
 .how {
   padding: 80px 24px;
-  background: var(--bg-alt);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.how-header { text-align: center; margin-bottom: 48px; }
-.how-header h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 12px; }
-.how-steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  max-width: 1000px;
-  margin: 0 auto;
+  background: linear-gradient(135deg, #C97B4A 0%, #A0552B 100%);
+  color: #FFF7ED;
   position: relative;
+  overflow: hidden;
+}
+.dark .how { background: linear-gradient(135deg, #6B3A1F 0%, #3F2010 100%); }
+.how-header { text-align: center; margin-bottom: 56px; position: relative; z-index: 2; }
+.how-header h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 12px; color: #FFF7ED; }
+.how-header p { color: rgba(255, 247, 237, 0.85); }
+.how-steps {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 320px;
 }
 .how-step {
+  position: absolute;
+  width: 360px;
   padding: 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  position: relative;
-  box-shadow: var(--shadow-sm), var(--ring-top);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18), var(--ring-top);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+  color: var(--text);
 }
+.how-step:hover { transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28), var(--ring-top); z-index: 10; }
+.how-step:nth-child(1) { top: 0; inset-inline-end: 0; transform: rotate(-2deg); z-index: 3; }
+.how-step:nth-child(2) { top: 40px; inset-inline-end: 280px; z-index: 2; }
+.how-step:nth-child(3) { top: 80px; inset-inline-end: 560px; transform: rotate(2deg); z-index: 1; }
+.how-step:nth-child(1):hover,
+.how-step:nth-child(3):hover { transform: translateY(-6px) rotate(0deg); }
 .how-step .num {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
@@ -374,10 +384,13 @@
   letter-spacing: 0.05em;
   margin-bottom: 12px;
 }
-.how-step h3 { font-size: 1rem; font-weight: 700; margin: 0 0 8px; }
+.how-step h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; }
 .how-step p { font-size: 14px; color: var(--text-sec); margin: 0; }
 
-@media (max-width: 800px) { .how-steps { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) {
+  .how-steps { height: auto; display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 480px; }
+  .how-step { position: static; width: auto; transform: none !important; }
+}
 
 /* ---- Pricing ------------------------------------------------------------ */
 .pricing {
