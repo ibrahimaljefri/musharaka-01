@@ -5,6 +5,7 @@ const cors    = require('cors')
 const path    = require('path')
 const { errorHandler } = require('./middleware/errorHandler')
 
+const authRoutes      = require('./routes/auth')
 const salesRoutes     = require('./routes/sales')
 const importRoutes    = require('./routes/import')
 const submitRoutes    = require('./routes/submit')
@@ -55,6 +56,7 @@ app.use(cors({
 }))
 
 // Body parsing with size limit (import route uses multipart — handled by Multer separately)
+app.use(require('cookie-parser')())
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: false, limit: '1mb' }))
 
@@ -69,6 +71,7 @@ app.use('/api', (req, res, next) => {
   next()
 })
 
+app.use('/api/auth',      authRoutes)
 app.use('/api/sales',     salesRoutes)
 app.use('/api/sales',     importRoutes)
 app.use('/api/submit',    submitRoutes)

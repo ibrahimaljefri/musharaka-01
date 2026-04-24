@@ -1,44 +1,37 @@
-const { supabase } = require('../config/supabase')
+const jwt = require('jsonwebtoken')
 
-// Fail fast — never run with a placeholder service role key
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY === 'placeholder-service-role-key') {
-  if (process.env.NODE_ENV === 'production') {
-    console.error('[FATAL] SUPABASE_SERVICE_ROLE_KEY is not configured. Exiting.')
-    process.exit(1)
-  }
+// Fail fast in production if JWT_SECRET is missing
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('[FATAL] JWT_SECRET is not configured. Exiting.')
+  process.exit(1)
 }
 
-async function authMiddleware(req, res, next) {
-  // Test-mode bypass: integration tests set X-Test-User-Id instead of a real JWT
+function authMiddleware(req, res, next) {
+  // Test-mode bypass — integration tests set X-Test-User-Id header
   if (process.env.NODE_ENV === 'test') {
     const testUserId = req.headers['x-test-user-id']
     if (testUserId) {
-      req.user = { id: testUserId }
+      req.user = { id: testUserId, email: 'test@test.com' }
       return next()
     }
   }
 
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
+  const header = req.headers.authorization
+  if (!header?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'غير مصرح' })
   }
-  const token = authHeader.split(' ')[1]
-  const { data: { user }, error } = await supabase.auth.getUser(token)
 
-  if (error || !user) {
-    // Diagnostic: log the reason Supabase rejected the token so production
-    // 401s can be distinguished (bad env key, expired token, wrong project).
-    // The token itself is never logged — only the Supabase error and metadata.
-    console.warn('[auth] getUser rejected token', {
-      route:  req.originalUrl,
-      reason: error?.message || 'no user returned',
-      status: error?.status,
-    })
-    return res.status(401).json({ error: 'جلسة منتهية، يرجى تسجيل الدخول مجدداً' })
+  const token = header.slice(7)
+  try {
+    const payload  = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-change-in-prod')
+    req.user       = { id: payload.sub, email: payload.email }
+    req.tenantId   = payload.tenantId   || null
+    req.userRole   = payload.role       || null
+    req.isSuperAdmin = payload.isSuperAdmin || false
+    next()
+  } catch {
+    return res.status(401).json({ error: 'انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجدداً' })
   }
-
-  req.user = user
-  next()
 }
 
 module.exports = { authMiddleware }
