@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../lib/axiosClient'
-import { supabase } from '../lib/supabaseClient'
 import { useAuthStore } from '../store/authStore'
 import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
@@ -64,8 +63,9 @@ export default function SaleCreate() {
   const [errors, setErrors]     = useState({})
 
   useEffect(() => {
-    supabase.from('branches').select('id,code,name').order('name')
-      .then(({ data }) => setBranches(data || []))
+    api.get('/branches')
+      .then(({ data }) => setBranches(Array.isArray(data) ? data : (data?.branches || [])))
+      .catch(() => setBranches([]))
   }, [])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))

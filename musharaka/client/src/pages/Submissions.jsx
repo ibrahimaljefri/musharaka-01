@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import api from '../lib/axiosClient'
 import BranchBadge from '../components/BranchBadge'
 import { ChevronDown, ChevronUp, Send, AlertCircle } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
@@ -59,8 +59,10 @@ function SubmissionCard({ sub }) {
   const toggle = async () => {
     if (!open && sales.length === 0) {
       setLoadingSales(true)
-      const { data } = await supabase.from('sales').select('*').eq('submission_id', sub.id).order('sale_date')
-      setSales(data || [])
+      try {
+        const { data } = await api.get('/sales', { params: { submission_id: sub.id, limit: 5000 } })
+        setSales(data?.sales || [])
+      } catch { setSales([]) }
       setLoadingSales(false)
     }
     setOpen(o => !o)
@@ -165,18 +167,31 @@ export default function Submissions() {
   const [loading, setLoading]         = useState(true)
 
   useEffect(() => {
-    supabase.from('branches').select('id,code,name').order('name').then(({ data }) => setBranches(data || []))
+    api.get('/branches')
+      .then(({ data }) => setBranches(Array.isArray(data) ? data : (data?.branches || [])))
+      .catch(() => setBranches([]))
     load({})
   }, [])
 
   async function load(f) {
     setLoading(true)
-    let q = supabase.from('submissions').select('*, branches(code,name)').order('submitted_at', { ascending: false })
-    if (f.branch_id) q = q.eq('branch_id', f.branch_id)
-    if (f.month)     q = q.eq('month', f.month)
-    if (f.year)      q = q.eq('year', f.year)
-    const { data } = await q
-    setSubmissions(data || [])
+    try {
+      const params = { limit: 1000 }
+      if (f.branch_id) params.branch_id = f.branch_id
+      if (f.month)     params.month     = f.month
+      if (f.year)      params.year      = f.year
+      const { data } = await api.get('/submissions', { params })
+      const rows = data?.submissions || []
+      // Enrich rows with branch info (API returns branch_code + branch_name via join)
+      const branchMap = new Map(branches.map(b => [b.id, b]))
+      const enriched = rows.map(r => ({
+        ...r,
+        branches: r.branch_code
+          ? { code: r.branch_code, name: r.branch_name }
+          : (branchMap.get(r.branch_id) ? { code: branchMap.get(r.branch_id).code, name: branchMap.get(r.branch_id).name } : null),
+      }))
+      setSubmissions(enriched)
+    } catch { setSubmissions([]) }
     setLoading(false)
   }
 

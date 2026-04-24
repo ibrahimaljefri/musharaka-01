@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import api from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../lib/useToast'
 import KpiCard from '../components/KpiCard'
@@ -172,36 +172,38 @@ function AdvancedDashboard({ branchId }) {
     const now = new Date()
     const y   = now.getFullYear()
 
-    // Monthly breakdown for current year
-    const monthlyPromises = Array.from({ length: 12 }, (_, i) => {
-      const m       = i + 1
-      const lastDay = new Date(y, m, 0).getDate()
-      const from    = `${y}-${String(m).padStart(2,'0')}-01`
-      const to      = `${y}-${String(m).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`
-      let q = supabase.from('sales').select('amount').gte('sale_date', from).lte('sale_date', to)
-      if (branchId) q = q.eq('branch_id', branchId)
-      return q
-    })
+    // Fetch all sales for this year in one call (tenant-scoped server-side)
+    const params = {
+      from:  `${y}-01-01`,
+      to:    `${y}-12-31`,
+      limit: 10000,
+    }
+    if (branchId) params.branch_id = branchId
 
-    // Sent vs pending
-    let sentQ    = supabase.from('sales').select('amount').eq('status', 'sent')
-    let pendingQ = supabase.from('sales').select('amount').eq('status', 'pending')
-    if (branchId) { sentQ = sentQ.eq('branch_id', branchId); pendingQ = pendingQ.eq('branch_id', branchId) }
+    let yearSales = []
+    try {
+      const { data } = await api.get('/sales', { params })
+      yearSales = data?.sales || []
+    } catch {
+      yearSales = []
+    }
 
-    const [monthlyResults, sentRes, pendingRes] = await Promise.all([
-      Promise.all(monthlyPromises),
-      sentQ,
-      pendingQ,
-    ])
-
-    const monthlyData = monthlyResults.map((r, i) => ({
+    // Monthly breakdown
+    const monthlyData = Array.from({ length: 12 }, (_, i) => ({
       key:   MONTHS_AR[i].slice(0, 3),
-      value: (r.data || []).reduce((s, row) => s + parseFloat(row.amount || 0), 0),
+      value: 0,
     }))
-
-    const sentTotal    = (sentRes.data    || []).reduce((s, r) => s + parseFloat(r.amount || 0), 0)
-    const pendingTotal = (pendingRes.data || []).reduce((s, r) => s + parseFloat(r.amount || 0), 0)
-    const grandTotal   = sentTotal + pendingTotal
+    let sentTotal = 0, pendingTotal = 0
+    for (const r of yearSales) {
+      if (!r.sale_date) continue
+      const d = new Date(r.sale_date)
+      const m = d.getMonth()
+      const amt = parseFloat(r.amount || 0)
+      monthlyData[m].value += amt
+      if (r.status === 'sent')    sentTotal    += amt
+      if (r.status === 'pending') pendingTotal += amt
+    }
+    const grandTotal = sentTotal + pendingTotal
 
     // Best month
     const best = [...monthlyData].sort((a, b) => b.value - a.value)[0]
@@ -305,19 +307,21 @@ export default function Dashboard() {
   const [branchQuota, setBranchQuota] = useState(null)
 
   useEffect(() => {
-    supabase.from('branches').select('id,code,name').order('name')
-      .then(({ data }) => setBranches(data || []))
+    api.get('/branches')
+      .then(({ data }) => setBranches(Array.isArray(data) ? data : (data?.branches || [])))
+      .catch(() => setBranches([]))
   }, [])
 
+  const maxBranches = useAuthStore(s => s.maxBranches)
   useEffect(() => {
     if (!tenantId) return
-    Promise.all([
-      supabase.from('branches').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-      supabase.from('tenants').select('max_branches').eq('id', tenantId).single(),
-    ]).then(([{ count: branchCount }, { data: tenantInfo }]) => {
-      setBranchQuota({ used: branchCount || 0, max: tenantInfo?.max_branches })
-    }).catch(() => {})
-  }, [tenantId])
+    api.get('/branches')
+      .then(({ data }) => {
+        const list = Array.isArray(data) ? data : (data?.branches || [])
+        setBranchQuota({ used: list.length, max: maxBranches ?? null })
+      })
+      .catch(() => {})
+  }, [tenantId, maxBranches])
 
   useEffect(() => { load() }, [branchId, page])
 
@@ -331,49 +335,58 @@ export default function Dashboard() {
     const mFrom   = `${y}-${String(m).padStart(2,'0')}-01`
     const mTo     = `${y}-${String(m).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`
 
-    let totalQ     = supabase.from('sales').select('amount')
-    let monthQ     = supabase.from('sales').select('amount').gte('sale_date', mFrom).lte('sale_date', mTo)
-    let countQ     = supabase.from('sales').select('id', { count: 'exact', head: true })
-    let pendingQ   = supabase.from('sales').select('id', { count: 'exact', head: true }).eq('status', 'pending')
-    let confirmedQ = supabase.from('sales').select('id', { count: 'exact', head: true }).eq('status', 'sent')
+    try {
+      // Fetch ALL tenant sales (server enforces tenant_id isolation) for totals
+      const allParams = { limit: 10000 }
+      if (branchId) allParams.branch_id = branchId
+      const allRes = await api.get('/sales', { params: allParams })
+      const allSales = allRes.data?.sales || []
 
-    if (branchId) {
-      totalQ     = totalQ.eq('branch_id', branchId)
-      monthQ     = monthQ.eq('branch_id', branchId)
-      countQ     = countQ.eq('branch_id', branchId)
-      pendingQ   = pendingQ.eq('branch_id', branchId)
-      confirmedQ = confirmedQ.eq('branch_id', branchId)
+      const total        = allSales.reduce((s, r) => s + parseFloat(r.amount || 0), 0)
+      const month        = allSales
+        .filter(r => r.sale_date >= mFrom && r.sale_date <= mTo)
+        .reduce((s, r) => s + parseFloat(r.amount || 0), 0)
+      const count        = allSales.length
+      const pendingCount = allSales.filter(r => r.status === 'pending').length
+      const confirmedCount = allSales.filter(r => r.status === 'sent').length
+
+      setKpis({ total, month, count, pendingCount, confirmedCount })
+      setKpisLoading(false)
+
+      // Paginated slice
+      const start = page * PAGE_SIZE
+      const end   = start + PAGE_SIZE
+      const branchMap = new Map(branches.map(b => [b.id, b]))
+      const enriched = allSales
+        .sort((a, b) => new Date(b.created_at || b.sale_date) - new Date(a.created_at || a.sale_date))
+        .slice(start, end)
+        .map(r => ({
+          ...r,
+          branches: branchMap.get(r.branch_id)
+            ? { code: branchMap.get(r.branch_id).code, name: branchMap.get(r.branch_id).name }
+            : null,
+        }))
+      setSales(enriched)
+      setTotalRows(count)
+    } catch (e) {
+      setKpis({ total: 0, month: 0, count: 0, pendingCount: 0, confirmedCount: 0 })
+      setKpisLoading(false)
+      setSales([])
+      setTotalRows(0)
     }
-
-    const [tRes, mRes, cRes, pRes, cfRes] = await Promise.all([totalQ, monthQ, countQ, pendingQ, confirmedQ])
-    const total = (tRes.data || []).reduce((s, r) => s + parseFloat(r.amount || 0), 0)
-    const month = (mRes.data || []).reduce((s, r) => s + parseFloat(r.amount || 0), 0)
-
-    setKpis({ total, month, count: cRes.count || 0, pendingCount: pRes.count || 0, confirmedCount: cfRes.count || 0 })
-    setKpisLoading(false)
-
-    // Paginated sales list
-    let rq = supabase
-      .from('sales')
-      .select('*, branches(code,name)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
-    if (branchId) rq = rq.eq('branch_id', branchId)
-    const { data: rows, count } = await rq
-    setSales(rows || [])
-    setTotalRows(count || 0)
     setLoading(false)
   }
 
   async function handleDelete() {
-    const { error } = await supabase.from('sales').delete().eq('id', deleteId).eq('status', 'pending')
-    setDeleteId(null)
-    if (error) {
-      toast.error('لا يمكن حذف هذا السجل')
-      return
+    try {
+      await api.delete(`/sales/${deleteId}`)
+      setDeleteId(null)
+      toast.success('تم حذف السجل بنجاح')
+      load()
+    } catch (err) {
+      setDeleteId(null)
+      toast.error(err.response?.data?.error || 'لا يمكن حذف هذا السجل')
     }
-    toast.success('تم حذف السجل بنجاح')
-    load()
   }
 
   const totalPages = Math.ceil(totalRows / PAGE_SIZE)

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
 import api from '../lib/axiosClient'
 import ButtonSpinner from '../components/ButtonSpinner'
 import { toast } from '../lib/useToast'
@@ -29,8 +28,9 @@ export default function Submit() {
   const [preflight, setPreflight] = useState({ checking: false, count: null, branchOk: null, reason: '' })
 
   useEffect(() => {
-    supabase.from('branches').select('id,code,name,contract_number,token').order('name')
-      .then(({ data }) => setBranches(data || []))
+    api.get('/branches')
+      .then(({ data }) => setBranches(Array.isArray(data) ? data : (data?.branches || [])))
+      .catch(() => setBranches([]))
   }, [])
 
   // When the user picks a branch+month+year, preflight:
@@ -53,21 +53,27 @@ export default function Submit() {
     const fromDate  = `${form.year}-${mm}-01`
     const toDate    = `${form.year}-${mm}-${String(lastDay).padStart(2, '0')}`
 
-    supabase.from('sales')
-      .select('id', { count: 'exact', head: true })
-      .eq('branch_id', form.branch_id)
-      .eq('status', 'pending')
-      .gte('sale_date', fromDate)
-      .lte('sale_date', toDate)
-      .then(({ count }) => {
-        if (cancelled) return
-        const branchOk = !!(branch.contract_number && branch.token)
-        let reason = ''
-        if (!branch.contract_number) reason = 'الفرع بدون رقم عقد (lease_code) — اطلب من الإدارة إضافته'
-        else if (!branch.token)      reason = 'الفرع بدون توكن التكامل — اطلب من الإدارة إضافته'
-        else if ((count ?? 0) === 0) reason = 'لا توجد فواتير معلقة لهذه الفترة'
-        setPreflight({ checking: false, count: count ?? 0, branchOk, reason })
-      })
+    api.get('/sales', {
+      params: {
+        branch_id: form.branch_id,
+        status:    'pending',
+        from:      fromDate,
+        to:        toDate,
+        limit:     1,
+      },
+    }).then(({ data }) => {
+      if (cancelled) return
+      const count = data?.total ?? 0
+      // Token lives on the tenant, not the branch — preflight only checks contract_number client-side;
+      // the server will surface token-missing errors at submit time.
+      const branchOk = !!branch.contract_number
+      let reason = ''
+      if (!branch.contract_number) reason = 'الفرع بدون رقم عقد (lease_code) — اطلب من الإدارة إضافته'
+      else if (count === 0)        reason = 'لا توجد فواتير معلقة لهذه الفترة'
+      setPreflight({ checking: false, count, branchOk, reason })
+    }).catch(() => {
+      if (!cancelled) setPreflight({ checking: false, count: 0, branchOk: false, reason: 'تعذر التحقق من الفواتير المعلقة' })
+    })
     return () => { cancelled = true }
   }, [form.branch_id, form.month, form.year, branches])
 

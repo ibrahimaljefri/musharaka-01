@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import api from '../lib/axiosClient'
 import KpiCard from '../components/KpiCard'
 import BranchBadge from '../components/BranchBadge'
 import PageHeader from '../components/PageHeader'
@@ -32,8 +32,9 @@ export default function Reports() {
   const [page, setPage]         = useState(1)
 
   useEffect(() => {
-    supabase.from('branches').select('id,code,name').order('name')
-      .then(({ data }) => setBranches(data || []))
+    api.get('/branches')
+      .then(({ data }) => setBranches(Array.isArray(data) ? data : (data?.branches || [])))
+      .catch(() => setBranches([]))
     runQuery({ branch_id: '', month: '', year: new Date().getFullYear() })
   }, [])
 
@@ -42,19 +43,34 @@ export default function Reports() {
 
   const runQuery = async (f) => {
     setLoading(true)
-    let q = supabase.from('sales').select('*, branches(code,name)').order('sale_date', { ascending: false })
-    if (f.branch_id) q = q.eq('branch_id', f.branch_id)
-    if (f.month)     q = q.eq('month', f.month)
-    if (f.year)      q = q.eq('year', f.year)
-    const { data } = await q
-    const rows = data || []
-    setSales(rows)
-    const total    = rows.reduce((s, r) => s + parseFloat(r.amount || 0), 0)
-    const count    = rows.length
-    const avg      = count ? total / count : 0
-    const days     = new Set(rows.map(r => r.sale_date)).size
-    const dailyAvg = days ? total / days : 0
-    setKpis({ total, avg, count, dailyAvg })
+    try {
+      const params = { limit: 10000 }
+      if (f.branch_id) params.branch_id = f.branch_id
+      if (f.month)     params.month     = f.month
+      if (f.year)      params.year      = f.year
+
+      const { data } = await api.get('/sales', { params })
+      const rows = data?.sales || []
+
+      // Enrich with branch info (so existing UI that expects row.branches.code still works)
+      const branchMap = new Map(branches.map(b => [b.id, b]))
+      const enriched = rows.map(r => ({
+        ...r,
+        branches: branchMap.get(r.branch_id)
+          ? { code: branchMap.get(r.branch_id).code, name: branchMap.get(r.branch_id).name }
+          : null,
+      }))
+      setSales(enriched)
+      const total    = enriched.reduce((s, r) => s + parseFloat(r.amount || 0), 0)
+      const count    = enriched.length
+      const avg      = count ? total / count : 0
+      const days     = new Set(enriched.map(r => r.sale_date)).size
+      const dailyAvg = days ? total / days : 0
+      setKpis({ total, avg, count, dailyAvg })
+    } catch {
+      setSales([])
+      setKpis({ total: 0, avg: 0, count: 0, dailyAvg: 0 })
+    }
     setLoading(false)
   }
 
