@@ -2,12 +2,17 @@
   "name": "musharaka-e2e",
   "private": true,
   "scripts": {
-    "test": "npx playwright test",
-    "test:ui": "npx playwright test --ui",
-    "test:headed": "npx playwright test --headed",
-    "test:report": "npx playwright show-report playwright-report"
+    "test":       "npx playwright test",
+    "test:api":   "npx playwright test --project=api",
+    "test:e2e":   "npx playwright test --project=chromium --project=admin",
+    "test:ui":    "npx playwright test --ui",
+    "test:headed":"npx playwright test --headed",
+    "test:report":"npx playwright show-report playwright-report",
+    "report:docx":"node scripts/generate-report.js",
+    "run:full":   "bash scripts/run-full-suite.sh"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.0"
+    "@playwright/test": "^1.48.0",
+    "docx":             "^8.5.0"
   }
 }

@@ -1,31 +1,31 @@
 /**
- * Auth setup — runs once before all authenticated test suites.
- * Saves storage state (cookies + localStorage) to fixtures/.auth/user.json
- * so every downstream project can reuse the session.
- *
- * Run requirements: real Supabase connection must be available.
+ * Auth setup — tenant user. Runs once before all `chromium`/`firefox`/etc. projects.
+ * Performs a real login via POST /api/auth/login, seeds localStorage, then saves
+ * storage state to fixtures/.auth/user.json.
  */
 import { test as setup, expect } from '@playwright/test'
-import path from 'path'
+import * as fs from 'fs'
+import * as path from 'path'
 
 const AUTH_FILE = path.join(__dirname, '../../fixtures/.auth/user.json')
 
-// Ignore any pre-existing storage state for this setup run
 setup.use({ storageState: { cookies: [], origins: [] } })
 
-setup('authenticate', async ({ page }) => {
-  await page.goto('/login')
+setup('tenant authenticate', async ({ page }) => {
+  const email    = process.env.TEST_USER_EMAIL    || process.env.TEST_EMAIL    || 'ibrahimaljefri@yahoo.com'
+  const password = process.env.TEST_USER_PASSWORD || process.env.TEST_PASSWORD || '123456'
 
-  // Page must load with RTL direction
+  await page.goto('/login')
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
 
-  await page.fill('input[type="email"]', process.env.TEST_EMAIL ?? 'test@musharaka.com')
-  await page.fill('input[type="password"]', process.env.TEST_PASSWORD ?? 'Test1234!')
+  await page.fill('input[type="email"]',    email)
+  await page.fill('input[type="password"]', password)
   await page.click('button[type="submit"]')
 
-  // Wait for redirect to dashboard — confirms successful authentication
-  await expect(page).toHaveURL('/dashboard', { timeout: 15_000 })
+  // Wait for redirect away from /login (dashboard OR change-password)
+  await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 15_000 })
 
-  // Persist the session for all downstream projects
+  // Persist session (localStorage access token + refresh cookie)
+  fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true })
   await page.context().storageState({ path: AUTH_FILE })
 })
