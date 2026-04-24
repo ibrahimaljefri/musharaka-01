@@ -1,8 +1,8 @@
 -- 001: Extensions and shared trigger functions
 -- Requires PostgreSQL 13+ (gen_random_uuid built-in)
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";   -- fallback for gen_random_uuid on older PG
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";    -- used for crypt() if needed later
+-- uuid-ossp and pgcrypto are not available on all cPanel hosts;
+-- gen_random_uuid() is built into PostgreSQL 13+ (no extension needed)
 
 -- Shared trigger: auto-update updated_at on any table
 CREATE OR REPLACE FUNCTION update_updated_at()
