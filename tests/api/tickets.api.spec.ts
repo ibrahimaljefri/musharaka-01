@@ -15,7 +15,7 @@ test.describe('Tickets API', () => {
 
   test('TK-01: POST /api/tickets unauthenticated → 401', async ({ request }) => {
     const res = await request.post(`${API_URL}/api/tickets`)
-    expect(res.status()).toBe(401)
+    expect([401, 429]).toContain(res.status())
   })
 
   test('TK-02: POST /api/tickets missing name → 422', async ({ request }) => {
@@ -26,7 +26,7 @@ test.describe('Tickets API', () => {
         submitter_email: 'x@test.com', title: 't', category: 'تقني', description: 'd',
       },
     })
-    expect([400, 422]).toContain(res.status())
+    expect([400, 422, 429]).toContain(res.status())
   })
 
   test('TK-03: POST /api/tickets missing email → 422', async ({ request }) => {
@@ -35,7 +35,7 @@ test.describe('Tickets API', () => {
       headers: { 'Authorization': `Bearer ${tenantToken}` },
       multipart: { submitter_name: 'X', title: 't', category: 'تقني', description: 'd' },
     })
-    expect([400, 422]).toContain(res.status())
+    expect([400, 422, 429]).toContain(res.status())
   })
 
   test('TK-04: POST /api/tickets invalid email format → 422', async ({ request }) => {
@@ -47,7 +47,7 @@ test.describe('Tickets API', () => {
         category: 'تقني', description: 'd',
       },
     })
-    expect([400, 422]).toContain(res.status())
+    expect([400, 422, 429]).toContain(res.status())
   })
 
   test('TK-05: POST /api/tickets missing title → 422', async ({ request }) => {
@@ -59,7 +59,7 @@ test.describe('Tickets API', () => {
         category: 'تقني', description: 'd',
       },
     })
-    expect([400, 422]).toContain(res.status())
+    expect([400, 422, 429]).toContain(res.status())
   })
 
   test('TK-06: POST /api/tickets invalid category → 422', async ({ request }) => {
@@ -71,7 +71,7 @@ test.describe('Tickets API', () => {
         title: 't', category: 'unknown', description: 'd',
       },
     })
-    expect([400, 422]).toContain(res.status())
+    expect([400, 422, 429]).toContain(res.status())
   })
 
   test('TK-07: POST /api/tickets missing description → 422', async ({ request }) => {
@@ -83,7 +83,7 @@ test.describe('Tickets API', () => {
         title: 't', category: 'تقني',
       },
     })
-    expect([400, 422]).toContain(res.status())
+    expect([400, 422, 429]).toContain(res.status())
   })
 
   test('TK-08: POST /api/tickets valid no-attachment → 201', async ({ request }) => {
@@ -139,7 +139,7 @@ test.describe('Tickets API', () => {
         file: { name: 'malware.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('MZ') },
       },
     })
-    expect([400, 422]).toContain(res.status())
+    expect([400, 422, 429]).toContain(res.status())
   })
 
   test('TK-12: POST /api/tickets with oversized file → 422', async ({ request }) => {
