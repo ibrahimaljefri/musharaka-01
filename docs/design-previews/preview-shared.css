@@ -264,6 +264,8 @@ section.alt {
   align-items: center;
   justify-content: space-between;
   padding: 12px 24px;
+  /* Reserve room for the floating theme toggle so it doesn't overlap user chip */
+  padding-inline-end: 72px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   gap: var(--space-4);
