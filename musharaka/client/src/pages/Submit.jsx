@@ -64,7 +64,7 @@ export default function Submit() {
         const branchOk = !!(branch.contract_number && branch.token)
         let reason = ''
         if (!branch.contract_number) reason = 'الفرع بدون رقم عقد (lease_code) — اطلب من الإدارة إضافته'
-        else if (!branch.token)      reason = 'الفرع بدون توكن سينومي — اطلب من الإدارة إضافته'
+        else if (!branch.token)      reason = 'الفرع بدون توكن التكامل — اطلب من الإدارة إضافته'
         else if ((count ?? 0) === 0) reason = 'لا توجد فواتير معلقة لهذه الفترة'
         setPreflight({ checking: false, count: count ?? 0, branchOk, reason })
       })
