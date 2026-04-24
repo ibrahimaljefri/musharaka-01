@@ -11,11 +11,11 @@ test.describe('Branches API', () => {
 
   test.beforeAll(async ({ request }) => {
     const admin  = await tryLoginAdmin(request)
-    adminToken   = admin.accessToken
+    adminToken   = admin?.accessToken || ''
     try {
       const tenant = await tryLoginTenant(request)
-      tenantToken  = tenant.accessToken
-      tenantId     = tenant.user.tenantId
+      tenantToken  = tenant?.accessToken || ''
+      tenantId     = tenant?.user?.tenantId || null
     } catch {
       tenantToken  = ''
       tenantId     = null

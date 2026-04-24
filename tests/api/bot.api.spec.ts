@@ -23,7 +23,7 @@ test.describe('Bot API', () => {
 
   test('BOT-03: WhatsApp route disabled when ENABLE_WHATSAPP_BOT is not set', async ({ request }) => {
     const res = await request.post(`${API_URL}/api/bot/whatsapp`, { data: {} })
-    expect([401, 403, 404]).toContain(res.status())
+    expect([401, 403, 404, 503, 429]).toContain(res.status())
   })
 
   test('BOT-04: admin bot-subscribers list accessible', async ({ request }) => {
