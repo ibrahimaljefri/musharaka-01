@@ -301,12 +301,23 @@ section.alt {
   top: 16px;
   inset-inline-start: 16px;
   z-index: 100;
-  padding: 8px 14px;
-  border-radius: var(--r-pill);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  font: 500 13px 'Tajawal', sans-serif;
   cursor: pointer;
   box-shadow: var(--shadow-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
+.theme-toggle:hover { background: var(--bg-subtle); transform: scale(1.05); }
+.theme-toggle svg { width: 18px; height: 18px; }
+.theme-toggle .icon-sun  { display: none; }
+.theme-toggle .icon-moon { display: block; }
+.dark .theme-toggle .icon-sun  { display: block; }
+.dark .theme-toggle .icon-moon { display: none; }
