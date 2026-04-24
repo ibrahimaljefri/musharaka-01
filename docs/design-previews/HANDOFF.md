@@ -30,9 +30,10 @@
 
 ## 🔴 Items needing your input
 
-1. **WhatsApp numbers for pre-sales engineers** (currently placeholders `+966 5X XXX XXXX`).
-   - How many engineers? 1 or 2?
-   - Real numbers + display name for each.
+1. **Pre-sales phone numbers** (currently placeholders `+966 5X XXX XXXX`).
+   - To update: open `landing-preview.html`, find the block marked `⚙ EDIT-HERE: Contact info` near line ~830, and replace the two `number` strings inside `window.URWA_CONTACT.phones`.
+   - The contact section AND the modal both pull from the same config, so editing once updates both.
+   - Email is also in the same block (currently `info@urwah.sa`).
 2. **Design approval on each of the 5 mockups** — all 5 must be approved before Phase E starts.
 3. **Brand gold shade** — current light: `#B8860B`, dark: `#FBBF24`. Acceptable?
 4. **Old deliverable doc** — `docs/deliverables/Musharaka_Marketing_Overview.docx` is locked by Word on your machine and couldn't be auto-deleted. The new `Urwa_Marketing_Overview.docx` exists beside it. Please delete the old file manually when Word releases the lock.
