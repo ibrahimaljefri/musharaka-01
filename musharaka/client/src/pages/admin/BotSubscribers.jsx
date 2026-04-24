@@ -6,7 +6,10 @@ import EmptyState from '../../components/EmptyState'
 import TenantBadge from '../../components/TenantBadge'
 import { TableSkeleton } from '../../components/SkeletonLoader'
 import TableControls from '../../components/TableControls'
+import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
+
+const PAGE_SIZE = 20
 import { Plus, Edit2, Trash2, MessageCircle, CheckCircle2, XCircle } from 'lucide-react'
 
 // Label/color maps kept for legacy whatsapp rows in the DB; the UI no longer
@@ -62,6 +65,12 @@ export default function BotSubscribers() {
       (s.contact_name || '').toLowerCase().includes(q)
     )
   }, [subscribers, search])
+
+  const [page, setPage] = useState(1)
+  useEffect(() => { setPage(1) }, [search])
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paged       = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <div className="space-y-6">
@@ -124,7 +133,7 @@ export default function BotSubscribers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filtered.map(s => (
+                {paged.map(s => (
                   <tr key={s.id} className="hover:bg-yellow-50/20 transition-colors">
                     <td className="px-4 py-3">
                       <TenantBadge name={s.tenant_name} subtext={s.contract_number} />
@@ -165,6 +174,9 @@ export default function BotSubscribers() {
                 ))}
               </tbody>
             </table>
+            <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+              <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+            </div>
           </div>
         )}
       </div>

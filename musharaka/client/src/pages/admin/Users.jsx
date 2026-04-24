@@ -5,7 +5,10 @@ import ConfirmDialog from '../../components/ConfirmDialog'
 import { TableSkeleton } from '../../components/SkeletonLoader'
 import TableControls from '../../components/TableControls'
 import SortableHeader from '../../components/SortableHeader'
+import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
+
+const PAGE_SIZE = 20
 import {
   UserPlus, Trash2, Clock, UserCheck,
   Building2, Eye, EyeOff, X, Pencil
@@ -405,6 +408,12 @@ export default function Users() {
     return list
   }, [users, search, sort])
 
+  const [page, setPage] = useState(1)
+  useEffect(() => { setPage(1) }, [search, sort])
+  const totalPages  = Math.max(1, Math.ceil(filteredSorted.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const pagedUsers  = filteredSorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -494,7 +503,7 @@ export default function Users() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredSorted.map(u => (
+                {pagedUsers.map(u => (
                   <tr key={u.id} className="hover:bg-yellow-50/20 transition-colors">
                     <td className="px-4 py-3 font-semibold text-gray-800 font-arabic">{u.full_name || '—'}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs font-mono">{u.email}</td>
@@ -527,6 +536,9 @@ export default function Users() {
                 ))}
               </tbody>
             </table>
+            <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+              <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+            </div>
           </div>
         )}
       </div>

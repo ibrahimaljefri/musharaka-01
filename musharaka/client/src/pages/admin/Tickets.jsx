@@ -9,8 +9,11 @@ import EmptyState from '../../components/EmptyState'
 import { TableSkeleton } from '../../components/SkeletonLoader'
 import TableControls from '../../components/TableControls'
 import SortableHeader from '../../components/SortableHeader'
+import Pagination from '../../components/Pagination'
 import { Ticket } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, CATEGORY_COLORS, fmtTicketDate } from '../../lib/ticketConstants'
+
+const PAGE_SIZE = 20
 
 const STATUS_FILTERS = [
   { value: null,        label: 'الكل' },
@@ -27,8 +30,11 @@ export default function Tickets() {
   const [search, setSearch]   = useState('')
   const [statusFilter, setStatusFilter] = useState(null)
   const [sort, setSort]       = useState({ field: null, dir: 'asc' })
+  const [page, setPage]       = useState(1)
 
   useEffect(() => { load() }, [])
+  // Reset to page 1 whenever filters/sort change
+  useEffect(() => { setPage(1) }, [search, statusFilter, sort])
 
   async function load() {
     setLoading(true)
@@ -67,6 +73,10 @@ export default function Tickets() {
     }
     return list
   }, [tickets, search, statusFilter, sort])
+
+  const totalPages   = Math.max(1, Math.ceil(filteredSorted.length / PAGE_SIZE))
+  const currentPage  = Math.min(page, totalPages)
+  const pagedTickets = filteredSorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <div className="space-y-6">
@@ -134,7 +144,7 @@ export default function Tickets() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredSorted.map(t => (
+                {pagedTickets.map(t => (
                   <tr
                     key={t.id}
                     onClick={() => navigate(`/admin/tickets/${t.id}`)}
@@ -165,6 +175,9 @@ export default function Tickets() {
                 ))}
               </tbody>
             </table>
+            <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+              <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+            </div>
           </div>
         )}
       </div>

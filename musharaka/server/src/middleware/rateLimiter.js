@@ -13,10 +13,12 @@ if (process.env.NODE_ENV === 'test') {
   return
 }
 
-// Standard API limiter — 60 requests per minute per IP
+// Standard API limiter — 240 requests per minute per IP.
+// Tuned for admin pages that fan out ~5 GETs on load (stats, tenants, users, tickets,
+// api-keys). A refresh-heavy admin session must never hit this.
 const standardLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: 240,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'طلبات كثيرة جداً، يرجى المحاولة لاحقاً' },

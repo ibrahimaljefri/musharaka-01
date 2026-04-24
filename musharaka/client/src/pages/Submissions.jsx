@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import BranchBadge from '../components/BranchBadge'
+import Pagination from '../components/Pagination'
+
+const SUBMISSIONS_PAGE_SIZE = 10
 import { ChevronDown, ChevronUp, Send, AlertCircle } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 
@@ -266,10 +269,23 @@ export default function Submissions() {
           }
         />
       ) : (
-        <div className="space-y-3">
-          {submissions.map(sub => <SubmissionCard key={sub.id} sub={sub} />)}
-        </div>
+        <SubmissionsList submissions={submissions} />
       )}
+    </div>
+  )
+}
+
+function SubmissionsList({ submissions }) {
+  const [page, setPage] = useState(1)
+  useEffect(() => { setPage(1) }, [submissions])
+  const totalPages  = Math.max(1, Math.ceil(submissions.length / SUBMISSIONS_PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paged       = submissions.slice((currentPage - 1) * SUBMISSIONS_PAGE_SIZE, currentPage * SUBMISSIONS_PAGE_SIZE)
+
+  return (
+    <div className="space-y-3">
+      {paged.map(sub => <SubmissionCard key={sub.id} sub={sub} />)}
+      <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
     </div>
   )
 }

@@ -4,8 +4,11 @@ import api from '../lib/axiosClient'
 import BranchBadge from '../components/BranchBadge'
 import ConfirmDialog from '../components/ConfirmDialog'
 import TableControls from '../components/TableControls'
+import Pagination from '../components/Pagination'
 import { TableSkeleton } from '../components/SkeletonLoader'
 import { toast } from '../lib/useToast'
+
+const PAGE_SIZE = 20
 import { Plus, Edit2, Trash2, Building2, AlertTriangle } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import { useAuthStore } from '../store/authStore'
@@ -53,6 +56,12 @@ export default function Branches() {
       (b.location || '').toLowerCase().includes(q)
     )
   }, [branches, search])
+
+  const [page, setPage] = useState(1)
+  useEffect(() => { setPage(1) }, [search])
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paged       = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   // Limit enforcement
   const atLimit    = maxBranches != null && branches.length >= maxBranches
@@ -153,7 +162,7 @@ export default function Branches() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
-                  {filtered.map((b, i) => (
+                  {paged.map((b, i) => (
                     <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40">
                       <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
                       <td className="px-4 py-3"><BranchBadge code={b.code} /></td>
@@ -183,6 +192,9 @@ export default function Branches() {
                   )}
                 </tbody>
               </table>
+            </div>
+            <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+              <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
             </div>
           </div>
         )}
