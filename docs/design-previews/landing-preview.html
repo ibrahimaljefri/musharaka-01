@@ -285,7 +285,7 @@
 .feature-card {
   padding: 18px 20px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm), var(--ring-top);
   display: grid;
@@ -302,8 +302,12 @@
 .feature-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg), var(--ring-top);
-  border-color: var(--border-strong);
 }
+/* Each card hover border matches its icon color */
+.feature-card:nth-child(1):hover { border-color: #B45309; box-shadow: 0 12px 32px rgba(180, 83, 9, 0.22), var(--ring-top); }
+.feature-card:nth-child(2):hover { border-color: #047857; box-shadow: 0 12px 32px rgba(4, 120, 87, 0.22), var(--ring-top); }
+.feature-card:nth-child(3):hover { border-color: #1E40AF; box-shadow: 0 12px 32px rgba(30, 64, 175, 0.22), var(--ring-top); }
+.feature-card:nth-child(4):hover { border-color: #BE185D; box-shadow: 0 12px 32px rgba(190, 24, 93, 0.22), var(--ring-top); }
 .feature-card:hover .feature-arrow { transform: translateX(-4px); opacity: 1; }
 .feature-icon {
   width: 44px;
