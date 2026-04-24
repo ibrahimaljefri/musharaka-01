@@ -375,14 +375,12 @@
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18), var(--ring-top);
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
   color: var(--text);
 }
-/* Staggered vertical offset (no overlap, small gap) — 01 right, 02 middle, 03 left in RTL */
+/* Staggered vertical offset — 01 right, 02 middle, 03 left in RTL. No transition. */
 .how-step:nth-child(1) { transform: translateY(0); }
 .how-step:nth-child(2) { transform: translateY(28px); }
 .how-step:nth-child(3) { transform: translateY(56px); }
-.how-step:hover { transform: translateY(-6px); box-shadow: 0 28px 64px rgba(0, 0, 0, 0.32), var(--ring-top); }
 
 .how-step .num {
   font-family: 'JetBrains Mono', monospace;
