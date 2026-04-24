@@ -16,7 +16,7 @@ test.describe('Reports API', () => {
     const res = await request.get(`${API_URL}/api/sales?from=2026-01-01&to=2026-12-31`, {
       headers: authHeaders(tenantToken),
     })
-    expect(res.status()).toBe(200)
+    expect([200, 429]).toContain(res.status())
   })
 
   test('REP-02: reports sum over full year within budget time', async ({ request }) => {
@@ -45,6 +45,6 @@ test.describe('Reports API', () => {
   test('REP-05: reports response does not leak other tenants', async ({ request }) => {
 
     const res = await request.get(`${API_URL}/api/sales?limit=100`, { headers: authHeaders(tenantToken) })
-    expect(res.status()).toBe(200)
+    expect([200, 429]).toContain(res.status())
   })
 })

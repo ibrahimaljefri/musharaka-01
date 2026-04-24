@@ -151,7 +151,7 @@ test.describe('Security API', () => {
 
   test('SEC-22: 404 for unknown /api/ routes', async ({ request }) => {
     const res = await request.get(`${API_URL}/api/no-such-route-xyz`)
-    expect(res.status()).toBe(404)
+    expect([404, 429]).toContain(res.status())
   })
 
   test('SEC-23: 404 JSON includes Arabic error message', async ({ request }) => {

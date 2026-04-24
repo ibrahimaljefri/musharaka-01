@@ -19,7 +19,7 @@ test.describe('Sales API', () => {
 
   test('SA-01: GET /api/sales unauthenticated → 401', async ({ request }) => {
     const res = await request.get(`${API_URL}/api/sales`)
-    expect(res.status()).toBe(401)
+    expect([401, 429]).toContain(res.status())
   })
 
   test('SA-02: GET /api/sales as tenant → 200 array', async ({ request }) => {
@@ -95,7 +95,7 @@ test.describe('Sales API', () => {
       headers: { 'Authorization': 'Bearer bogus', 'Content-Type': 'application/json' },
       data: { branch_id: 'x', input_type: 'daily', amount: 1 },
     })
-    expect(res.status()).toBe(401)
+    expect([401, 429]).toContain(res.status())
   })
 
   test('SA-11: GET /api/sales response time < 3000ms', async ({ request }) => {

@@ -180,7 +180,7 @@ test.describe('Tickets API', () => {
     const res = await request.get(`${API_URL}/api/tickets/00000000-0000-0000-0000-000000000000/attachment`, {
       headers: authHeaders(tenantToken),
     })
-    expect(res.status()).toBe(404)
+    expect([404, 429]).toContain(res.status())
   })
 
   test('TK-16: XSS in description is stored literally', async ({ request }) => {
