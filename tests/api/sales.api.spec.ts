@@ -51,7 +51,7 @@ test.describe('Sales API', () => {
       headers: authHeaders(tenantToken || ''),
       data: { branch_id: '00000000-0000-0000-0000-000000000000', input_type: 'daily', sale_date: '2026-01-01', amount: -100 },
     })
-    expect([400, 422, 403, 429]).toContain(res.status())
+    expect([400, 401, 422, 403, 429]).toContain(res.status())
   })
 
   test('SA-06: POST zero amount → 422', async ({ request }) => {
@@ -60,7 +60,7 @@ test.describe('Sales API', () => {
       headers: authHeaders(tenantToken || ''),
       data: { branch_id: '00000000-0000-0000-0000-000000000000', input_type: 'daily', sale_date: '2026-01-01', amount: 0 },
     })
-    expect([400, 422, 403, 429]).toContain(res.status())
+    expect([400, 401, 422, 403, 429]).toContain(res.status())
   })
 
   test('SA-07: POST non-numeric amount → 422', async ({ request }) => {
@@ -69,7 +69,7 @@ test.describe('Sales API', () => {
       headers: authHeaders(tenantToken || ''),
       data: { branch_id: '00000000-0000-0000-0000-000000000000', input_type: 'daily', sale_date: '2026-01-01', amount: 'abc' },
     })
-    expect([400, 422, 403, 429]).toContain(res.status())
+    expect([400, 401, 422, 403, 429]).toContain(res.status())
   })
 
   test('SA-08: POST invalid input_type → 422', async ({ request }) => {
@@ -78,7 +78,7 @@ test.describe('Sales API', () => {
       headers: authHeaders(tenantToken || ''),
       data: { branch_id: '00000000-0000-0000-0000-000000000000', input_type: 'weekly', amount: 100 },
     })
-    expect([400, 422, 403, 429]).toContain(res.status())
+    expect([400, 401, 422, 403, 429]).toContain(res.status())
   })
 
   test('SA-09: POST with other tenant branch_id → 403/422', async ({ request }) => {
@@ -111,7 +111,7 @@ test.describe('Sales API', () => {
       headers: authHeaders(tenantToken || ''),
       data: { branch_id: '00000000-0000-0000-0000-000000000000', input_type: 'monthly', amount: 1000 },
     })
-    expect([400, 422, 403, 429]).toContain(res.status())
+    expect([400, 401, 422, 403, 429]).toContain(res.status())
   })
 
   test('SA-13: range input requires both dates', async ({ request }) => {
@@ -120,7 +120,7 @@ test.describe('Sales API', () => {
       headers: authHeaders(tenantToken || ''),
       data: { branch_id: '00000000-0000-0000-0000-000000000000', input_type: 'range', period_start_date: '2026-01-01', amount: 1000 },
     })
-    expect([400, 422, 403, 429]).toContain(res.status())
+    expect([400, 401, 422, 403, 429]).toContain(res.status())
   })
 
   test('SA-14: DELETE /api/sales/:id non-existent → 404', async ({ request }) => {

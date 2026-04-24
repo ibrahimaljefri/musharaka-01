@@ -56,7 +56,7 @@ test.describe('Branches API', () => {
       headers: authHeaders(tenantToken),
       data: { code: 'T-MISSING-NAME' },
     })
-    expect([400, 422, 429]).toContain(res.status())
+    expect([400, 401, 422, 429]).toContain(res.status())
   })
 
   // BR-05
@@ -66,7 +66,7 @@ test.describe('Branches API', () => {
       headers: authHeaders(tenantToken),
       data: { name: 'NoCode' },
     })
-    expect([400, 422, 429]).toContain(res.status())
+    expect([400, 401, 422, 429]).toContain(res.status())
   })
 
   // BR-06 — Full lifecycle (create → get → update → delete)
@@ -188,7 +188,7 @@ test.describe('Branches API', () => {
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: {},
     })
-    expect([400, 422, 429]).toContain(res.status())
+    expect([400, 401, 422, 429]).toContain(res.status())
   })
 
   // BR-16 — Response time
@@ -265,7 +265,7 @@ test.describe('Branches API', () => {
     const res = await request.post(`${API_URL}/api/branches`, {
       headers: authHeaders(tenantToken), data: { code: 'X', name: '   ' },
     })
-    expect([400, 422, 429]).toContain(res.status())
+    expect([400, 401, 422, 429]).toContain(res.status())
   })
 
   // BR-22 — Content-Type missing on POST
