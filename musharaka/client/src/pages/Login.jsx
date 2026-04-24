@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import api, { TOKEN_KEY } from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import AlertBanner from '../components/AlertBanner'
@@ -33,13 +33,21 @@ export default function Login() {
     if (!form.email) return setError('البريد الإلكتروني مطلوب')
     if (!form.password) return setError('كلمة المرور مطلوبة')
     setLoading(true)
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email: form.email, password: form.password,
-    })
-    setLoading(false)
-    if (err) return setError('بيانات الدخول غير صحيحة. يرجى المحاولة مجدداً.')
-    await init()
-    navigate(getRedirect(), { replace: true })
+    try {
+      const { data } = await api.post('/auth/login', { email: form.email, password: form.password })
+      localStorage.setItem(TOKEN_KEY, data.accessToken)
+      await init()
+      navigate(getRedirect(), { replace: true })
+    } catch (err) {
+      const msg = err.response?.data?.error || ''
+      if (msg.includes('NEEDS_RESET') || msg.includes('إعادة تعيين')) {
+        setError('هذا الحساب يحتاج إعادة تعيين كلمة المرور — تحقق من بريدك الإلكتروني.')
+      } else {
+        setError('بيانات الدخول غير صحيحة. يرجى المحاولة مجدداً.')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

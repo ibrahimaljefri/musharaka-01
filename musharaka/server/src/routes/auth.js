@@ -228,9 +228,11 @@ function publicUser(u) {
     allowed_input_types:      u.allowed_input_types || ['daily'],
     allow_advanced_dashboard: u.allow_advanced_dashboard || false,
     allow_import:             u.allow_import   || false,
-    allow_reports:            u.allow_reports  || false,
-    max_branches:             u.max_branches   || 3,
-    max_users:                u.max_users      || 10,
+    allow_reports:            u.allow_reports        || false,
+    max_branches:             u.max_branches         || 3,
+    max_users:                u.max_users            || 10,
+    activated_at:             u.tenant_activated_at  || null,
+    plan:                     u.tenant_plan          || null,
   }
 }
 

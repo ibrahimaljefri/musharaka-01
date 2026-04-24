@@ -10,6 +10,7 @@ const LandingPage      = lazy(() => import('./pages/LandingPage'))
 const Login            = lazy(() => import('./pages/Login'))
 const Register         = lazy(() => import('./pages/Register'))
 const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword    = lazy(() => import('./pages/ResetPassword'))
 const ChangePassword   = lazy(() => import('./pages/ChangePassword'))
 
 // Protected pages
@@ -123,6 +124,7 @@ export default function App() {
             <Route path="/login"            element={<GuestRoute><Login /></GuestRoute>} />
             <Route path="/register"         element={<GuestRoute><Register /></GuestRoute>} />
             <Route path="/forgot-password"  element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+            <Route path="/reset-password"   element={<GuestRoute><ResetPassword /></GuestRoute>} />
           </Route>
 
           {/* Force password change — authenticated but outside AppLayout */}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import api, { TOKEN_KEY } from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
 import { UserPlus, CheckCircle } from 'lucide-react'
 import FormField from '../components/FormField'
@@ -89,17 +89,20 @@ export default function Register() {
       if (/^0/.test(n))   return '966' + n.slice(1)
       return '966' + n
     })()
-    const { error: err } = await supabase.auth.signUp({
-      email: form.email, password: form.password,
-      options: { data: { full_name: form.name, phone: canonicalPhone } },
-    })
-    setLoading(false)
-    if (err) {
-      setGeneralError(err.message.includes('already') ? 'البريد الإلكتروني مسجل مسبقاً.' : 'حدث خطأ، يرجى المحاولة مجدداً.')
-      return
+    try {
+      const { data } = await api.post('/auth/signup', {
+        email: form.email, password: form.password,
+        full_name: form.name, phone: canonicalPhone,
+      })
+      localStorage.setItem(TOKEN_KEY, data.accessToken)
+      await init()
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      const msg = err.response?.data?.error || ''
+      setGeneralError(msg.includes('مسبقاً') ? 'البريد الإلكتروني مسجل مسبقاً.' : 'حدث خطأ، يرجى المحاولة مجدداً.')
+    } finally {
+      setLoading(false)
     }
-    await init()
-    navigate('/dashboard', { replace: true })
   }
 
   return (

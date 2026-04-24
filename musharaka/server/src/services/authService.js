@@ -60,7 +60,9 @@ async function loadUserWithContext(userId) {
        t.allow_import,
        t.allow_reports,
        t.max_branches,
-       t.max_users
+       t.max_users,
+       t.activated_at  AS tenant_activated_at,
+       t.plan          AS tenant_plan
      FROM app_users u
      LEFT JOIN tenant_users tu ON tu.user_id = u.id
      LEFT JOIN tenants      t  ON t.id = tu.tenant_id

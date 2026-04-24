@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { devAuth } from '../lib/devAuth'
+import api from '../lib/axiosClient'
 import { KeyRound, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import LogoMark from '../components/LogoMark'
 import AlertBanner from '../components/AlertBanner'
@@ -40,20 +40,19 @@ export default function ChangePassword({ forced = false }) {
     if (form.next === form.current) return setError('كلمة المرور الجديدة يجب أن تختلف عن الحالية')
 
     setLoading(true)
-    const users = JSON.parse(localStorage.getItem('dev_auth_users') || '[]')
-    const me    = users.find(u => u.id === user?.id)
-    if (!me || me.password !== form.current) {
+    try {
+      await api.post('/auth/change-password', {
+        current_password: form.current,
+        new_password: form.next,
+      })
+      useAuthStore.setState({ mustChangePassword: false })
+      setDone(true)
+      setTimeout(() => navigate('/dashboard', { replace: true }), 1500)
+    } catch (err) {
+      setError(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
+    } finally {
       setLoading(false)
-      return setError('كلمة المرور الحالية غير صحيحة')
     }
-
-    const { error: err } = await devAuth.changePassword(form.next)
-    setLoading(false)
-    if (err) return setError(err.message)
-
-    useAuthStore.setState({ mustChangePassword: false })
-    setDone(true)
-    setTimeout(() => navigate('/dashboard', { replace: true }), 1500)
   }
 
   // ── Success screen ──────────────────────────────────────────────────────────
