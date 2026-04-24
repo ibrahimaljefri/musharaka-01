@@ -258,6 +258,47 @@ section.alt {
   }
 }
 
+/* ---- App shell (header used by internal-page mockups) ------------------- */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: var(--space-4);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.app-topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.app-topbar .brand img { height: 28px; width: auto; display: block; }
+.app-topbar .crumbs {
+  font-size: 14px;
+  color: var(--text-sec);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-topbar .crumbs .sep { color: var(--text-muted); }
+.app-topbar .crumbs .current { color: var(--text); font-weight: 600; }
+.app-topbar .user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: var(--bg-subtle);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+}
+.app-topbar .avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #FBBF24, var(--brand));
+  display: grid; place-items: center; color: white; font-weight: 700; font-size: 12px;
+}
+
 /* ---- Preview harness — viewport frames (only in index/preview pages) ---- */
 .preview-shell {
   display: grid;
