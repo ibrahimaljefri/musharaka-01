@@ -1,6 +1,9 @@
 /**
- * Shared helpers for API regression tests.
- * Tests use Playwright's `request` fixture (APIRequestContext).
+ * Shared helpers for API regression tests (Playwright APIRequestContext).
+ *
+ * Uses module-level token caching so we hit /api/auth/login ONCE per process.
+ * This avoids cascading rate-limit failures when many spec files each call
+ * loginAdmin/loginTenant in their beforeAll hook.
  */
 import { APIRequestContext, expect } from '@playwright/test'
 
@@ -17,15 +20,18 @@ export interface AuthTokens {
   }
 }
 
-/** Log in and return access token + user.
- *  Retries on 429 (rate-limited) with exponential backoff up to ~70s total
- *  to survive the rate-limit window after AUTH-05's brute-force test. */
-export async function login(
+// ── Module-level token cache ─────────────────────────────────────────────
+let cachedAdmin:  AuthTokens | null = null
+let cachedTenant: AuthTokens | null = null
+
+/** Log in with short retry-on-429. Max ~9s so it fits inside the 30s
+ *  test timeout even when called inside a beforeAll hook. */
+async function rawLogin(
   request: APIRequestContext,
   email: string,
   password: string
 ): Promise<AuthTokens> {
-  const waits = [0, 5000, 10000, 15000, 20000, 20000]  // ~70s total
+  const waits = [0, 3000, 6000]    // ~9s total, 3 attempts
   let lastStatus = 0
   let lastBody   = ''
   for (const w of waits) {
@@ -36,29 +42,43 @@ export async function login(
     if (res.ok()) return res.json()
     lastStatus = res.status()
     lastBody   = await res.text()
-    if (lastStatus !== 429) break   // non-rate-limit errors don't benefit from retry
+    if (lastStatus !== 429) break
   }
-  expect.soft(false, `login failed for ${email}: ${lastStatus} ${lastBody}`).toBeTruthy()
-  throw new Error(`login failed for ${email}: ${lastStatus}`)
+  throw new Error(`login failed for ${email}: ${lastStatus} ${lastBody}`)
+}
+
+/** Hits the endpoint. Fails the test if login fails. */
+export async function login(
+  request: APIRequestContext,
+  email: string,
+  password: string
+): Promise<AuthTokens> {
+  const tokens = await rawLogin(request, email, password)
+  expect(tokens.accessToken, 'login must return access token').toBeTruthy()
+  return tokens
 }
 
 export async function loginAdmin(request: APIRequestContext): Promise<AuthTokens> {
-  return login(
+  if (cachedAdmin) return cachedAdmin
+  cachedAdmin = await login(
     request,
     process.env.TEST_ADMIN_EMAIL || 'admin@admin.com',
     process.env.TEST_ADMIN_PASSWORD || 'admin123'
   )
+  return cachedAdmin
 }
 
 export async function loginTenant(request: APIRequestContext): Promise<AuthTokens> {
-  return login(
+  if (cachedTenant) return cachedTenant
+  cachedTenant = await login(
     request,
     process.env.TEST_USER_EMAIL || 'ibrahimaljefri@yahoo.com',
     process.env.TEST_USER_PASSWORD || '123456'
   )
+  return cachedTenant
 }
 
-/** Non-throwing login helpers for beforeAll — return null on any failure so
+/** Non-throwing variants for beforeAll — return null on any failure so
  *  the suite still runs tests that don't need a token. */
 export async function tryLoginAdmin(request: APIRequestContext): Promise<AuthTokens | null> {
   try { return await loginAdmin(request) } catch { return null }
