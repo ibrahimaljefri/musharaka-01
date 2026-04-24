@@ -379,10 +379,10 @@
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), z-index 0s;
   color: var(--text);
 }
-/* RTL flow: step 01 on the right, 02 middle, 03 left — slight overlap */
-.how-step:nth-child(1) { top: 0;   inset-inline-end: 0;   z-index: 3; }
-.how-step:nth-child(2) { top: 30px; inset-inline-end: 240px; z-index: 2; }
-.how-step:nth-child(3) { top: 60px; inset-inline-end: 480px; z-index: 1; }
+/* RTL flow: step 01 on the right (inline-start), 02 middle, 03 left — slight overlap */
+.how-step:nth-child(1) { top: 0;   inset-inline-start: 0;   z-index: 3; }
+.how-step:nth-child(2) { top: 30px; inset-inline-start: 240px; z-index: 2; }
+.how-step:nth-child(3) { top: 60px; inset-inline-start: 480px; z-index: 1; }
 .how-step:hover { transform: translateY(-8px); box-shadow: 0 28px 64px rgba(0, 0, 0, 0.32), var(--ring-top); z-index: 10; }
 
 .how-step .num {
