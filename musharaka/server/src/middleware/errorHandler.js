@@ -21,6 +21,9 @@ function isBadInputError(err) {
   if (err?.code === '22P02') return true   // invalid_text_representation
   if (err?.code === '22008') return true   // datetime_field_overflow
   if (err?.code === '22023') return true   // invalid_parameter_value
+  if (err?.code === '23503') return true   // foreign_key_violation
+  if (err?.code === '23514') return true   // check_violation
+  if (err?.code === '23502') return true   // not_null_violation
   return BAD_INPUT_PATTERNS.some(rx => rx.test(msg))
 }
 
