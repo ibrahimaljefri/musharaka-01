@@ -1,7 +1,7 @@
 /* Shared form page for BranchCreate + BranchEdit. Scoped under .branch-form-page. */
 
 .branch-form-page {
-  max-width: 860px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-5, 24px);
   color: var(--text);

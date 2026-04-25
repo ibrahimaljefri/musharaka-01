@@ -1,7 +1,7 @@
 /* Submit page — scoped under .submit-page. */
 
 .submit-page {
-  max-width: 640px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: var(--space-5, 24px);
   color: var(--text);

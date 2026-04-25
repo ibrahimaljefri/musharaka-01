@@ -457,21 +457,46 @@ export default function Dashboard() {
     return months
   }, [allSalesCache, chartRange]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Chart path for SVG area
+  // Chart path + axis ticks for SVG area
   const chartPath = useMemo(() => {
     if (!chartData || chartData.length === 0) return null
-    const W = 600, H = 200
+    // Inner plotting area with margins for axis labels
+    const W = 800, H = 260
+    const M = { top: 12, right: 16, bottom: 32, left: 56 } // margins inside viewBox
+    const innerW = W - M.left - M.right
+    const innerH = H - M.top - M.bottom
     const max = Math.max(...chartData.map(d => d.value), 1)
-    const step = chartData.length > 1 ? W / (chartData.length - 1) : W
+    const step = chartData.length > 1 ? innerW / (chartData.length - 1) : innerW
     const coords = chartData.map((d, i) => {
-      const x = (i * step).toFixed(2)
-      const y = (H - (d.value / max) * (H - 20) - 10).toFixed(2)
-      return `${x},${y}`
+      const x = (M.left + i * step).toFixed(2)
+      const y = (M.top + (1 - d.value / max) * innerH).toFixed(2)
+      return { x, y, label: d.label, value: d.value }
     })
-    const line = coords.join(' ')
-    const area = `M${coords[0]} L${coords.slice(1).join(' L')} L${W},${H} L0,${H} Z`
-    return { line, area }
+    const line = coords.map(c => `${c.x},${c.y}`).join(' ')
+    const last = coords[coords.length - 1]
+    const first = coords[0]
+    const area = `M${first.x},${first.y} ${coords.slice(1).map(c => `L${c.x},${c.y}`).join(' ')} L${last.x},${M.top + innerH} L${first.x},${M.top + innerH} Z`
+
+    // Y-axis ticks: 0, 25%, 50%, 75%, 100% of max
+    const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({
+      y: M.top + (1 - t) * innerH,
+      value: max * t,
+    }))
+
+    // X-axis ticks: show every Nth label so they don't overlap (max ~8 labels visible)
+    const xLabelEvery = Math.max(1, Math.ceil(chartData.length / 8))
+    const xTicks = coords
+      .map((c, i) => ({ ...c, show: i % xLabelEvery === 0 || i === coords.length - 1 }))
+
+    return { W, H, M, innerW, innerH, line, area, coords, yTicks, xTicks }
   }, [chartData])
+
+  // Compact value formatter for axis labels (e.g. 1.2k, 3.4M)
+  const fmtAxis = (v) => {
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+    if (v >= 1_000) return (v / 1_000).toFixed(1).replace(/\.0$/, '') + 'k'
+    return Math.round(v).toString()
+  }
 
   // Per-KPI sparkline inputs (from chart data / counts)
   const monthlySparkValues = useMemo(() => chartData.map(d => d.value), [chartData])
@@ -668,15 +693,71 @@ export default function Dashboard() {
         </div>
         <div className="chart-area">
           {chartPath ? (
-            <svg className="chart-line" viewBox="0 0 600 200" preserveAspectRatio="none">
+            <svg
+              className="chart-line"
+              viewBox={`0 0 ${chartPath.W} ${chartPath.H}`}
+              preserveAspectRatio="xMidYMid meet"
+              style={{ width: '100%', height: '100%', overflow: 'visible' }}
+            >
               <defs>
                 <linearGradient id="dash-chart-grad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0" stopColor="var(--brand)" stopOpacity="0.3" />
                   <stop offset="1" stopColor="var(--brand)" stopOpacity="0" />
                 </linearGradient>
               </defs>
+
+              {/* Y-axis gridlines + labels */}
+              {chartPath.yTicks.map((t, i) => (
+                <g key={`y-${i}`}>
+                  <line
+                    x1={chartPath.M.left}
+                    x2={chartPath.W - chartPath.M.right}
+                    y1={t.y}
+                    y2={t.y}
+                    stroke="var(--border)"
+                    strokeWidth="1"
+                    strokeDasharray={i === 0 ? '0' : '3,3'}
+                  />
+                  <text
+                    x={chartPath.W - chartPath.M.right + 6}
+                    y={t.y + 4}
+                    fill="var(--text-muted)"
+                    fontSize="11"
+                    fontFamily="Tajawal, sans-serif"
+                    textAnchor="start"
+                  >
+                    {fmtAxis(t.value)}
+                  </text>
+                </g>
+              ))}
+
+              {/* Area + line */}
               <path d={chartPath.area} fill="url(#dash-chart-grad)" />
-              <polyline points={chartPath.line} fill="none" stroke="var(--brand)" strokeWidth="2" />
+              <polyline points={chartPath.line} fill="none" stroke="var(--brand)" strokeWidth="2.5" strokeLinejoin="round" />
+
+              {/* Data point dots */}
+              {chartPath.coords.map((c, i) => (
+                <circle key={`pt-${i}`} cx={c.x} cy={c.y} r="3" fill="var(--brand)">
+                  <title>{c.label}: {fmtAxis(c.value)}</title>
+                </circle>
+              ))}
+
+              {/* X-axis labels */}
+              {chartPath.xTicks.map((t, i) =>
+                t.show ? (
+                  <text
+                    key={`x-${i}`}
+                    x={t.x}
+                    y={chartPath.H - 10}
+                    fill="var(--text-muted)"
+                    fontSize="11"
+                    fontFamily="Tajawal, sans-serif"
+                    textAnchor="middle"
+                  >
+                    {t.label}
+                  </text>
+                ) : null
+              )}
             </svg>
           ) : (
             <div className="chart-empty">لا توجد بيانات كافية لعرض الرسم البياني</div>

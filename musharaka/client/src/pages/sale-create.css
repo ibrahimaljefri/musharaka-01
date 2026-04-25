@@ -2,7 +2,7 @@
    Tokens come from layouts/app-shell.css (scoped under .app-root). */
 
 .sc-page {
-  max-width: 720px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-5, 24px);
 }

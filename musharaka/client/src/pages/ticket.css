@@ -1,7 +1,7 @@
 /* Ticket pages (create + success) — scoped under .ticket-page. */
 
 .ticket-page {
-  max-width: 720px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-5, 24px);
   color: var(--text);
