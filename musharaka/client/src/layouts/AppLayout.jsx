@@ -7,6 +7,7 @@ import {
   LayoutDashboard, PlusCircle, Upload, BarChart2, GitBranch, Send, FileText,
   LifeBuoy, HelpCircle, Building2, Users, MessageCircle,
   Menu, ChevronRight, Moon, Sun, LogOut, ShieldCheck, Clock, AlertTriangle, BookOpen,
+  KeyRound,
 } from 'lucide-react'
 import './app-shell.css'
 
@@ -18,6 +19,7 @@ const tenantNav = [
   { to: '/branches',       label: 'الفروع',           icon: GitBranch },
   { to: '/submit',         label: 'إرسال الفواتير',    icon: Send },
   { to: '/submissions',    label: 'تقرير الإرسالات',   icon: FileText },
+  { to: '/users/scopes',   label: 'إدارة الصلاحيات',  icon: KeyRound, requireScope: 'multiUserAdmin' },
   { to: '/tickets/create', label: 'رفع تذكرة دعم',    icon: LifeBuoy },
   { to: '/faq',            label: 'الأسئلة الشائعة',   icon: HelpCircle },
 ]
@@ -47,6 +49,7 @@ export default function AppLayout() {
   const {
     session, user, signOut, init, loading, isSuperAdmin,
     tenantStatus, mustChangePassword, allowImport, allowReports,
+    role, userCount,
   } = useAuthStore()
   const { dark, toggle: toggleTheme } = useThemeStore()
   const navigate = useNavigate()
@@ -87,7 +90,16 @@ export default function AppLayout() {
   if (mustChangePassword) return <Navigate to="/change-password" replace />
 
   const flags = { allowImport, allowReports }
-  const visibleTenantNav = tenantNav.filter(item => !item.flag || flags[item.flag])
+  const scopes = {
+    // Phase C visibility rule: only show "إدارة الصلاحيات" to managers
+    // of multi-user tenants. Single-user tenants don't need it.
+    multiUserAdmin: role === 'admin' && (userCount ?? 0) > 1,
+  }
+  const visibleTenantNav = tenantNav.filter(item => {
+    if (item.flag         && !flags[item.flag])         return false
+    if (item.requireScope && !scopes[item.requireScope]) return false
+    return true
+  })
   const navItems = isSuperAdmin ? adminNav : visibleTenantNav
 
   const activeItem = navItems.find(n => location.pathname.startsWith(n.to))

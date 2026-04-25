@@ -233,6 +233,7 @@ function publicUser(u) {
     max_users:                u.max_users            || 10,
     activated_at:             u.tenant_activated_at  || null,
     plan:                     u.tenant_plan          || null,
+    user_count:               u.user_count           ?? null,
   }
 }
 

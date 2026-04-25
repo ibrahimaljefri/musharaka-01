@@ -8,6 +8,7 @@ function applyUser(u) {
     user:                  { id: u.id, email: u.email, full_name: u.full_name, phone: u.phone },
     isSuperAdmin:          u.isSuperAdmin           || false,
     tenantId:              u.tenantId               || null,
+    role:                  u.role                   || null,
     tenantStatus:          isExpired ? 'expired' : (u.tenant_status || null),
     allowedInputTypes:     u.allowed_input_types     || ['daily'],
     allowAdvancedDashboard: u.allow_advanced_dashboard || false,
@@ -17,16 +18,18 @@ function applyUser(u) {
     expiresAt:             u.tenant_expires_at       || null,
     planName:              u.plan                    || null,
     maxBranches:           u.max_branches            ?? null,
+    userCount:             u.user_count              ?? null,
     mustChangePassword:    u.mustChangePassword      || false,
   }
 }
 
 const CLEAR = {
   session: null, user: null,
-  isSuperAdmin: false, tenantId: null, tenantStatus: null,
+  isSuperAdmin: false, tenantId: null, role: null, tenantStatus: null,
   allowedInputTypes: ['daily'], allowAdvancedDashboard: false,
   allowImport: false, allowReports: false, mustChangePassword: false,
   activatedAt: null, expiresAt: null, planName: null, maxBranches: null,
+  userCount: null,
 }
 
 export const useAuthStore = create((set, get) => ({

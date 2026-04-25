@@ -13,15 +13,25 @@ const { authMiddleware }   = require('../middleware/auth')
 const { tenantMiddleware } = require('../middleware/tenantMiddleware')
 const { pool, selectOne, insertOne, updateOne } = require('../db/query')
 const { standardLimiter }  = require('../middleware/rateLimiter')
+const { applyBranchScope, isBranchOutOfScope } = require('../utils/branchScope')
 
 router.use(standardLimiter, authMiddleware, tenantMiddleware)
+
+// Admin-only writes (members can read assigned branches but cannot CRUD them)
+function adminOnly(req, res, next) {
+  if (req.isSuperAdmin || req.userRole === 'admin') return next()
+  return res.status(403).json({ error: 'هذا الإجراء مخصص لمدير الحساب فقط' })
+}
 
 // ── GET /api/branches ──────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
+    const where  = ['tenant_id = $1']
+    const params = [req.tenantId]
+    applyBranchScope(req, where, params, 'id')
     const { rows } = await pool.query(
-      `SELECT * FROM branches WHERE tenant_id = $1 ORDER BY name`,
-      [req.tenantId]
+      `SELECT * FROM branches WHERE ${where.join(' AND ')} ORDER BY name`,
+      params
     )
     res.json(rows)
   } catch (err) { next(err) }
@@ -30,6 +40,9 @@ router.get('/', async (req, res, next) => {
 // ── GET /api/branches/:id ──────────────────────────────────────────────────
 router.get('/:id', async (req, res, next) => {
   try {
+    if (isBranchOutOfScope(req, req.params.id)) {
+      return res.status(403).json({ error: 'لا تملك صلاحية الوصول إلى هذا الفرع' })
+    }
     const { rows } = await pool.query(
       `SELECT * FROM branches WHERE id = $1 AND tenant_id = $2 LIMIT 1`,
       [req.params.id, req.tenantId]
@@ -40,7 +53,7 @@ router.get('/:id', async (req, res, next) => {
 })
 
 // ── POST /api/branches ─────────────────────────────────────────────────────
-router.post('/', async (req, res, next) => {
+router.post('/', adminOnly, async (req, res, next) => {
   try {
     const { code, name, contract_number, brand_name, unit_number, location, address } = req.body
 
@@ -81,7 +94,7 @@ router.post('/', async (req, res, next) => {
 })
 
 // ── PUT /api/branches/:id ──────────────────────────────────────────────────
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', adminOnly, async (req, res, next) => {
   try {
     const { code, name, contract_number, brand_name, unit_number, location, address } = req.body
 
@@ -112,7 +125,7 @@ router.put('/:id', async (req, res, next) => {
 })
 
 // ── DELETE /api/branches/:id ───────────────────────────────────────────────
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', adminOnly, async (req, res, next) => {
   try {
     // Block deletion if branch has sales records
     const { rows: countRows } = await pool.query(

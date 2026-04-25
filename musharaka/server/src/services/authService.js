@@ -62,7 +62,8 @@ async function loadUserWithContext(userId) {
        t.max_branches,
        t.max_users,
        t.activated_at  AS tenant_activated_at,
-       t.plan          AS tenant_plan
+       t.plan          AS tenant_plan,
+       (SELECT count(*)::int FROM tenant_users tu2 WHERE tu2.tenant_id = tu.tenant_id) AS user_count
      FROM app_users u
      LEFT JOIN tenant_users tu ON tu.user_id = u.id
      LEFT JOIN tenants      t  ON t.id = tu.tenant_id

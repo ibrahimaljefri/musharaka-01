@@ -7,6 +7,15 @@ const { tenantMiddleware } = require('../middleware/tenantMiddleware')
 const { pool } = require('../db/query')
 const { previewImport, processImport } = require('../controllers/importController')
 const { standardLimiter, strictLimiter } = require('../middleware/rateLimiter')
+const { isBranchOutOfScope } = require('../utils/branchScope')
+
+function ensureBranchInScope(req, res, next) {
+  const branchId = req.body?.branch_id || req.query?.branch_id
+  if (isBranchOutOfScope(req, branchId)) {
+    return res.status(403).json({ error: 'لا تملك صلاحية الوصول إلى هذا الفرع' })
+  }
+  next()
+}
 
 const ALLOWED_MIMES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -52,6 +61,10 @@ router.get('/import/template', standardLimiter, authMiddleware, tenantMiddleware
     const { branch_id, month, year } = req.query
 
     if (!branch_id) return res.status(422).json({ error: 'يرجى تحديد الفرع' })
+
+    if (isBranchOutOfScope(req, branch_id)) {
+      return res.status(403).json({ error: 'لا تملك صلاحية الوصول إلى هذا الفرع' })
+    }
 
     // Ownership check
     const { rows: branchRows } = await pool.query(
@@ -121,7 +134,7 @@ router.get('/import/template', standardLimiter, authMiddleware, tenantMiddleware
   } catch (err) { next(err) }
 })
 
-router.post('/import/preview', standardLimiter, authMiddleware, tenantMiddleware, upload.single('file'), handleMulterError, previewImport)
-router.post('/import',         strictLimiter,   authMiddleware, tenantMiddleware, upload.single('file'), handleMulterError, processImport)
+router.post('/import/preview', standardLimiter, authMiddleware, tenantMiddleware, upload.single('file'), handleMulterError, ensureBranchInScope, previewImport)
+router.post('/import',         strictLimiter,   authMiddleware, tenantMiddleware, upload.single('file'), handleMulterError, ensureBranchInScope, processImport)
 
 module.exports = router

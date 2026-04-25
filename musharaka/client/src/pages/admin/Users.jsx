@@ -24,12 +24,17 @@ function fmtDate(d) {
 }
 
 // ── Assign Modal ──────────────────────────────────────────────────────────────
+//
+// Phase B: Role is determined by the SERVER (first user → admin, next → member).
+// Super-admin no longer picks the role here — they only pick the tenant and,
+// for non-first users, optionally restrict branch access.
 function AssignModal({ user, onClose, onDone }) {
-  const [tenants, setTenants]   = useState([])
-  const [tenantId, setTenantId] = useState('')
-  const [role, setRole]         = useState('member')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState('')
+  const [tenants, setTenants]         = useState([])
+  const [tenantId, setTenantId]       = useState('')
+  const [tenantInfo, setTenantInfo]   = useState(null) // { user_count, branches }
+  const [selectedBranches, setSelectedBranches] = useState(new Set())
+  const [loading, setLoading]         = useState(false)
+  const [error, setError]             = useState('')
 
   useEffect(() => {
     api.get('/admin/tenants').then(({ data }) => setTenants(data || []))
@@ -41,12 +46,43 @@ function AssignModal({ user, onClose, onDone }) {
     return () => document.removeEventListener('keydown', handleEsc)
   }, [onClose])
 
+  // When the tenant changes, look up its current user count + branches so we
+  // can show the right preview (first user becomes admin; otherwise member).
+  useEffect(() => {
+    if (!tenantId) { setTenantInfo(null); setSelectedBranches(new Set()); return }
+    Promise.all([
+      api.get(`/admin/tenants/${tenantId}`),
+      api.get(`/admin/tenants/${tenantId}/branches`),
+    ]).then(([tRes, bRes]) => {
+      setTenantInfo({
+        user_count: (tRes.data?.tenant_users || []).length,
+        branches:   bRes.data || [],
+      })
+      setSelectedBranches(new Set())
+    }).catch(() => setTenantInfo(null))
+  }, [tenantId])
+
+  const isFirstUser    = tenantInfo?.user_count === 0
+  const computedRole   = isFirstUser ? 'admin' : 'member'
+  const showBranchPick = tenantInfo && !isFirstUser
+
+  function toggleBranch(id) {
+    setSelectedBranches(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
   const handleSubmit = async e => {
     e.preventDefault()
     if (!tenantId) return setError('يرجى اختيار المستأجر')
     setLoading(true)
     try {
-      await api.post(`/admin/users/${user.id}/assign`, { tenant_id: tenantId, role })
+      await api.post(`/admin/users/${user.id}/assign`, {
+        tenant_id:  tenantId,
+        branch_ids: showBranchPick ? Array.from(selectedBranches) : [],
+      })
       onDone()
     } catch (err) {
       setError(err.response?.data?.error || 'فشل التعيين')
@@ -75,13 +111,38 @@ function AssignModal({ user, onClose, onDone }) {
             </select>
           </div>
 
-          <div className="field">
-            <label htmlFor="assign-role" className="field-label">الدور</label>
-            <select id="assign-role" className="input" value={role} onChange={e => setRole(e.target.value)}>
-              <option value="admin">مدير</option>
-              <option value="member">مستخدم</option>
-            </select>
-          </div>
+          {tenantInfo && (
+            <div className="field">
+              <label className="field-label">الدور (يُحدد تلقائياً)</label>
+              <div style={{ padding: '8px 12px', background: 'var(--bg-subtle)', borderRadius: 'var(--r-md)', fontSize: 13 }}>
+                {isFirstUser
+                  ? '🛡 مدير الحساب (أول مستخدم في هذا المستأجر)'
+                  : '👤 مستخدم عادي'}
+              </div>
+            </div>
+          )}
+
+          {showBranchPick && (
+            <div className="field">
+              <label className="field-label">الفروع المسموحة</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 6, maxHeight: 240, overflow: 'auto', padding: 8, border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
+                {tenantInfo.branches.length === 0 && (
+                  <div className="t-small" style={{ color: 'var(--text-muted)' }}>لا توجد فروع لهذا المستأجر بعد.</div>
+                )}
+                {tenantInfo.branches.map(b => (
+                  <label key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedBranches.has(b.id)}
+                      onChange={() => toggleBranch(b.id)}
+                    />
+                    <span><strong>{b.code}</strong> — {b.name}</span>
+                  </label>
+                ))}
+              </div>
+              <span className="field-hint">اتركها فارغة لمنع الوصول إلى أي فرع. يمكن تعديلها لاحقاً من قِبَل المدير.</span>
+            </div>
+          )}
 
           <div className="modal-actions">
             <button type="submit" disabled={loading} className="btn btn-primary">
