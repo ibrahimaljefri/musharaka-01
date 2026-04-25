@@ -4,10 +4,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../lib/axiosClient'
-import PageHeader from '../../components/PageHeader'
 import ButtonSpinner from '../../components/ButtonSpinner'
 import { toast } from '../../lib/useToast'
-import { Save, UserPlus, Eye, EyeOff } from 'lucide-react'
+import { Save, UserPlus, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import './admin-tenant-form.css'
 
 const PLANS = [
   { v: 'basic',        l: 'أساسي' },
@@ -49,9 +49,8 @@ export default function TenantForm({ mode = 'create' }) {
   const [userForm, setUserForm] = useState({
     user_email: '', user_password: '', user_name: '',
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]   = useState(false)
   const [fetching, setFetching] = useState(isEdit)
-
 
   useEffect(() => {
     if (!isEdit) return
@@ -84,13 +83,10 @@ export default function TenantForm({ mode = 'create' }) {
   const toggleInputType = (type) => {
     const current = form.allowed_input_types
     set('allowed_input_types',
-      current.includes(type)
-        ? current.filter(t => t !== type)
-        : [...current, type]
+      current.includes(type) ? current.filter(t => t !== type) : [...current, type]
     )
   }
 
-  // Auto-generate slug from name
   const handleNameChange = (v) => {
     set('name', v)
     if (!isEdit) {
@@ -127,112 +123,104 @@ export default function TenantForm({ mode = 'create' }) {
     } finally { setLoading(false) }
   }
 
+  const Header = (
+    <div className="adm-page-header">
+      <button onClick={() => navigate('/admin/tenants')} className="adm-back" aria-label="رجوع">
+        <ArrowRight size={18} />
+      </button>
+      <div>
+        <h1 className="adm-page-title">{isEdit ? 'تعديل المستأجر' : 'إضافة مستأجر جديد'}</h1>
+        <div className="t-small">{isEdit ? 'تعديل بيانات الحساب والاشتراك' : 'إنشاء حساب جديد وتهيئة الصلاحيات'}</div>
+      </div>
+    </div>
+  )
+
   if (fetching) return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <PageHeader
-        title={isEdit ? 'تعديل المستأجر' : 'إضافة مستأجر جديد'}
-        subtitle={isEdit ? 'تعديل بيانات الحساب والاشتراك' : 'إنشاء حساب جديد وتهيئة الصلاحيات'}
-        backTo="/admin/tenants"
-      />
-      <div className="card-surface p-6 space-y-4">
-        <div className="skeleton h-10 rounded-lg mb-4" />
-        <div className="skeleton h-10 rounded-lg mb-4" />
-        <div className="skeleton h-10 rounded-lg mb-4" />
-        <div className="skeleton h-10 rounded-lg mb-4" />
+    <div className="adm-tenant-form">
+      {Header}
+      <div className="adm-section">
+        <div className="skeleton" style={{ height: 40 }} />
+        <div className="skeleton" style={{ height: 40 }} />
+        <div className="skeleton" style={{ height: 40 }} />
+        <div className="skeleton" style={{ height: 40 }} />
       </div>
     </div>
   )
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <PageHeader
-        title={isEdit ? 'تعديل المستأجر' : 'إضافة مستأجر جديد'}
-        subtitle={isEdit ? 'تعديل بيانات الحساب والاشتراك' : 'إنشاء حساب جديد وتهيئة الصلاحيات'}
-        backTo="/admin/tenants"
-      />
+    <div className="adm-tenant-form">
+      {Header}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="adm-form">
 
         {/* Basic info */}
-        <div className="card-surface p-6 space-y-4">
-          <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">معلومات الحساب</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">اسم المؤسسة <span className="text-red-500">*</span></label>
-              <input value={form.name} onChange={e => handleNameChange(e.target.value)} required
-                className="input-base font-arabic" />
+        <div className="adm-section">
+          <h2 className="adm-section-title">معلومات الحساب</h2>
+          <div className="grid-2">
+            <div className="field">
+              <label className="field-label">اسم المؤسسة <span className="field-required">*</span></label>
+              <input className="input" value={form.name} onChange={e => handleNameChange(e.target.value)} required />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">الرمز المختصر (slug) <span className="text-red-500">*</span></label>
-              <input value={form.slug} onChange={e => set('slug', e.target.value)} required dir="ltr"
-                className="input-base font-mono" />
+            <div className="field">
+              <label className="field-label">الرمز المختصر (slug) <span className="field-required">*</span></label>
+              <input className="input mono" value={form.slug} onChange={e => set('slug', e.target.value)} required dir="ltr" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">
-                رقم السجل التجاري <span className="text-gray-400 font-normal">(اختياري)</span>
-              </label>
-              <input value={form.commercial_registration} onChange={e => set('commercial_registration', e.target.value)}
-                dir="ltr" placeholder="1010123456"
-                className="input-base font-mono" />
+          <div className="grid-3">
+            <div className="field">
+              <label className="field-label">رقم السجل التجاري <span className="field-muted">(اختياري)</span></label>
+              <input className="input mono" value={form.commercial_registration} dir="ltr"
+                onChange={e => set('commercial_registration', e.target.value)} placeholder="1010123456" />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">
-                رقم الجوال الرئيسي <span className="text-gray-400 font-normal">(اختياري)</span>
-              </label>
-              <input value={form.primary_phone} onChange={e => set('primary_phone', e.target.value)}
-                dir="ltr" placeholder="05XXXXXXXX"
-                className="input-base font-mono" />
-              <p className="text-xs text-gray-400 font-arabic mt-1">للتواصل مع المستأجر</p>
+            <div className="field">
+              <label className="field-label">رقم الجوال الرئيسي <span className="field-muted">(اختياري)</span></label>
+              <input className="input mono" value={form.primary_phone} dir="ltr"
+                onChange={e => set('primary_phone', e.target.value)} placeholder="05XXXXXXXX" />
+              <span className="field-hint">للتواصل مع المستأجر</span>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">
-                رقم الحساب <span className="text-gray-400 font-normal">(اختياري)</span>
-              </label>
-              <input value={form.account_number} onChange={e => set('account_number', e.target.value)}
-                dir="ltr" placeholder="ACC-2024-001"
-                className="input-base font-mono" />
+            <div className="field">
+              <label className="field-label">رقم الحساب <span className="field-muted">(اختياري)</span></label>
+              <input className="input mono" value={form.account_number} dir="ltr"
+                onChange={e => set('account_number', e.target.value)} placeholder="ACC-2024-001" />
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">ملاحظات</label>
-            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
-              className="input-base font-arabic resize-none" />
+          <div className="field">
+            <label className="field-label">ملاحظات</label>
+            <textarea className="input" value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />
           </div>
         </div>
 
         {/* Subscription */}
-        <div className="card-surface p-6 space-y-4">
-          <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">الاشتراك والصلاحيات</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">الخطة</label>
-              <select value={form.plan} onChange={e => set('plan', e.target.value)}
-                className="input-base font-arabic">
+        <div className="adm-section">
+          <h2 className="adm-section-title">الاشتراك والصلاحيات</h2>
+          <div className="grid-3">
+            <div className="field">
+              <label className="field-label">الخطة</label>
+              <select className="input" value={form.plan} onChange={e => set('plan', e.target.value)}>
                 {PLANS.map(p => <option key={p.v} value={p.v}>{p.l}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">تاريخ التفعيل</label>
-              <input type="date" value={form.activated_at} onChange={e => set('activated_at', e.target.value)} dir="ltr"
-                className="input-base" />
+            <div className="field">
+              <label className="field-label">تاريخ التفعيل</label>
+              <input className="input" type="date" dir="ltr" value={form.activated_at}
+                onChange={e => set('activated_at', e.target.value)} />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">تاريخ الانتهاء <span className="text-gray-400 font-normal">(اختياري)</span></label>
-              <input type="date" value={form.expires_at} onChange={e => set('expires_at', e.target.value)} dir="ltr"
-                className="input-base" />
+            <div className="field">
+              <label className="field-label">تاريخ الانتهاء <span className="field-muted">(اختياري)</span></label>
+              <input className="input" type="date" dir="ltr" value={form.expires_at}
+                onChange={e => set('expires_at', e.target.value)} />
             </div>
           </div>
 
           {isEdit && (
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">الحالة</label>
-              <div className="flex gap-3">
+            <div className="field">
+              <label className="field-label">الحالة</label>
+              <div className="adm-radio-row">
                 {STATUSES.map(s => (
-                  <label key={s.v} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="status" value={s.v} checked={form.status === s.v} onChange={() => set('status', s.v)} className="text-yellow-600 focus:ring-yellow-400" />
-                    <span className="text-sm font-arabic text-gray-700 dark:text-gray-300">{s.l}</span>
+                  <label key={s.v}>
+                    <input type="radio" name="status" value={s.v} checked={form.status === s.v}
+                      onChange={() => set('status', s.v)} />
+                    {s.l}
                   </label>
                 ))}
               </div>
@@ -240,137 +228,101 @@ export default function TenantForm({ mode = 'create' }) {
           )}
 
           {/* Feature toggles */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-2">الميزات المتاحة</label>
+          <div className="field">
+            <label className="field-label">الميزات المتاحة</label>
             {[
               { key: 'allow_advanced_dashboard', label: 'لوحة التحكم المتقدمة', desc: 'رسوم بيانية ومؤشرات تحليلية متقدمة' },
               { key: 'allow_import',             label: 'استيراد Excel',         desc: 'رفع ملفات Excel لإدخال المبيعات' },
               { key: 'allow_reports',            label: 'التقارير',              desc: 'صفحة التقارير والتحليلات التفصيلية' },
             ].map(({ key, label, desc }) => (
-              <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div key={key} className="adm-toggle-row" style={{ marginTop: 8 }}>
                 <div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-arabic">{label}</p>
-                  <p className="text-xs text-gray-400 font-arabic mt-0.5">{desc}</p>
+                  <div className="row-name">{label}</div>
+                  <div className="row-desc">{desc}</div>
                 </div>
-                <button type="button"
-                  onClick={() => set(key, !form[key])}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${form[key] ? 'bg-yellow-500' : 'bg-gray-300'}`}>
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form[key] ? 'translate-x-1' : 'translate-x-6'}`} />
+                <button type="button" onClick={() => set(key, !form[key])}
+                  className={`adm-toggle ${form[key] ? 'on' : ''}`} aria-pressed={!!form[key]}>
+                  <span className="knob" />
                 </button>
               </div>
             ))}
           </div>
 
-          {/* Input type permissions */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-2">أنواع الإدخال المسموح بها</label>
-            <div className="flex gap-3 flex-wrap">
+          {/* Input types */}
+          <div className="field">
+            <label className="field-label">أنواع الإدخال المسموح بها</label>
+            <div className="adm-chips">
               {INPUT_TYPES.map(type => {
                 const active = form.allowed_input_types.includes(type.v)
                 return (
-                  <button
-                    key={type.v} type="button"
-                    onClick={() => toggleInputType(type.v)}
-                    className={`px-4 py-2 rounded-lg text-sm font-arabic border transition-colors ${
-                      active
-                        ? 'bg-yellow-600 text-white border-yellow-600'
-                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-yellow-400'
-                    }`}
-                  >
+                  <button key={type.v} type="button" onClick={() => toggleInputType(type.v)}
+                    className={`adm-chip-btn ${active ? 'active' : ''}`}>
                     {type.l}
                   </button>
                 )
               })}
             </div>
-            <p className="text-xs text-gray-400 font-arabic mt-1.5">
-              حدد الأنواع التي يمكن للمستأجر استخدامها عند إدخال المبيعات
-            </p>
+            <span className="field-hint">حدد الأنواع التي يمكن للمستأجر استخدامها عند إدخال المبيعات</span>
           </div>
 
-          {/* Max branches override */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 font-arabic mb-1">
-              الحد الأقصى للفروع
-              <span className="text-gray-400 mr-1 text-xs">(الحد الأدنى: 3)</span>
-            </label>
-            <input
-              type="number"
-              min="3"
-              value={form.max_branches}
-              onChange={e => set('max_branches', Math.max(3, parseInt(e.target.value) || 3))}
-              className="input-base"
-            />
+          <div className="field">
+            <label className="field-label">الحد الأقصى للفروع <span className="field-muted">(الحد الأدنى: 3)</span></label>
+            <input className="input" type="number" min="3" value={form.max_branches}
+              onChange={e => set('max_branches', Math.max(3, parseInt(e.target.value) || 3))} />
           </div>
         </div>
 
-        {/* Cenomi / Seinomy integration */}
-        <div className="card-surface p-6 space-y-4">
-          <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">تكامل سينومي</h2>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">
-              توكن سينومي (Cenomi API Token)
-              <span className="text-gray-400 font-normal mr-1">(اختياري)</span>
+        {/* Cenomi integration */}
+        <div className="adm-section">
+          <h2 className="adm-section-title">تكامل سينومي</h2>
+          <div className="field">
+            <label className="field-label">
+              توكن سينومي (Cenomi API Token) <span className="field-muted">(اختياري)</span>
             </label>
-            <div className="relative">
-              <input
-                type={showCenomiToken ? 'text' : 'password'}
-                dir="ltr"
+            <div className="pwd-wrap">
+              <input className="input mono" type={showCenomiToken ? 'text' : 'password'} dir="ltr"
                 value={form.cenomi_api_token}
                 onChange={e => set('cenomi_api_token', e.target.value)}
-                placeholder="••••••••••••••••"
-                className="input-base font-mono pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowCenomiToken(v => !v)}
-                className="absolute inset-y-0 left-0 flex items-center px-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                tabIndex={-1}
-              >
+                placeholder="••••••••••••••••" />
+              <button type="button" onClick={() => setShowCenomiToken(v => !v)}
+                className="pwd-toggle" tabIndex={-1} aria-label="عرض/إخفاء">
                 {showCenomiToken ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
-            <p className="text-xs text-gray-400 font-arabic mt-1">
-              يُصدر سينومي توكناً واحداً لكل حساب. يُستخدم لإرسال بيانات المبيعات تلقائياً.
-            </p>
+            <span className="field-hint">يُصدر سينومي توكناً واحداً لكل حساب. يُستخدم لإرسال بيانات المبيعات تلقائياً.</span>
           </div>
         </div>
 
         {/* User (create only) */}
         {!isEdit && (
-          <div className="card-surface p-6 space-y-4">
-            <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2 flex items-center gap-2">
-              <UserPlus size={14} className="text-gray-500" />
-              حساب المستخدم الأول (اختياري)
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">البريد الإلكتروني</label>
-                <input type="email" value={userForm.user_email} onChange={e => setUserForm(f => ({...f, user_email: e.target.value}))} dir="ltr"
-                  className="input-base" />
+          <div className="adm-section">
+            <h2 className="adm-section-title"><UserPlus size={14} /> حساب المستخدم الأول (اختياري)</h2>
+            <div className="grid-2">
+              <div className="field">
+                <label className="field-label">البريد الإلكتروني</label>
+                <input className="input" type="email" dir="ltr" value={userForm.user_email}
+                  onChange={e => setUserForm(f => ({...f, user_email: e.target.value}))} />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">كلمة المرور المؤقتة</label>
-                <input type="text" value={userForm.user_password} onChange={e => setUserForm(f => ({...f, user_password: e.target.value}))} dir="ltr"
-                  placeholder="8+ أحرف"
-                  className="input-base" />
+              <div className="field">
+                <label className="field-label">كلمة المرور المؤقتة</label>
+                <input className="input" type="text" dir="ltr" value={userForm.user_password}
+                  onChange={e => setUserForm(f => ({...f, user_password: e.target.value}))} placeholder="8+ أحرف" />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">الاسم الكامل</label>
-                <input type="text" value={userForm.user_name} onChange={e => setUserForm(f => ({...f, user_name: e.target.value}))}
-                  className="input-base font-arabic" />
+              <div className="field">
+                <label className="field-label">الاسم الكامل</label>
+                <input className="input" type="text" value={userForm.user_name}
+                  onChange={e => setUserForm(f => ({...f, user_name: e.target.value}))} />
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex gap-3">
-          <button type="submit" disabled={loading}
-            className="flex-1 flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm">
+        <div className="adm-actions">
+          <button type="submit" disabled={loading} className="btn btn-primary">
             {loading ? <ButtonSpinner /> : <Save size={15} />}
             {loading ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديلات' : 'إنشاء الحساب'}
           </button>
-          <button type="button" onClick={() => navigate('/admin/tenants')}
-            className="px-5 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-arabic">
+          <button type="button" onClick={() => navigate('/admin/tenants')} className="btn btn-ghost">
             إلغاء
           </button>
         </div>

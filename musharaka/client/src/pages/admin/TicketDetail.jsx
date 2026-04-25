@@ -7,7 +7,16 @@ import api from '../../lib/axiosClient'
 import ButtonSpinner from '../../components/ButtonSpinner'
 import { toast } from '../../lib/useToast'
 import { ArrowRight, Paperclip, Save } from 'lucide-react'
-import { STATUS_OPTIONS, STATUS_COLORS, CATEGORY_LABELS, fmtTicketDate } from '../../lib/ticketConstants'
+import { STATUS_OPTIONS, CATEGORY_LABELS, fmtTicketDate } from '../../lib/ticketConstants'
+import './admin-ticket-detail.css'
+
+const STATUS_CLASS = {
+  open: 's-open',
+  in_progress: 's-progress',
+  resolved: 's-resolved',
+  closed: 's-closed',
+  new: 's-open',
+}
 
 export default function TicketDetail() {
   const { id }     = useParams()
@@ -42,139 +51,125 @@ export default function TicketDetail() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <div className="inline-block w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+    <div className="adm-ticket-detail">
+      <div className="adm-loading"><div className="adm-spinner" /></div>
     </div>
   )
 
   if (!ticket) return (
-    <div className="text-center py-20 font-arabic text-gray-500">التذكرة غير موجودة</div>
+    <div className="adm-ticket-detail">
+      <div className="adm-loading" style={{ color: 'var(--text-muted)' }}>التذكرة غير موجودة</div>
+    </div>
   )
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <button onClick={() => navigate('/admin/tickets')} className="text-gray-400 hover:text-gray-600 mt-1">
-          <ArrowRight size={20} />
+    <div className="adm-ticket-detail">
+      <div className="adm-page-header">
+        <button onClick={() => navigate('/admin/tickets')} className="adm-back" aria-label="رجوع">
+          <ArrowRight size={18} />
         </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-800 dark:text-white font-arabic">{ticket.title}</h1>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-arabic ${STATUS_COLORS[ticket.status]}`}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <h1 className="adm-page-title">{ticket.title}</h1>
+            <span className={`adm-tag ${STATUS_CLASS[ticket.status] || ''}`}>
               {STATUS_OPTIONS.find(s => s.v === ticket.status)?.l}
             </span>
           </div>
-          <p className="text-xs text-gray-400 font-mono mt-0.5">#{ticket.ticket_number}</p>
+          <p className="t-mono" style={{ margin: 0 }}>#{ticket.ticket_number}</p>
         </div>
       </div>
 
-      {/* Ticket details */}
-      <div className="card-surface p-6 space-y-4">
-        <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
-          تفاصيل المشكلة
-        </h2>
-
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-xs text-gray-400 font-arabic mb-0.5">التصنيف</p>
-            <p className="font-arabic text-gray-700 dark:text-gray-200">{CATEGORY_LABELS[ticket.category] || ticket.category}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 font-arabic mb-0.5">تاريخ الإنشاء</p>
-            <p className="font-arabic text-gray-700 dark:text-gray-200">{fmtTicketDate(ticket.created_at, true)}</p>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-400 font-arabic mb-1">وصف المشكلة</p>
-          <p className="text-sm font-arabic text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
-            {ticket.description}
-          </p>
-        </div>
-
-        {ticket.steps && (
-          <div>
-            <p className="text-xs text-gray-400 font-arabic mb-1">خطوات إعادة المشكلة</p>
-            <p className="text-sm font-arabic text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
-              {ticket.steps}
-            </p>
-          </div>
-        )}
-
-        {ticket.attachment_url && (
-          <div>
-            <p className="text-xs text-gray-400 font-arabic mb-1">المرفق</p>
-            <a href={ticket.attachment_url} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-yellow-700 hover:text-yellow-800 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-lg transition-colors font-arabic">
-              <Paperclip size={13} />
-              {ticket.attachment_name || 'عرض المرفق'}
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Client info */}
-      <div className="card-surface p-6 space-y-3">
-        <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
-          بيانات العميل
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-xs text-gray-400 font-arabic mb-0.5">الاسم</p>
-            <p className="font-arabic text-gray-800 dark:text-gray-100 font-medium">{ticket.submitter_name}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 font-arabic mb-0.5">البريد الإلكتروني</p>
-            <p className="font-mono text-gray-700 dark:text-gray-300 text-xs text-right" dir="ltr">{ticket.submitter_email}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 font-arabic mb-0.5">المستأجر</p>
-            <p className="font-arabic text-gray-800 dark:text-gray-100">{ticket.tenant_name || '—'}</p>
-          </div>
-          {ticket.tenant_phone && (
-            <div>
-              <p className="text-xs text-gray-400 font-arabic mb-0.5">رقم الجوال</p>
-              <p className="font-mono text-gray-700 dark:text-gray-300 text-sm" dir="ltr">{ticket.tenant_phone}</p>
+      <div className="adm-grid">
+        <div className="adm-main">
+          {/* Ticket details */}
+          <div className="adm-section">
+            <h2 className="adm-section-title">تفاصيل المشكلة</h2>
+            <div className="adm-meta-grid">
+              <div className="meta-cell">
+                <span className="meta-label">التصنيف</span>
+                <span className="meta-value">{CATEGORY_LABELS[ticket.category] || ticket.category}</span>
+              </div>
+              <div className="meta-cell">
+                <span className="meta-label">تاريخ الإنشاء</span>
+                <span className="meta-value">{fmtTicketDate(ticket.created_at, true)}</span>
+              </div>
             </div>
-          )}
-          {ticket.branch_count != null && (
-            <div>
-              <p className="text-xs text-gray-400 font-arabic mb-0.5">عدد الفروع</p>
-              <p className="font-arabic text-gray-800 dark:text-gray-100 font-medium">{ticket.branch_count} فرع</p>
+
+            <div className="meta-cell">
+              <span className="meta-label">وصف المشكلة</span>
+              <div className="adm-block">{ticket.description}</div>
             </div>
-          )}
+
+            {ticket.steps && (
+              <div className="meta-cell">
+                <span className="meta-label">خطوات إعادة المشكلة</span>
+                <div className="adm-block">{ticket.steps}</div>
+              </div>
+            )}
+
+            {ticket.attachment_url && (
+              <div className="meta-cell">
+                <span className="meta-label">المرفق</span>
+                <a href={ticket.attachment_url} target="_blank" rel="noreferrer" className="adm-attach">
+                  <Paperclip size={13} />
+                  {ticket.attachment_name || 'عرض المرفق'}
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Admin action */}
+          <div className="adm-section">
+            <h2 className="adm-section-title">إجراء المشرف</h2>
+            <div className="meta-cell">
+              <span className="meta-label">الحالة</span>
+              <select className="input" style={{ maxWidth: 280 }} value={status} onChange={e => setStatus(e.target.value)}>
+                {STATUS_OPTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
+              </select>
+            </div>
+            <div className="meta-cell">
+              <span className="meta-label">ملاحظات / الحل المقترح</span>
+              <textarea className="input" value={comment} onChange={e => setComment(e.target.value)}
+                rows={4} placeholder="اكتب الحل أو الملاحظات الداخلية هنا..." />
+            </div>
+            <div>
+              <button onClick={handleSave} disabled={saving} className="btn btn-primary">
+                {saving ? <ButtonSpinner /> : <Save size={15} />}
+                {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Admin action */}
-      <div className="card-surface p-6 space-y-4">
-        <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
-          إجراء المشرف
-        </h2>
-
-        <div>
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">الحالة</label>
-          <select value={status} onChange={e => setStatus(e.target.value)}
-            className="input-base w-full sm:w-56 font-arabic">
-            {STATUS_OPTIONS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 font-arabic mb-1.5">
-            ملاحظات / الحل المقترح
-          </label>
-          <textarea value={comment} onChange={e => setComment(e.target.value)}
-            rows={4} placeholder="اكتب الحل أو الملاحظات الداخلية هنا..."
-            className="input-base font-arabic resize-none" />
-        </div>
-
-        <button onClick={handleSave} disabled={saving}
-          className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium px-6 py-2.5 rounded-lg transition-colors font-arabic text-sm">
-          {saving ? <ButtonSpinner /> : <Save size={15} />}
-          {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-        </button>
+        <aside className="adm-side">
+          <div className="adm-section">
+            <h2 className="adm-section-title">بيانات العميل</h2>
+            <div className="meta-cell">
+              <span className="meta-label">الاسم</span>
+              <span className="meta-value" style={{ fontWeight: 500 }}>{ticket.submitter_name}</span>
+            </div>
+            <div className="meta-cell">
+              <span className="meta-label">البريد الإلكتروني</span>
+              <span className="meta-value mono" dir="ltr">{ticket.submitter_email}</span>
+            </div>
+            <div className="meta-cell">
+              <span className="meta-label">المستأجر</span>
+              <span className="meta-value">{ticket.tenant_name || '—'}</span>
+            </div>
+            {ticket.tenant_phone && (
+              <div className="meta-cell">
+                <span className="meta-label">رقم الجوال</span>
+                <span className="meta-value mono" dir="ltr">{ticket.tenant_phone}</span>
+              </div>
+            )}
+            {ticket.branch_count != null && (
+              <div className="meta-cell">
+                <span className="meta-label">عدد الفروع</span>
+                <span className="meta-value">{ticket.branch_count} فرع</span>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
     </div>
   )
