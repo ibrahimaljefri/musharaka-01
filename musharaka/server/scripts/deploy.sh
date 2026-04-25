@@ -53,15 +53,30 @@ COMMIT=$(git log -1 --format='%h %s')
 ok "Now at: $COMMIT"
 
 # ────────── 2. Sync server code (with --delete to remove stale files) ────────
-log "Syncing server code → $SRV_DST  (preserves node_modules, .env, tmp/)"
+log "Syncing server code → $SRV_DST  (preserves node_modules, .env, tmp/, .htaccess)"
 mkdir -p "$SRV_DST"
+# CRITICAL: must exclude .htaccess — it contains the Apache → port 3001 proxy
+# rule that's NOT in the repo and gets re-installed manually if missing.
+# Also keep node_modules / .env / tmp / logs / pid files intact.
 rsync -a --delete \
   --exclude='node_modules' \
   --exclude='.env' \
   --exclude='tmp/' \
   --exclude='*.log' \
   --exclude='*.pid' \
+  --exclude='.htaccess' \
   "$SRV_SRC/" "$SRV_DST/"
+
+# Safety net: if .htaccess is somehow missing (first deploy / accidental delete),
+# recreate it so Apache can route to node.
+if [ ! -f "$SRV_DST/.htaccess" ]; then
+  warn ".htaccess missing — restoring Apache → node proxy rule"
+  cat > "$SRV_DST/.htaccess" << 'EOF'
+RewriteEngine On
+RewriteRule ^(.*)$ http://127.0.0.1:3001/$1 [P,L]
+EOF
+  ok ".htaccess created"
+fi
 ok "Server code synced"
 
 # ────────── 3. Sync frontend dist ────────────────────────────────────────────
