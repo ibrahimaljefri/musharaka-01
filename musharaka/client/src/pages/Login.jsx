@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import api, { TOKEN_KEY } from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import AlertBanner from '../components/AlertBanner'
 import ButtonSpinner from '../components/ButtonSpinner'
 
@@ -51,84 +51,71 @@ export default function Login() {
   }
 
   return (
-    <div>
-      <h1
-        className="text-xl font-bold text-white font-arabic mb-6 text-center"
-        style={{ letterSpacing: '-0.01em' }}
-      >
-        تسجيل الدخول
-      </h1>
+    <>
+      <div className="auth-form-title">تسجيل الدخول</div>
+      <div className="auth-form-sub">أدخل بياناتك للدخول إلى لوحة التحكم</div>
 
       <AlertBanner type="error" message={error} dismissible onClose={() => setError('')} />
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        <div>
-          <label className="block text-sm font-medium font-arabic mb-1.5" style={{ color: 'rgba(255,255,255,0.70)' }}>
-            البريد الإلكتروني
-          </label>
-          <input
-            type="email" dir="ltr" autoComplete="email"
-            value={form.email}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors"
-            style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }}
-            placeholder="example@email.com"
-          />
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="auth-field">
+          <label className="auth-label">البريد الإلكتروني</label>
+          <div className="auth-input-wrap">
+            <span className="auth-input-icon"><Mail size={16} /></span>
+            <input
+              className="auth-input"
+              type="email"
+              dir="ltr"
+              autoComplete="email"
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              placeholder="you@company.com"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium font-arabic mb-1.5" style={{ color: 'rgba(255,255,255,0.70)' }}>
-            كلمة المرور
-          </label>
-          <div className="relative">
+        <div className="auth-field">
+          <div className="auth-sign-row">
+            <label className="auth-label">كلمة المرور</label>
+            <Link to="/forgot-password" className="auth-forgot">نسيت كلمة المرور؟</Link>
+          </div>
+          <div className="auth-input-wrap">
+            <span className="auth-input-icon"><Lock size={16} /></span>
             <input
-              type={showPass ? 'text' : 'password'} dir="ltr" autoComplete="current-password"
+              className="auth-input"
+              type={showPass ? 'text' : 'password'}
+              dir="ltr"
+              autoComplete="current-password"
               value={form.password}
               onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors pl-10"
-              style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }}
+              placeholder="••••••••"
+              style={{ paddingInlineEnd: '40px' }}
             />
             <button
-              type="button" onClick={() => setShowPass(p => !p)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 transition-colors"
-              style={{ color: 'rgba(255,255,255,0.40)' }}
-              onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.70)'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.40)'}
+              type="button"
+              onClick={() => setShowPass(p => !p)}
+              className="auth-eye-toggle"
+              aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
             >
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </div>
 
-        <button
-          type="submit" disabled={loading}
-          className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold disabled:opacity-60 hover:brightness-110"
-          style={{ background: '#F59E0B', color: '#0a0a0a' }}
-        >
+        <button type="submit" disabled={loading} className="auth-submit-btn">
           {loading ? (
             <><ButtonSpinner /><span>جاري الدخول...</span></>
           ) : (
-            <><LogIn size={16} /><span>دخول</span></>
+            <span>دخول</span>
           )}
         </button>
       </form>
 
-      <div className="mt-4 text-center">
-        <Link
-          to="/forgot-password"
-          className="text-sm font-arabic hover:underline transition-colors"
-          style={{ color: 'rgba(255,255,255,0.40)' }}
-          onMouseEnter={e => e.currentTarget.style.color = '#F59E0B'}
-          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.40)'}
-        >
-          نسيت كلمة المرور؟
-        </Link>
-      </div>
+      <div className="auth-divider">أو</div>
 
-      <p className="mt-3 text-center text-sm font-arabic" style={{ color: 'rgba(255,255,255,0.50)' }}>
-        ليس لديك حساب؟{' '}
-        <Link to="/register" className="text-yellow-400 hover:underline font-medium">إنشاء حساب جديد</Link>
-      </p>
-    </div>
+      <div className="auth-register-cta">
+        هل أنت مستخدم جديد؟ <Link to="/register">تواصل مع فريق المبيعات</Link>
+      </div>
+    </>
   )
 }
