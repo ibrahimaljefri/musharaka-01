@@ -570,6 +570,7 @@ export default function Dashboard() {
           onChange={e => { setBranchId(e.target.value); setPage(0) }}
           className="input-base"
           style={{ maxWidth: 260 }}
+          data-testid="branch-filter"
         >
           <option value="">جميع الفروع</option>
           {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -722,7 +723,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {sales.slice(0, 8).map(s => (
-                  <tr key={s.id}>
+                  <tr key={s.id} data-testid="sale-row">
                     <td>
                       {s.branches
                         ? <BranchBadge code={s.branches.code || '—'} />
@@ -747,6 +748,7 @@ export default function Dashboard() {
                           onClick={() => setDeleteId(s.id)}
                           style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 4 }}
                           aria-label="حذف"
+                          data-testid="delete-sale-btn"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -760,7 +762,7 @@ export default function Dashboard() {
         )}
 
         {totalPages > 1 && (
-          <div style={{
+          <div data-testid="pagination" style={{
             padding: 'var(--space-3) var(--space-5)',
             borderTop: '1px solid var(--border)',
             display: 'flex',

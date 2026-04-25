@@ -16,9 +16,9 @@ test.describe('Submissions report page', () => {
 
   // SM-02: Filter panel has branch, month, year selects
   test('SM-02: filter panel renders branch, month, and year selects', async ({ page }) => {
-    await expect(page.locator('select').nth(0)).toBeVisible()
-    await expect(page.locator('select').nth(1)).toBeVisible()
-    await expect(page.locator('select').nth(2)).toBeVisible()
+    await expect(page.getByTestId('branch-select')).toBeVisible()
+    await expect(page.getByTestId('month-select')).toBeVisible()
+    await expect(page.getByTestId('year-select')).toBeVisible()
   })
 
   // SM-03: "بحث" (search) button is present
@@ -37,7 +37,7 @@ test.describe('Submissions report page', () => {
   test('SM-05: submission cards load after search', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection with existing submissions')
     await page.getByRole('button', { name: 'بحث' }).click()
-    await page.waitForSelector('[data-testid="submission-card"], .submission-card, .border.rounded', { timeout: 10_000 })
+    await page.waitForSelector('[data-testid="submission-card"]', { timeout: 10_000 })
   })
 
   // SM-06: Expand card shows invoice table
@@ -45,7 +45,7 @@ test.describe('Submissions report page', () => {
   test('SM-06: expanding a submission card reveals sent days table', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
     await page.getByRole('button', { name: 'بحث' }).click()
-    const expandBtn = page.locator('button').filter({ hasText: /تفاصيل|عرض/ }).first()
+    const expandBtn = page.getByTestId('expand-submission').first()
     await expandBtn.click()
     await expect(page.getByText(/الأيام المُرسلة|إجمالي الفواتير/)).toBeVisible()
   })
@@ -55,7 +55,7 @@ test.describe('Submissions report page', () => {
   test('SM-07: collapsing an expanded card hides the detail table', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
     await page.getByRole('button', { name: 'بحث' }).click()
-    const toggleBtn = page.locator('button').filter({ hasText: /تفاصيل|عرض/ }).first()
+    const toggleBtn = page.getByTestId('expand-submission').first()
     await toggleBtn.click() // expand
     await toggleBtn.click() // collapse
     await expect(page.getByText(/الأيام المُرسلة/)).not.toBeVisible()
@@ -66,7 +66,7 @@ test.describe('Submissions report page', () => {
   test('SM-08: expanded card shows "الأيام المفقودة" section', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
     await page.getByRole('button', { name: 'بحث' }).click()
-    const toggleBtn = page.locator('button').filter({ hasText: /تفاصيل|عرض/ }).first()
+    const toggleBtn = page.getByTestId('expand-submission').first()
     await toggleBtn.click()
     await expect(page.getByText('الأيام المفقودة')).toBeVisible()
   })
@@ -75,7 +75,7 @@ test.describe('Submissions report page', () => {
   // Requires live Supabase connection
   test('SM-09: selecting a branch filter updates visible submission cards', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
-    await page.locator('select').nth(0).selectOption({ index: 1 })
+    await page.getByTestId('branch-select').selectOption({ index: 1 })
     await page.getByRole('button', { name: 'بحث' }).click()
     await page.waitForTimeout(500)
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl') // at minimum page is still valid

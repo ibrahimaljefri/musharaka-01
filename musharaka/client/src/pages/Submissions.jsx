@@ -69,8 +69,8 @@ function SubmissionCard({ sub }) {
   const sentDates = sales.map(s => s.sale_date)
 
   return (
-    <div className="sm-card">
-      <button type="button" className="sm-card-head" onClick={toggle}>
+    <div className="sm-card" data-testid="submission-card">
+      <button type="button" className="sm-card-head" onClick={toggle} data-testid="expand-submission">
         <div className="sm-card-left">
           <BranchBadge code={sub.branches?.code || '?'} />
           <div>
@@ -184,21 +184,21 @@ export default function Submissions() {
         <div className="sm-filter-bar">
           <div className="field">
             <label>الفرع</label>
-            <select className="input" value={filters.branch_id} onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))}>
+            <select className="input" value={filters.branch_id} onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))} data-testid="branch-select">
               <option value="">جميع الفروع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </div>
           <div className="field">
             <label>الشهر</label>
-            <select className="input" value={filters.month} onChange={e => setFilters(f => ({...f, month: e.target.value}))}>
+            <select className="input" value={filters.month} onChange={e => setFilters(f => ({...f, month: e.target.value}))} data-testid="month-select">
               <option value="">الكل</option>
               {[...Array(12)].map((_,i) => <option key={i+1} value={i+1}>{MONTHS_AR[i+1]}</option>)}
             </select>
           </div>
           <div className="field">
             <label>السنة</label>
-            <select className="input" value={filters.year} onChange={e => setFilters(f => ({...f, year: e.target.value}))}>
+            <select className="input" value={filters.year} onChange={e => setFilters(f => ({...f, year: e.target.value}))} data-testid="year-select">
               <option value="">الكل</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>

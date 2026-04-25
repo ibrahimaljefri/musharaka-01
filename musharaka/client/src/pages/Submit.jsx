@@ -108,7 +108,7 @@ export default function Submit() {
       <form onSubmit={handleSubmit} className="surface">
         <div className="sb-field">
           <label className="sb-label">الفرع <span className="req">*</span></label>
-          <select className="input" value={form.branch_id} onChange={e => set('branch_id', e.target.value)}>
+          <select className="input" value={form.branch_id} onChange={e => set('branch_id', e.target.value)} data-testid="branch-select">
             <option value="">اختر الفرع</option>
             {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
           </select>
@@ -118,13 +118,13 @@ export default function Submit() {
           <div className="sb-row">
             <div>
               <label className="sb-label">الشهر</label>
-              <select className="input" value={form.month} onChange={e => set('month', parseInt(e.target.value))}>
+              <select className="input" value={form.month} onChange={e => set('month', parseInt(e.target.value))} data-testid="month-select">
                 {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
               </select>
             </div>
             <div className="w-year">
               <label className="sb-label">السنة</label>
-              <select className="input" value={form.year} onChange={e => set('year', parseInt(e.target.value))}>
+              <select className="input" value={form.year} onChange={e => set('year', parseInt(e.target.value))} data-testid="year-select">
                 {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>

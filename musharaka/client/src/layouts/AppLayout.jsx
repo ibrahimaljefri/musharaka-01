@@ -101,7 +101,7 @@ export default function AppLayout() {
   return (
     <div className={`app-root ${dark ? 'dark' : ''}`}>
       <div className={`app-shell${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
-        <aside className="app-sidebar">
+        <aside className="app-sidebar" data-testid="sidebar">
           <div className="brand">
             <UrwahLogo variant="mark" width={30} id="sidebar-brand" />
           </div>
@@ -168,6 +168,7 @@ export default function AppLayout() {
               onClick={() => setMobileOpen(o => !o)}
               aria-label="القائمة"
               type="button"
+              data-testid="hamburger"
             >
               <Menu size={18} />
             </button>

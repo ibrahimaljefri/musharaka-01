@@ -20,8 +20,13 @@ export default function AlertBanner({ type = 'success', message, dismissible = t
     onClose?.()
   }
 
+  const role = type === 'error' ? 'alert' : 'status'
+  const testId = type === 'error' ? 'alert-error' : type === 'success' ? 'alert-success' : `alert-${type}`
+
   return (
     <div
+      role={role}
+      data-testid={testId}
       style={{ animation: 'slideDown 0.2s ease-out' }}
       className={`flex items-start gap-3 p-3 rounded-lg border mb-4 ${bg} ${border}`}
     >

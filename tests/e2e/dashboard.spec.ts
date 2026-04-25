@@ -32,7 +32,7 @@ test.describe('Dashboard page', () => {
   // D-03: Branch filter dropdown is present and contains "جميع الفروع"
   // -----------------------------------------------------------------------
   test('D-03: branch filter dropdown has default "جميع الفروع" option', async ({ page }) => {
-    const select = page.locator('select').first()
+    const select = page.getByTestId('branch-filter')
     await expect(select).toBeVisible()
     await expect(select).toHaveValue('')
     await expect(select.locator('option').first()).toHaveText('جميع الفروع')
@@ -50,7 +50,7 @@ test.describe('Dashboard page', () => {
   // -----------------------------------------------------------------------
   test('D-05: sales table has all required column headers in Arabic', async ({ page }) => {
     // Wait for table or empty-state message to ensure page has loaded
-    await page.waitForSelector('table, .font-arabic', { timeout: 10_000 })
+    await page.waitForSelector('table, [data-testid="empty-state"], main', { timeout: 10_000 })
 
     const headers = ['رقم الفاتورة', 'الفرع', 'النوع', 'التاريخ', 'المبلغ', 'الحالة', 'الإجراءات']
     for (const header of headers) {
@@ -72,7 +72,7 @@ test.describe('Dashboard page', () => {
   // -----------------------------------------------------------------------
   test('D-07: selecting a branch filter updates the KPI cards', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
-    const select = page.locator('select').first()
+    const select = page.getByTestId('branch-filter')
     const initialTotal = await page.getByText('إجمالي المبيعات').locator('..').innerText()
 
     // Select the first non-empty branch option if any exist
@@ -99,10 +99,10 @@ test.describe('Dashboard page', () => {
     if (!(await sentBadge.isVisible())) return // No sent rows to check
 
     // The sibling actions cell should show "محمية" text
-    const row = sentBadge.locator('../../..')
+    const row = page.locator('[data-testid="sale-row"]').filter({ has: sentBadge }).first()
     await expect(row.getByText('محمية')).toBeVisible()
     // No trash icon button in that row
-    await expect(row.locator('button')).toHaveCount(0)
+    await expect(row.locator('[data-testid="delete-sale-btn"]')).toHaveCount(0)
   })
 
   // -----------------------------------------------------------------------
@@ -114,8 +114,8 @@ test.describe('Dashboard page', () => {
     const pendingBadge = page.locator('span').filter({ hasText: 'معلقة' }).first()
     if (!(await pendingBadge.isVisible())) return
 
-    const row = pendingBadge.locator('../../..')
-    await expect(row.locator('button')).toBeVisible()
+    const row = page.locator('[data-testid="sale-row"]').filter({ has: pendingBadge }).first()
+    await expect(row.locator('[data-testid="delete-sale-btn"]')).toBeVisible()
   })
 
   // -----------------------------------------------------------------------
@@ -125,7 +125,7 @@ test.describe('Dashboard page', () => {
   test('D-10: clicking delete opens ConfirmDialog with Arabic message', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
     // Find and click a delete button
-    const deleteBtn = page.locator('button').filter({ has: page.locator('svg') }).first()
+    const deleteBtn = page.getByTestId('delete-sale-btn').first()
     if (!(await deleteBtn.isVisible())) return
 
     await deleteBtn.click()
@@ -148,7 +148,7 @@ test.describe('Dashboard page', () => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto('/dashboard')
 
-    const sidebar = page.locator('aside').first()
+    const sidebar = page.getByTestId('sidebar')
     await expect(sidebar).toBeVisible()
 
     const sidebarBox = await sidebar.boundingBox()
@@ -216,7 +216,7 @@ test.describe('Dashboard page', () => {
     await page.goto('/dashboard')
 
     // The menu button contains the Menu icon (lucide)
-    const menuBtn = page.locator('header button').first()
+    const menuBtn = page.getByTestId('hamburger')
     await expect(menuBtn).toBeVisible()
   })
 
@@ -227,11 +227,11 @@ test.describe('Dashboard page', () => {
   test('D-17: pagination controls are present when data exceeds 25 rows', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
     // If totalRows > 25 the pagination section appears
-    const paginationText = page.locator('.font-arabic').filter({ hasText: /\d+ \/ \d+/ })
+    const pagination = page.getByTestId('pagination')
     // Only assert if pagination is actually rendered
-    const count = await paginationText.count()
+    const count = await pagination.count()
     if (count > 0) {
-      await expect(paginationText.first()).toBeVisible()
+      await expect(pagination.first()).toBeVisible()
     }
   })
 })

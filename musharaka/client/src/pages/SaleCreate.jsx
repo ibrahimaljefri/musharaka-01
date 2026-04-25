@@ -176,6 +176,7 @@ export default function SaleCreate() {
               value={form.branch_id}
               onChange={e => set('branch_id', e.target.value)}
               onBlur={e => validateField('branch_id', e.target.value)}
+              data-testid="branch-select"
             >
               <option value="">اختر الفرع</option>
               {branches.map(b => (
@@ -225,6 +226,7 @@ export default function SaleCreate() {
                   className="input"
                   value={form.year}
                   onChange={e => set('year', parseInt(e.target.value))}
+                  data-testid="year-select"
                 >
                   {YEARS.map(y => (
                     <option key={y} value={y} disabled={y > currentYear}>{y}</option>
@@ -237,6 +239,7 @@ export default function SaleCreate() {
                   className="input"
                   value={form.month}
                   onChange={e => set('month', parseInt(e.target.value))}
+                  data-testid="month-select"
                 >
                   {MONTHS.map(m => {
                     const isFuture = form.year === currentYear && m.v > currentMonth

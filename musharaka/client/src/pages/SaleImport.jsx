@@ -107,7 +107,7 @@ export default function SaleImport() {
 
           <div className="ip-field">
             <label className="ip-label">الفرع <span className="req">*</span></label>
-            <select className="input" value={branchId} onChange={e => setBranchId(e.target.value)}>
+            <select className="input" value={branchId} onChange={e => setBranchId(e.target.value)} data-testid="branch-select">
               <option value="">اختر الفرع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
             </select>
@@ -115,7 +115,7 @@ export default function SaleImport() {
 
           <div className="ip-field">
             <label className="ip-label">الملف (.xlsx, .xls, .csv)</label>
-            <div className="ip-dropzone" onClick={() => fileRef.current?.click()}>
+            <div className="ip-dropzone" data-testid="drop-zone" onClick={() => fileRef.current?.click()}>
               <Upload size={28} className="ip-dz-icon" />
               <div className="ip-dz-main">{file ? file.name : 'انقر لاختيار ملف أو اسحب وأفلت'}</div>
               <div className="ip-dz-sub">xlsx, xls, csv — بحد أقصى 10 MB</div>
@@ -182,7 +182,7 @@ export default function SaleImport() {
             <div className="ip-modal">
               <div className="ip-modal-head">
                 <h2>معاينة البيانات ({preview.length} صف)</h2>
-                <button type="button" className="ip-modal-close" onClick={() => setShowPreview(false)}>
+                <button type="button" className="ip-modal-close" onClick={() => setShowPreview(false)} aria-label="إغلاق" data-testid="modal-close">
                   <X size={18} />
                 </button>
               </div>

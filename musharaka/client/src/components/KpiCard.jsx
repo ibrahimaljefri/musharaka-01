@@ -41,7 +41,7 @@ const colorMap = {
 export default function KpiCard({ title, value, subtitle, color = 'green', icon: Icon, trend }) {
   const c = colorMap[color] || colorMap.green
   return (
-    <div className={`rounded-xl border p-5 hover-lift ${c.bg} ${c.border}`}>
+    <div data-testid="kpi-card" className={`rounded-xl border p-5 hover-lift ${c.bg} ${c.border}`}>
       <div className="flex items-start justify-between mb-3">
         <span className={`text-xs font-semibold font-arabic uppercase tracking-wide ${c.text}`}>{title}</span>
         {Icon && (
