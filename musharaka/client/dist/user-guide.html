@@ -6,40 +6,125 @@
 <title>دليل المستخدم — عروة لإدارة المبيعات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
-/* ─── Reset & Base ─────────────────────────────────────────── */
+/* ─── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ─── Tokens — Light (default) ─────────────────────────────── */
 :root {
-  --gold:        #d4a017;
-  --gold-light:  #e8c060;
-  --gold-pale:   #f5e199;
-  --gold-dark:   #a07810;
-  --navy:        #0f1724;
-  --navy-mid:    #162035;
-  --navy-soft:   #1e2d48;
-  --slate:       #2a3a5c;
-  --text-base:   #e8dfc8;
-  --text-muted:  #9aabbf;
-  --text-dim:    #5a7080;
-  --white:       #ffffff;
+  --bg:           #FFFFFF;
+  --bg-alt:       #FAFAF9;
+  --bg-subtle:    #F5F5F4;
+  --surface:      #FFFFFF;
 
-  --font-body:   'Cairo', 'Segoe UI', sans-serif;
-  --font-accent: 'Cormorant Garamond', Georgia, serif;
+  --border:        #E7E5E4;
+  --border-strong: #D6D3D1;
+
+  --text:        #0C0A09;
+  --text-sec:    #57534E;
+  --text-muted:  #78716C;
+
+  --brand:       #B8860B;
+  --brand-hover: #92400E;
+  --brand-soft:  #FEF3C7;
+  --brand-ink:   #4A2E02;
+
+  --success: #15803D;
+  --warning: #B45309;
+  --error:   #B91C1C;
+  --info:    #1D4ED8;
+
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+  --ring-top:  inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
   --transition-slide: 420ms cubic-bezier(0.65, 0, 0.35, 1);
-  --transition-fast:  200ms ease;
+  --transition-fast:  180ms ease;
+
+  --font-body: 'Tajawal', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
+/* ─── Tokens — Dark ─────────────────────────────────────────── */
+html.dark {
+  --bg:        #0A0A0B;
+  --bg-alt:    #121214;
+  --bg-subtle: #18181B;
+  --surface:   #18181B;
+
+  --border:        #27272A;
+  --border-strong: #3F3F46;
+
+  --text:        #FAFAF9;
+  --text-sec:    #D4D4D8;
+  --text-muted:  #A1A1AA;
+
+  --brand:       #FBBF24;
+  --brand-hover: #F59E0B;
+  --brand-soft:  #3F2D0F;
+  --brand-ink:   #FEF3C7;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.4);
+  --ring-top:  inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ─── Base ──────────────────────────────────────────────────── */
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--navy);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-body);
-  color: var(--text-base);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Subtle paper-grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>");
+}
+html.dark body::before { opacity: 0.05; }
+
+/* ─── Theme Toggle ──────────────────────────────────────────── */
+#theme-toggle {
+  position: fixed;
+  top: 16px;
+  inset-inline-end: 16px;
+  z-index: 110;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+}
+#theme-toggle:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  transform: translateY(-1px);
 }
 
 /* ─── Progress Bar ──────────────────────────────────────────── */
@@ -48,13 +133,13 @@ html, body {
   top: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+  background: linear-gradient(90deg, var(--brand-hover), var(--brand), #FBBF24);
   transition: width var(--transition-slide);
   z-index: 100;
-  box-shadow: 0 0 12px var(--gold);
+  box-shadow: 0 0 12px rgba(184, 134, 11, 0.35);
 }
 
-/* ─── Deck Container ────────────────────────────────────────── */
+/* ─── Deck ──────────────────────────────────────────────────── */
 #deck {
   width: 100%;
   height: 100vh;
@@ -71,63 +156,46 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-
-  /* Entry state */
+  background: var(--bg);
   transform: translateX(-100%);
   opacity: 0;
-  transition:
-    transform var(--transition-slide),
-    opacity var(--transition-slide);
+  transition: transform var(--transition-slide), opacity var(--transition-slide);
   will-change: transform, opacity;
 }
+.slide.active   { transform: translateX(0); opacity: 1; z-index: 10; }
+.slide.exit-right { transform: translateX(100%); opacity: 0; z-index: 5; }
+.slide.exit-left  { transform: translateX(-100%); opacity: 0; z-index: 5; }
 
-.slide.active {
-  transform: translateX(0);
-  opacity: 1;
-  z-index: 10;
-}
-
-.slide.exit-right {
-  transform: translateX(100%);
-  opacity: 0;
-  z-index: 5;
-}
-
-.slide.exit-left {
-  transform: translateX(-100%);
-  opacity: 0;
-  z-index: 5;
-}
-
-/* ─── Background Textures ───────────────────────────────────── */
+/* ─── Slide Background Layers ───────────────────────────────── */
 .slide-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 70% at 85% 20%, rgba(184, 134, 11, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 15% 80%, rgba(184, 134, 11, 0.03) 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+}
+html.dark .slide-bg {
+  background:
+    radial-gradient(ellipse 60% 70% at 85% 20%, rgba(251, 191, 36, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 15% 80%, rgba(251, 191, 36, 0.04) 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
 }
 
-/* Dot grid pattern */
 .bg-dots::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(212,160,23,0.07) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: radial-gradient(circle, rgba(184, 134, 11, 0.10) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.5;
+}
+html.dark .bg-dots::before {
+  background-image: radial-gradient(circle, rgba(251, 191, 36, 0.10) 1px, transparent 1px);
 }
 
-/* Diagonal cut decoration */
-.bg-cut::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 55%;
-  height: 100%;
-  background: linear-gradient(135deg, var(--navy-mid) 0%, transparent 100%);
-  clip-path: polygon(0 0, 80% 0, 100% 100%, 0 100%);
-}
-
-/* ─── Brand Mark ────────────────────────────────────────────── */
+/* ─── Brand mark ────────────────────────────────────────────── */
 .brand {
   position: absolute;
   top: 16px;
@@ -136,30 +204,29 @@ html, body {
   user-select: none;
 }
 
-/* Full-logo glass card — matches branding.html canonical style, scaled for slides */
 .ug-flc {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 10px;
-  border-radius: 10px;
-  background: rgba(10, 18, 32, 0.72);
-  border: 1px solid rgba(212, 160, 23, 0.28);
-  box-shadow: 0 4px 18px rgba(0,0,0,0.55), 0 0 32px rgba(212,160,23,0.12);
+  padding: 6px 14px;
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm), var(--ring-top);
 }
-
 .ug-flc::before {
   content: '';
   position: absolute;
-  top: 0; left: 12%; right: 12%;
+  top: 0; left: 18%; right: 18%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.60), rgba(232,192,96,0.40), rgba(212,160,23,0.60), transparent);
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
+  opacity: 0.55;
 }
-
 .ug-flc-lg {
-  padding: 10px 18px;
-  border-radius: 16px;
+  padding: 12px 22px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md), var(--ring-top);
 }
 
 /* ─── Slide Number ──────────────────────────────────────────── */
@@ -169,10 +236,9 @@ html, body {
   left: 32px;
   z-index: 20;
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
+  font-weight: 700;
+  color: var(--text-muted);
   letter-spacing: 2px;
-  font-family: var(--font-accent);
 }
 
 /* ─── Navigation Arrows ─────────────────────────────────────── */
@@ -183,30 +249,31 @@ html, body {
   z-index: 50;
   width: 44px;
   height: 44px;
-  border: 1px solid rgba(212,160,23,0.25);
+  border: 1px solid var(--border);
   border-radius: 50%;
-  background: rgba(15,23,36,0.7);
-  backdrop-filter: blur(8px);
+  background: var(--surface);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
-  color: var(--gold);
+  color: var(--brand);
+  box-shadow: var(--shadow-md);
 }
-
 #nav-prev { right: 20px; }
 #nav-next { left: 20px; }
 
 #nav-prev:hover, #nav-next:hover {
-  background: rgba(212,160,23,0.15);
-  border-color: var(--gold);
-  box-shadow: 0 0 20px rgba(212,160,23,0.2);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-hover);
 }
-
+html.dark #nav-prev:hover, html.dark #nav-next:hover {
+  color: var(--brand-ink);
+}
 #nav-prev svg, #nav-next svg { width: 18px; height: 18px; }
 
-/* ─── Slide Counter ─────────────────────────────────────────── */
+/* ─── Slide Counter Dots ────────────────────────────────────── */
 #slide-counter {
   position: fixed;
   bottom: 22px;
@@ -216,24 +283,23 @@ html, body {
   display: flex;
   gap: 6px;
 }
-
 .dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--text-dim);
+  background: var(--border-strong);
   transition: all var(--transition-fast);
   cursor: pointer;
+  border: none;
+  padding: 0;
 }
-
 .dot.active {
-  background: var(--gold);
-  width: 18px;
+  background: var(--brand);
+  width: 20px;
   border-radius: 3px;
-  box-shadow: 0 0 8px var(--gold);
 }
 
-/* ─── Common Layout Helpers ─────────────────────────────────── */
+/* ─── Slide Content Container ───────────────────────────────── */
 .slide-content {
   position: relative;
   z-index: 10;
@@ -247,78 +313,75 @@ html, body {
   align-self: center;
 }
 
-/* Gold accent line */
+/* ─── Accent line under tag ─────────────────────────────────── */
 .accent-line {
   width: 48px;
   height: 3px;
-  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  background: linear-gradient(90deg, var(--brand), var(--brand-hover));
   border-radius: 2px;
   margin-bottom: 20px;
-  box-shadow: 0 0 10px rgba(212,160,23,0.4);
 }
 
-/* Section tag */
+/* ─── Section tag ───────────────────────────────────────────── */
 .section-tag {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--gold);
-  opacity: 0.8;
+  color: var(--brand);
   margin-bottom: 12px;
 }
 
-/* Headings */
+/* ─── Headings ──────────────────────────────────────────────── */
 .slide-title {
   font-size: clamp(28px, 3.5vw, 46px);
   font-weight: 800;
-  color: var(--white);
+  color: var(--text);
   line-height: 1.25;
   margin-bottom: 10px;
+  letter-spacing: -0.01em;
 }
 
 .slide-subtitle {
   font-size: clamp(14px, 1.5vw, 18px);
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--text-sec);
   margin-bottom: 36px;
   line-height: 1.7;
 }
 
-/* Gold text highlight */
-.gold { color: var(--gold); }
-.gold-light { color: var(--gold-light); }
+/* Highlight helpers (gold accent text) */
+.gold, .gold-light { color: var(--brand); font-weight: 700; }
+html.dark .gold, html.dark .gold-light { color: var(--brand-ink); }
 
-/* Bullet list */
+/* ─── Bullet list ───────────────────────────────────────────── */
 .bullet-list {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .bullet-list li {
   display: flex;
   align-items: flex-start;
   gap: 14px;
   font-size: clamp(14px, 1.4vw, 17px);
   font-weight: 500;
-  color: var(--text-base);
+  color: var(--text);
   line-height: 1.6;
 }
-
 .bullet-list li::before {
   content: '';
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  border: 2px solid var(--gold);
+  border: 2px solid var(--brand);
   border-radius: 50%;
-  margin-top: 6px;
-  box-shadow: 0 0 6px rgba(212,160,23,0.3);
+  margin-top: 7px;
+  background: var(--brand-soft);
 }
 
-/* Numbered steps */
+/* ─── Numbered steps ────────────────────────────────────────── */
 .step-list {
   list-style: none;
   display: flex;
@@ -326,45 +389,42 @@ html, body {
   gap: 18px;
   counter-reset: step;
 }
-
 .step-list li {
   display: flex;
   align-items: flex-start;
   gap: 16px;
   font-size: clamp(14px, 1.4vw, 16px);
   font-weight: 500;
-  color: var(--text-base);
+  color: var(--text);
   line-height: 1.6;
   counter-increment: step;
 }
-
 .step-list li::before {
   content: counter(step);
   flex-shrink: 0;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-  border-radius: 8px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
+  border-radius: var(--r-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 800;
-  color: var(--navy);
-  box-shadow: 0 4px 12px rgba(212,160,23,0.3);
-  font-family: var(--font-accent);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
 }
 
-/* Info card */
+/* ─── Info card / Surface ───────────────────────────────────── */
 .info-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(212,160,23,0.15);
-  border-radius: 12px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
   padding: 20px 24px;
-  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-sm), var(--ring-top);
 }
 
-/* Two-column layout */
+/* ─── Two-column layout ─────────────────────────────────────── */
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -372,127 +432,89 @@ html, body {
   align-items: start;
 }
 
-/* Code/command block */
+/* ─── Code/command block ────────────────────────────────────── */
 .cmd-block {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(212,160,23,0.2);
-  border-right: 3px solid var(--gold);
-  border-radius: 6px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-right: 3px solid var(--brand);
+  border-radius: var(--r-sm);
   padding: 14px 18px;
-  font-family: var(--font-accent);
-  font-size: 16px;
-  color: var(--gold-light);
-  letter-spacing: 0.5px;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 14px;
+  color: var(--brand-hover);
+  letter-spacing: 0.3px;
   margin: 8px 0;
 }
+html.dark .cmd-block { color: var(--brand-ink); }
 
-/* Highlight badge */
+/* ─── Badge ─────────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(212,160,23,0.1);
-  border: 1px solid rgba(212,160,23,0.3);
-  border-radius: 20px;
+  background: var(--brand-soft);
+  border: 1px solid var(--brand);
+  border-radius: var(--r-pill);
   padding: 4px 14px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--brand-ink);
   letter-spacing: 1px;
 }
 
-/* Geometric shapes */
-.shape-circle {
+/* ─── Decorative shapes (light gold rings) ──────────────────── */
+.shape-circle, .shape-ring {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(212,160,23,0.12);
+  border: 1px solid rgba(184, 134, 11, 0.10);
+}
+html.dark .shape-circle, html.dark .shape-ring {
+  border-color: rgba(251, 191, 36, 0.10);
 }
 
-.shape-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(212,160,23,0.08);
-}
-
-/* Divider */
+/* ─── Divider ───────────────────────────────────────────────── */
 .divider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.25), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
   margin: 24px 0;
 }
 
-/* Warning / tip box */
+/* ─── Tip box ───────────────────────────────────────────────── */
 .tip-box {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: rgba(212,160,23,0.06);
-  border: 1px solid rgba(212,160,23,0.2);
-  border-radius: 10px;
+  background: var(--brand-soft);
+  border: 1px solid var(--brand);
+  border-right: 3px solid var(--brand);
+  border-radius: var(--r-md);
   padding: 14px 18px;
   margin-top: 20px;
 }
-
+html.dark .tip-box {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
 .tip-icon {
   font-size: 18px;
   flex-shrink: 0;
   margin-top: 2px;
+  color: var(--brand-hover);
 }
-
+html.dark .tip-icon { color: var(--brand-ink); }
 .tip-text {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--brand-ink);
   line-height: 1.6;
 }
 
-/* ─── Reduced Motion ────────────────────────────────────────── */
+/* ─── Reduced motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .slide,
-  #progress-bar,
-  .dot {
-    transition: none;
-  }
+  .slide, #progress-bar, .dot { transition: none; }
 }
 
-/* ─── SLIDE 1 — Cover ───────────────────────────────────────── */
-#slide-1 {
-  background: var(--navy);
-}
-
-#slide-1 .slide-bg {
-  background:
-    radial-gradient(ellipse 70% 60% at 70% 50%, rgba(212,160,23,0.09) 0%, transparent 70%),
-    linear-gradient(180deg, var(--navy) 0%, var(--navy-mid) 100%);
-  background-image:
-    radial-gradient(ellipse 70% 60% at 70% 50%, rgba(212,160,23,0.09) 0%, transparent 70%),
-    linear-gradient(rgba(212,160,23,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(212,160,23,0.03) 1px, transparent 1px),
-    linear-gradient(180deg, var(--navy) 0%, var(--navy-mid) 100%);
-  background-size: 100% 100%, 48px 48px, 48px 48px, 100% 100%;
-}
-
-#slide-1 .shape-1 {
-  width: 500px;
-  height: 500px;
-  top: -120px;
-  right: -120px;
-}
-
-#slide-1 .shape-2 {
-  width: 320px;
-  height: 320px;
-  bottom: -60px;
-  left: -60px;
-}
-
-#slide-1 .shape-3 {
-  width: 200px;
-  height: 200px;
-  bottom: 80px;
-  right: 200px;
-}
-
+/* ─── Cover slide (slide-1) ─────────────────────────────────── */
 #slide-1 .cover-content {
   position: relative;
   z-index: 10;
@@ -504,229 +526,204 @@ html, body {
   padding: 80px;
   text-align: right;
 }
-
 #slide-1 .cover-tag {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: var(--gold);
-  opacity: 0.7;
+  color: var(--brand);
   margin-bottom: 20px;
 }
-
+#slide-1 .cover-bar {
+  width: 4px;
+  height: 80px;
+  background: linear-gradient(180deg, var(--brand), transparent);
+  border-radius: 2px;
+  margin-bottom: 24px;
+  align-self: flex-end;
+}
 #slide-1 .cover-title {
-  font-family: var(--font-body);
   font-size: clamp(36px, 5vw, 64px);
   font-weight: 900;
-  color: var(--white);
+  color: var(--text);
   line-height: 1.15;
   margin-bottom: 16px;
-  text-shadow: 0 4px 32px rgba(0,0,0,0.4);
+  letter-spacing: -0.02em;
 }
-
-#slide-1 .cover-title span {
-  color: var(--gold);
-}
+#slide-1 .cover-title .gold,
+#slide-1 .cover-title span { color: var(--brand); }
+html.dark #slide-1 .cover-title span { color: var(--brand-ink); }
 
 #slide-1 .cover-sub {
   font-size: clamp(15px, 1.6vw, 20px);
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--text-sec);
   margin-bottom: 48px;
   max-width: 520px;
   line-height: 1.7;
 }
-
 #slide-1 .cover-meta {
   display: flex;
   gap: 16px;
   align-items: center;
 }
 
-/* Vertical gold bar beside cover title */
-#slide-1 .cover-bar {
-  width: 4px;
-  height: 80px;
-  background: linear-gradient(180deg, var(--gold), transparent);
-  border-radius: 2px;
-  margin-bottom: 24px;
-  align-self: flex-end;
-}
-
-/* ─── SLIDE TEMPLATE — Content ──────────────────────────────── */
-.content-slide {
-  background: var(--navy-mid);
-}
-
-.content-slide .slide-bg {
-  background:
-    radial-gradient(ellipse 50% 80% at 90% 50%, rgba(212,160,23,0.04) 0%, transparent 70%),
-    linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
-}
-
-/* ─── SLIDE 4 — Dashboard (KPI grid) ───────────────────────── */
+/* ─── KPI grid (slide 4 / 12) ───────────────────────────────── */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .kpi-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(212,160,23,0.12);
-  border-top: 2px solid var(--gold);
-  border-radius: 10px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--brand);
+  border-radius: var(--r-lg);
   padding: 18px 20px;
   text-align: right;
+  box-shadow: var(--shadow-sm), var(--ring-top);
 }
-
 .kpi-label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1px;
-  color: var(--text-dim);
+  color: var(--text-muted);
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-
 .kpi-value {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
-  color: var(--gold-light);
-  font-family: var(--font-accent);
+  color: var(--brand-hover);
   line-height: 1;
   margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
-
+html.dark .kpi-value { color: var(--brand-ink); }
 .kpi-sub {
   font-size: 11px;
-  color: var(--text-dim);
+  color: var(--text-muted);
 }
 
-/* ─── SLIDE 10/11 — Submit status ───────────────────────────── */
+/* ─── Status rows (slide 9) ─────────────────────────────────── */
 .status-row {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   margin-bottom: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
 }
-
 .status-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+.status-row.pending { border-color: rgba(180, 83, 9, 0.35); background: rgba(254, 243, 199, 0.4); }
+.status-row.sent    { border-color: rgba(21, 128, 61, 0.35); background: rgba(220, 252, 231, 0.4); }
+.status-row.locked  { border-color: rgba(29, 78, 216, 0.35); background: rgba(219, 234, 254, 0.4); }
+html.dark .status-row.pending { background: rgba(63, 45, 15, 0.5); }
+html.dark .status-row.sent    { background: rgba(20, 50, 30, 0.5); }
+html.dark .status-row.locked  { background: rgba(20, 30, 60, 0.5); }
 
-.status-row.pending { background: rgba(255,180,0,0.06); border: 1px solid rgba(255,180,0,0.2); }
-.status-row.sent    { background: rgba(50,200,100,0.06); border: 1px solid rgba(50,200,100,0.2); }
-.status-row.locked  { background: rgba(100,150,255,0.06); border: 1px solid rgba(100,150,255,0.2); }
+.status-row.pending .status-dot { background: #B45309; }
+.status-row.sent    .status-dot { background: #15803D; }
+.status-row.locked  .status-dot { background: #1D4ED8; }
 
-.status-row.pending .status-dot { background: #ffb400; box-shadow: 0 0 6px #ffb400; }
-.status-row.sent    .status-dot { background: #32c864; box-shadow: 0 0 6px #32c864; }
-.status-row.locked  .status-dot { background: #6496ff; box-shadow: 0 0 6px #6496ff; }
+.status-label { font-size: 14px; font-weight: 700; }
+.status-row.pending .status-label { color: #B45309; }
+.status-row.sent    .status-label { color: #15803D; }
+.status-row.locked  .status-label { color: #1D4ED8; }
+html.dark .status-row.pending .status-label { color: #FBBF24; }
+html.dark .status-row.sent    .status-label { color: #4ADE80; }
+html.dark .status-row.locked  .status-label { color: #93C5FD; }
 
-.status-label { font-size: 14px; font-weight: 600; }
-.status-row.pending .status-label { color: #ffb400; }
-.status-row.sent    .status-label { color: #32c864; }
-.status-row.locked  .status-label { color: #6496ff; }
+.status-desc { font-size: 13px; color: var(--text-sec); }
 
-.status-desc { font-size: 13px; color: var(--text-muted); }
-
-/* ─── SLIDE 12-14 — Bot ─────────────────────────────────────── */
+/* ─── Bot bubble (preserved class) ──────────────────────────── */
 .bot-bubble {
-  background: rgba(37,211,102,0.08);
-  border: 1px solid rgba(37,211,102,0.2);
+  background: rgba(21, 128, 61, 0.08);
+  border: 1px solid rgba(21, 128, 61, 0.25);
   border-radius: 12px 12px 4px 12px;
   padding: 12px 18px;
   font-size: 15px;
-  color: #c5f0d5;
+  color: #15803D;
   margin-bottom: 10px;
   display: inline-block;
   max-width: 90%;
-  font-family: var(--font-accent);
-  letter-spacing: 0.3px;
 }
-
+html.dark .bot-bubble { color: #4ADE80; }
 .bot-label {
   font-size: 10px;
-  color: var(--text-dim);
+  color: var(--text-muted);
   margin-bottom: 4px;
   text-align: right;
   letter-spacing: 1px;
 }
 
-/* ─── SLIDE 16 — Tickets ────────────────────────────────────── */
+/* ─── Pills (slide 13) ──────────────────────────────────────── */
 .category-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin: 16px 0;
 }
-
 .pill {
-  background: rgba(212,160,23,0.08);
-  border: 1px solid rgba(212,160,23,0.25);
-  border-radius: 20px;
+  background: var(--brand-soft);
+  border: 1px solid var(--brand);
+  border-radius: var(--r-pill);
   padding: 6px 16px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--gold-light);
-  letter-spacing: 0.5px;
+  color: var(--brand-ink);
 }
 
-/* ─── SLIDE 19 — Admin ──────────────────────────────────────── */
+/* ─── Admin grid (slide 16) ─────────────────────────────────── */
 .admin-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
-
 .admin-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(212,160,23,0.12);
-  border-radius: 10px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   padding: 16px 18px;
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  box-shadow: var(--shadow-sm), var(--ring-top);
+  transition: all var(--transition-fast);
 }
-
+.admin-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md), var(--ring-top);
+}
 .admin-icon {
   font-size: 22px;
   flex-shrink: 0;
   margin-top: 1px;
 }
-
 .admin-card-title {
   font-size: 14px;
   font-weight: 700;
-  color: var(--gold-light);
+  color: var(--brand-hover);
   margin-bottom: 4px;
 }
-
+html.dark .admin-card-title { color: var(--brand-ink); }
 .admin-card-desc {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-sec);
   line-height: 1.5;
 }
 
-/* ─── SLIDE 20 — Thank You ──────────────────────────────────── */
-#slide-20 {
-  background: var(--navy);
-}
-
-#slide-20 .slide-bg {
-  background:
-    radial-gradient(ellipse 80% 60% at 30% 60%, rgba(212,160,23,0.08) 0%, transparent 70%),
-    linear-gradient(180deg, var(--navy) 0%, #0a0f1a 100%);
-}
-
-#slide-20 .outro-content {
+/* ─── Outro slide (slide-17) ────────────────────────────────── */
+#slide-17 .outro-content {
   position: relative;
   z-index: 10;
   flex: 1;
@@ -738,37 +735,36 @@ html, body {
   padding: 60px;
   gap: 20px;
 }
-
-
-#slide-20 .outro-title {
+#slide-17 .outro-title {
   font-size: clamp(28px, 4vw, 52px);
   font-weight: 900;
-  color: var(--white);
+  color: var(--text);
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
+#slide-17 .outro-title .gold { color: var(--brand); }
+html.dark #slide-17 .outro-title .gold { color: var(--brand-ink); }
 
-#slide-20 .outro-sub {
+#slide-17 .outro-sub {
   font-size: 16px;
-  color: var(--text-muted);
+  color: var(--text-sec);
   max-width: 460px;
   line-height: 1.7;
 }
-
-#slide-20 .outro-tagline {
-  font-family: var(--font-accent);
+#slide-17 .outro-tagline {
   font-size: clamp(16px, 2vw, 22px);
-  color: var(--gold);
-  font-style: italic;
+  color: var(--brand);
+  font-weight: 700;
   letter-spacing: 0.5px;
 }
+html.dark #slide-17 .outro-tagline { color: var(--brand-ink); }
 
-/* Large decorative brand mark on thank-you slide */
-#slide-20 .bg-brand {
+#slide-17 .bg-brand {
   position: absolute;
-  font-family: var(--font-accent);
   font-size: 320px;
-  font-weight: 700;
-  color: rgba(212,160,23,0.03);
+  font-weight: 900;
+  color: var(--brand);
+  opacity: 0.04;
   user-select: none;
   letter-spacing: -10px;
   z-index: 1;
@@ -778,9 +774,40 @@ html, body {
   transform: translate(-50%, -50%);
   white-space: nowrap;
 }
+html.dark #slide-17 .bg-brand { opacity: 0.06; }
+
+/* Override per-slide cover-content tweaks not needed in light theme */
+.content-slide { background: transparent; }
+
+/* Scoped fixes for inline color="var(--text-dim)" / "var(--text-muted)" / "var(--text-base)" usages
+   that referenced the OLD palette. Map old vars to current ones via fallback. */
+:root {
+  --text-dim: var(--text-muted);
+  --text-base: var(--text);
+  --gold: var(--brand);
+  --gold-light: var(--brand);
+  --gold-dark: var(--brand-hover);
+  --navy: var(--bg);
+  --navy-mid: var(--bg-alt);
+  --white: var(--text);
+}
+html.dark :root,
+html.dark {
+  --gold: var(--brand-ink);
+  --gold-light: var(--brand-ink);
+}
 </style>
 </head>
 <body>
+
+<!-- Theme Toggle -->
+<button id="theme-toggle" onclick="document.documentElement.classList.toggle('dark')"
+        aria-label="تبديل السمة" title="تبديل السمة">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
 
 <!-- Progress Bar -->
 <div id="progress-bar" style="width: 5%;"></div>
@@ -806,11 +833,9 @@ html, body {
   <!-- ══════════════ SLIDE 1 — Cover ══════════════ -->
   <section class="slide active" id="slide-1" role="region" aria-label="الغلاف">
     <div class="slide-bg">
-      <div class="shape-circle shape-1" style="width:500px;height:500px;top:-120px;right:-120px;"></div>
-      <div class="shape-circle shape-2" style="width:320px;height:320px;bottom:-60px;left:-60px;"></div>
-      <div class="shape-ring shape-3" style="width:200px;height:200px;bottom:80px;right:200px;"></div>
-      <!-- Decorative lines -->
-      <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 80% 70% at 65% 55%, rgba(212,160,23,0.06) 0%, transparent 65%);"></div>
+      <div class="shape-circle" style="width:500px;height:500px;top:-120px;right:-120px;"></div>
+      <div class="shape-circle" style="width:320px;height:320px;bottom:-60px;left:-60px;"></div>
+      <div class="shape-ring" style="width:200px;height:200px;bottom:80px;right:200px;"></div>
     </div>
 
     <!-- Brand mark -->
@@ -830,7 +855,7 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">01 / 20</div>
+    <div class="slide-num">01 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 2 — Overview ══════════════ -->
@@ -842,13 +867,12 @@ html, body {
       <div class="section-tag">نظرة عامة</div>
       <div class="accent-line"></div>
       <h2 class="slide-title">ما هي <span class="gold">عروة</span>؟</h2>
-      <p class="slide-subtitle">منصة B2B لإدارة وإرسال مبيعات الفروع لمشغّلي المراكز التجارية</p>
+      <p class="slide-subtitle">منصة B2B لإدارة وإرسال المبيعات</p>
 
       <ul class="bullet-list">
         <li>إدخال وتتبع مبيعات فروعك بدقة — يومياً أو شهرياً</li>
-        <li>إرسال بيانات المبيعات مباشرةً إلى المركز التجاري (سينومي وغيره)</li>
+        <li>إرسال المبيعات مباشرةً إلى المركز التجاري</li>
         <li>متابعة حالة الإرساليات وسجل التحقق من الإرسال</li>
-        <li>دعم الإدخال عبر واتساب وتيليغرام دون تسجيل دخول</li>
         <li>نظام تذاكر للدعم الفني وحل المشكلات</li>
       </ul>
 
@@ -858,7 +882,7 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">02 / 20</div>
+    <div class="slide-num">02 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 3 — Login ══════════════ -->
@@ -892,7 +916,7 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">03 / 20</div>
+    <div class="slide-num">03 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 4 — Dashboard ══════════════ -->
@@ -914,12 +938,12 @@ html, body {
         </div>
         <div class="kpi-card">
           <div class="kpi-label">معلّقة</div>
-          <div class="kpi-value" style="color:#ffb400;">٣</div>
+          <div class="kpi-value" style="color:#B45309;">٣</div>
           <div class="kpi-sub">إدخالات في الانتظار</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">مُرسَلة</div>
-          <div class="kpi-value" style="color:#32c864;">٢٢</div>
+          <div class="kpi-value" style="color:#15803D;">٢٢</div>
           <div class="kpi-sub">إرساليات مكتملة</div>
         </div>
       </div>
@@ -931,7 +955,7 @@ html, body {
       </ul>
     </div>
 
-    <div class="slide-num">04 / 20</div>
+    <div class="slide-num">04 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 5 — Branches ══════════════ -->
@@ -959,15 +983,15 @@ html, body {
             <div class="kpi-label" style="margin-bottom:12px;">مثال على فرع</div>
             <div style="display:flex;flex-direction:column;gap:10px;">
               <div style="display:flex;justify-content:space-between;font-size:13px;">
-                <span style="color:var(--text-dim);">الاسم</span>
+                <span style="color:var(--text-muted);">الاسم</span>
                 <span class="gold-light">فرع جدة — العثيم مول</span>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:13px;">
-                <span style="color:var(--text-dim);">الرمز</span>
+                <span style="color:var(--text-muted);">الرمز</span>
                 <span class="gold-light">JED-001</span>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:13px;">
-                <span style="color:var(--text-dim);">رقم العقد</span>
+                <span style="color:var(--text-muted);">رقم العقد</span>
                 <span class="gold-light">C-2024-0089</span>
               </div>
             </div>
@@ -975,13 +999,9 @@ html, body {
         </div>
       </div>
 
-      <div class="tip-box">
-        <span class="tip-icon">ℹ</span>
-        <span class="tip-text">بيانات الفروع يُنشئها المسؤول. إذا لم يظهر فرعك، تواصل مع الدعم الفني.</span>
-      </div>
     </div>
 
-    <div class="slide-num">05 / 20</div>
+    <div class="slide-num">05 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 6 — Daily Sales ══════════════ -->
@@ -1009,7 +1029,7 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">06 / 20</div>
+    <div class="slide-num">06 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 7 — Monthly Sales ══════════════ -->
@@ -1034,13 +1054,13 @@ html, body {
       <div class="divider"></div>
 
       <div class="info-card">
-        <div style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+        <div style="font-size:13px;color:var(--text-sec);line-height:1.7;">
           ✦ &nbsp;يوزّع النظام المبلغ الإجمالي تلقائياً على أيام الشهر بالتساوي عند الإرسال للمركز التجاري.
         </div>
       </div>
     </div>
 
-    <div class="slide-num">07 / 20</div>
+    <div class="slide-num">07 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 8 — Period Sales ══════════════ -->
@@ -1068,7 +1088,7 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">08 / 20</div>
+    <div class="slide-num">08 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 9 — Review before submit ══════════════ -->
@@ -1085,7 +1105,6 @@ html, body {
       <ul class="bullet-list">
         <li>راجع الإدخالات المعلّقة في بطاقة لوحة المعلومات الرئيسية</li>
         <li>انقر على أيقونة ✕ لحذف إدخال خاطئ قبل الإرسال</li>
-        <li>الإدخالات المُرسَلة تظهر بأيقونة 🔒 ولا يمكن تعديلها</li>
       </ul>
 
       <div class="divider"></div>
@@ -1115,7 +1134,7 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">09 / 20</div>
+    <div class="slide-num">09 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 10 — Submit ══════════════ -->
@@ -1127,7 +1146,7 @@ html, body {
       <div class="section-tag">الإرسال</div>
       <div class="accent-line"></div>
       <h2 class="slide-title">إرسال المبيعات <span class="gold">للمركز التجاري</span></h2>
-      <p class="slide-subtitle">أرسل مبيعاتك إلى سينومي أو المركز المختص تلقائياً</p>
+      <p class="slide-subtitle">أرسل مبيعاتك إلى المركز التجاري المختص تلقائياً</p>
 
       <ol class="step-list">
         <li>اضغط على <strong class="gold">إرسال المبيعات</strong> في القائمة الجانبية</li>
@@ -1143,7 +1162,7 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">10 / 20</div>
+    <div class="slide-num">10 / 15</div>
   </section>
 
   <!-- ══════════════ SLIDE 11 — Confirmation ══════════════ -->
@@ -1158,7 +1177,7 @@ html, body {
       <p class="slide-subtitle">النظام يحفظ سجلاً كاملاً لكل إرسالية</p>
 
       <ul class="bullet-list">
-        <li>تتحول حالة الإدخالات من <strong style="color:#ffb400;">معلّقة</strong> إلى <strong style="color:#32c864;">مُرسَلة</strong> فوراً</li>
+        <li>تتحول حالة الإدخالات من <strong style="color:#B45309;">معلّقة</strong> إلى <strong style="color:#15803D;">مُرسَلة</strong> فوراً</li>
         <li>يظهر سجل الإرسالية في قسم <strong class="gold-light">الإرساليات</strong> بالتاريخ والوقت</li>
         <li>يحفظ النظام دليل الإرسال — يمكن الرجوع إليه عند الحاجة</li>
         <li>لا يمكن حذف بيانات مُرسَلة إلا عبر المسؤول</li>
@@ -1170,122 +1189,18 @@ html, body {
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="font-size:28px;">✅</div>
           <div>
-            <div style="font-size:14px;font-weight:700;color:var(--gold-light);margin-bottom:4px;">إرسالية ناجحة</div>
-            <div style="font-size:12px;color:var(--text-muted);">فرع جدة — مارس 2025 — أُرسِل بتاريخ 02/04/2025 الساعة 10:15 ص</div>
+            <div style="font-size:14px;font-weight:700;color:var(--brand-hover);margin-bottom:4px;">إرسالية ناجحة</div>
+            <div style="font-size:12px;color:var(--text-sec);">فرع جدة — مارس 2025 — أُرسِل بتاريخ 02/04/2025 الساعة 10:15 ص</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="slide-num">11 / 20</div>
+    <div class="slide-num">11 / 15</div>
   </section>
 
-  <!-- ══════════════ SLIDE 12 — Bot ══════════════ -->
-  <section class="slide content-slide" id="slide-12" role="region" aria-label="روبوت الرسائل">
-    <div class="slide-bg bg-dots"></div>
-    <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
-
-    <div class="slide-content">
-      <div class="section-tag">الروبوت الذكي</div>
-      <div class="accent-line"></div>
-      <h2 class="slide-title">إرسال عبر <span class="gold">واتساب وتيليغرام</span></h2>
-      <p class="slide-subtitle">أدخل مبيعاتك برسالة نصية بسيطة دون فتح المنصة</p>
-
-      <ul class="bullet-list">
-        <li>يدعم النظام إدخال المبيعات عبر <strong class="gold-light">واتساب</strong> أو <strong class="gold-light">تيليغرام</strong></li>
-        <li>يجب على المسؤول تفعيل حسابك في الروبوت أولاً</li>
-        <li>بعد التفعيل أرسل رسالة للروبوت مباشرةً</li>
-      </ul>
-
-      <div class="divider"></div>
-
-      <div style="text-align:right;">
-        <div class="bot-label">مثال على رسالة ✓</div>
-        <div class="bot-bubble">مبيعات اليوم ٥٠٠٠</div>
-      </div>
-
-      <div class="tip-box">
-        <span class="tip-icon">📱</span>
-        <span class="tip-text">رقم الواتساب ورابط التيليغرام يُرسَلان إليك عند تفعيل الحساب من قِبَل المسؤول.</span>
-      </div>
-    </div>
-
-    <div class="slide-num">12 / 20</div>
-  </section>
-
-  <!-- ══════════════ SLIDE 13 — Bot branches ══════════════ -->
-  <section class="slide content-slide" id="slide-13" role="region" aria-label="الروبوت والفروع">
-    <div class="slide-bg bg-dots"></div>
-    <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
-
-    <div class="slide-content">
-      <div class="section-tag">الروبوت الذكي</div>
-      <div class="accent-line"></div>
-      <h2 class="slide-title">تحديد <span class="gold">الفرع</span> عبر الروبوت</h2>
-      <p class="slide-subtitle">إذا كان لديك أكثر من فرع، حدّده في رسالتك</p>
-
-      <div class="two-col" style="gap:20px;">
-        <div>
-          <div style="font-size:12px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:12px;">فرع واحد</div>
-          <ul class="bullet-list" style="gap:10px;">
-            <li>يُعرِّف الروبوت فرعك تلقائياً</li>
-            <li>لا داعي لذكر اسم الفرع</li>
-          </ul>
-          <div style="margin-top:14px;">
-            <div class="bot-label">رسالة ✓</div>
-            <div class="bot-bubble" style="font-size:14px;">مبيعات اليوم ٨٠٠٠</div>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:12px;">فروع متعددة</div>
-          <ul class="bullet-list" style="gap:10px;">
-            <li>اذكر اسم الفرع في بداية الرسالة</li>
-            <li>أو انتظر سؤال الروبوت</li>
-          </ul>
-          <div style="margin-top:14px;">
-            <div class="bot-label">رسالة ✓</div>
-            <div class="bot-bubble" style="font-size:14px;">فرع جدة: مبيعات اليوم ٥٠٠٠</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="slide-num">13 / 20</div>
-  </section>
-
-  <!-- ══════════════ SLIDE 14 — Bot date formats ══════════════ -->
-  <section class="slide content-slide" id="slide-14" role="region" aria-label="صيغ التاريخ في الروبوت">
-    <div class="slide-bg bg-dots"></div>
-    <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
-
-    <div class="slide-content">
-      <div class="section-tag">الروبوت الذكي</div>
-      <div class="accent-line"></div>
-      <h2 class="slide-title">صيغ <span class="gold">الرسائل المقبولة</span></h2>
-      <p class="slide-subtitle">يفهم الروبوت عدة صيغ للتاريخ والفترات</p>
-
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <div>
-          <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:8px;">يومي</div>
-          <div class="cmd-block">مبيعات اليوم ٥٠٠٠</div>
-          <div class="cmd-block">مبيعات ١٥ أبريل ٣٠٠٠</div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:8px;">شهري</div>
-          <div class="cmd-block">مبيعات شهر مارس ٨٠,٠٠٠</div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:8px;">فترة</div>
-          <div class="cmd-block">مبيعات من ١ أبريل إلى ١٥ أبريل ٢٥,٠٠٠</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="slide-num">14 / 20</div>
-  </section>
-
-  <!-- ══════════════ SLIDE 15 — Reports ══════════════ -->
-  <section class="slide content-slide" id="slide-15" role="region" aria-label="التقارير">
+  <!-- ══════════════ SLIDE 12 — Reports ══════════════ -->
+  <section class="slide content-slide" id="slide-12" role="region" aria-label="التقارير">
     <div class="slide-bg bg-dots"></div>
     <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
 
@@ -1323,11 +1238,11 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">15 / 20</div>
+    <div class="slide-num">12 / 15</div>
   </section>
 
-  <!-- ══════════════ SLIDE 16 — Tickets ══════════════ -->
-  <section class="slide content-slide" id="slide-16" role="region" aria-label="تذاكر الدعم">
+  <!-- ══════════════ SLIDE 13 — Tickets ══════════════ -->
+  <section class="slide content-slide" id="slide-13" role="region" aria-label="تذاكر الدعم">
     <div class="slide-bg bg-dots"></div>
     <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
 
@@ -1345,7 +1260,7 @@ html, body {
       </ol>
 
       <div style="margin-top:16px;">
-        <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:10px;">تصنيفات التذاكر</div>
+        <div style="font-size:11px;color:var(--brand);font-weight:800;letter-spacing:2px;margin-bottom:10px;">تصنيفات التذاكر</div>
         <div class="category-pills">
           <span class="pill">تكامل API</span>
           <span class="pill">ترخيص وعقود</span>
@@ -1356,11 +1271,11 @@ html, body {
       </div>
     </div>
 
-    <div class="slide-num">16 / 20</div>
+    <div class="slide-num">13 / 15</div>
   </section>
 
-  <!-- ══════════════ SLIDE 17 — After ticket ══════════════ -->
-  <section class="slide content-slide" id="slide-17" role="region" aria-label="بعد رفع التذكرة">
+  <!-- ══════════════ SLIDE 14 — After ticket ══════════════ -->
+  <section class="slide content-slide" id="slide-14" role="region" aria-label="بعد رفع التذكرة">
     <div class="slide-bg bg-dots"></div>
     <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
 
@@ -1382,148 +1297,41 @@ html, body {
       <div class="info-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <span class="badge">SUP-0042</span>
-          <span style="font-size:11px;color:var(--text-dim);">02/04/2025</span>
+          <span style="font-size:11px;color:var(--text-muted);">02/04/2025</span>
         </div>
-        <div style="font-size:13px;font-weight:600;color:var(--text-base);margin-bottom:4px;">مشكلة في إرسال مبيعات فبراير</div>
-        <div style="font-size:12px;color:var(--text-muted);">الحالة: <span style="color:#ffb400;">قيد المعالجة</span></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">مشكلة في إرسال مبيعات فبراير</div>
+        <div style="font-size:12px;color:var(--text-sec);">الحالة: <span style="color:#B45309;font-weight:700;">قيد المعالجة</span></div>
       </div>
     </div>
 
-    <div class="slide-num">17 / 20</div>
+    <div class="slide-num">14 / 15</div>
   </section>
 
-  <!-- ══════════════ SLIDE 18 — Tips & Issues ══════════════ -->
-  <section class="slide content-slide" id="slide-18" role="region" aria-label="مشكلات شائعة">
-    <div class="slide-bg bg-dots"></div>
-    <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
-
-    <div class="slide-content">
-      <div class="section-tag">نصائح وحلول</div>
-      <div class="accent-line"></div>
-      <h2 class="slide-title">مشكلات <span class="gold">شائعة ونصائح</span></h2>
-      <p class="slide-subtitle">أبرز المشكلات وكيفية حلها</p>
-
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="tip-box" style="margin-top:0;">
-          <span class="tip-icon">⚠</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold-light);margin-bottom:3px;">لا يمكنني الإرسال</div>
-            <div class="tip-text">تحقق من اكتمال جميع إدخالات الشهر وعدم وجود أيام فارغة.</div>
-          </div>
-        </div>
-        <div class="tip-box" style="margin-top:0;">
-          <span class="tip-icon">🔒</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold-light);margin-bottom:3px;">المبلغ مرسل مسبقاً</div>
-            <div class="tip-text">تواصل مع مسؤول النظام لفتح الإدخال وإعادة الإرسال.</div>
-          </div>
-        </div>
-        <div class="tip-box" style="margin-top:0;">
-          <span class="tip-icon">💰</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold-light);margin-bottom:3px;">تنسيق المبالغ</div>
-            <div class="tip-text">أدخل المبالغ دائماً بالريال السعودي (ر.س) — بدون رموز عملة.</div>
-          </div>
-        </div>
-        <div class="tip-box" style="margin-top:0;">
-          <span class="tip-icon">📅</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold-light);margin-bottom:3px;">الروبوت لا يرد</div>
-            <div class="tip-text">تأكد أن رقمك مُسجَّل ومُفعَّل من قِبَل مسؤول النظام.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="slide-num">18 / 20</div>
-  </section>
-
-  <!-- ══════════════ SLIDE 19 — Admin ══════════════ -->
-  <section class="slide content-slide" id="slide-19" role="region" aria-label="المسؤول">
-    <div class="slide-bg bg-dots"></div>
-    <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
-
-    <div class="slide-content">
-      <div class="section-tag">المسؤولون</div>
-      <div class="accent-line"></div>
-      <h2 class="slide-title">دليل <span class="gold">مديري الفروع</span></h2>
-      <p class="slide-subtitle">مرجع سريع لصلاحيات المسؤولين في النظام</p>
-
-      <div class="admin-grid">
-        <div class="admin-card">
-          <span class="admin-icon">👥</span>
-          <div>
-            <div class="admin-card-title">إدارة المستأجرين والمستخدمين</div>
-            <div class="admin-card-desc">إضافة حسابات جديدة وتحديد الصلاحيات</div>
-          </div>
-        </div>
-        <div class="admin-card">
-          <span class="admin-icon">🔑</span>
-          <div>
-            <div class="admin-card-title">مفاتيح API</div>
-            <div class="admin-card-desc">إنشاء وإدارة مفاتيح التكامل مع الأنظمة الخارجية</div>
-          </div>
-        </div>
-        <div class="admin-card">
-          <span class="admin-icon">🤖</span>
-          <div>
-            <div class="admin-card-title">مشتركو الروبوت</div>
-            <div class="admin-card-desc">تفعيل وإدارة حسابات واتساب وتيليغرام</div>
-          </div>
-        </div>
-        <div class="admin-card">
-          <span class="admin-icon">🎫</span>
-          <div>
-            <div class="admin-card-title">تذاكر الدعم</div>
-            <div class="admin-card-desc">مراجعة الطلبات والرد على المستخدمين</div>
-          </div>
-        </div>
-        <div class="admin-card">
-          <span class="admin-icon">🏢</span>
-          <div>
-            <div class="admin-card-title">إدارة الفروع</div>
-            <div class="admin-card-desc">إضافة الفروع وتحديث بيانات العقود</div>
-          </div>
-        </div>
-        <div class="admin-card">
-          <span class="admin-icon">📊</span>
-          <div>
-            <div class="admin-card-title">تقارير الإدارة</div>
-            <div class="admin-card-desc">رصد المبيعات الإجمالية لجميع المستأجرين</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="slide-num">19 / 20</div>
-  </section>
-
-  <!-- ══════════════ SLIDE 20 — Thank You ══════════════ -->
-  <section class="slide" id="slide-20" role="region" aria-label="شكراً">
+  <!-- ══════════════ SLIDE 17 — Thank You ══════════════ -->
+  <section class="slide" id="slide-17" role="region" aria-label="شكراً">
     <div class="slide-bg">
-      <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 60%, rgba(212,160,23,0.08) 0%, transparent 70%);"></div>
       <div class="shape-ring" style="width:600px;height:600px;top:-150px;left:-150px;opacity:0.4;"></div>
       <div class="shape-ring" style="width:300px;height:300px;bottom:40px;right:80px;opacity:0.3;"></div>
     </div>
 
     <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
 
-    <div class="bg-brand">م</div>
+    <div class="bg-brand">ع</div>
 
     <div class="outro-content">
       <div class="ug-flc ug-flc-lg" style="margin-bottom:12px;"><span class="ug-logo-slot" data-type="full" data-size="120"></span></div>
       <h2 class="outro-title">شكراً لاستخدامك<br /><span class="gold">عروة</span></h2>
-      <p class="outro-sub">منصتك الموثوقة لإدارة وإرسال بيانات المبيعات إلى المراكز التجارية الكبرى</p>
+      <p class="outro-sub">منصتك الموثوقة لإدارة وإرسال المبيعات إلى المراكز التجارية الكبرى</p>
 
       <div class="divider" style="max-width:300px;margin:8px auto;"></div>
 
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-        <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-muted);">
-          <span style="color:var(--gold);">🎫</span>
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-sec);">
+          <span style="color:var(--brand);">🎫</span>
           <span>للدعم الفني: <strong class="gold-light">رفع تذكرة دعم من داخل النظام</strong></span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-muted);">
-          <span style="color:var(--gold);">📖</span>
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-sec);">
+          <span style="color:var(--brand);">📖</span>
           <span>هذا الدليل متاح دائماً في قائمة المساعدة</span>
         </div>
       </div>
@@ -1531,7 +1339,7 @@ html, body {
       <p class="outro-tagline">إدارة مبيعاتك — بدقة، سهولة، وثقة</p>
     </div>
 
-    <div class="slide-num">20 / 20</div>
+    <div class="slide-num">15 / 15</div>
   </section>
 
 </div><!-- /deck -->
@@ -1562,14 +1370,9 @@ html, body {
   function getDots() { return counter.querySelectorAll('.dot'); }
 
   function updateUI(idx) {
-    // Progress bar — full at last slide
     const pct = ((idx + 1) / TOTAL) * 100;
     bar.style.width = pct + '%';
-
-    // Dots
     getDots().forEach((d, i) => d.classList.toggle('active', i === idx));
-
-    // Arrows visibility
     btnPrev.style.opacity = idx === TOTAL - 1 ? '0.3' : '1';
     btnNext.style.opacity = idx === 0 ? '0.3' : '1';
   }
@@ -1580,21 +1383,17 @@ html, body {
 
     const prev = slides[current];
     const next = slides[idx];
-    const dir  = idx > current ? 1 : -1;  // 1 = forward, -1 = backward
+    const dir  = idx > current ? 1 : -1;
 
-    // Prepare incoming slide off-screen
     next.classList.remove('active', 'exit-right', 'exit-left');
     next.style.transform = dir === 1 ? 'translateX(-100%)' : 'translateX(100%)';
     next.style.opacity   = '0';
 
-    // Force reflow
     void next.offsetWidth;
 
-    // Animate current out
     prev.classList.remove('active');
     prev.classList.add(dir === 1 ? 'exit-right' : 'exit-left');
 
-    // Animate next in
     next.style.transform = '';
     next.style.opacity   = '';
     next.classList.add('active');
@@ -1602,7 +1401,6 @@ html, body {
     current = idx;
     updateUI(current);
 
-    // Cleanup after transition
     const dur = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 440;
     setTimeout(() => {
       prev.classList.remove('exit-right', 'exit-left');
@@ -1613,7 +1411,6 @@ html, body {
   function next() { goTo(current + 1); }
   function prev() { goTo(current - 1); }
 
-  // Keyboard
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft'  || e.key === 'ArrowDown'  || e.key === ' ') { e.preventDefault(); next(); }
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
@@ -1622,7 +1419,6 @@ html, body {
   btnNext.addEventListener('click', next);
   btnPrev.addEventListener('click', prev);
 
-  // Touch / swipe
   let touchStartX = 0;
   let touchStartY = 0;
 
@@ -1639,7 +1435,6 @@ html, body {
     }
   }, { passive: true });
 
-  // Initial state
   slides.forEach((s, i) => {
     if (i !== 0) {
       s.style.transform = 'translateX(-100%)';
@@ -1650,40 +1445,9 @@ html, body {
 })();
 </script>
 
-<!-- LOGO INJECTION — branding.html canonical full calligraphic SVG — no squircle -->
-<script>
-(function () {
-  'use strict';
-  var P = '<path d="M428.109741,308.062500 C448.252167,303.688812 463.935150,292.184570 478.893982,279.506531 C497.342896,263.870483 513.617004,245.912170 531.592224,229.767548 C546.534424,216.347137 562.293457,204.081390 581.419067,197.053467 C595.298706,191.953232 609.478821,190.154388 624.063232,193.939819 C653.639465,201.616455 663.741516,226.418884 658.878113,251.379181 C658.359314,254.041916 658.276428,256.980682 655.790955,260.006836 C655.450317,256.014160 655.177673,252.748520 654.892151,249.483994 C653.137573,229.421875 639.162720,215.670181 619.272705,213.145767 C596.501221,210.255661 577.976196,219.570038 560.615662,232.369461 C544.345703,244.364822 530.170349,258.756226 515.848633,272.949402 C500.918365,287.745605 485.542084,302.027222 467.671082,313.304199 C453.401306,322.308716 438.159546,328.753021 421.109192,329.944550 C384.898102,332.475098 358.177185,306.386932 357.680817,274.173035 C357.322998,250.951004 367.502075,232.862686 385.321564,218.638031 C387.134308,217.190964 389.023834,215.840012 390.852325,214.463547 C384.869843,204.779770 393.771088,198.624039 395.314545,190.137436 C400.361359,192.710297 403.551727,196.151352 406.834808,199.245850 C410.692841,202.882278 413.924805,202.803116 417.555969,199.362732 C420.212555,196.845749 422.916168,194.378387 425.597992,191.888016 C426.763550,190.805618 427.523651,189.180588 430.002350,188.717926 C429.784851,197.426392 425.101044,203.072540 418.707947,208.151810 C421.833740,211.570679 424.858215,214.785324 427.780304,218.090515 C442.655914,234.916351 434.529297,270.913361 410.321808,277.442474 C390.891754,282.683044 376.220215,269.675049 380.107819,249.960770 C381.566040,242.566177 383.992126,235.508133 387.011810,228.429092 C382.244232,230.805710 379.170013,235.030060 376.246429,239.170074 C356.552155,267.058716 370.345093,301.433746 403.967224,308.592529 C411.930695,310.288116 419.826996,310.131805 428.109741,308.062500 M394.061249,251.254227 C399.086792,259.671692 412.348450,257.227814 419.537933,251.799484 C422.727448,249.391296 423.353729,246.638855 421.360291,243.145081 C416.983429,235.473969 410.323242,230.096466 403.730469,224.446304 C398.876770,228.418381 396.285278,233.255569 393.892151,238.165619 C391.926727,242.198074 391.387360,246.421738 394.061249,251.254227 z"/><path d="M576.357117,289.720032 C581.971436,291.678497 587.302185,292.243591 592.672607,291.302307 C593.070740,290.001831 592.387878,289.433350 591.816345,288.877380 C582.726807,280.034668 581.746826,269.901550 586.896729,258.718628 C592.100098,247.419662 598.905334,237.902390 612.173828,235.340103 C623.994263,233.057419 640.485046,243.305099 643.721375,254.916306 C644.101807,256.281250 644.366516,257.601410 643.164124,258.593048 C641.706421,259.795197 640.299805,258.795837 638.997253,258.147827 C628.586243,252.968658 617.812012,252.809647 606.935303,256.138092 C597.922668,258.896088 597.074280,262.418915 603.265747,269.618744 C612.329407,280.158386 624.713440,283.647034 637.865234,279.028320 C646.027954,276.161652 654.037415,272.859863 662.126038,269.780365 C663.962036,269.081360 665.797668,268.079163 667.833435,269.149872 C668.761353,277.365448 661.081970,290.011444 653.538635,292.796906 C638.088623,298.502045 623.543396,306.548035 607.550781,310.825836 C592.372009,314.885956 577.353699,315.687653 562.958374,307.680237 C556.138611,303.886749 551.007324,298.294373 545.753784,291.455322 C543.585449,304.266907 539.333252,315.313232 531.551331,324.742340 C525.570679,331.988953 518.527039,337.565216 508.798279,338.842468 C504.215607,339.444092 499.839783,338.459106 495.512543,337.284912 C488.557800,335.397766 482.209320,332.040802 475.874207,328.702576 C473.874237,327.648712 471.996399,326.165802 473.046204,323.597565 C474.012085,321.234589 476.253235,321.526855 478.237244,322.131134 C492.827911,326.575165 505.008087,321.622498 516.173767,312.533600 C522.834167,307.112030 528.270386,300.678131 532.713135,293.332794 C535.257019,289.126953 535.310486,285.309509 533.280457,280.663757 C527.429016,267.272614 526.915222,271.732758 537.022156,261.807983 C539.611389,259.265350 542.352661,256.877411 545.808899,253.695984 C552.321899,269.158051 559.869263,283.147614 576.357117,289.720032 z"/><path d="M460.696899,261.690094 C448.874115,256.856354 444.183502,248.285339 446.545380,236.115051 C448.743439,224.788910 453.471405,214.592346 460.851532,205.724289 C471.427490,193.016129 484.579987,193.730453 493.830322,207.369049 C500.527740,217.243668 503.871643,228.277573 505.246124,240.015289 C505.719513,244.058014 504.836975,247.379868 501.634460,250.286636 C496.831299,254.646225 492.413971,259.429199 487.781555,263.980225 C486.896301,264.849915 486.199829,266.211761 484.516815,265.893890 C483.305664,264.217377 485.690765,262.912384 484.898712,261.011902 C477.075256,263.641846 469.112427,264.564697 460.696899,261.690094 M472.851074,240.929062 C477.976929,241.102432 483.088379,241.190582 488.139069,238.484772 C486.093658,231.855240 483.004822,226.058197 478.102966,221.410095 C475.783386,219.210632 472.901459,217.851959 469.432098,218.917328 C464.441132,220.449982 459.441437,226.363358 459.412292,230.897507 C459.385406,235.082794 463.444031,238.975662 469.498566,240.519775 C470.297974,240.723648 471.144653,240.741928 472.851074,240.929062 z"/><path d="M382.481873,161.486572 C388.508118,153.710754 388.534882,153.674393 396.099915,159.241898 C398.623077,161.098846 400.970703,163.194275 403.543152,165.298935 C406.839874,163.066238 408.771912,159.706848 411.103241,156.762924 C412.906372,154.485931 414.646973,153.975250 416.993561,155.749420 C417.786987,156.349289 418.666626,156.833694 419.486877,157.399811 C434.590240,167.824112 430.314941,169.322388 421.531799,180.377075 C419.682190,182.705017 417.997375,182.787796 415.750031,180.716675 C412.223755,177.466934 408.442078,174.494370 404.464203,171.148392 C401.772369,174.355118 399.133362,177.078995 396.997162,180.152344 C394.452789,183.812943 392.316071,183.339478 389.477753,180.502945 C386.903778,177.930573 383.944275,175.732300 381.076324,173.468414 C376.222015,169.636627 376.167786,169.424118 380.080292,164.496826 C380.803772,163.585678 381.536163,162.681625 382.481873,161.486572 z"/><path d="M598.817017,175.773315 C602.242554,173.725784 605.659302,172.304947 608.178589,169.555847 C602.521545,162.847595 602.983154,157.105087 609.391174,153.046036 C611.321838,151.823090 613.356873,151.162094 615.506653,152.302658 C617.662354,153.446365 618.291626,155.486755 618.256531,157.790604 C618.208618,160.935760 616.871826,163.973099 619.744080,167.082062 C620.931458,168.367340 619.235535,172.682281 616.218811,172.016800 C613.102844,171.329437 611.994080,173.028107 610.359192,174.497040 C603.873169,180.324524 595.722717,183.353653 588.486816,182.193817 C591.222656,178.609512 595.348511,177.991287 598.817017,175.773315 z"/><path d="M507.902527,404.792236 C506.407623,409.087341 505.085327,413.029968 503.701965,416.951019 C503.106262,418.639496 502.767944,420.760132 500.404236,420.780090 C498.091400,420.799591 497.560577,418.778503 496.931580,417.073822 C492.440857,404.903259 487.984863,392.719910 483.499115,380.547516 C481.293610,374.562653 479.876892,368.090668 472.621033,365.133789 C479.117920,361.342133 487.598145,363.970551 490.324615,370.255066 C493.959747,378.634216 496.907562,387.310699 500.193939,395.842773 C500.837738,397.514191 501.071320,399.413666 502.563782,400.710358 C511.086945,382.654724 515.424255,376.457520 500.849335,364.856293 C504.528503,361.831055 513.241028,363.803009 516.802246,368.483459 C518.647217,370.908295 519.533813,373.778564 520.576233,376.589020 C523.635803,384.837952 526.767151,393.060303 530.110229,401.929321 C532.135010,399.434021 532.850403,396.972107 533.711243,394.612762 C537.018127,385.549866 540.306213,376.479919 543.550354,367.394379 C544.500122,364.734558 545.808228,362.929169 549.007080,364.191010 C550.179504,365.914948 549.203125,367.445801 548.672791,368.946960 C543.021240,384.943390 537.340149,400.929382 531.658386,416.915161 C531.056458,418.608673 530.746887,420.723724 528.343445,420.687439 C525.806824,420.649200 525.312317,418.481079 524.618042,416.606720 C521.231140,407.463226 517.837341,398.322235 513.946777,387.834808 C511.671082,394.240082 509.860718,399.335571 507.902527,404.792236 z"/><path d="M444.896423,363.692932 C449.430878,363.530029 453.326965,364.229431 457.109009,365.690643 C463.156982,368.027313 466.785614,372.407745 466.896240,378.854340 C467.003815,385.124969 464.176392,390.082489 458.207855,392.838593 C457.177338,393.314484 456.170166,393.840942 454.332306,394.749329 C460.051239,402.327728 462.508301,411.790741 471.285919,416.640350 C472.212402,417.152252 473.102234,417.563293 473.001099,418.765472 C472.878052,420.227814 471.686981,420.641144 470.536438,420.825836 C464.432892,421.805634 459.154419,420.093994 455.537842,415.048431 C451.859894,409.917236 448.670929,404.433746 445.310181,399.077942 C444.057526,397.081726 442.970093,394.686401 440.042236,395.507751 C437.037415,396.350708 438.246918,399.082062 438.181976,401.033691 C438.015808,406.025482 438.005249,411.029205 438.144440,416.022247 C438.261597,420.226166 435.652344,420.323334 432.553497,420.353912 C429.424957,420.384735 427.528290,419.738739 427.571686,415.985260 C427.712250,403.827209 427.591949,391.666443 427.638428,379.506958 C427.659973,373.871216 428.538635,367.904419 419.810608,366.032349 C424.399170,362.334137 428.627960,364.035187 432.424683,363.755096 C436.400696,363.461731 440.415222,363.690918 444.896423,363.692932 M451.526398,370.860443 C449.347168,369.624756 447.047913,368.691162 444.547241,368.415405 C439.624481,367.872559 438.194214,369.095001 438.128815,373.938507 C438.075165,377.911255 438.103851,381.885681 438.148041,385.858826 C438.166626,387.528046 438.239197,389.109222 440.353088,389.777985 C444.830414,391.194519 451.753296,388.993713 454.223267,385.201599 C456.928101,381.048889 456.070953,375.292542 451.526398,370.860443 z"/><path d="M661.812927,365.459839 C662.072876,379.882812 662.207764,393.869171 662.238586,407.855743 C662.247437,411.848602 662.192566,415.692963 667.224609,416.850616 C668.160156,417.065796 668.525513,417.882935 668.387146,418.782288 C668.241943,419.726105 667.477051,420.000946 666.618835,420.249603 C657.141724,422.995361 651.763062,418.962585 651.729126,409.038177 C651.716003,405.207489 651.636230,401.374146 651.749695,397.546844 C651.838928,394.538330 650.494202,393.344635 647.560120,393.394836 C642.565063,393.480286 637.564880,393.511658 632.571777,393.379547 C629.272827,393.292267 628.176025,394.821289 628.242920,397.928894 C628.357666,403.256042 628.146912,408.591034 628.299377,413.916229 C628.411682,417.839874 628.144531,420.569244 622.851990,420.462555 C617.904846,420.362823 617.630493,417.863953 617.660950,414.123230 C617.765381,401.299377 617.698120,388.474152 617.697510,375.649445 C617.697327,371.859589 617.640320,368.120667 612.733582,367.188751 C611.802979,367.012024 611.323181,366.278839 611.429077,365.353851 C611.536438,364.416534 612.285828,364.070160 613.128235,363.795624 C622.158203,360.853180 628.079407,364.968201 628.214966,374.329651 C628.263184,377.660065 628.286072,380.992157 628.236145,384.322235 C628.198730,386.821503 629.355103,388.017334 631.833130,388.014221 C637.162537,388.007477 642.492126,387.984863 647.821167,388.026794 C650.512695,388.047974 651.772522,386.887512 651.717407,384.114563 C651.628113,379.619446 651.693848,375.121094 651.706238,370.624176 C651.726562,363.249451 654.549072,361.661926 661.812927,365.459839 z"/><path d="M572.921875,368.976868 C574.331543,366.638641 574.497375,363.573853 577.951660,363.790863 C581.030151,363.984283 581.337769,366.672882 582.219177,368.688263 C587.879028,381.628754 593.472168,394.598663 599.035217,407.581146 C600.634216,411.312622 602.367554,414.871521 606.382507,416.601349 C607.355591,417.020630 608.178772,417.566681 607.981689,418.787720 C607.735718,420.311859 606.453918,420.329834 605.309387,420.492645 C598.605286,421.446350 592.604004,418.571045 589.759094,411.489594 C587.341614,405.472198 583.587341,404.593750 577.673340,404.015961 C567.109192,402.983795 560.539551,406.019440 558.169983,416.767273 C557.500610,419.803131 555.374634,421.166382 551.151978,419.336700 C558.367737,402.635193 565.563293,385.980530 572.921875,368.976868 M570.155518,399.008972 C574.375549,398.732483 578.679504,399.625000 583.606750,398.094513 C580.936035,391.892609 578.388794,385.977509 575.414001,379.069458 C571.604004,385.228119 569.570068,390.792694 567.225586,396.198639 C566.325684,398.273712 567.588257,398.850220 570.155518,399.008972 z"/><path d="M410.212952,369.202271 C409.786896,381.142426 411.251495,392.669556 409.341431,404.074799 C407.424500,415.520935 399.767639,421.374878 387.301544,421.286316 C374.750793,421.197174 366.641388,414.898254 364.638336,403.817047 C363.082550,395.210236 364.060791,386.542084 363.873840,377.904327 C363.768463,373.036041 364.347107,368.018951 358.025696,366.342621 C357.799896,366.282745 357.773804,365.469757 357.659851,365.028015 C367.501099,360.173645 374.279724,364.085052 374.312866,374.543823 C374.339264,382.869720 374.085175,391.207123 374.438477,399.518890 C374.978210,412.218262 384.438202,418.905151 395.373596,414.574799 C402.775299,411.643677 404.316956,405.054047 404.572784,398.250122 C404.941650,388.438934 404.633270,378.603577 404.722839,368.779510 C404.740814,366.806854 403.961670,363.937836 407.363007,363.927338 C410.635071,363.917206 410.023224,366.660431 410.212952,369.202271 z"/>';
-  function fl(w, uid) {
-    var g = 'flg_' + uid, r = 'flrg_' + uid, h = Math.round(w * 295 / 325);
-    return '<svg width="' + w + '" height="' + h + '" viewBox="350 140 325 295" fill="none"'
-      + ' xmlns="http://www.w3.org/2000/svg" aria-label="شعار عروة" role="img" style="display:block">'
-      + '<defs>'
-      + '<linearGradient id="' + g + '" x1="512" y1="140" x2="512" y2="440" gradientUnits="userSpaceOnUse">'
-      + '<stop offset="0%" stop-color="#FFFDE7"/><stop offset="10%" stop-color="#FDE68A"/>'
-      + '<stop offset="40%" stop-color="#F59E0B"/><stop offset="75%" stop-color="#D97706"/>'
-      + '<stop offset="100%" stop-color="#92400E"/>'
-      + '</linearGradient>'
-      + '<radialGradient id="' + r + '" cx="512" cy="260" r="200" gradientUnits="userSpaceOnUse">'
-      + '<stop offset="0%" stop-color="#FBBF24" stop-opacity="0.28"/>'
-      + '<stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>'
-      + '</radialGradient></defs>'
-      + '<ellipse cx="512" cy="255" rx="230" ry="160" fill="url(#' + r + ')"/>'
-      + '<g fill="url(#' + g + ')">' + P + '</g></svg>';
-  }
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.ug-logo-slot').forEach(function (el, i) {
-      var w = parseInt(el.getAttribute('data-size') || '58', 10);
-      var t = document.createElement('span'); t.innerHTML = fl(w, 'ug' + i);
-      el.parentNode.replaceChild(t.firstElementChild, el);
-    });
-  });
-})();
-</script>
 <!-- ══════════════════════════════════════════════════════════════════ -->
-<!-- LOGO INJECTION — branding.html canonical full calligraphic SVG      -->
-<!-- No squircle, no external image, identical to branding document      -->
+<!-- LOGO INJECTION — canonical Urwa calligraphic SVG                    -->
+<!-- Replaces every .ug-logo-slot / .sm-logo-slot placeholder            -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <script>
 (function () {
@@ -1699,14 +1463,12 @@ html, body {
       + ' xmlns="http://www.w3.org/2000/svg" aria-label="\u0634\u0639\u0627\u0631 \u0639\u0631\u0648\u0629" role="img" style="display:block">'
       + '<defs>'
       + '<linearGradient id="' + gId + '" x1="512" y1="140" x2="512" y2="440" gradientUnits="userSpaceOnUse">'
-      + '<stop offset="0%"   stop-color="#FFFDE7"/>'
-      + '<stop offset="10%"  stop-color="#FDE68A"/>'
-      + '<stop offset="40%"  stop-color="#F59E0B"/>'
-      + '<stop offset="75%"  stop-color="#D97706"/>'
+      + '<stop offset="0%"   stop-color="#FDE68A"/>'
+      + '<stop offset="40%"  stop-color="#D97706"/>'
       + '<stop offset="100%" stop-color="#92400E"/>'
       + '</linearGradient>'
       + '<radialGradient id="' + rgId + '" cx="512" cy="260" r="200" gradientUnits="userSpaceOnUse">'
-      + '<stop offset="0%"   stop-color="#FBBF24" stop-opacity="0.28"/>'
+      + '<stop offset="0%"   stop-color="#FBBF24" stop-opacity="0.18"/>'
       + '<stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>'
       + '</radialGradient>'
       + '</defs>'
