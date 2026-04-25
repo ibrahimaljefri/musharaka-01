@@ -147,13 +147,12 @@
   color: var(--text);
 }
 .dash-wrap .chart-area {
-  height: 200px;
-  background:
-    linear-gradient(180deg, rgba(184, 134, 11, 0.08) 0%, transparent 100%),
-    repeating-linear-gradient(0deg, transparent 0, transparent 39px, var(--border) 39px, var(--border) 40px);
+  height: 360px;
+  background: linear-gradient(180deg, rgba(184, 134, 11, 0.06) 0%, transparent 100%);
   border-radius: var(--r-md);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  padding: 8px;
 }
 .dash-wrap .chart-line {
   position: absolute;

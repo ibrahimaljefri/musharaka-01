@@ -461,8 +461,10 @@ export default function Dashboard() {
   const chartPath = useMemo(() => {
     if (!chartData || chartData.length === 0) return null
     // Inner plotting area with margins for axis labels
-    const W = 800, H = 260
-    const M = { top: 12, right: 16, bottom: 32, left: 56 } // margins inside viewBox
+    // Wide viewBox + `preserveAspectRatio=none` on the SVG means chart STRETCHES
+    // to fill any container width while text labels render at normal proportions
+    const W = 1600, H = 360
+    const M = { top: 16, right: 60, bottom: 36, left: 16 } // RTL: y-axis labels on right
     const innerW = W - M.left - M.right
     const innerH = H - M.top - M.bottom
     const max = Math.max(...chartData.map(d => d.value), 1)
@@ -696,7 +698,7 @@ export default function Dashboard() {
             <svg
               className="chart-line"
               viewBox={`0 0 ${chartPath.W} ${chartPath.H}`}
-              preserveAspectRatio="xMidYMid meet"
+              preserveAspectRatio="none"
               style={{ width: '100%', height: '100%', overflow: 'visible' }}
             >
               <defs>
@@ -722,7 +724,7 @@ export default function Dashboard() {
                     x={chartPath.W - chartPath.M.right + 6}
                     y={t.y + 4}
                     fill="var(--text-muted)"
-                    fontSize="11"
+                    fontSize="14"
                     fontFamily="Tajawal, sans-serif"
                     textAnchor="start"
                   >
@@ -750,7 +752,7 @@ export default function Dashboard() {
                     x={t.x}
                     y={chartPath.H - 10}
                     fill="var(--text-muted)"
-                    fontSize="11"
+                    fontSize="14"
                     fontFamily="Tajawal, sans-serif"
                     textAnchor="middle"
                   >
