@@ -2,17 +2,24 @@
   "name": "musharaka-e2e",
   "private": true,
   "scripts": {
-    "test":       "npx playwright test",
-    "test:api":   "npx playwright test --project=api",
-    "test:e2e":   "npx playwright test --project=chromium --project=admin",
-    "test:ui":    "npx playwright test --ui",
-    "test:headed":"npx playwright test --headed",
-    "test:report":"npx playwright show-report playwright-report",
-    "report:docx":"node scripts/generate-report.js",
-    "run:full":   "bash scripts/run-full-suite.sh"
+    "test": "npx playwright test",
+    "test:api": "npx playwright test --project=api",
+    "test:e2e": "npx playwright test --project=chromium --project=admin",
+    "test:ui": "npx playwright test --ui",
+    "test:headed": "npx playwright test --headed",
+    "test:report": "npx playwright show-report playwright-report",
+    "test:visual": "npx playwright test e2e/visual-regression.spec.ts e2e/visual-regression-admin.spec.ts",
+    "test:a11y": "npx playwright test e2e/accessibility.spec.ts",
+    "test:theme": "npx playwright test e2e/theme-parity.spec.ts",
+    "test:keyboard": "npx playwright test e2e/keyboard-navigation.spec.ts",
+    "test:cross-browser": "npx playwright test e2e/cross-browser-smoke.spec.ts --project=chromium --project=firefox --project=webkit",
+    "baseline": "npx playwright test --update-snapshots e2e/visual-regression.spec.ts e2e/visual-regression-admin.spec.ts",
+    "report:docx": "node scripts/generate-report.js",
+    "run:full": "bash scripts/run-full-suite.sh"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.8.0",
     "@playwright/test": "^1.48.0",
-    "docx":             "^8.5.0"
+    "docx": "^8.5.0"
   }
 }

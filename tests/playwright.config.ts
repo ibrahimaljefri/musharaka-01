@@ -88,10 +88,11 @@ export default defineConfig({
     // API regression project — no browser, APIRequestContext only
     {
       name: 'api',
+      testDir: './api',
       use: {
         baseURL: API_URL,
       },
-      testMatch: '**/api/**/*.spec.ts',
+      testMatch: '**/*.spec.ts',
     },
   ],
 })
