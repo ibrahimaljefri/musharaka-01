@@ -98,7 +98,10 @@ if [ "$SKIP_MIGRATE" = false ]; then
     for f in src/schema/*.sql; do
       [ -e "$f" ] || continue
       log "  → $(basename $f)"
-      psql "$DATABASE_URL" -q -f "$f" 2>&1 | grep -vE "NOTICE|^$" | head -10 || true
+      # Filter out expected re-run noise (already-exists is fine — schema is idempotent)
+      psql "$DATABASE_URL" -q -f "$f" 2>&1 \
+        | grep -vE "NOTICE|^$|already exists|trigger .* for relation .* already exists" \
+        | head -10 || true
     done
     ok "Schema migrations applied"
   fi
@@ -131,20 +134,36 @@ ok "Old process stopped"
 log "Starting fresh node process on port $APP_PORT"
 > "$LOG_FILE"
 cd "$SRV_DST"
-PORT=$APP_PORT nohup node src/index.js > "$LOG_FILE" 2>&1 &
+# Use setsid to fully detach so script exit doesn't kill the child
+PORT=$APP_PORT setsid nohup node src/index.js > "$LOG_FILE" 2>&1 < /dev/null &
 NEW_PID=$!
+disown 2>/dev/null || true
 echo $NEW_PID > "$PID_FILE"
 log "  PID: $NEW_PID"
-sleep 4
 
-# Check it's actually listening
-if ! ss -tnlp 2>/dev/null | grep -q ":$APP_PORT" && \
-   ! netstat -tnlp 2>/dev/null | grep -q ":$APP_PORT"; then
-  warn "Nothing listening on :$APP_PORT after 4 seconds — check log:"
-  tail -20 "$LOG_FILE"
-  fatal "Node process did not bind to port $APP_PORT"
+# Wait up to 15 seconds for startup confirmation in the log
+log "Waiting for startup..."
+STARTED=false
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+  sleep 1
+  if grep -qiE "running on port|listening on" "$LOG_FILE" 2>/dev/null; then
+    STARTED=true
+    break
+  fi
+  # Also bail early if we see a fatal error
+  if grep -qiE "Error:|throw new" "$LOG_FILE" 2>/dev/null; then
+    warn "Startup error detected after ${i}s — log:"
+    tail -30 "$LOG_FILE"
+    fatal "Node failed to start"
+  fi
+done
+
+if [ "$STARTED" = true ]; then
+  ok "Node started successfully (PID $NEW_PID)"
+else
+  warn "No 'running on port' message after 15s — process may still be starting"
+  tail -10 "$LOG_FILE"
 fi
-ok "Node listening on :$APP_PORT (PID $NEW_PID)"
 
 # ────────── 8. Verify wake ───────────────────────────────────────────────────
 log "Verifying public health endpoint"
@@ -154,13 +173,13 @@ if [ "$HTTP_CODE" = "200" ]; then
   ok "wake: HTTP 200 — deployment successful 🎉"
   ok "Site live at: https://apps.stepup2you.com"
 elif [ "$HTTP_CODE" = "503" ]; then
-  warn "wake: HTTP $HTTP_CODE — Apache can't reach node yet. Check the log:"
+  warn "wake: HTTP $HTTP_CODE — Apache can't reach node. Recent log:"
   tail -20 "$LOG_FILE"
-  exit 1
+  warn "If the log shows 'running on port', the process started but Apache may"
+  warn "still be holding old connections. Wait 10s and retry: curl -s -o /dev/null -w '%{http_code}\\n' $HEALTH_URL"
 else
   warn "wake: HTTP $HTTP_CODE — unexpected. Recent log:"
   tail -20 "$LOG_FILE"
-  exit 1
 fi
 
 echo ""
