@@ -1,0 +1,338 @@
+/* ============================================================================
+   App Shell — Production port of preview-shared.css app-shell styles
+   Scoped under .app-root so these styles don't leak globally.
+   ============================================================================ */
+
+.app-root {
+  /* Light tokens */
+  --bg:          #FFFFFF;
+  --bg-alt:      #FAFAF9;
+  --bg-subtle:   #F5F5F4;
+  --surface:     #FFFFFF;
+
+  --border:        #E7E5E4;
+  --border-strong: #D6D3D1;
+
+  --text:        #0C0A09;
+  --text-sec:    #57534E;
+  --text-muted:  #78716C;
+
+  --brand:       #B8860B;
+  --brand-hover: #92400E;
+  --brand-soft:  #FEF3C7;
+  --brand-ink:   #4A2E02;
+
+  --success:     #15803D;
+  --warning:     #B45309;
+  --error:       #B91C1C;
+  --info:        #1D4ED8;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md:   0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-lg:   0 2px 6px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-focus:0 0 0 3px rgba(184, 134, 11, 0.25);
+  --ring-top:    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:  150ms;
+  --dur-base:  200ms;
+
+  direction: rtl;
+  color: var(--text);
+  background: var(--bg);
+  font-family: 'Tajawal', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.dark .app-root,
+.app-root.dark {
+  --bg:          #0A0A0B;
+  --bg-alt:      #121214;
+  --bg-subtle:   #18181B;
+  --surface:     #18181B;
+
+  --border:        #27272A;
+  --border-strong: #3F3F46;
+
+  --text:        #FAFAF9;
+  --text-sec:    #D4D4D8;
+  --text-muted:  #A1A1AA;
+
+  --brand:       #FBBF24;
+  --brand-hover: #F59E0B;
+  --brand-soft:  #3F2D0F;
+  --brand-ink:   #FEF3C7;
+
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:   0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg:   0 2px 6px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.4);
+  --ring-top:    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ---- Typography helpers (scoped) --------------------------------------- */
+.app-root .t-mono  { font-family: 'JetBrains Mono', 'Consolas', monospace; font-variant-numeric: tabular-nums; }
+.app-root .t-small { font-size: 0.875rem; line-height: 1.5; color: var(--text-sec); }
+.app-root .t-micro { font-size: 0.75rem;  line-height: 1.4; color: var(--text-muted); }
+
+/* ---- Shell ------------------------------------------------------------- */
+.app-root .app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns var(--dur-base) var(--ease-out);
+}
+.app-root .app-shell.collapsed { grid-template-columns: 64px 1fr; }
+
+/* ---- Sidebar ----------------------------------------------------------- */
+.app-root .app-sidebar {
+  background: var(--surface);
+  border-inline-end: 1px solid var(--border);
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 10;
+}
+.app-root .app-sidebar .brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.app-root .side-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  font: 500 14px 'Tajawal', sans-serif;
+  color: var(--text-sec);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: right;
+}
+.app-root .side-item:hover { background: var(--bg-subtle); color: var(--text); }
+.app-root .side-item.active {
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  font-weight: 600;
+  position: relative;
+}
+.app-root .side-item.active::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -10px;
+  top: 8px; bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand);
+}
+.app-root .side-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.app-root .app-shell.collapsed .side-item { justify-content: center; padding: 11px 0; position: relative; }
+.app-root .app-shell.collapsed .side-item .label { display: none; }
+.app-root .app-shell.collapsed .side-item:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  inset-inline-start: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--text);
+  color: var(--surface);
+  padding: 5px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+.app-root .app-shell.collapsed .side-item.active::before { display: none; }
+
+.app-root .collapse-toggle {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  border-radius: var(--r-md);
+  color: var(--text-sec);
+  cursor: pointer;
+  font: 500 13px 'Tajawal', sans-serif;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.app-root .collapse-toggle:hover { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+.app-root .collapse-toggle svg { transition: transform var(--dur-base) var(--ease-out); }
+.app-root .app-shell.collapsed .collapse-toggle .label { display: none; }
+.app-root .app-shell.collapsed .collapse-toggle svg { transform: rotate(180deg); }
+
+/* ---- Main area --------------------------------------------------------- */
+.app-root .app-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Topbar ------------------------------------------------------------ */
+.app-root .app-topbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: var(--space-4);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.app-root .app-topbar .crumbs {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-root .topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-root .user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: var(--bg-subtle);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  color: var(--text);
+  max-width: 220px;
+}
+.app-root .user-chip > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-root .user-chip .avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #FBBF24, var(--brand));
+  display: grid; place-items: center; color: white; font-weight: 700; font-size: 12px;
+  flex-shrink: 0;
+}
+
+.app-root .theme-btn,
+.app-root .signout-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-sec);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.app-root .theme-btn:hover { background: var(--bg-subtle); color: var(--text); }
+.app-root .signout-btn { color: var(--error); }
+.app-root .signout-btn:hover { background: rgba(185, 28, 28, 0.08); }
+
+.app-root .hamburger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+}
+
+/* ---- Content ----------------------------------------------------------- */
+.app-root .app-content {
+  padding: 24px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- Subscription banner ----------------------------------------------- */
+.app-root .subscription-banner {
+  background: var(--error);
+  color: white;
+  font-size: 12px;
+  text-align: center;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ---- Mobile ------------------------------------------------------------ */
+@media (max-width: 900px) {
+  .app-root .app-shell { grid-template-columns: 1fr; }
+  .app-root .app-sidebar {
+    position: fixed;
+    top: 0;
+    inset-inline-start: 0;
+    width: 260px;
+    transform: translateX(100%);
+    transition: transform var(--dur-base) var(--ease-out);
+    box-shadow: var(--shadow-lg);
+    z-index: 50;
+  }
+  [dir="rtl"] .app-root .app-sidebar { transform: translateX(100%); }
+  [dir="ltr"] .app-root .app-sidebar { transform: translateX(-100%); }
+  .app-root .app-shell.mobile-open .app-sidebar { transform: translateX(0); }
+
+  .app-root .app-shell.mobile-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 40;
+    cursor: pointer;
+  }
+  .app-root .app-shell.mobile-open .app-main { pointer-events: none; }
+  .app-root .app-shell.mobile-open .app-sidebar,
+  .app-root .app-shell.mobile-open .hamburger { pointer-events: auto; }
+
+  .app-root .collapse-toggle { display: none; }
+  .app-root .hamburger { display: inline-flex; }
+
+  .app-root .app-topbar { padding: 10px 14px; }
+  .app-root .app-content { padding: 16px; }
+
+  .app-root .user-chip > span:last-child { display: none; }
+}
