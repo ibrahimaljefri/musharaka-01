@@ -212,28 +212,31 @@
 .import-page .ip-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4, 16px);
-}
-.import-page .ip-modal-backdrop::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
 }
 .import-page .ip-modal {
   position: relative;
-  background: var(--surface);
-  border-radius: var(--r-lg, 12px);
-  box-shadow: var(--shadow-lg, 0 20px 40px rgba(0,0,0,0.2));
+  z-index: 1;
+  background: #FFFFFF;
+  border: 1px solid var(--border, #E7E5E4);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
   width: 100%;
   max-width: 900px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+html.dark .import-page .ip-modal {
+  background: #18181B;
+  border-color: #27272A;
 }
 .import-page .ip-modal-head {
   display: flex;
