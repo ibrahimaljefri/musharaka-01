@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../lib/axiosClient'
-import { KeyRound, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import AlertBanner from '../components/AlertBanner'
+import ButtonSpinner from '../components/ButtonSpinner'
 
 function strength(pwd) {
   let s = 0
@@ -11,8 +13,6 @@ function strength(pwd) {
   if (/[^a-zA-Z0-9]/.test(pwd)) s++
   return s
 }
-
-const glass = { background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }
 
 export default function ResetPassword() {
   const navigate = useNavigate()
@@ -28,10 +28,13 @@ export default function ResetPassword() {
   const pw = strength(form.next)
 
   if (!token) return (
-    <div className="text-center text-white font-arabic">
-      <p>رابط إعادة التعيين غير صالح.</p>
-      <Link to="/forgot-password" className="text-yellow-400 underline mt-2 inline-block">طلب رابط جديد</Link>
-    </div>
+    <>
+      <div className="auth-form-title">رابط غير صالح</div>
+      <div className="auth-form-sub">رابط إعادة التعيين غير صالح أو منتهي الصلاحية.</div>
+      <div className="auth-register-cta">
+        <Link to="/forgot-password">طلب رابط جديد</Link>
+      </div>
+    </>
   )
 
   const handleSubmit = async e => {
@@ -52,86 +55,95 @@ export default function ResetPassword() {
   }
 
   if (done) return (
-    <div
-      className="backdrop-blur-xl rounded-2xl p-8 border shadow-2xl text-center"
-      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
-    >
-      <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
-        style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.30)' }}>
-        <ShieldCheck size={28} className="text-green-400" />
+    <>
+      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+        <div
+          style={{
+            width: '56px', height: '56px', borderRadius: '999px',
+            background: 'rgba(16,185,129,0.15)',
+            border: '1px solid rgba(16,185,129,0.30)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '12px',
+          }}
+        >
+          <ShieldCheck size={28} style={{ color: '#34D399' }} />
+        </div>
       </div>
-      <h2 className="text-lg font-bold text-white font-arabic mb-2">تم إعادة تعيين كلمة المرور</h2>
-      <p className="text-sm font-arabic" style={{ color: 'rgba(255,255,255,0.50)' }}>جاري التوجيه لتسجيل الدخول...</p>
-    </div>
+      <div className="auth-form-title">تم إعادة تعيين كلمة المرور</div>
+      <div className="auth-form-sub">جاري التوجيه لتسجيل الدخول...</div>
+    </>
   )
 
+  const fields = [
+    { key: 'next',    label: 'كلمة المرور الجديدة' },
+    { key: 'confirm', label: 'تأكيد كلمة المرور' },
+  ]
+
   return (
-    <div
-      className="backdrop-blur-xl rounded-2xl p-8 border shadow-2xl"
-      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
-    >
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)' }}>
-          <KeyRound size={22} className="text-yellow-400" />
-        </div>
-        <h1 className="text-xl font-bold text-white font-arabic">إعادة تعيين كلمة المرور</h1>
-        <p className="text-sm font-arabic text-center mt-1" style={{ color: 'rgba(255,255,255,0.50)' }}>
-          أدخل كلمة المرور الجديدة
-        </p>
-      </div>
+    <>
+      <div className="auth-form-title">إعادة تعيين كلمة المرور</div>
+      <div className="auth-form-sub">أدخل كلمة المرور الجديدة</div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg text-sm font-arabic text-center border"
-          style={{ background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.25)', color: '#FCA5A5' }}>
-          {error}
-        </div>
-      )}
+      <AlertBanner type="error" message={error} dismissible onClose={() => setError('')} />
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        {[
-          { key: 'next',    label: 'كلمة المرور الجديدة' },
-          { key: 'confirm', label: 'تأكيد كلمة المرور' },
-        ].map(({ key, label }) => (
-          <div key={key}>
-            <label className="block text-sm font-medium font-arabic mb-1.5"
-              style={{ color: 'rgba(255,255,255,0.70)' }}>{label}</label>
-            <div className="relative">
+      <form onSubmit={handleSubmit} noValidate>
+        {fields.map(({ key, label }) => (
+          <div key={key} className="auth-field">
+            <label className="auth-label">{label}</label>
+            <div className="auth-input-wrap">
+              <span className="auth-input-icon"><Lock size={16} /></span>
               <input
-                type={show[key] ? 'text' : 'password'} dir="ltr"
+                className="auth-input"
+                type={show[key] ? 'text' : 'password'}
+                dir="ltr"
+                autoComplete="new-password"
                 value={form[key]}
                 onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/60 border transition-colors pl-10"
-                style={glass}
+                placeholder="••••••••"
+                style={{ paddingInlineEnd: '40px' }}
               />
-              <button type="button" onClick={() => setShow(s => ({ ...s, [key]: !s[key] }))}
-                className="absolute left-3 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: 'rgba(255,255,255,0.40)' }}
-                onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.70)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.40)'}
+              <button
+                type="button"
+                onClick={() => setShow(s => ({ ...s, [key]: !s[key] }))}
+                className="auth-eye-toggle"
+                aria-label={show[key] ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
               >
-                {show[key] ? <EyeOff size={15} /> : <Eye size={15} />}
+                {show[key] ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {key === 'next' && form.next && (
-              <div className="flex gap-1 mt-1.5">
+              <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${
-                    i <= pw ? pw <= 1 ? 'bg-red-400' : pw === 2 ? 'bg-amber-400' : 'bg-green-400'
-                    : 'bg-gray-200 dark:bg-gray-700'
-                  }`} />
+                  <div
+                    key={i}
+                    style={{
+                      height: '3px',
+                      flex: 1,
+                      borderRadius: '999px',
+                      transition: 'background-color 150ms',
+                      background: i <= pw
+                        ? (pw <= 1 ? '#F87171' : pw === 2 ? '#FBBF24' : '#34D399')
+                        : 'rgba(255,255,255,0.12)',
+                    }}
+                  />
                 ))}
               </div>
             )}
           </div>
         ))}
-        <button type="submit" disabled={loading}
-          className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold disabled:opacity-60 hover:brightness-110"
-          style={{ background: '#F59E0B', color: '#0a0a0a' }}
-        >
-          {loading ? 'جاري الحفظ...' : 'حفظ كلمة المرور الجديدة'}
+
+        <button type="submit" disabled={loading} className="auth-submit-btn">
+          {loading ? (
+            <><ButtonSpinner /><span>جاري الحفظ...</span></>
+          ) : (
+            <span>حفظ كلمة المرور الجديدة</span>
+          )}
         </button>
       </form>
-    </div>
+
+      <div className="auth-register-cta">
+        <Link to="/login">العودة لتسجيل الدخول</Link>
+      </div>
+    </>
   )
 }
