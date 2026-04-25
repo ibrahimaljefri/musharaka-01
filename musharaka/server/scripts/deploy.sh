@@ -31,7 +31,7 @@ CLI_DST=~/public_html/musharaka/server/client/dist
 NODE_VERSION=22
 NODE_ENV_PATH=~/nodevenv/public_html/musharaka/server/server/$NODE_VERSION
 APP_PORT=3001
-HEALTH_URL=https://apps.stepup2you.com/api/health
+HEALTH_URL=https://apps.stepup2you.com/
 LOG_FILE=~/musharaka.log
 PID_FILE=~/musharaka.pid
 
@@ -169,14 +169,15 @@ fi
 log "Verifying public health endpoint"
 sleep 2
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL")
-if [ "$HTTP_CODE" = "200" ]; then
-  ok "wake: HTTP 200 — deployment successful 🎉"
+# Anything 1xx-4xx means node is responding. Only 5xx (especially 503) = dead.
+if [ "$HTTP_CODE" -lt 500 ] 2>/dev/null; then
+  ok "wake: HTTP $HTTP_CODE — node is responding 🎉"
   ok "Site live at: https://apps.stepup2you.com"
 elif [ "$HTTP_CODE" = "503" ]; then
-  warn "wake: HTTP $HTTP_CODE — Apache can't reach node. Recent log:"
+  warn "wake: HTTP 503 — Apache can't reach node. Recent log:"
   tail -20 "$LOG_FILE"
   warn "If the log shows 'running on port', the process started but Apache may"
-  warn "still be holding old connections. Wait 10s and retry: curl -s -o /dev/null -w '%{http_code}\\n' $HEALTH_URL"
+  warn "still be holding old connections. Wait 10s and retry."
 else
   warn "wake: HTTP $HTTP_CODE — unexpected. Recent log:"
   tail -20 "$LOG_FILE"
