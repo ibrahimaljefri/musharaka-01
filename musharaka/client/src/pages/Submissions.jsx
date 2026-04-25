@@ -16,9 +16,12 @@ function fmt(n) { return Number(n||0).toLocaleString('ar-SA',{minimumFractionDig
 function MissingDays({ sentDates, month, year }) {
   if (!sentDates || sentDates.length === 0) return null
   const daysInMonth = new Date(year, month, 0).getDate()
+  // Build YYYY-MM-DD strings directly — avoids the timezone shift caused by
+  // .toISOString() on a local-midnight Date in non-UTC timezones (e.g. SA = UTC+3).
+  const mm = String(month).padStart(2, '0')
   const allDays = Array.from({ length: daysInMonth }, (_, i) => {
-    const d = new Date(year, month - 1, i + 1)
-    return d.toISOString().split('T')[0]
+    const dd = String(i + 1).padStart(2, '0')
+    return `${year}-${mm}-${dd}`
   })
   const sentSet = new Set(sentDates)
   const missing = allDays.filter(d => !sentSet.has(d))
