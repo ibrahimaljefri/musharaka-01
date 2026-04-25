@@ -29,13 +29,15 @@ async function tenantMiddleware(req, res, next) {
     req.allowedInputTypes = ['daily', 'monthly', 'range']
     req.tenantActivatedAt = '2020-01-01'
     req.tenantExpiresAt   = null
+    req.allowedBranchIds  = null    // wildcard in test mode
     return next()
   }
 
   // Fast path — JWT already has the context (set by authMiddleware)
   if (req.isSuperAdmin) {
-    req.tenantId  = null
-    req.userRole  = 'super_admin'
+    req.tenantId         = null
+    req.userRole         = 'super_admin'
+    req.allowedBranchIds = null     // wildcard
     return next()
   }
 
@@ -50,6 +52,7 @@ async function tenantMiddleware(req, res, next) {
       req.allowedInputTypes  = cached.allowed_input_types || ['daily']
       req.tenantActivatedAt  = cached.activated_at || null
       req.tenantExpiresAt    = cached.expires_at   || null
+      await populateAllowedBranches(req)
       return next()
     }
 
@@ -71,6 +74,7 @@ async function tenantMiddleware(req, res, next) {
     req.allowedInputTypes  = t.allowed_input_types || ['daily']
     req.tenantActivatedAt  = t.activated_at || null
     req.tenantExpiresAt    = t.expires_at   || null
+    await populateAllowedBranches(req)
     return next()
   }
 
@@ -109,7 +113,39 @@ async function tenantMiddleware(req, res, next) {
   req.allowedInputTypes = row.allowed_input_types || ['daily']
   req.tenantActivatedAt = row.activated_at || null
   req.tenantExpiresAt   = row.expires_at   || null
+  await populateAllowedBranches(req)
   next()
+}
+
+/**
+ * Phase B — populate req.allowedBranchIds from tenant_user_branches.
+ *   - admin / super-admin → null (wildcard, no filter applied downstream)
+ *   - member              → array of branch UUIDs (may be empty)
+ *
+ * Cached per (userId,tenantId) for 60s to avoid hitting the DB on every API call.
+ */
+const _branchCache = new Map()
+const BRANCH_TTL_MS = 60 * 1000
+
+async function populateAllowedBranches(req) {
+  if (req.userRole === 'admin' || req.isSuperAdmin) {
+    req.allowedBranchIds = null
+    return
+  }
+  const key = `${req.user.id}:${req.tenantId}`
+  const cached = _branchCache.get(key)
+  if (cached && Date.now() - cached.at < BRANCH_TTL_MS) {
+    req.allowedBranchIds = cached.ids
+    return
+  }
+  const { rows } = await pool.query(
+    `SELECT branch_id FROM tenant_user_branches
+      WHERE tenant_id = $1 AND user_id = $2`,
+    [req.tenantId, req.user.id]
+  )
+  const ids = rows.map(r => r.branch_id)
+  _branchCache.set(key, { ids, at: Date.now() })
+  req.allowedBranchIds = ids
 }
 
 function superAdminOnly(req, res, next) {

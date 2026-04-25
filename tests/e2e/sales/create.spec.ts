@@ -76,7 +76,7 @@ test.describe('Sale Create page', () => {
   test('S-07: submitting without amount shows Arabic validation error', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection (to populate branch select)')
     // Assumes at least one branch is available for selection
-    const branchSelect = page.locator('select').first()
+    const branchSelect = page.getByTestId('branch-select')
     const options = await branchSelect.locator('option').count()
     if (options <= 1) return
 
@@ -92,7 +92,7 @@ test.describe('Sale Create page', () => {
   // -----------------------------------------------------------------------
   test('S-08: amount of zero shows Arabic validation error', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection (to populate branch select)')
-    const branchSelect = page.locator('select').first()
+    const branchSelect = page.getByTestId('branch-select')
     const options = await branchSelect.locator('option').count()
     if (options <= 1) return
 
@@ -109,7 +109,7 @@ test.describe('Sale Create page', () => {
   // -----------------------------------------------------------------------
   test('S-09: successful daily sale submission shows success message', async ({ page }) => {
     test.skip(true, '// Requires live backend')
-    const branchSelect = page.locator('select').first()
+    const branchSelect = page.getByTestId('branch-select')
     const options = await branchSelect.locator('option').count()
     if (options <= 1) return
 
@@ -119,7 +119,7 @@ test.describe('Sale Create page', () => {
     await page.getByRole('button', { name: 'حفظ المبيعات' }).click()
 
     // Success AlertBanner should appear
-    await expect(page.locator('.bg-green-50, [class*="success"]')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('[role="status"], [data-testid="alert-success"]').first()).toBeVisible({ timeout: 10_000 })
     // Should redirect to dashboard after 1.5s
     await expect(page).toHaveURL('/dashboard', { timeout: 5_000 })
   })
@@ -132,18 +132,18 @@ test.describe('Sale Create page', () => {
     test.skip(true, '// Requires live backend')
     await page.getByRole('radio', { name: 'شهري' }).click()
 
-    const branchSelect = page.locator('select').first()
+    const branchSelect = page.getByTestId('branch-select')
     const options = await branchSelect.locator('option').count()
     if (options <= 1) return
 
     await branchSelect.selectOption({ index: 1 })
     // Select first month option
-    const monthSelect = page.locator('select').nth(1)
+    const monthSelect = page.getByTestId('month-select')
     await monthSelect.selectOption({ index: 0 })
     await page.fill('input[type="number"]', '50000')
     await page.getByRole('button', { name: 'حفظ المبيعات' }).click()
 
-    await expect(page.locator('.bg-green-50, [class*="success"]')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('[role="status"], [data-testid="alert-success"]').first()).toBeVisible({ timeout: 10_000 })
   })
 
   // -----------------------------------------------------------------------
@@ -190,7 +190,7 @@ test.describe('Sale Create page', () => {
     test.skip(true, '// Requires live backend')
     await page.getByRole('radio', { name: 'فترة مخصصة' }).click()
 
-    const branchSelect = page.locator('select').first()
+    const branchSelect = page.getByTestId('branch-select')
     const options = await branchSelect.locator('option').count()
     if (options <= 1) return
 
@@ -200,6 +200,6 @@ test.describe('Sale Create page', () => {
     await page.getByRole('button', { name: 'حفظ المبيعات' }).click()
 
     // API or validation should return an error
-    await expect(page.locator('.bg-red-50, [class*="error"]')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('[role="alert"], [data-testid="alert-error"]').first()).toBeVisible({ timeout: 10_000 })
   })
 })

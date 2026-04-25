@@ -1,0 +1,348 @@
+/* ============================================================================
+   Auth Pages Styles — Scoped to .auth-root
+   Brand-split layout: dark gradient brand panel + light/dark form panel
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap');
+
+/* ---- Tokens: Light (default) --------------------------------------------- */
+.auth-root {
+  --bg:          #FFFFFF;
+  --bg-alt:      #FAFAF9;
+  --bg-subtle:   #F5F5F4;
+  --surface:     #FFFFFF;
+
+  --border:        #E7E5E4;
+  --border-strong: #D6D3D1;
+
+  --text:        #0C0A09;
+  --text-sec:    #57534E;
+  --text-muted:  #78716C;
+
+  --brand:       #B8860B;
+  --brand-hover: #92400E;
+  --brand-soft:  #FEF3C7;
+  --brand-ink:   #4A2E02;
+
+  --error:       #B91C1C;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md:   0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-focus:0 0 0 3px rgba(184, 134, 11, 0.25);
+  --ring-top:    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:  150ms;
+  --dur-base:  200ms;
+
+  font-family: 'Tajawal', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  direction: rtl;
+  text-align: right;
+  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* ---- Tokens: Dark --------------------------------------------------------- */
+.dark .auth-root {
+  --bg:          #0A0A0B;
+  --bg-alt:      #121214;
+  --bg-subtle:   #18181B;
+  --surface:     #18181B;
+
+  --border:        #27272A;
+  --border-strong: #3F3F46;
+
+  --text:        #FAFAF9;
+  --text-sec:    #D4D4D8;
+  --text-muted:  #A1A1AA;
+
+  --brand:       #FBBF24;
+  --brand-hover: #F59E0B;
+  --brand-soft:  #3F2D0F;
+  --brand-ink:   #FEF3C7;
+
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:   0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --ring-top:    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ---- Box-sizing reset ---------------------------------------------------- */
+.auth-root *,
+.auth-root *::before,
+.auth-root *::after { box-sizing: border-box; }
+
+/* ---- Split layout -------------------------------------------------------- */
+.auth-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+/* ---- Brand panel (always dark) ------------------------------------------ */
+.auth-brand-panel {
+  background: linear-gradient(135deg, #1C1917 0%, #292524 100%);
+  color: #FAFAF9;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-brand-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(251, 191, 36, 0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.auth-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.25));
+}
+
+.auth-brand-content { position: relative; z-index: 1; }
+
+.auth-brand-title {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 var(--space-3);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-brand-sub {
+  color: #A8A29E;
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 420px;
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.auth-brand-footer {
+  position: relative;
+  z-index: 1;
+  color: #78716C;
+  font-size: 0.875rem;
+}
+
+/* ---- Form panel ---------------------------------------------------------- */
+.auth-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: var(--bg);
+}
+
+.auth-form-box {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-form-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.auth-form-sub {
+  color: var(--text-sec);
+  margin-bottom: var(--space-6);
+  font-size: 0.9375rem;
+}
+
+/* ---- Form fields --------------------------------------------------------- */
+.auth-field { margin-bottom: var(--space-4); }
+
+.auth-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input-icon {
+  position: absolute;
+  inset-inline-start: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 10px 14px;
+  padding-inline-start: 40px;
+  font: 400 0.9375rem 'Tajawal', sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+  min-height: 44px;
+}
+
+.auth-input::placeholder { color: var(--text-muted); }
+
+.auth-input:focus {
+  outline: 0;
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
+}
+
+.auth-eye-toggle {
+  position: absolute;
+  inset-inline-end: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.auth-eye-toggle:hover { color: var(--text); }
+
+/* ---- Helpers ------------------------------------------------------------- */
+.auth-sign-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.auth-sign-row .auth-label { margin-bottom: 0; }
+
+.auth-forgot {
+  font-size: 0.8rem;
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-forgot:hover { text-decoration: underline; }
+
+/* ---- Submit button ------------------------------------------------------- */
+.auth-submit-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  font: 700 0.9375rem 'Tajawal', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 44px;
+  background: linear-gradient(180deg, #D4A01A 0%, var(--brand) 100%);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-hover) 100%);
+}
+
+.auth-submit-btn:active:not(:disabled) { transform: scale(0.98); }
+
+.auth-submit-btn:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+
+.auth-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ---- Divider ------------------------------------------------------------- */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ---- Register CTA -------------------------------------------------------- */
+.auth-register-cta {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-sec);
+}
+
+.auth-register-cta a {
+  color: var(--brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-register-cta a:hover { text-decoration: underline; }
+
+/* ---- Responsive ---------------------------------------------------------- */
+@media (max-width: 900px) {
+  .auth-split { grid-template-columns: 1fr; }
+  .auth-brand-panel {
+    min-height: 240px;
+    padding: var(--space-5);
+  }
+  .auth-brand-title { font-size: 1.5rem; }
+  .auth-brand-sub { font-size: 0.9rem; }
+}

@@ -77,7 +77,7 @@ router.get('/', standardLimiter, async (req, res, next) => {
   const today = new Date().toISOString().split('T')[0]
   const samples = [
     { id: 'dev-1', contract_number: 'CNT-001', branch_code: 'BR-001', branch_name: 'فرع الرياض',
-      brand_name: 'مشاركة', unit_number: 'U-01', location: 'الرياض', invoice_number: 'INV-2026-001',
+      brand_name: 'عروة', unit_number: 'U-01', location: 'الرياض', invoice_number: 'INV-2026-001',
       input_type: 'daily', period_from_date: today, period_to_date: today,
       sale_date: today, month: new Date().getMonth() + 1, year: new Date().getFullYear(),
       amount: 5000.00, status: 'pending' },

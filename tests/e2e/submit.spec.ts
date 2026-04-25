@@ -13,9 +13,9 @@ test.describe('Submit to Seinomy page', () => {
   test('SB-01: "إرسال الفواتير" heading and selects are visible', async ({ page }) => {
     await expect(page.getByRole('heading', { name: /إرسال الفواتير/ })).toBeVisible()
     // Branch, month, and year selects must all be present
-    await expect(page.locator('select').nth(0)).toBeVisible() // branch
-    await expect(page.locator('select').nth(1)).toBeVisible() // month
-    await expect(page.locator('select').nth(2)).toBeVisible() // year
+    await expect(page.getByTestId('branch-select')).toBeVisible() // branch
+    await expect(page.getByTestId('month-select')).toBeVisible() // month
+    await expect(page.getByTestId('year-select')).toBeVisible() // year
   })
 
   // SB-02: Submitting without branch shows Arabic error
@@ -33,9 +33,9 @@ test.describe('Submit to Seinomy page', () => {
   // SB-04: Successful submission (mock) — requires live API + Supabase
   test('SB-04: successful submission shows Arabic success message with invoice count', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection and pending invoices')
-    await page.locator('select').nth(0).selectOption({ index: 1 }) // pick first branch
-    await page.locator('select').nth(1).selectOption('1')          // January
-    await page.locator('select').nth(2).selectOption('2026')       // 2026
+    await page.getByTestId('branch-select').selectOption({ index: 1 }) // pick first branch
+    await page.getByTestId('month-select').selectOption('1')          // January
+    await page.getByTestId('year-select').selectOption('2026')       // 2026
     await page.getByRole('button', { name: /إرسال/ }).click()
     await expect(page.getByText(/تم إرسال الفواتير/)).toBeVisible({ timeout: 15_000 })
   })

@@ -45,7 +45,7 @@ test.describe('Sale Import page', () => {
   // -----------------------------------------------------------------------
   test('I-02: branch select and file drop-zone are rendered', async ({ page }) => {
     await expect(page.getByText('الفرع')).toBeVisible()
-    await expect(page.locator('select').first()).toBeVisible()
+    await expect(page.getByTestId('branch-select')).toBeVisible()
 
     // Drop-zone text
     await expect(page.getByText('انقر لاختيار ملف أو اسحب وأفلت')).toBeVisible()
@@ -68,7 +68,7 @@ test.describe('Sale Import page', () => {
     await fileInput.setInputFiles(csvPath)
 
     // Drop-zone should now show the file name
-    const dropZone = page.locator('.border-dashed')
+    const dropZone = page.getByTestId('drop-zone')
     await expect(dropZone).toContainText(path.basename(csvPath))
 
     // Clean up
@@ -128,7 +128,7 @@ test.describe('Sale Import page', () => {
     await expect(page.locator('table th').first()).toBeVisible()
 
     // Close modal
-    await page.locator('button').filter({ has: page.locator('svg') }).last().click()
+    await page.getByTestId('modal-close').click()
 
     fs.unlinkSync(csvPath)
   })
@@ -146,7 +146,7 @@ test.describe('Sale Import page', () => {
     await expect(page.getByText(/معاينة البيانات/)).toBeVisible({ timeout: 10_000 })
 
     // Click the X close button inside the modal header
-    await page.locator('button svg').last().locator('..').click()
+    await page.getByTestId('modal-close').click()
     await expect(page.getByText(/معاينة البيانات/)).not.toBeVisible()
 
     fs.unlinkSync(csvPath)
@@ -160,7 +160,7 @@ test.describe('Sale Import page', () => {
     test.skip(true, '// Requires live backend')
     const csvPath = createTempCsv('input_type,amount,sale_date\ndaily,750,2026-04-01\n')
 
-    const branchSelect = page.locator('select').first()
+    const branchSelect = page.getByTestId('branch-select')
     const options = await branchSelect.locator('option').count()
     if (options <= 1) {
       fs.unlinkSync(csvPath)
@@ -172,7 +172,7 @@ test.describe('Sale Import page', () => {
     await page.getByRole('button', { name: /استيراد/ }).click()
 
     // Success panel with green background
-    await expect(page.locator('.bg-green-50')).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('[role="status"], [data-testid="alert-success"]').first()).toBeVisible({ timeout: 15_000 })
 
     fs.unlinkSync(csvPath)
   })

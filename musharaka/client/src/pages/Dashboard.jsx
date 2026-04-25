@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../lib/useToast'
-import KpiCard from '../components/KpiCard'
-import PageHeader from '../components/PageHeader'
 import { TableSkeleton, KpiSkeleton } from '../components/SkeletonLoader'
 import {
   DollarSign, TrendingUp, Hash, Lock, Trash2,
@@ -16,6 +14,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import AlertBanner from '../components/AlertBanner'
 import BranchBadge from '../components/BranchBadge'
 import EmptyState from '../components/EmptyState'
+import './dashboard.css'
 
 const PAGE_SIZE  = 25
 const MONTHS_AR  = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
@@ -24,14 +23,39 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function StatusDot({ status }) {
-  return status === 'sent'
-    ? <span className="inline-flex items-center gap-1.5 text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-arabic">
-        <CheckCircle2 size={10} /> مرسلة
-      </span>
-    : <span className="inline-flex items-center gap-1.5 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full font-arabic">
-        <Clock size={10} /> معلقة
-      </span>
+function fmtInt(n) {
+  return Number(n || 0).toLocaleString('ar-SA')
+}
+
+function fmtShortDate(iso) {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })
+  } catch {
+    return iso
+  }
+}
+
+function statusLabel(status) {
+  if (status === 'sent') return 'مُرسل'
+  if (status === 'pending') return 'معلّق'
+  return status || '—'
+}
+
+// Build sparkline points string from an array of numeric values
+function sparklinePoints(values, width = 100, height = 24) {
+  if (!values || values.length === 0) return ''
+  const nonZero = values.filter(v => Number.isFinite(v))
+  if (nonZero.length === 0) return `0,${height / 2} ${width},${height / 2}`
+  const max = Math.max(...nonZero, 1)
+  const min = Math.min(...nonZero, 0)
+  const range = max - min || 1
+  const step = values.length > 1 ? width / (values.length - 1) : width
+  return values.map((v, i) => {
+    const x = (i * step).toFixed(2)
+    const y = (height - ((v - min) / range) * (height - 4) - 2).toFixed(2)
+    return `${x},${y}`
+  }).join(' ')
 }
 
 // ── Advanced Analytics ─────────────────────────────────────────────────────────
@@ -74,7 +98,7 @@ function MiniBarChart({ data, label }) {
 }
 
 // ── License Widget ──────────────────────────────────────────────────────────────
-function LicenseWidget({ activatedAt, expiresAt, planName, onRenew }) {
+function LicenseWidget({ activatedAt, expiresAt, planName }) {
   const daysLeft = useMemo(() => {
     if (!expiresAt) return null
     return Math.ceil((new Date(expiresAt) - new Date()) / 86400000)
@@ -118,7 +142,6 @@ function LicenseWidget({ activatedAt, expiresAt, planName, onRenew }) {
   return (
     <div className="card-surface p-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        {/* Plan & expiry info */}
         <div className="flex items-center gap-4 flex-1 flex-wrap">
           {planName && (
             <div className="flex items-center gap-1.5">
@@ -136,7 +159,6 @@ function LicenseWidget({ activatedAt, expiresAt, planName, onRenew }) {
           )}
         </div>
 
-        {/* Days left + progress */}
         <div className="flex items-center gap-3 shrink-0">
           <div className={`text-sm font-bold font-arabic ${colorClass} flex items-center gap-1`}>
             {daysLeft !== null && daysLeft > 0 && daysLeft < 30 && (
@@ -172,7 +194,6 @@ function AdvancedDashboard({ branchId }) {
     const now = new Date()
     const y   = now.getFullYear()
 
-    // Fetch all sales for this year in one call (tenant-scoped server-side)
     const params = {
       from:  `${y}-01-01`,
       to:    `${y}-12-31`,
@@ -188,7 +209,6 @@ function AdvancedDashboard({ branchId }) {
       yearSales = []
     }
 
-    // Monthly breakdown
     const monthlyData = Array.from({ length: 12 }, (_, i) => ({
       key:   MONTHS_AR[i].slice(0, 3),
       value: 0,
@@ -205,7 +225,6 @@ function AdvancedDashboard({ branchId }) {
     }
     const grandTotal = sentTotal + pendingTotal
 
-    // Best month
     const best = [...monthlyData].sort((a, b) => b.value - a.value)[0]
 
     setStats({ monthlyData, sentTotal, pendingTotal, grandTotal, bestMonth: best })
@@ -224,7 +243,6 @@ function AdvancedDashboard({ branchId }) {
 
   return (
     <div className="space-y-4">
-      {/* Summary row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card-surface p-4">
           <p className="text-xs text-gray-400 font-arabic mb-1">نسبة المرسلة من الإجمالي</p>
@@ -270,7 +288,6 @@ function AdvancedDashboard({ branchId }) {
         </div>
       </div>
 
-      {/* Monthly bar chart */}
       <div className="card-surface p-5">
         <MiniBarChart data={stats.monthlyData} label={`المبيعات الشهرية — ${new Date().getFullYear()}`} />
       </div>
@@ -281,6 +298,7 @@ function AdvancedDashboard({ branchId }) {
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const user                   = useAuthStore(s => s.user)
   const allowAdvancedDashboard = useAuthStore(s => s.allowAdvancedDashboard)
   const tenantId               = useAuthStore(s => s.tenantId)
   const isSuperAdmin           = useAuthStore(s => s.isSuperAdmin)
@@ -297,6 +315,7 @@ export default function Dashboard() {
   const [branches, setBranches]   = useState([])
   const [branchId, setBranchId]   = useState('')
   const [sales, setSales]         = useState([])
+  const [allSalesCache, setAllSalesCache] = useState([])
   const [kpis, setKpis]           = useState({ total: 0, month: 0, count: 0, pendingCount: 0, confirmedCount: 0 })
   const [kpisLoading, setKpisLoading] = useState(true)
   const [page, setPage]           = useState(0)
@@ -305,6 +324,7 @@ export default function Dashboard() {
   const [deleteId, setDeleteId]   = useState(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [branchQuota, setBranchQuota] = useState(null)
+  const [chartRange, setChartRange] = useState('monthly') // 'daily' | 'monthly' | 'yearly'
 
   useEffect(() => {
     api.get('/branches')
@@ -336,7 +356,6 @@ export default function Dashboard() {
     const mTo     = `${y}-${String(m).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`
 
     try {
-      // Fetch ALL tenant sales (server enforces tenant_id isolation) for totals
       const allParams = { limit: 10000 }
       if (branchId) allParams.branch_id = branchId
       const allRes = await api.get('/sales', { params: allParams })
@@ -352,8 +371,8 @@ export default function Dashboard() {
 
       setKpis({ total, month, count, pendingCount, confirmedCount })
       setKpisLoading(false)
+      setAllSalesCache(allSales)
 
-      // Paginated slice
       const start = page * PAGE_SIZE
       const end   = start + PAGE_SIZE
       const branchMap = new Map(branches.map(b => [b.id, b]))
@@ -371,6 +390,7 @@ export default function Dashboard() {
     } catch (e) {
       setKpis({ total: 0, month: 0, count: 0, pendingCount: 0, confirmedCount: 0 })
       setKpisLoading(false)
+      setAllSalesCache([])
       setSales([])
       setTotalRows(0)
     }
@@ -392,156 +412,427 @@ export default function Dashboard() {
   const totalPages = Math.ceil(totalRows / PAGE_SIZE)
   const now = new Date()
 
+  // ── Derived chart/sparkline data ────────────────────────────────────────
+  const chartData = useMemo(() => {
+    if (!allSalesCache || allSalesCache.length === 0) return []
+    if (chartRange === 'yearly') {
+      const byYear = new Map()
+      for (const r of allSalesCache) {
+        if (!r.sale_date) continue
+        const y = new Date(r.sale_date).getFullYear()
+        byYear.set(y, (byYear.get(y) || 0) + parseFloat(r.amount || 0))
+      }
+      return [...byYear.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([k, v]) => ({ key: String(k), value: v }))
+    }
+    if (chartRange === 'daily') {
+      const days = 30
+      const buckets = []
+      const today = new Date()
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today)
+        d.setDate(today.getDate() - i)
+        buckets.push({ iso: d.toISOString().slice(0, 10), value: 0 })
+      }
+      const idx = new Map(buckets.map((b, i) => [b.iso, i]))
+      for (const r of allSalesCache) {
+        if (!r.sale_date) continue
+        const key = String(r.sale_date).slice(0, 10)
+        if (idx.has(key)) {
+          buckets[idx.get(key)].value += parseFloat(r.amount || 0)
+        }
+      }
+      return buckets.map(b => ({ key: b.iso.slice(5), value: b.value }))
+    }
+    // monthly (current year)
+    const y = now.getFullYear()
+    const months = Array.from({ length: 12 }, (_, i) => ({ key: MONTHS_AR[i].slice(0, 3), value: 0 }))
+    for (const r of allSalesCache) {
+      if (!r.sale_date) continue
+      const d = new Date(r.sale_date)
+      if (d.getFullYear() !== y) continue
+      months[d.getMonth()].value += parseFloat(r.amount || 0)
+    }
+    return months
+  }, [allSalesCache, chartRange]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Chart path + axis ticks for SVG area
+  const chartPath = useMemo(() => {
+    if (!chartData || chartData.length === 0) return null
+    // Inner plotting area with margins for axis labels
+    // Wide viewBox + `preserveAspectRatio=none` on the SVG means chart STRETCHES
+    // to fill any container width while text labels render at normal proportions
+    const W = 1600, H = 360
+    const M = { top: 16, right: 60, bottom: 36, left: 16 } // RTL: y-axis labels on right
+    const innerW = W - M.left - M.right
+    const innerH = H - M.top - M.bottom
+    const max = Math.max(...chartData.map(d => d.value), 1)
+    const step = chartData.length > 1 ? innerW / (chartData.length - 1) : innerW
+    const coords = chartData.map((d, i) => {
+      const x = (M.left + i * step).toFixed(2)
+      const y = (M.top + (1 - d.value / max) * innerH).toFixed(2)
+      return { x, y, label: d.label, value: d.value }
+    })
+    const line = coords.map(c => `${c.x},${c.y}`).join(' ')
+    const last = coords[coords.length - 1]
+    const first = coords[0]
+    const area = `M${first.x},${first.y} ${coords.slice(1).map(c => `L${c.x},${c.y}`).join(' ')} L${last.x},${M.top + innerH} L${first.x},${M.top + innerH} Z`
+
+    // Y-axis ticks: 0, 25%, 50%, 75%, 100% of max
+    const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({
+      y: M.top + (1 - t) * innerH,
+      value: max * t,
+    }))
+
+    // X-axis ticks: show every Nth label so they don't overlap (max ~8 labels visible)
+    const xLabelEvery = Math.max(1, Math.ceil(chartData.length / 8))
+    const xTicks = coords
+      .map((c, i) => ({ ...c, show: i % xLabelEvery === 0 || i === coords.length - 1 }))
+
+    return { W, H, M, innerW, innerH, line, area, coords, yTicks, xTicks }
+  }, [chartData])
+
+  // Compact value formatter for axis labels (e.g. 1.2k, 3.4M)
+  const fmtAxis = (v) => {
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+    if (v >= 1_000) return (v / 1_000).toFixed(1).replace(/\.0$/, '') + 'k'
+    return Math.round(v).toString()
+  }
+
+  // Per-KPI sparkline inputs (from chart data / counts)
+  const monthlySparkValues = useMemo(() => chartData.map(d => d.value), [chartData])
+
+  // Branch growth trend (count per month)
+  const branchCountSpark = useMemo(() => {
+    // Simple placeholder: flat line of current count + slight variance — avoids fake data
+    const n = branches.length || 1
+    return [n, n, n, n, n, n]
+  }, [branches])
+
+  // Invoice count per month (count of records)
+  const invoiceCountSpark = useMemo(() => {
+    if (!allSalesCache || allSalesCache.length === 0) return []
+    const y = now.getFullYear()
+    const months = Array.from({ length: 12 }, () => 0)
+    for (const r of allSalesCache) {
+      if (!r.sale_date) continue
+      const d = new Date(r.sale_date)
+      if (d.getFullYear() !== y) continue
+      months[d.getMonth()] += 1
+    }
+    return months
+  }, [allSalesCache]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pending count spark (per month)
+  const pendingSpark = useMemo(() => {
+    if (!allSalesCache || allSalesCache.length === 0) return []
+    const y = now.getFullYear()
+    const months = Array.from({ length: 12 }, () => 0)
+    for (const r of allSalesCache) {
+      if (!r.sale_date || r.status !== 'pending') continue
+      const d = new Date(r.sale_date)
+      if (d.getFullYear() !== y) continue
+      months[d.getMonth()] += 1
+    }
+    return months
+  }, [allSalesCache]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Month-over-month growth for monthly-sales KPI
+  const monthlyGrowthPct = useMemo(() => {
+    if (!monthlySparkValues || monthlySparkValues.length < 2) return null
+    const curr = monthlySparkValues[now.getMonth()] ?? 0
+    const prev = monthlySparkValues[Math.max(0, now.getMonth() - 1)] ?? 0
+    if (prev <= 0) return null
+    return Math.round(((curr - prev) / prev) * 100)
+  }, [monthlySparkValues]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const greetingName = user?.full_name || 'أهلاً'
+
   return (
-    <div className="space-y-6">
+    <div className="dash-wrap">
+      {/* Header */}
+      <div className="dash-header">
+        <div>
+          <div className="dash-title">مرحباً، {greetingName} 👋</div>
+          <div className="t-small">لوحة تحكم عروة — تنظيمك اليومي</div>
+        </div>
+        <Link to="/sales/create" className="btn-sm btn-primary">+ إضافة المبيعات</Link>
+      </div>
 
-      {/* Page header */}
-      <PageHeader title="لوحة القيادة" />
-
-      {/* License widget — hidden for super-admins (they have no tenant license) */}
+      {/* License / expiry / quota banners (retained) */}
       {!isSuperAdmin && (activatedAt || expiresAt || planName) && (
-        <LicenseWidget
-          activatedAt={activatedAt}
-          expiresAt={expiresAt}
-          planName={planName}
-        />
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <LicenseWidget activatedAt={activatedAt} expiresAt={expiresAt} planName={planName} />
+        </div>
       )}
-
-      {/* Expiry CTA banner — shown when < 30 days remain */}
       {!isSuperAdmin && daysLeft !== null && daysLeft < 30 && (
-        <AlertBanner type="warning" message={
-          <span className="font-arabic">
-            ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم. تواصل مع الإدارة للتجديد.
-          </span>
-        } />
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <AlertBanner type="warning" message={
+            <span className="font-arabic">
+              ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم. تواصل مع الإدارة للتجديد.
+            </span>
+          } />
+        </div>
       )}
-
-      {/* Branch quota warning */}
       {branchQuota && branchQuota.max !== null && branchQuota.max !== undefined &&
         branchQuota.used >= Math.floor(branchQuota.max * 0.8) && (
-        <AlertBanner
-          type={branchQuota.used >= branchQuota.max ? 'error' : 'warning'}
-          message={
-            branchQuota.used >= branchQuota.max
-              ? `تنبيه: لقد وصلت إلى الحد الأقصى للفروع (${branchQuota.max} فروع). تواصل مع الإدارة للترقية.`
-              : `تنبيه: لديك ${branchQuota.max - branchQuota.used} فرع متبقٍ من أصل ${branchQuota.max}. تواصل مع الإدارة للترقية.`
-          }
-        />
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <AlertBanner
+            type={branchQuota.used >= branchQuota.max ? 'error' : 'warning'}
+            message={
+              branchQuota.used >= branchQuota.max
+                ? `تنبيه: لقد وصلت إلى الحد الأقصى للفروع (${branchQuota.max} فروع). تواصل مع الإدارة للترقية.`
+                : `تنبيه: لديك ${branchQuota.max - branchQuota.used} فرع متبقٍ من أصل ${branchQuota.max}. تواصل مع الإدارة للترقية.`
+            }
+          />
+        </div>
       )}
 
       {/* Branch filter */}
-      <div className="flex items-center gap-3">
-        <label className="text-sm text-gray-500 dark:text-gray-400 font-arabic whitespace-nowrap">الفرع:</label>
-        <select value={branchId} onChange={e => { setBranchId(e.target.value); setPage(0) }}
-          className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm font-arabic bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+        <label className="t-small" style={{ whiteSpace: 'nowrap' }}>الفرع:</label>
+        <select
+          value={branchId}
+          onChange={e => { setBranchId(e.target.value); setPage(0) }}
+          className="input-base"
+          style={{ maxWidth: 260 }}
+          data-testid="branch-filter"
+        >
           <option value="">جميع الفروع</option>
           {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </div>
 
-      {/* KPI Cards — 5 cards */}
+      {/* KPI grid — 4 cards matching mockup */}
       {kpisLoading ? (
-        <KpiSkeleton count={5} />
+        <div style={{ marginBottom: 'var(--space-5)' }}>
+          <KpiSkeleton count={4} />
+        </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <KpiCard title="إجمالي المبيعات"      value={`${fmt(kpis.total)} ر.س`}                   subtitle="جميع السجلات"          color="green"  icon={DollarSign} />
-          <KpiCard title={`مبيعات ${MONTHS_AR[now.getMonth()]}`} value={`${fmt(kpis.month)} ر.س`} subtitle="الشهر الحالي"          color="pink"   icon={TrendingUp} />
-          <KpiCard title="إجمالي السجلات"       value={kpis.count.toLocaleString('ar-SA')}           subtitle="جميع الإدخالات"        color="purple" icon={Hash} />
-          <KpiCard title="فواتير معلقة"         value={kpis.pendingCount.toLocaleString('ar-SA')}    subtitle="في انتظار الإرسال"     color="yellow" icon={Clock} />
-          <KpiCard title="فواتير مؤكدة"         value={kpis.confirmedCount.toLocaleString('ar-SA')}  subtitle="تم إرسالها بنجاح"      color="cyan"   icon={CheckCircle2} />
+        <div className="kpi-grid">
+          {/* 1. Monthly total */}
+          <div className="kpi surface brand-edge">
+            <div className="kpi-label">إجمالي المبيعات (الشهر)</div>
+            <div className="kpi-value">{fmt(kpis.month)} ر.س</div>
+            <div className={`kpi-trend ${monthlyGrowthPct !== null && monthlyGrowthPct < 0 ? 'down' : ''}`}>
+              {monthlyGrowthPct === null
+                ? <>— {MONTHS_AR[now.getMonth()]}</>
+                : <>{monthlyGrowthPct >= 0 ? '▲' : '▼'} {Math.abs(monthlyGrowthPct)}٪ عن الشهر السابق</>}
+            </div>
+            <svg className="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+              <polyline points={sparklinePoints(monthlySparkValues)} fill="none" stroke="var(--brand)" strokeWidth="1.5" />
+            </svg>
+          </div>
+
+          {/* 2. Invoice count */}
+          <div className="kpi surface">
+            <div className="kpi-label">عدد الفواتير</div>
+            <div className="kpi-value">{fmtInt(kpis.count)}</div>
+            <div className="kpi-trend">الإجمالي التراكمي</div>
+            <svg className="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+              <polyline points={sparklinePoints(invoiceCountSpark)} fill="none" stroke="var(--brand)" strokeWidth="1.5" />
+            </svg>
+          </div>
+
+          {/* 3. Active branches */}
+          <div className="kpi surface">
+            <div className="kpi-label">الفروع النشطة</div>
+            <div className="kpi-value">{fmtInt(branches.length)}</div>
+            <div className="kpi-trend">
+              {branchQuota?.max ? `من أصل ${fmtInt(branchQuota.max)}` : 'جميع الفروع'}
+            </div>
+            <svg className="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+              <polyline points={sparklinePoints(branchCountSpark)} fill="none" stroke="var(--brand)" strokeWidth="1.5" />
+            </svg>
+          </div>
+
+          {/* 4. Pending submissions */}
+          <div className="kpi surface">
+            <div className="kpi-label">بانتظار الإرسال</div>
+            <div className="kpi-value">{fmtInt(kpis.pendingCount)}</div>
+            <div className={`kpi-trend ${kpis.pendingCount > 0 ? 'down' : ''}`}>
+              {kpis.pendingCount > 0 ? '▼ يحتاج مراجعة' : '▲ لا توجد معلقات'}
+            </div>
+            <svg className="kpi-spark" viewBox="0 0 100 24" preserveAspectRatio="none">
+              <polyline
+                points={sparklinePoints(pendingSpark)}
+                fill="none"
+                stroke={kpis.pendingCount > 0 ? '#B91C1C' : 'var(--brand)'}
+                strokeWidth="1.5"
+              />
+            </svg>
+          </div>
         </div>
       )}
 
-      {/* Quick Action Row */}
-      <div className="grid grid-cols-2 gap-3 mb-6" dir="rtl">
-        {[
-          { icon: PlusCircle, label: 'إضافة مبيعات',  to: '/sales/create',    color: 'text-yellow-600 dark:text-yellow-400' },
-          { icon: Send,       label: 'إرسال الفواتير', to: '/submit',          color: 'text-blue-600 dark:text-blue-400' },
-        ].map(({ icon: Icon, label, to, color }) => (
-          <Link key={to} to={to}
-            className="card-surface hover:shadow-md active:scale-95 transition-all p-3 flex items-center gap-3 rounded-xl cursor-pointer"
-          >
-            <Icon size={18} className={color} />
-            <span className="text-sm font-medium font-arabic text-gray-700 dark:text-gray-200">{label}</span>
-          </Link>
-        ))}
+      {/* Chart card */}
+      <div className="surface chart-card">
+        <div className="chart-header">
+          <div>
+            <div className="chart-title">المبيعات</div>
+            <div className="t-micro">
+              {chartRange === 'daily' ? 'آخر ٣٠ يوم' : chartRange === 'yearly' ? 'جميع السنوات' : `شهور ${now.getFullYear()}`}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              type="button"
+              className={`btn-sm btn-ghost ${chartRange === 'daily' ? 'active' : ''}`}
+              onClick={() => setChartRange('daily')}
+            >يومي</button>
+            <button
+              type="button"
+              className={`btn-sm btn-ghost ${chartRange === 'monthly' ? 'active' : ''}`}
+              onClick={() => setChartRange('monthly')}
+            >شهري</button>
+            <button
+              type="button"
+              className={`btn-sm btn-ghost ${chartRange === 'yearly' ? 'active' : ''}`}
+              onClick={() => setChartRange('yearly')}
+            >سنوي</button>
+          </div>
+        </div>
+        <div className="chart-area">
+          {chartPath ? (
+            <svg
+              className="chart-line"
+              viewBox={`0 0 ${chartPath.W} ${chartPath.H}`}
+              preserveAspectRatio="none"
+              style={{ width: '100%', height: '100%', overflow: 'visible' }}
+            >
+              <defs>
+                <linearGradient id="dash-chart-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="var(--brand)" stopOpacity="0.3" />
+                  <stop offset="1" stopColor="var(--brand)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              {/* Y-axis gridlines + labels */}
+              {chartPath.yTicks.map((t, i) => (
+                <g key={`y-${i}`}>
+                  <line
+                    x1={chartPath.M.left}
+                    x2={chartPath.W - chartPath.M.right}
+                    y1={t.y}
+                    y2={t.y}
+                    stroke="var(--border)"
+                    strokeWidth="1"
+                    strokeDasharray={i === 0 ? '0' : '3,3'}
+                  />
+                  <text
+                    x={chartPath.W - chartPath.M.right + 6}
+                    y={t.y + 4}
+                    fill="var(--text-muted)"
+                    fontSize="14"
+                    fontFamily="Tajawal, sans-serif"
+                    textAnchor="start"
+                  >
+                    {fmtAxis(t.value)}
+                  </text>
+                </g>
+              ))}
+
+              {/* Area + line */}
+              <path d={chartPath.area} fill="url(#dash-chart-grad)" />
+              <polyline points={chartPath.line} fill="none" stroke="var(--brand)" strokeWidth="2.5" strokeLinejoin="round" />
+
+              {/* Data point dots */}
+              {chartPath.coords.map((c, i) => (
+                <circle key={`pt-${i}`} cx={c.x} cy={c.y} r="3" fill="var(--brand)">
+                  <title>{c.label}: {fmtAxis(c.value)}</title>
+                </circle>
+              ))}
+
+              {/* X-axis labels */}
+              {chartPath.xTicks.map((t, i) =>
+                t.show ? (
+                  <text
+                    key={`x-${i}`}
+                    x={t.x}
+                    y={chartPath.H - 10}
+                    fill="var(--text-muted)"
+                    fontSize="14"
+                    fontFamily="Tajawal, sans-serif"
+                    textAnchor="middle"
+                  >
+                    {t.label}
+                  </text>
+                ) : null
+              )}
+            </svg>
+          ) : (
+            <div className="chart-empty">لا توجد بيانات كافية لعرض الرسم البياني</div>
+          )}
+        </div>
       </div>
 
-      {/* Advanced Analytics (subscription-gated) */}
-      {allowAdvancedDashboard && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <BarChart2 size={16} className="text-yellow-600" />
-              <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">التحليلات المتقدمة</h2>
-            </div>
-            <button onClick={() => setShowAdvanced(s => !s)}
-              className="text-xs text-yellow-600 hover:underline font-arabic flex items-center gap-1">
-              {showAdvanced ? 'إخفاء' : 'إظهار'}
-              <ChevronDown
-                size={13}
-                className="transition-transform"
-                style={{ transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              />
-            </button>
-          </div>
-          {showAdvanced && <AdvancedDashboard branchId={branchId} />}
-        </div>
-      )}
-
-      {/* Recent sales table */}
-      <div className="card-surface overflow-hidden">
-        <div className="section-header">
-          <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">آخر المبيعات</h2>
-          <span className="text-xs text-gray-400 font-arabic">{totalRows.toLocaleString('ar-SA')} سجل</span>
+      {/* Recent sales */}
+      <div className="surface" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="recent-header">
+          <div className="chart-title">آخر المبيعات</div>
+          <Link to="/submissions" className="t-small">عرض الكل ←</Link>
         </div>
 
         {loading ? (
-          <div className="p-4">
-            <TableSkeleton rows={8} cols={7} />
+          <div style={{ padding: 'var(--space-4)' }}>
+            <TableSkeleton rows={6} cols={5} />
           </div>
         ) : sales.length === 0 ? (
-          <EmptyState
-            icon={DollarSign}
-            title="لا توجد مبيعات بعد"
-            description="ابدأ بتسجيل مبيعاتك اليومية أو الشهرية لمتابعة أداء فروعك"
-            action={
-              <Link to="/sales/create"
-                className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic">
-                <PlusCircle size={15} /> إضافة أول مبيعة
-              </Link>
-            }
-          />
+          <div className="recent-empty">
+            <EmptyState
+              icon={DollarSign}
+              title="لا توجد مبيعات بعد"
+              description="ابدأ بتسجيل مبيعاتك اليومية أو الشهرية لمتابعة أداء فروعك"
+              action={
+                <Link to="/sales/create" className="btn-sm btn-primary">
+                  <PlusCircle size={15} /> إضافة أول مبيعة
+                </Link>
+              }
+            />
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-gray-500 dark:text-gray-300 text-xs font-arabic border-b border-gray-100 dark:border-gray-700">
-                <tr className="bg-gray-50/80 dark:bg-gray-800/60">
-                  <th className="px-4 py-3 text-right font-medium">رقم الفاتورة</th>
-                  <th className="px-4 py-3 text-right font-medium">الفرع</th>
-                  <th className="px-4 py-3 text-right font-medium">النوع</th>
-                  <th className="px-4 py-3 text-right font-medium">التاريخ</th>
-                  <th className="px-4 py-3 text-right font-medium">المبلغ (ر.س)</th>
-                  <th className="px-4 py-3 text-right font-medium">الحالة</th>
-                  <th className="px-4 py-3 text-right font-medium">إجراء</th>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="recent-table">
+              <thead>
+                <tr>
+                  <th>الفرع</th>
+                  <th>رقم الفاتورة</th>
+                  <th>المبلغ</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                  <th>إجراء</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60">
-                {sales.map(s => (
-                  <tr key={s.id} className={`transition-colors ${s.status === 'sent' ? 'bg-gray-50/40 dark:bg-gray-800/20' : 'hover:bg-yellow-50/30 dark:hover:bg-yellow-900/10'}`}>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300 font-arabic text-xs">{s.invoice_number || <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
-                    <td className="px-4 py-3"><BranchBadge code={s.branches?.code || '—'} /></td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-arabic text-xs">
-                      {s.input_type === 'daily' ? 'يومي' : s.input_type === 'monthly' ? 'شهري' : 'مخصص'}
+              <tbody>
+                {sales.slice(0, 8).map(s => (
+                  <tr key={s.id} data-testid="sale-row">
+                    <td>
+                      {s.branches
+                        ? <BranchBadge code={s.branches.code || '—'} />
+                        : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-xs" dir="ltr">{s.sale_date}</td>
-                    <td className="px-4 py-3 font-bold text-gray-800 dark:text-gray-100 font-arabic">{fmt(s.amount)}</td>
-                    <td className="px-4 py-3"><StatusDot status={s.status} /></td>
-                    <td className="px-4 py-3">
+                    <td className="t-mono">{s.invoice_number || '—'}</td>
+                    <td className="t-mono" dir="ltr">{fmt(s.amount)} ر.س</td>
+                    <td>{fmtShortDate(s.sale_date)}</td>
+                    <td>
+                      <span className={`status-pill ${s.status === 'sent' ? 'status-submitted' : 'status-pending'}`}>
+                        {statusLabel(s.status)}
+                      </span>
+                    </td>
+                    <td>
                       {s.status === 'sent' ? (
-                        <span className="text-xs text-gray-300 dark:text-gray-600 flex items-center gap-1"><Lock size={10} /> محمية</span>
+                        <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
+                          <Lock size={10} /> محمية
+                        </span>
                       ) : (
-                        <button onClick={() => setDeleteId(s.id)} className="text-red-300 hover:text-red-500 transition-colors">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteId(s.id)}
+                          style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 4 }}
+                          aria-label="حذف"
+                          data-testid="delete-sale-btn"
+                        >
                           <Trash2 size={14} />
                         </button>
                       )}
@@ -553,20 +844,94 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-            <span className="text-xs text-gray-400 font-arabic">صفحة {page + 1} من {totalPages}</span>
-            <div className="flex items-center gap-1">
-              <button disabled={page === 0} onClick={() => setPage(p => p - 1)}
-                className="p-1.5 rounded-lg disabled:opacity-30 hover:bg-gray-200 transition-colors">
+          <div data-testid="pagination" style={{
+            padding: 'var(--space-3) var(--space-5)',
+            borderTop: '1px solid var(--border)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'var(--bg-subtle)',
+          }}>
+            <span className="t-micro">صفحة {page + 1} من {totalPages} — {fmtInt(totalRows)} سجل</span>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                type="button"
+                disabled={page === 0}
+                onClick={() => setPage(p => p - 1)}
+                className="btn-sm btn-ghost"
+                style={{ opacity: page === 0 ? 0.4 : 1 }}
+              >
                 <ChevronRight size={15} />
               </button>
-              <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}
-                className="p-1.5 rounded-lg disabled:opacity-30 hover:bg-gray-200 transition-colors">
+              <button
+                type="button"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage(p => p + 1)}
+                className="btn-sm btn-ghost"
+                style={{ opacity: page >= totalPages - 1 ? 0.4 : 1 }}
+              >
                 <ChevronLeft size={15} />
               </button>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Secondary section — quick actions + advanced analytics + extra KPIs */}
+      <div className="dash-secondary">
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3" dir="rtl">
+          {[
+            { icon: PlusCircle, label: 'إضافة مبيعات',  to: '/sales/create',    color: 'text-yellow-600 dark:text-yellow-400' },
+            { icon: Send,       label: 'إرسال الفواتير', to: '/submit',          color: 'text-blue-600 dark:text-blue-400' },
+          ].map(({ icon: Icon, label, to, color }) => (
+            <Link key={to} to={to}
+              className="card-surface hover:shadow-md active:scale-95 transition-all p-3 flex items-center gap-3 rounded-xl cursor-pointer"
+            >
+              <Icon size={18} className={color} />
+              <span className="text-sm font-medium font-arabic text-gray-700 dark:text-gray-200">{label}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Cumulative totals + confirmed count (retained from original 5-KPI layout) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="card-surface p-4 flex items-center gap-3">
+            <DollarSign size={22} className="text-green-600 dark:text-green-400 shrink-0" />
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-arabic mb-0.5">إجمالي المبيعات التراكمي</p>
+              <p className="text-lg font-bold text-gray-800 dark:text-gray-100 font-arabic">{fmt(kpis.total)} ر.س</p>
+            </div>
+          </div>
+          <div className="card-surface p-4 flex items-center gap-3">
+            <CheckCircle2 size={22} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-arabic mb-0.5">فواتير مؤكدة</p>
+              <p className="text-lg font-bold text-gray-800 dark:text-gray-100 font-arabic">{fmtInt(kpis.confirmedCount)} <span className="text-xs text-gray-400">تم إرسالها</span></p>
+            </div>
+          </div>
+        </div>
+
+        {/* Advanced analytics (subscription-gated) */}
+        {allowAdvancedDashboard && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <BarChart2 size={16} className="text-yellow-600" />
+                <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">التحليلات المتقدمة</h2>
+              </div>
+              <button onClick={() => setShowAdvanced(s => !s)}
+                className="text-xs text-yellow-600 hover:underline font-arabic flex items-center gap-1">
+                {showAdvanced ? 'إخفاء' : 'إظهار'}
+                <ChevronDown
+                  size={13}
+                  className="transition-transform"
+                  style={{ transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
+              </button>
+            </div>
+            {showAdvanced && <AdvancedDashboard branchId={branchId} />}
           </div>
         )}
       </div>
@@ -581,3 +946,7 @@ export default function Dashboard() {
     </div>
   )
 }
+
+// Unused import guards (retained for backward compat during incremental refactor)
+// eslint-disable-next-line no-unused-vars
+const _unused = { Hash, TrendingUp }

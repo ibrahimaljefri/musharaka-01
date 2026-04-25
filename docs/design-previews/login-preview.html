@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عروة — تسجيل الدخول</title>
+<link rel="stylesheet" href="preview-shared.css">
+<style>
+  body { min-height: 100vh; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+  .brand-panel {
+    background: linear-gradient(135deg, #1C1917 0%, #292524 100%);
+    color: #FAFAF9;
+    padding: var(--space-8) var(--space-6);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 70% 30%, rgba(251,191,36,0.15) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .brand-logo { display: flex; align-items: center; gap: var(--space-3); position: relative; z-index: 1; }
+  .logo-mark { height: 44px; width: auto; display: block; filter: drop-shadow(0 2px 8px rgba(251,191,36,0.25)); }
+  .brand-content { position: relative; z-index: 1; }
+  .brand-title { font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: var(--space-3); }
+  .brand-sub { color: #A8A29E; font-size: 1rem; line-height: 1.7; max-width: 420px; }
+  .brand-footer { position: relative; z-index: 1; color: #78716C; font-size: 0.875rem; }
+  .form-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    background: var(--bg);
+  }
+  .form-box { width: 100%; max-width: 400px; }
+  .form-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 6px; }
+  .form-sub { color: var(--text-sec); margin-bottom: var(--space-6); }
+  .field { margin-bottom: var(--space-4); }
+  .label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 6px; }
+  .input-wrap { position: relative; }
+  .input-icon { position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+  .input-wrap .input { padding-inline-start: 40px; }
+  .forgot { font-size: 0.8rem; color: var(--brand); text-decoration: none; }
+  .forgot:hover { text-decoration: underline; }
+  .sign-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+  .divider { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-5) 0; color: var(--text-muted); font-size: 0.8rem; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .register-cta { text-align: center; font-size: 0.875rem; color: var(--text-sec); }
+  .register-cta a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  @media (max-width: 900px) {
+    .split { grid-template-columns: 1fr; }
+    .brand-panel { min-height: 240px; padding: var(--space-5); }
+    .brand-title { font-size: 1.5rem; }
+    .brand-sub { font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')" aria-label="تبديل السمة"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+
+<div class="split">
+  <div class="brand-panel">
+    <div class="brand-logo">
+      <img class="logo-mark" src="urwah-logo.svg" alt="عروة"/>
+    </div>
+
+    <div class="brand-content">
+      <h1 class="brand-title">الأسلوب الحديث لإدارة المبيعات</h1>
+      <p class="brand-sub">منصة عروة تساعدك على تنظيم مبيعات فروعك</p>
+    </div>
+
+    <div class="brand-footer">© ٢٠٢٦ عروة. جميع الحقوق محفوظة.</div>
+  </div>
+
+  <div class="form-panel">
+    <div class="form-box">
+      <div class="form-title">تسجيل الدخول</div>
+      <div class="form-sub">أدخل بياناتك للدخول إلى لوحة التحكم</div>
+
+      <form>
+        <div class="field">
+          <label class="label">البريد الإلكتروني</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉</span>
+            <input class="input" type="email" placeholder="you@company.com" />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="sign-row">
+            <label class="label" style="margin: 0;">كلمة المرور</label>
+            <a href="#" class="forgot">نسيت كلمة المرور؟</a>
+          </div>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input class="input" type="password" placeholder="••••••••" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--space-3);">دخول</button>
+      </form>
+
+      <div class="divider">أو</div>
+
+      <div class="register-cta">
+        هل أنت مستخدم جديد؟ <a href="#">تواصل مع فريق المبيعات</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

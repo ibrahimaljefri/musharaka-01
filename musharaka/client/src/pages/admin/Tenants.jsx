@@ -2,36 +2,24 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../lib/axiosClient'
 import ConfirmDialog from '../../components/ConfirmDialog'
-import PageHeader from '../../components/PageHeader'
 import { TableSkeleton } from '../../components/SkeletonLoader'
-import TableControls from '../../components/TableControls'
-import SortableHeader from '../../components/SortableHeader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
-import {
-  Plus, Edit2, Trash2, Key, CheckCircle2, XCircle,
-  Clock, Building2
-} from 'lucide-react'
 import EmptyState from '../../components/EmptyState'
-import TenantBadge from '../../components/TenantBadge'
+import { Plus, Edit2, Trash2, Key, Building2 } from 'lucide-react'
+import './admin-tenants.css'
 
 const PAGE_SIZE = 20
 
 const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
 const PLAN_LABELS = { basic: 'أساسي', professional: 'احترافي', enterprise: 'مؤسسي' }
-const PLAN_COLORS = {
-  basic:        'bg-gray-100 text-gray-600',
-  professional: 'bg-blue-100 text-blue-700',
-  enterprise:   'bg-purple-100 text-purple-700',
-}
 
-function statusBadge(tenant) {
+function tenantStatusInfo(tenant) {
   const expired = tenant.expires_at && new Date(tenant.expires_at) < new Date()
-  if (expired || tenant.status === 'expired')
-    return <span className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-arabic"><XCircle size={10} />منتهي</span>
-  if (tenant.status === 'suspended')
-    return <span className="inline-flex items-center gap-1 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-arabic"><Clock size={10} />موقوف</span>
-  return <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-arabic"><CheckCircle2 size={10} />نشط</span>
+  if (expired || tenant.status === 'expired') return { cls: 'expired', label: 'منتهي' }
+  if (tenant.status === 'suspended')           return { cls: 'suspended', label: 'موقوف' }
+  if (tenant.status === 'trial')               return { cls: 'trial', label: 'تجريبي' }
+  return { cls: 'active', label: 'نشط' }
 }
 
 function fmtDate(d) {
@@ -40,16 +28,24 @@ function fmtDate(d) {
   return `${dt.getDate()} ${MONTHS_AR[dt.getMonth()]} ${dt.getFullYear()}`
 }
 
+const INPUT_TYPE_LABELS = { daily: 'يومي', monthly: 'شهري' }
+function inputTypesList(value) {
+  if (Array.isArray(value)) return value
+  return String(value || 'daily').split(',').map(s => s.trim()).filter(Boolean)
+}
+
 export default function Tenants() {
   const [tenants, setTenants]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [search, setSearch]             = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [planFilter, setPlanFilter]     = useState('')
   const [sort, setSort]                 = useState({ field: null, dir: 'asc' })
   const [page, setPage]                 = useState(1)
 
   useEffect(() => { load() }, [])
-  useEffect(() => { setPage(1) }, [search])
+  useEffect(() => { setPage(1) }, [search, statusFilter, planFilter])
 
   async function load() {
     setLoading(true)
@@ -73,14 +69,27 @@ export default function Tenants() {
     }
   }
 
+  // Build plan option list from real data so the select mirrors what's served.
+  const planOptions = useMemo(() => {
+    const set = new Set()
+    tenants.forEach(t => { if (t.plan) set.add(t.plan) })
+    return Array.from(set)
+  }, [tenants])
+
   const filteredSorted = useMemo(() => {
     let list = tenants.filter(t => {
-      if (!search) return true
-      const q = search.toLowerCase()
-      return (
-        (t.name || '').toLowerCase().includes(q) ||
-        (t.slug || '').toLowerCase().includes(q)
-      )
+      if (search) {
+        const q = search.toLowerCase()
+        const hit = (t.name || '').toLowerCase().includes(q) ||
+                    (t.slug || '').toLowerCase().includes(q)
+        if (!hit) return false
+      }
+      if (statusFilter) {
+        const { cls } = tenantStatusInfo(t)
+        if (cls !== statusFilter) return false
+      }
+      if (planFilter && t.plan !== planFilter) return false
+      return true
     })
 
     if (sort.field) {
@@ -97,126 +106,206 @@ export default function Tenants() {
       })
     }
     return list
-  }, [tenants, search, sort])
+  }, [tenants, search, statusFilter, planFilter, sort])
 
-  const totalPages = Math.ceil(filteredSorted.length / PAGE_SIZE)
+  const totalPages = Math.ceil(filteredSorted.length / PAGE_SIZE) || 1
   const paged = filteredSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const firstIdx = filteredSorted.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const lastIdx  = Math.min(page * PAGE_SIZE, filteredSorted.length)
+
+  // Summary counts reflect full list, not current filter view.
+  const { activeCount, trialCount, expiredCount } = useMemo(() => {
+    let a = 0, tr = 0, ex = 0
+    tenants.forEach(t => {
+      const { cls } = tenantStatusInfo(t)
+      if (cls === 'expired') ex++
+      else if (cls === 'trial') tr++
+      else if (cls === 'active') a++
+    })
+    return { activeCount: a, trialCount: tr, expiredCount: ex }
+  }, [tenants])
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="المستأجرون"
-        subtitle="التحكم الكامل في الحسابات والاشتراكات"
-        icon={Building2}
-        action={
-          <Link to="/admin/tenants/create"
-            className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic shadow-sm">
-            <Plus size={15} /> مستأجر جديد
-          </Link>
-        }
-      />
-
-      <div className="card-surface overflow-hidden">
-        <div className="section-header">
-          <span className="font-semibold text-gray-700 font-arabic text-sm">الحسابات المسجلة</span>
-          <span className="text-xs text-gray-400 font-arabic">{tenants.length} حساب</span>
+    <div className="adm-tenants">
+      <div className="adm-page-header">
+        <div>
+          <h1 className="adm-page-title">إدارة العملاء</h1>
+          <div className="t-small">
+            {activeCount} عميل نشط · {trialCount} تجريبي · {expiredCount} منتهي
+          </div>
         </div>
+        <Link to="/admin/tenants/create" className="btn btn-primary">
+          <Plus size={15} /> إضافة عميل
+        </Link>
+      </div>
 
-        <div className="px-4 pt-3">
-          <TableControls
-            value={search}
-            onChange={setSearch}
-            count={filteredSorted.length}
-            total={tenants.length}
-            placeholder="بحث بالاسم أو الرمز..."
-          />
-        </div>
+      <div className="adm-filter-bar">
+        <input
+          className="input"
+          placeholder="🔍 بحث بالاسم أو الرمز..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <select
+          className="input"
+          style={{ maxWidth: 180 }}
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+        >
+          <option value="">جميع الحالات</option>
+          <option value="active">نشط</option>
+          <option value="trial">تجريبي</option>
+          <option value="expired">منتهي</option>
+          <option value="suspended">موقوف</option>
+        </select>
+        <select
+          className="input"
+          style={{ maxWidth: 180 }}
+          value={planFilter}
+          onChange={e => setPlanFilter(e.target.value)}
+        >
+          <option value="">جميع الباقات</option>
+          {planOptions.map(p => (
+            <option key={p} value={p}>{PLAN_LABELS[p] || p}</option>
+          ))}
+        </select>
+      </div>
 
+      <div className="adm-tbl-wrap surface">
         {loading ? (
-          <div className="p-4">
-            <TableSkeleton rows={5} cols={8} />
+          <div style={{ padding: 16 }}>
+            <TableSkeleton rows={5} cols={7} />
           </div>
         ) : tenants.length === 0 ? (
-          <EmptyState
-            icon={Building2}
-            title="لا يوجد مستأجرون بعد"
-            description="أضف أول مستأجر لبدء إدارة الحسابات والاشتراكات"
-            action={
-              <Link to="/admin/tenants/create"
-                className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic">
-                <Plus size={15} /> مستأجر جديد
-              </Link>
-            }
-          />
+          <div style={{ padding: 24 }}>
+            <EmptyState
+              icon={Building2}
+              title="لا يوجد مستأجرون بعد"
+              description="أضف أول مستأجر لبدء إدارة الحسابات والاشتراكات"
+              action={
+                <Link to="/admin/tenants/create" className="btn btn-primary">
+                  <Plus size={15} /> إضافة عميل
+                </Link>
+              }
+            />
+          </div>
+        ) : filteredSorted.length === 0 ? (
+          <div className="adm-state">لا توجد نتائج مطابقة للمرشحات الحالية</div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="table-head">
-                  <tr>
-                    <SortableHeader field="name" sort={sort} onSort={setSort}>الاسم</SortableHeader>
-                    <th className="px-4 py-3 text-right font-medium">الرمز</th>
-                    <SortableHeader field="plan" sort={sort} onSort={setSort}>الخطة</SortableHeader>
-                    <SortableHeader field="status" sort={sort} onSort={setSort}>الحالة</SortableHeader>
-                    <th className="px-4 py-3 text-right font-medium">تاريخ التفعيل</th>
-                    <SortableHeader field="expires_at" sort={sort} onSort={setSort}>تاريخ الانتهاء</SortableHeader>
-                    <th className="px-4 py-3 text-right font-medium">أنواع الإدخال</th>
-                    <th className="px-4 py-3 text-right font-medium">إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {paged.map(t => (
-                    <tr key={t.id} className="hover:bg-yellow-50/20 transition-colors">
-                      <td className="px-4 py-3"><TenantBadge name={t.name} subtext={t.commercial_registration} /></td>
-                      <td className="px-4 py-3 text-gray-500 text-xs font-mono">{t.slug}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-arabic ${PLAN_COLORS[t.plan] || PLAN_COLORS.basic}`}>
-                          {PLAN_LABELS[t.plan] || t.plan}
-                        </span>
+            {/* Desktop table */}
+            <table className="adm-tbl">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الرمز</th>
+                  <th>الباقة</th>
+                  <th>أنواع الإدخال</th>
+                  <th>الحالة</th>
+                  <th>تاريخ الانتهاء</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paged.map(t => {
+                  const s = tenantStatusInfo(t)
+                  const expired = t.expires_at && new Date(t.expires_at) < new Date()
+                  return (
+                    <tr key={t.id}>
+                      <td>
+                        <strong>{t.name}</strong>
+                        {t.commercial_registration && (
+                          <div className="t-micro">{t.commercial_registration}</div>
+                        )}
                       </td>
-                      <td className="px-4 py-3">{statusBadge(t)}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs font-arabic">{fmtDate(t.activated_at)}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs font-arabic">
-                        {t.expires_at
-                          ? <span className={new Date(t.expires_at) < new Date() ? 'text-red-500 font-semibold' : ''}>{fmtDate(t.expires_at)}</span>
-                          : <span className="text-gray-300">غير محدد</span>
-                        }
+                      <td className="t-mono">{t.slug || '—'}</td>
+                      <td>{PLAN_LABELS[t.plan] || t.plan || '—'}</td>
+                      <td>
+                        {inputTypesList(t.allowed_input_types).map(type => (
+                          <span key={type} className="adm-chip">
+                            {INPUT_TYPE_LABELS[type] || 'مخصص'}
+                          </span>
+                        ))}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1 flex-wrap">
-                          {(Array.isArray(t.allowed_input_types)
-                            ? t.allowed_input_types
-                            : (t.allowed_input_types || 'daily').split(',').filter(Boolean)
-                          ).map(type => (
-                            <span key={type} className="text-xs bg-yellow-50 border border-yellow-200 text-yellow-700 px-1.5 py-0.5 rounded font-arabic">
-                              {type === 'daily' ? 'يومي' : type === 'monthly' ? 'شهري' : 'مخصص'}
-                            </span>
-                          ))}
-                        </div>
+                      <td>
+                        <span className={`adm-status s-${s.cls}`}>{s.label}</span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <Link to={`/admin/tenants/${t.id}/edit`}
-                            className="p-1.5 rounded-lg text-yellow-600 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 transition-colors" title="تعديل">
+                      <td className="t-mono" style={expired ? { color: '#B91C1C', fontWeight: 600 } : undefined}>
+                        {t.expires_at ? fmtDate(t.expires_at) : 'غير محدد'}
+                      </td>
+                      <td>
+                        <div className="adm-actions">
+                          <Link
+                            to={`/admin/tenants/${t.id}/edit`}
+                            className="adm-icon-btn"
+                            title="تعديل"
+                            aria-label="تعديل"
+                          >
                             <Edit2 size={13} />
                           </Link>
-                          <Link to={`/admin/tenants/${t.id}/api-keys`}
-                            className="p-1.5 rounded-lg text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors" title="مفاتيح API">
+                          <Link
+                            to={`/admin/tenants/${t.id}/api-keys`}
+                            className="adm-icon-btn"
+                            title="مفاتيح API"
+                            aria-label="مفاتيح API"
+                          >
                             <Key size={13} />
                           </Link>
-                          <button onClick={() => setDeleteTarget(t)}
-                            className="p-1.5 rounded-lg text-red-500 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors" title="حذف">
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(t)}
+                            className="adm-icon-btn danger"
+                            title="حذف"
+                            aria-label="حذف"
+                          >
                             <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  )
+                })}
+              </tbody>
+            </table>
+
+            {/* Mobile card fallback */}
+            <div className="adm-cards-mobile">
+              {paged.map(t => {
+                const s = tenantStatusInfo(t)
+                return (
+                  <div key={t.id} className="adm-card-row">
+                    <div className="card-title">{t.name}</div>
+                    <div className="kv"><span className="k">الرمز</span><span className="t-mono">{t.slug || '—'}</span></div>
+                    <div className="kv"><span className="k">الباقة</span><span>{PLAN_LABELS[t.plan] || t.plan || '—'}</span></div>
+                    <div className="kv"><span className="k">الحالة</span><span className={`adm-status s-${s.cls}`}>{s.label}</span></div>
+                    <div className="kv"><span className="k">ينتهي في</span><span className="t-mono">{t.expires_at ? fmtDate(t.expires_at) : 'غير محدد'}</span></div>
+                    <div className="kv kv-actions">
+                      <div className="adm-actions">
+                        <Link to={`/admin/tenants/${t.id}/edit`} className="adm-icon-btn" aria-label="تعديل">
+                          <Edit2 size={13} />
+                        </Link>
+                        <Link to={`/admin/tenants/${t.id}/api-keys`} className="adm-icon-btn" aria-label="مفاتيح API">
+                          <Key size={13} />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(t)}
+                          className="adm-icon-btn danger"
+                          aria-label="حذف"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
-            <div className="px-4 pb-4">
+            <div className="adm-pagination">
+              <span className="t-small">
+                عرض {firstIdx}–{lastIdx} من {filteredSorted.length}
+              </span>
               <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </div>
           </>

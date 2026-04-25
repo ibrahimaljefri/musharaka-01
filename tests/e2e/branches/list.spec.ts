@@ -59,7 +59,7 @@ test.describe('Branches list page', () => {
   test('B-06: each branch row shows a colored code badge', async ({ page }) => {
     test.skip(true, '// Requires live Supabase connection')
     await page.waitForSelector('table tbody tr', { timeout: 10_000 })
-    const badges = page.locator('table tbody tr .rounded-full, table tbody tr .badge')
+    const badges = page.locator('table tbody tr [data-testid="branch-badge"]')
     const count = await badges.count()
     expect(count).toBeGreaterThan(0)
   })

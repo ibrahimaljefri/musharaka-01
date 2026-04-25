@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عروة — الصفحة الرئيسية (معاينة التصميم)</title>
+<link rel="stylesheet" href="preview-shared.css">
+<style>
+/* ============================================================================
+   Landing-specific styles
+   ============================================================================ */
+
+/* ---- Sticky nav bar ----------------------------------------------------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.dark .nav { background: rgba(10, 10, 11, 0.85); }
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  /* Reserve space on inline-end (LEFT in RTL) so floating theme toggle doesn't overlap CTAs */
+  padding-inline-end: 72px;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 24px;
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--text);
+  text-decoration: none;
+}
+.nav-brand .logo {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.nav-link {
+  padding: 8px 12px;
+  color: var(--text-sec);
+  text-decoration: none;
+  border-radius: var(--r-md);
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.nav-link:hover { color: var(--text); background: var(--bg-subtle); }
+.nav-link.active { color: var(--brand); font-weight: 600; }
+.nav-cta { display: flex; gap: 8px; }
+
+@media (max-width: 860px) {
+  .nav-links { display: none; }
+  .nav-cta .btn { padding: 6px 12px; min-height: 36px; font-size: 13px; }
+}
+
+/* ---- Hero --------------------------------------------------------------- */
+.hero {
+  padding: 72px 24px 64px;
+  text-align: center;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, var(--brand-soft) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 100%, rgba(251, 191, 36, 0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+.hero-content { position: relative; max-width: 880px; margin: 0 auto; }
+
+/* ---- Doodle decorations (Notion-style playful sketches) ----------------- */
+.doodle {
+  position: absolute;
+  pointer-events: none;
+  color: var(--brand);
+  opacity: 0.55;
+  z-index: 1;
+}
+.dark .doodle { opacity: 0.4; }
+.doodle-spin { animation: doodle-spin 14s linear infinite; transform-origin: center; }
+@keyframes doodle-spin { to { transform: rotate(360deg); } }
+.doodle-bob  { animation: doodle-bob  3.5s ease-in-out infinite; }
+@keyframes doodle-bob { 50% { transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .doodle-spin, .doodle-bob { animation: none; }
+}
+
+.hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--text-sec) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p.lede {
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  color: var(--text-sec);
+  max-width: 640px;
+  margin: 0 auto 32px;
+  line-height: 1.7;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hero-trust {
+  margin-top: 48px;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.hero-trust .item { display: inline-flex; align-items: center; gap: 6px; }
+.hero-trust svg   { color: var(--brand); }
+
+/* ---- Dashboard mockup (hero image) ------------------------------------- */
+.hero-preview {
+  margin: 56px auto 0;
+  max-width: 1000px;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.1),
+    0 0 0 1px var(--border),
+    var(--ring-top);
+  position: relative;
+}
+.hero-preview-bar {
+  padding: 12px 16px;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-preview-dots { display: flex; gap: 6px; }
+.hero-preview-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+.hero-preview-body {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 380px;
+  background:
+    linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+}
+.hp-sidebar {
+  border-inline-end: 1px solid var(--border);
+  background: var(--bg-alt);
+  padding: 14px 10px;
+  font-size: 12px;
+}
+.hp-sidebar .brand-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 8px 12px; font-weight: 700; color: var(--text);
+}
+.hp-sidebar .brand-row .dot { width: 22px; height: 22px; border-radius: 6px;
+  background: linear-gradient(135deg, #FBBF24, #B8860B); display: grid; place-items: center;
+  color: white; font-weight: 800; font-size: 11px; }
+.hp-nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px;
+  color: var(--text-sec); margin-bottom: 2px; }
+.hp-nav-item.active { background: var(--brand-soft); color: var(--brand-ink); font-weight: 600; }
+.hp-nav-item .ic { width: 14px; height: 14px; opacity: 0.7; }
+.hp-nav-item.active .ic { opacity: 1; }
+.hp-section { padding: 16px; }
+.hp-section-title { display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--text); }
+.hp-section-title .pill {
+  background: var(--brand-soft); color: var(--brand-ink); padding: 2px 8px;
+  border-radius: var(--r-pill); font-size: 10px; font-weight: 600;
+}
+.hp-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 11px; }
+.hp-table th, .hp-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+.hp-table th { background: var(--bg-alt); color: var(--text-muted); font-weight: 500; font-size: 10px; }
+.hp-table td .badge {
+  font-size: 9px; padding: 1px 7px; border-radius: var(--r-pill); font-weight: 600;
+}
+.hp-badge-ok { background: #DCFCE7; color: #15803D; }
+.hp-badge-pending { background: #FEF3C7; color: #92400E; }
+.dark .hp-badge-ok { background: #052E16; color: #4ADE80; }
+.dark .hp-badge-pending { background: #3F2D0F; color: #FBBF24; }
+@media (max-width: 760px) {
+  .hero-preview-body { grid-template-columns: 1fr; }
+  .hp-sidebar { display: none; }
+}
+.hero-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.hero-kpi {
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--ring-top);
+}
+.hero-kpi .label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+.hero-kpi .value { font-size: 20px; font-weight: 700; color: var(--text); }
+.hero-kpi .trend { font-size: 11px; color: var(--success); margin-top: 4px; }
+
+.hero-chart {
+  height: 140px;
+  border-radius: var(--r-md);
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 50%, rgba(184, 134, 11, 0.08) 100%),
+    radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 1px);
+  background-size: auto, 16px 16px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero-chart svg { width: 100%; height: 100%; display: block; }
+
+@media (max-width: 640px) {
+  .hero { padding: 48px 16px 32px; }
+  .hero-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- Feature grid ------------------------------------------------------- */
+.features {
+  padding: 80px 24px;
+}
+.features-header { text-align: center; margin-bottom: 48px; }
+.features-header h2 {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+.features-header p { color: var(--text-sec); max-width: 600px; margin: 0 auto; }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.feature-card {
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top-width: 6px;
+  border-right-width: 6px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm), var(--ring-top);
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.feature-text { min-width: 0; }
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg), var(--ring-top);
+}
+/* L-frame on top + right edges colored to match icon (corner emphasis) */
+.feature-card:nth-child(1) { border-top-color: #FBBF24; border-right-color: #FBBF24; }
+.feature-card:nth-child(2) { border-top-color: #34D399; border-right-color: #34D399; }
+.feature-card:nth-child(3) { border-top-color: #60A5FA; border-right-color: #60A5FA; }
+.feature-card:nth-child(4) { border-top-color: #F472B6; border-right-color: #F472B6; }
+.feature-card:nth-child(1):hover { border-top-color: #B45309; border-right-color: #B45309; box-shadow: 0 12px 32px rgba(180, 83, 9, 0.22), var(--ring-top); }
+.feature-card:nth-child(2):hover { border-top-color: #047857; border-right-color: #047857; box-shadow: 0 12px 32px rgba(4, 120, 87, 0.22), var(--ring-top); }
+.feature-card:nth-child(3):hover { border-top-color: #1E40AF; border-right-color: #1E40AF; box-shadow: 0 12px 32px rgba(30, 64, 175, 0.22), var(--ring-top); }
+.feature-card:nth-child(4):hover { border-top-color: #BE185D; border-right-color: #BE185D; box-shadow: 0 12px 32px rgba(190, 24, 93, 0.22), var(--ring-top); }
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: white;
+  flex-shrink: 0;
+}
+.feature-card:nth-child(1) .feature-icon { background: linear-gradient(135deg, #FBBF24, #B45309); }
+.feature-card:nth-child(2) .feature-icon { background: linear-gradient(135deg, #34D399, #047857); }
+.feature-card:nth-child(3) .feature-icon { background: linear-gradient(135deg, #60A5FA, #1E40AF); }
+.feature-card:nth-child(4) .feature-icon { background: linear-gradient(135deg, #F472B6, #BE185D); }
+.feature-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--text);
+}
+.feature-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+@media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
+
+/* ---- How it works ------------------------------------------------------- */
+.how {
+  padding: 80px 24px;
+  background: transparent;
+}
+.how-header { text-align: center; margin-bottom: 40px; }
+.how-header h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 12px; }
+.how-header p { color: var(--text-sec); }
+
+/* Contained clay panel — only wraps the cards, not the whole section */
+.how-stage {
+  background: linear-gradient(135deg, #C97B4A 0%, #A0552B 100%);
+  border-radius: var(--r-xl);
+  padding: 48px 32px 120px;
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+.dark .how-stage { background: linear-gradient(135deg, #6B3A1F 0%, #3F2010 100%); }
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: -3px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.how-step {
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18), var(--ring-top);
+  color: var(--text);
+}
+/* Staggered vertical offset — 01 right, 02 middle, 03 left in RTL. No transition. */
+.how-step:nth-child(1) { transform: translateY(0); }
+.how-step:nth-child(2) { transform: translateY(28px); }
+.how-step:nth-child(3) { transform: translateY(56px); }
+
+.how-step .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--brand);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+.how-step h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px; }
+.how-step p { font-size: 14px; color: var(--text-sec); margin: 0; }
+
+@media (max-width: 900px) {
+  .how-stage { padding: 32px 20px; }
+  .how-steps { grid-template-columns: 1fr; gap: 14px; max-width: 420px; }
+  .how-step { transform: none !important; }
+}
+
+/* ---- Pricing ------------------------------------------------------------ */
+.pricing {
+  padding: 80px 24px;
+}
+.pricing-header { text-align: center; margin-bottom: 48px; }
+.pricing-header h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 12px; }
+.pricing-header p  { color: var(--text-sec); }
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+.pricing-card {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm), var(--ring-top);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(184, 134, 11, 0.25), var(--ring-top);
+  border-color: var(--brand);
+}
+.pricing-cta-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+.pricing-card .badge {
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: var(--brand);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.pricing-card h3 { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+.pricing-card .desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+.pricing-card .price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.pricing-card .price .amount { font-size: 32px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+.pricing-card .price .currency { font-size: 14px; color: var(--text-sec); }
+.pricing-card .monthly { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 24px;
+  font-size: 14px;
+  color: var(--text-sec);
+  flex: 1;
+}
+.pricing-card li {
+  padding: 6px 0;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.pricing-card li::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+  flex-shrink: 0;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border-radius: 50%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23B8860B'><path d='M6.5 10.5L3.5 7.5l1-1 2 2 5-5 1 1z'/></svg>");
+  background-size: 12px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+@media (max-width: 800px) { .pricing-grid { grid-template-columns: 1fr; } .pricing-card.highlight { transform: none; } }
+
+/* ---- Contact ------------------------------------------------------------ */
+.contact {
+  padding: 80px 24px;
+  background: var(--bg-alt);
+  border-top: 1px solid var(--border);
+}
+.contact-inner {
+  max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
+}
+.contact h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 12px; }
+.contact p { color: var(--text-sec); margin: 0 0 32px; }
+
+.contact-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.contact-card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  text-align: start;
+  box-shadow: var(--shadow-sm), var(--ring-top);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.contact-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 20px;
+}
+.contact-card .name { font-size: 15px; font-weight: 700; margin: 0; }
+.contact-card .role { font-size: 13px; color: var(--text-muted); margin: 0 0 8px; }
+.contact-card .number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text-sec);
+  direction: ltr;
+  text-align: left;
+}
+
+.email-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+@media (max-width: 640px) { .contact-cards { grid-template-columns: 1fr; } }
+
+/* ---- Footer ------------------------------------------------------------- */
+.footer {
+  padding: 32px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.footer .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text); }
+.footer .brand .logo {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+.footer .links { display: flex; gap: 20px; }
+.footer .links a { color: var(--text-sec); text-decoration: none; }
+.footer .links a:hover { color: var(--text); }
+.footer .copy { color: var(--text-muted); }
+
+@media (max-width: 640px) {
+  .footer-inner { flex-direction: column; text-align: center; }
+}
+
+/* ---- Contact modal ------------------------------------------------------ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 10, 9, 0.5);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  max-width: 480px;
+  width: 100%;
+  padding: 28px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  position: relative;
+}
+.modal .close-btn {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 8px;
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+}
+.modal .close-btn:hover { background: var(--bg-subtle); color: var(--text); }
+.modal h3 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+.modal p  { color: var(--text-sec); font-size: 14px; margin: 0 0 20px; }
+.modal .actions { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- Icons --------------------------------------------------------------- */
+.icon { width: 16px; height: 16px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+.icon-lg { width: 24px; height: 24px; }
+</style>
+</head>
+<body>
+
+<!-- ───────── Theme toggle (preview only) ──────────────────────────────────── -->
+<button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')" aria-label="تبديل السمة"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+</button>
+
+<!-- ───────── Nav ──────────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <img class="logo" src="urwah-logo.svg" alt="عروة"/>
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="nav-link">الميزات</a>
+      <a href="#how" class="nav-link">كيف يعمل؟</a>
+      <a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('contactModal').classList.add('open')">تواصل معنا</a>
+      <a href="#pricing" class="nav-link">الأسعار</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#" class="btn btn-ghost btn-sm">دخول</a>
+      <a href="#" class="btn btn-primary btn-sm">ابدأ الآن</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ───────── Hero ─────────────────────────────────────────────────────────── -->
+<header class="hero">
+  <!-- ── Doodles (decorative SVG sprinkles) ────────────────────────────── -->
+  <svg class="doodle doodle-bob" style="top: 80px; inset-inline-start: 6%; width: 56px; height: 56px;" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- sparkle -->
+    <path d="M32 6v14M32 44v14M6 32h14M44 32h14M14 14l10 10M40 40l10 10M14 50l10-10M40 24l10-10"/>
+  </svg>
+  <svg class="doodle doodle-spin" style="top: 120px; inset-inline-end: 8%; width: 48px; height: 48px;" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+    <!-- gear-ish star -->
+    <path d="M32 8l5 13 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1z"/>
+  </svg>
+  <svg class="doodle" style="top: 280px; inset-inline-start: 4%; width: 70px; height: 50px;" viewBox="0 0 80 60" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- mini chart -->
+    <path d="M6 50L22 30L36 38L52 18L74 12"/>
+    <circle cx="22" cy="30" r="3" fill="currentColor"/>
+    <circle cx="52" cy="18" r="3" fill="currentColor"/>
+    <circle cx="74" cy="12" r="3" fill="currentColor"/>
+  </svg>
+  <svg class="doodle doodle-bob" style="top: 320px; inset-inline-end: 5%; width: 44px; height: 44px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- arrow swirl -->
+    <path d="M6 36c0-12 8-22 20-22s20 10 20 22"/>
+    <path d="M40 28l6 8-10 4"/>
+  </svg>
+  <svg class="doodle" style="top: 460px; inset-inline-start: 10%; width: 36px; height: 36px;" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+    <!-- dot constellation -->
+    <circle cx="6" cy="6" r="2.5"/><circle cx="20" cy="10" r="2"/>
+    <circle cx="12" cy="20" r="2"/><circle cx="26" cy="22" r="2.5"/>
+    <path d="M6 6L20 10L12 20L26 22" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.5"/>
+  </svg>
+  <svg class="doodle doodle-spin" style="top: 520px; inset-inline-end: 12%; width: 38px; height: 38px;" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <!-- circle plus -->
+    <circle cx="16" cy="16" r="13"/>
+    <path d="M16 9v14M9 16h14"/>
+  </svg>
+
+  <div class="hero-content">
+    <span class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+      منصة متكاملة لإدارة المبيعات
+    </span>
+    <h1>إدارة المبيعات بدقة وسرعة</h1>
+    <p class="lede">
+      منصة عروة تمكّن وتسهل جمع المبيعات شهرياً وتسويتها
+      مع منصة التكامل الخاصة بهم — أتمتة كاملة، تقارير فورية، واجهة عربية أولاً.
+    </p>
+    <div class="hero-ctas">
+      <a href="#" class="btn btn-primary">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        ابدأ تجربة مجانية
+      </a>
+      <button class="btn btn-ghost" onclick="document.getElementById('contactModal').classList.add('open')">
+        تواصل معنا
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Dashboard mockup -->
+  <div class="hero-preview">
+    <div class="hero-preview-bar">
+      <div class="hero-preview-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="hero-preview-body">
+      <!-- Sidebar nav (looks like the real app) -->
+      <aside class="hp-sidebar">
+        <div class="brand-row"><img src="urwah-logo.svg" alt="عروة" style="height: 24px; width: auto;"/></div>
+        <div class="hp-nav-item active">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          لوحة التحكم
+        </div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M5 9l7-7 7 7"/></svg>
+          المبيعات
+        </div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14M9 21V12h6v9"/></svg>
+          الفروع
+        </div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          التقارير
+        </div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11H5a2 2 0 00-2 2v7h18v-7a2 2 0 00-2-2h-4M9 11V7a3 3 0 116 0v4M9 11h6"/></svg>
+          الإرسال
+        </div>
+        <div class="hp-nav-item">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a4 4 0 014-4h6a4 4 0 014 4v2"/></svg>
+          المستخدمين
+        </div>
+      </aside>
+
+      <!-- Main content area -->
+      <div class="hp-section">
+        <div class="hero-kpis">
+          <div class="hero-kpi">
+            <div class="label">إجمالي المبيعات</div>
+            <div class="value">٢,١٨٤,٥٠٠</div>
+            <div class="trend">+12.4% ↑</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="label">هذا الشهر</div>
+            <div class="value">٥١٢,٣٠٠</div>
+            <div class="trend">+3.8% ↑</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="label">فواتير مرسلة</div>
+            <div class="value">١٨٢</div>
+            <div class="trend" style="color: var(--text-muted);">هذا الشهر</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="label">معلقة</div>
+            <div class="value">١٤</div>
+            <div class="trend" style="color: var(--warning);">بانتظار الإرسال</div>
+          </div>
+        </div>
+
+        <div class="hero-chart">
+          <svg viewBox="0 0 600 140" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#B8860B" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#B8860B" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M 0 100 Q 50 80, 100 70 T 200 60 T 300 55 T 400 35 T 500 45 T 600 25 L 600 140 L 0 140 Z"
+                  fill="url(#chartFill)"/>
+            <path d="M 0 100 Q 50 80, 100 70 T 200 60 T 300 55 T 400 35 T 500 45 T 600 25"
+                  fill="none" stroke="#B8860B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="600" cy="25"  r="4" fill="#B8860B"/>
+            <circle cx="500" cy="45"  r="3" fill="#B8860B" opacity="0.5"/>
+          </svg>
+        </div>
+
+        <div class="hp-section-title" style="margin-top: 16px;">
+          آخر المبيعات
+          <span class="pill">٥ جديدة</span>
+        </div>
+        <table class="hp-table">
+          <thead><tr><th>الفرع</th><th>الفاتورة</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+          <tbody>
+            <tr><td>الرياض — مول العرب</td><td>INV-342</td><td>٥,٨٤٠</td><td><span class="badge hp-badge-ok">مُرسل</span></td></tr>
+            <tr><td>جدة — النخيل</td><td>INV-341</td><td>٣,٢٠٠</td><td><span class="badge hp-badge-ok">مُرسل</span></td></tr>
+            <tr><td>الدمام — الظهران</td><td>INV-340</td><td>٧,١٢٠</td><td><span class="badge hp-badge-pending">معلّق</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ───────── Features ──────────────────────────────────────────────────────── -->
+<section class="features" id="features" style="position: relative;">
+  <svg class="doodle" style="top: 40px; inset-inline-start: 3%; width: 50px; height: 50px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- check sparkle -->
+    <circle cx="24" cy="24" r="18"/>
+    <path d="M16 24l6 6 12-12"/>
+  </svg>
+  <svg class="doodle doodle-bob" style="bottom: 60px; inset-inline-end: 4%; width: 60px; height: 60px;" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- target -->
+    <circle cx="32" cy="32" r="24"/>
+    <circle cx="32" cy="32" r="14"/>
+    <circle cx="32" cy="32" r="5" fill="currentColor"/>
+  </svg>
+  <svg class="doodle doodle-spin" style="top: 50%; inset-inline-end: 2%; width: 32px; height: 32px;" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+    <path d="M16 2l3 11h11l-9 7 3 11-8-7-8 7 3-11-9-7h11z"/>
+  </svg>
+
+
+  <div class="features-header">
+    <h2>كل ما تحتاجه لإدارة مبيعات</h2>
+  </div>
+
+  <div class="features-grid">
+    <!-- Feature 1: Integration -->
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+        </svg>
+      </div>
+      <div class="feature-text">
+        <h3>تكامل كامل مع المنصات</h3>
+        <p>إرسال تلقائي للفواتير — متزامن ومؤرشف وآمن</p>
+      </div>
+    </div>
+
+    <!-- Feature 2: Excel Import -->
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <path d="M9 13l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="feature-text">
+        <h3>استيراد Excel</h3>
+        <p>نموذج معبّأ بأيام الشهر، استيراد ذكي بدون أخطاء</p>
+      </div>
+    </div>
+
+    <!-- Feature 3: Reports -->
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M7 16l4-6 4 4 5-7"/>
+        </svg>
+      </div>
+      <div class="feature-text">
+        <h3>تقارير ولوحة تحكم حيّة</h3>
+        <p>مؤشرات أداء ومقارنة الفروع وتصدير CSV</p>
+      </div>
+    </div>
+
+    <!-- Feature 4: Branch permissions -->
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      </div>
+      <div class="feature-text">
+        <h3>صلاحيات الفروع</h3>
+        <p>كل مستخدم يرى الفروع المخصصة له فقط</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── How it works ─────────────────────────────────────────────────── -->
+<section class="how" id="how" style="position: relative;">
+  <svg class="doodle doodle-bob" style="top: 50px; inset-inline-end: 5%; width: 44px; height: 44px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- lightbulb -->
+    <path d="M24 6a12 12 0 00-7 21v5h14v-5a12 12 0 00-7-21z"/>
+    <path d="M19 38h10M21 42h6"/>
+  </svg>
+  <svg class="doodle" style="bottom: 80px; inset-inline-start: 4%; width: 52px; height: 52px;" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- arrow swoosh -->
+    <path d="M6 36c8-14 22-22 36-24"/>
+    <path d="M36 18l6-6-2 8"/>
+  </svg>
+  <div class="how-header">
+    <h2>كيف يعمل؟</h2>
+    <p style="color: var(--text-sec); max-width: 600px; margin: 0 auto;">ثلاث خطوات بسيطة من تسجيل المبيعات إلى إرسال الدفعة</p>
+  </div>
+  <div class="how-stage">
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="num">01</div>
+        <h3>شارك المبيعات بسلاسة</h3>
+        <p>يدوياً أو عبر استيراد Excel  المرونة الكاملة لأسلوبك المفضل</p>
+      </div>
+      <div class="how-step">
+        <div class="num">02</div>
+        <h3>راجع الفواتير</h3>
+        <p>تحقق من كل فاتورة، عدّل إن احتجت، وأكّد الأرقام قبل الإرسال النهائي</p>
+      </div>
+      <div class="how-step">
+        <div class="num">03</div>
+        <h3>أرسل الدفعة بضغطة</h3>
+        <p>تُرسل الدفعة كاملة إلى منصة التكامل وتُؤرشف لديك بنسخة قابلة للتدقيق</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── Pricing ──────────────────────────────────────────────────────── -->
+<section class="pricing" id="pricing">
+  <div class="pricing-header">
+    <h2>خطط تناسب حجم مراكزك</h2>
+    <p>اختر الباقة المناسبة لعدد الفروع والمستخدمين — ترقية سهلة متى احتجت</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <h3>أساسي</h3>
+      <p class="desc">للمراكز الصغيرة</p>
+      <div class="price"><span class="amount">999</span><span class="currency">ر.س / سنة</span></div>
+      <p class="monthly">83 ر.س / شهر</p>
+    </div>
+
+    <div class="pricing-card highlight">
+      <h3>متوسط</h3>
+      <p class="desc">للسلاسل المتنامية</p>
+      <div class="price"><span class="amount">1,999</span><span class="currency">ر.س / سنة</span></div>
+      <p class="monthly">167 ر.س / شهر</p>
+    </div>
+
+    <div class="pricing-card">
+      <h3>متقدم</h3>
+      <p class="desc">للشبكات الكبيرة</p>
+      <div class="price"><span class="amount">3,999</span><span class="currency">ر.س / سنة</span></div>
+      <p class="monthly">333 ر.س / شهر</p>
+    </div>
+  </div>
+
+  <div class="pricing-cta-row">
+    <button class="btn btn-primary" onclick="document.getElementById('contactModal').classList.add('open')" style="padding: 14px 32px; font-size: 1rem;">
+      تواصل معنا للاشتراك
+    </button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ⚙ EDIT-HERE: Contact info (single source of truth — easy to update)
+     Update the values below. The contact section + modal will pick them up
+     automatically from window.URWA_CONTACT.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+  window.URWA_CONTACT = {
+    email: "info@urwah.sa",
+    phones: [
+      { label: "الخط 1 — مبيعات المشاريع الصغيرة والمتوسطة", number: "+966 5X XXX XXXX" },
+      { label: "الخط 2 — مبيعات السلاسل الكبيرة والمؤسسية",  number: "+966 5X XXX XXXX" }
+    ]
+  };
+</script>
+
+<!-- Inline contact section removed — contact is reachable only via the nav
+     "تواصل معنا" button which opens #contactModal. -->
+
+<!-- ───────── Footer (simplified) ──────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="brand">
+      <img class="logo" src="urwah-logo.svg" alt="عروة"/>
+    </div>
+    <div class="links">
+      <a href="#features">الميزات</a>
+      <a href="#pricing">الأسعار</a>
+      <a href="#" onclick="event.preventDefault(); document.getElementById('contactModal').classList.add('open')">تواصل معنا</a>
+      <a href="#">الأسئلة الشائعة</a>
+    </div>
+    <div class="copy">© 2026 عروة. جميع الحقوق محفوظة.</div>
+  </div>
+</footer>
+
+<!-- ───────── Contact modal ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="contactModal" onclick="if(event.target===this) this.classList.remove('open')">
+  <div class="modal">
+    <button class="close-btn" onclick="document.getElementById('contactModal').classList.remove('open')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h3>تواصل مع فريق المبيعات الآن</h3>
+    <p>اتصل بنا مباشرة أو راسلنا عبر البريد الإلكتروني</p>
+    <div class="actions" id="modalActions"><!-- injected by JS --></div>
+  </div>
+</div>
+
+<script>
+  // Render contact section + modal from window.URWA_CONTACT
+  (function () {
+    var c = window.URWA_CONTACT || { email: "", phones: [] };
+    var phoneIcon = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+    var mailIcon = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+
+    // ---- Modal actions ------
+    var modalActions = document.getElementById('modalActions');
+    if (modalActions) {
+      var html = c.phones.map(function (p, i) {
+        var telHref = 'tel:' + p.number.replace(/\s/g, '');
+        return '<a href="' + telHref + '" class="btn btn-primary">' + phoneIcon + ' الخط ' + (i + 1) + ' — ' + p.number + '</a>';
+      }).join('');
+      html += '<a href="mailto:' + c.email + '" class="btn btn-ghost">' + mailIcon + ' ' + c.email + '</a>';
+      modalActions.innerHTML = html;
+    }
+  })();
+</script>
+
+</body>
+</html>

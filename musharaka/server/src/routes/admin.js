@@ -381,18 +381,51 @@ router.post('/users', async (req, res, next) => {
 router.post('/users/:id/assign', async (req, res, next) => {
   const client = await pool.connect()
   try {
-    const { tenant_id, role } = req.body
+    // SECURITY: ignore any client-supplied `role` — server determines it.
+    const { tenant_id } = req.body
+    const branchIds = Array.isArray(req.body?.branch_ids) ? req.body.branch_ids : []
     if (!tenant_id) return res.status(422).json({ error: 'يرجى اختيار المستأجر' })
 
     await client.query('BEGIN')
+
+    // Determine role: first user → admin, subsequent → member
+    const { rows: existing } = await client.query(
+      `SELECT count(*)::int AS n FROM tenant_users WHERE tenant_id = $1`,
+      [tenant_id]
+    )
+    const role = existing[0].n === 0 ? 'admin' : 'member'
+
+    // Validate branch_ids belong to this tenant (if any provided)
+    if (branchIds.length) {
+      const { rows: validBranches } = await client.query(
+        `SELECT id FROM branches WHERE tenant_id = $1 AND id = ANY($2::uuid[])`,
+        [tenant_id, branchIds]
+      )
+      if (validBranches.length !== branchIds.length) {
+        await client.query('ROLLBACK')
+        return res.status(422).json({ error: 'بعض الفروع المحددة لا تنتمي إلى المستأجر' })
+      }
+    }
+
+    // Replace any existing tenant assignment for this user
     await client.query(`DELETE FROM tenant_users WHERE user_id = $1`, [req.params.id])
+    await client.query(`DELETE FROM tenant_user_branches WHERE user_id = $1`, [req.params.id])
     await client.query(
       `INSERT INTO tenant_users (user_id, tenant_id, role) VALUES ($1, $2, $3)`,
-      [req.params.id, tenant_id, role || 'member']
+      [req.params.id, tenant_id, role]
     )
-    await client.query('COMMIT')
 
-    res.json({ message: 'تم تعيين المستخدم بنجاح' })
+    // Admin implicitly has access to every branch — skip scope rows.
+    if (role === 'member' && branchIds.length) {
+      await client.query(
+        `INSERT INTO tenant_user_branches (tenant_id, user_id, branch_id)
+         SELECT $1, $2, UNNEST($3::uuid[])`,
+        [tenant_id, req.params.id, branchIds]
+      )
+    }
+
+    await client.query('COMMIT')
+    res.json({ message: 'تم تعيين المستخدم بنجاح', role, branch_ids: branchIds })
   } catch (err) {
     try { await client.query('ROLLBACK') } catch { /* ignore */ }
     next(err)

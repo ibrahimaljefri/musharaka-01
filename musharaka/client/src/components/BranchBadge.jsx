@@ -7,7 +7,7 @@ const colors = [
 export default function BranchBadge({ code }) {
   const idx = code ? code.charCodeAt(0) % colors.length : 0
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium font-arabic ${colors[idx]}`}>
+    <span data-testid="branch-badge" className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium font-arabic ${colors[idx]}`}>
       {code}
     </span>
   )

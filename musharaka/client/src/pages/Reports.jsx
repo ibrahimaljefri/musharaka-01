@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import api from '../lib/axiosClient'
-import KpiCard from '../components/KpiCard'
 import BranchBadge from '../components/BranchBadge'
-import PageHeader from '../components/PageHeader'
 import { TableSkeleton, KpiSkeleton } from '../components/SkeletonLoader'
 import SortableHeader from '../components/SortableHeader'
 import Pagination from '../components/Pagination'
-import { DollarSign, BarChart2, Hash, TrendingUp, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
+import './reports.css'
 
 const PAGE_SIZE = 50
 
@@ -38,7 +37,6 @@ export default function Reports() {
     runQuery({ branch_id: '', month: '', year: new Date().getFullYear() })
   }, [])
 
-  // Reset to page 1 whenever applied filters or sort change
   useEffect(() => { setPage(1) }, [applied, sort])
 
   const runQuery = async (f) => {
@@ -51,8 +49,6 @@ export default function Reports() {
 
       const { data } = await api.get('/sales', { params })
       const rows = data?.sales || []
-
-      // Enrich with branch info (so existing UI that expects row.branches.code still works)
       const branchMap = new Map(branches.map(b => [b.id, b]))
       const enriched = rows.map(r => ({
         ...r,
@@ -76,7 +72,6 @@ export default function Reports() {
 
   const handleSearch = () => { setApplied(filters); runQuery(filters) }
 
-  // Client-side sort
   const sortedSales = useMemo(() => {
     if (!sort.field) return sales
     return [...sales].sort((a, b) => {
@@ -99,36 +94,37 @@ export default function Reports() {
   const paged = sortedSales.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="التقارير" />
+    <div className="reports-page">
+      <div className="rp-header">
+        <div>
+          <h1 className="rp-title">التقارير</h1>
+          <div className="t-small">عرض مفصّل لبيانات المبيعات حسب الفترة والفرع</div>
+        </div>
+      </div>
 
       {/* Filters */}
-      <div className="card-surface p-4">
-        <div className="flex flex-wrap gap-3 items-end">
-          <div>
-            <label className="block text-xs text-gray-500 font-arabic mb-1">الفرع</label>
-            <select value={filters.branch_id} onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))}
-              className="input-base">
+      <div className="surface">
+        <div className="rp-filter-bar">
+          <div className="field">
+            <label>الفرع</label>
+            <select className="input" value={filters.branch_id} onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))}>
               <option value="">جميع الفروع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-xs text-gray-500 font-arabic mb-1">الشهر</label>
-            <select value={filters.month} onChange={e => setFilters(f => ({...f, month: e.target.value}))}
-              className="input-base">
+          <div className="field">
+            <label>الشهر</label>
+            <select className="input" value={filters.month} onChange={e => setFilters(f => ({...f, month: e.target.value}))}>
               {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-xs text-gray-500 font-arabic mb-1">السنة</label>
-            <select value={filters.year} onChange={e => setFilters(f => ({...f, year: e.target.value}))}
-              className="input-base">
+          <div className="field">
+            <label>السنة</label>
+            <select className="input" value={filters.year} onChange={e => setFilters(f => ({...f, year: e.target.value}))}>
               {YEARS.map(y => <option key={y.v} value={y.v}>{y.l}</option>)}
             </select>
           </div>
-          <button onClick={handleSearch}
-            className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors font-arabic">
+          <button type="button" className="btn btn-primary" onClick={handleSearch}>
             <Search size={15} /> بحث
           </button>
         </div>
@@ -136,52 +132,64 @@ export default function Reports() {
 
       {/* KPIs */}
       {loading ? (
-        <KpiSkeleton count={4} />
+        <div style={{ marginBottom: 'var(--space-4, 16px)' }}><KpiSkeleton count={4} /></div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard title="إجمالي المبيعات"  value={`${fmt(kpis.total)} ر.س`}    color="green"  icon={DollarSign} />
-          <KpiCard title="متوسط المبيعة"    value={`${fmt(kpis.avg)} ر.س`}      color="pink"   icon={BarChart2}  />
-          <KpiCard title="عدد السجلات"      value={kpis.count.toLocaleString()}  color="purple" icon={Hash}       />
-          <KpiCard title="متوسط يومي"       value={`${fmt(kpis.dailyAvg)} ر.س`} color="cyan"   icon={TrendingUp} />
+        <div className="kpi-grid">
+          <div className="kpi">
+            <div className="kpi-label">إجمالي المبيعات</div>
+            <div className="kpi-value">{fmt(kpis.total)} ر.س</div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">متوسط المبيعة</div>
+            <div className="kpi-value">{fmt(kpis.avg)} ر.س</div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">عدد السجلات</div>
+            <div className="kpi-value">{kpis.count.toLocaleString('ar-SA')}</div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">متوسط يومي</div>
+            <div className="kpi-value">{fmt(kpis.dailyAvg)} ر.س</div>
+          </div>
         </div>
       )}
 
       {/* Sales table */}
-      <div className="card-surface overflow-hidden">
-        <div className="section-header">
-          <h2 className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">تفاصيل المبيعات</h2>
-          <span className="text-xs text-gray-400 font-arabic">{sales.length.toLocaleString('ar-SA')} نتيجة</span>
+      <div className="surface flush">
+        <div className="rp-tbl-head">
+          <h2>تفاصيل المبيعات</h2>
+          <span className="t-small">{sales.length.toLocaleString('ar-SA')} نتيجة</span>
         </div>
         {loading ? (
-          <div className="p-4">
+          <div style={{ padding: 16 }}>
             <TableSkeleton rows={6} cols={6} />
           </div>
         ) : sales.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 font-arabic text-sm">لا توجد مبيعات في هذه الفترة</div>
+          <div className="rp-empty">لا توجد مبيعات في هذه الفترة</div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="table-head">
+            <div className="rp-tbl-wrap">
+              <table className="rp-tbl">
+                <thead>
                   <tr>
                     <SortableHeader field="sale_date" sort={sort} onSort={setSort}>التاريخ</SortableHeader>
-                    <th className="px-4 py-3 text-right font-medium">الفرع</th>
-                    <th className="px-4 py-3 text-right font-medium">النوع</th>
-                    <th className="px-4 py-3 text-right font-medium">رقم الفاتورة</th>
+                    <th>الفرع</th>
+                    <th>النوع</th>
+                    <th>رقم الفاتورة</th>
                     <SortableHeader field="amount" sort={sort} onSort={setSort}>المبلغ (ر.س)</SortableHeader>
-                    <th className="px-4 py-3 text-right font-medium">الحالة</th>
+                    <th>الحالة</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60">
+                <tbody>
                   {paged.map(s => (
-                    <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300 font-arabic" dir="ltr">{s.sale_date}</td>
-                      <td className="px-4 py-3"><BranchBadge code={s.branches?.code || '—'} /></td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 font-arabic">{s.input_type === 'daily' ? 'يومي' : s.input_type === 'monthly' ? 'شهري' : 'مخصص'}</td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{s.invoice_number || '—'}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100 font-arabic">{fmt(s.amount)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-arabic ${s.status === 'sent' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400'}`}>
+                    <tr key={s.id}>
+                      <td className="t-mono" dir="ltr">{s.sale_date}</td>
+                      <td><BranchBadge code={s.branches?.code || '—'} /></td>
+                      <td>{s.input_type === 'daily' ? 'يومي' : s.input_type === 'monthly' ? 'شهري' : 'مخصص'}</td>
+                      <td className="t-mono">{s.invoice_number || '—'}</td>
+                      <td style={{ fontWeight: 600 }}>{fmt(s.amount)}</td>
+                      <td>
+                        <span className={`rp-pill ${s.status === 'sent' ? 'sent' : 'pending'}`}>
                           {s.status === 'sent' ? 'مرسلة' : 'معلقة'}
                         </span>
                       </td>
@@ -191,7 +199,7 @@ export default function Reports() {
               </table>
             </div>
             {totalPages > 1 && (
-              <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="rp-pagination">
                 <Pagination page={page} totalPages={totalPages} onChange={setPage} />
               </div>
             )}

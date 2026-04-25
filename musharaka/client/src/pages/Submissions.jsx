@@ -1,30 +1,32 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import BranchBadge from '../components/BranchBadge'
 import Pagination from '../components/Pagination'
-
-const SUBMISSIONS_PAGE_SIZE = 10
 import { ChevronDown, ChevronUp, Send, AlertCircle } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
+import './submissions.css'
 
+const SUBMISSIONS_PAGE_SIZE = 10
 const MONTHS_AR = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
 const YEARS = Array.from({ length: 6 }, (_, i) => 2021 + i)
+
 function fmt(n) { return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2}) }
 
 function MissingDays({ sentDates, month, year }) {
   if (!sentDates || sentDates.length === 0) return null
   const daysInMonth = new Date(year, month, 0).getDate()
+  // Build YYYY-MM-DD strings directly — avoids the timezone shift caused by
+  // .toISOString() on a local-midnight Date in non-UTC timezones (e.g. SA = UTC+3).
+  const mm = String(month).padStart(2, '0')
   const allDays = Array.from({ length: daysInMonth }, (_, i) => {
-    const d = new Date(year, month - 1, i + 1)
-    return d.toISOString().split('T')[0]
+    const dd = String(i + 1).padStart(2, '0')
+    return `${year}-${mm}-${dd}`
   })
   const sentSet = new Set(sentDates)
   const missing = allDays.filter(d => !sentSet.has(d))
   if (missing.length === 0) return (
-    <div className="text-xs text-green-600 dark:text-green-400 font-arabic mt-2">
-      لا توجد أيام ناقصة — جميع أيام الشهر مُغطاة
-    </div>
+    <div className="sm-missing"><span className="ok">لا توجد أيام ناقصة — جميع أيام الشهر مُغطاة</span></div>
   )
   const groups = []; let start = missing[0], prev = missing[0]
   for (let i = 1; i < missing.length; i++) {
@@ -37,15 +39,11 @@ function MissingDays({ sentDates, month, year }) {
   }
   groups.push({ start, end: prev })
   return (
-    <div className="mt-3">
-      <p className="text-xs font-semibold text-red-600 dark:text-red-400 font-arabic mb-1">
-        الأيام غير المُرسلة ({missing.length} يوم):
-      </p>
-      <div className="flex flex-wrap gap-1.5">
+    <div className="sm-missing">
+      <div className="h">الأيام غير المُرسلة ({missing.length} يوم):</div>
+      <div className="chips">
         {groups.map((g, i) => (
-          <span key={i}
-            className="text-xs bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 text-red-600 dark:text-red-400 px-2 py-0.5 rounded font-arabic"
-            dir="ltr">
+          <span key={i} className="chip" dir="ltr">
             {g.start === g.end ? g.start : `${g.start} → ${g.end}`}
           </span>
         ))}
@@ -74,81 +72,57 @@ function SubmissionCard({ sub }) {
   const sentDates = sales.map(s => s.sale_date)
 
   return (
-    <div className="card-surface overflow-hidden hover-lift">
-      {/* Card header row */}
-      <button
-        onClick={toggle}
-        className="w-full px-5 py-4 flex items-center justify-between transition-colors
-                   hover:bg-black/[0.03] dark:hover:bg-white/[0.04] rounded-2xl"
-      >
-        <div className="flex items-center gap-4">
+    <div className="sm-card" data-testid="submission-card">
+      <button type="button" className="sm-card-head" onClick={toggle} data-testid="expand-submission">
+        <div className="sm-card-left">
           <BranchBadge code={sub.branches?.code || '?'} />
-          <div className="text-right">
-            <p className="font-semibold text-gray-800 dark:text-gray-100 font-arabic text-sm">
-              {sub.branches?.name}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-arabic">
-              {MONTHS_AR[sub.month]} {sub.year}
-            </p>
+          <div>
+            <div className="sm-card-branch">{sub.branches?.name}</div>
+            <div className="sm-card-period">{MONTHS_AR[sub.month]} {sub.year}</div>
           </div>
         </div>
-
-        <div className="flex items-center gap-6">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs text-gray-400 dark:text-gray-500 font-arabic">عدد الفواتير</p>
-            <p className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm">
-              {sub.invoice_count}
-            </p>
+        <div className="sm-card-right">
+          <div className="sm-card-stat">
+            <div className="lbl">عدد الفواتير</div>
+            <div className="val">{sub.invoice_count}</div>
           </div>
-          <div className="text-right hidden sm:block">
-            <p className="text-xs text-gray-400 dark:text-gray-500 font-arabic">الإجمالي</p>
-            <p className="font-semibold text-green-700 dark:text-green-400 font-arabic text-sm">
-              {fmt(sub.total_amount)} ر.س
-            </p>
+          <div className="sm-card-stat val-money">
+            <div className="lbl">الإجمالي</div>
+            <div className="val">{fmt(sub.total_amount)} ر.س</div>
           </div>
-          <span className="inline-flex items-center gap-1 text-xs
-                           bg-green-100 dark:bg-green-900/40
-                           text-green-700 dark:text-green-400
-                           px-2.5 py-0.5 rounded-full font-arabic">
-            مرسل
-          </span>
+          <span className="sm-pill keep">مرسل</span>
           {open
-            ? <ChevronUp  size={16} className="text-gray-400 dark:text-gray-500 shrink-0" />
-            : <ChevronDown size={16} className="text-gray-400 dark:text-gray-500 shrink-0" />
+            ? <ChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            : <ChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
           }
         </div>
       </button>
 
-      {/* Expanded detail */}
       {open && (
-        <div className="border-t border-black/[0.06] dark:border-white/[0.06] px-5 py-4">
+        <div className="sm-card-body">
           {loadingSales ? (
-            <div className="flex flex-col gap-3 py-2">
-              {[1,2,3].map(i => (
-                <div key={i} className="card-surface h-16 skeleton rounded-2xl" />
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[1,2,3].map(i => <div key={i} className="sm-loading-card" />)}
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="font-arabic">
-                    <tr className="bg-black/[0.04] dark:bg-white/[0.05]
-                                   text-gray-500 dark:text-gray-300 border-b
-                                   border-black/[0.06] dark:border-white/[0.06]">
-                      <th className="px-3 py-2 text-right font-medium">التاريخ</th>
-                      <th className="px-3 py-2 text-right font-medium">رقم الفاتورة</th>
-                      <th className="px-3 py-2 text-right font-medium">المبلغ (ر.س)</th>
-                      <th className="px-3 py-2 text-right font-medium">ملاحظات</th>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="sm-tbl">
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>رقم الفاتورة</th>
+                      <th>المبلغ (ر.س)</th>
+                      <th>ملاحظات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
+                  <tbody>
                     {sales.map(s => (
-                      <tr key={s.id} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
-                        <td className="px-3 py-2 text-gray-600 dark:text-gray-300" dir="ltr">{s.sale_date}</td>
-                        <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{s.invoice_number || '—'}</td>
-                        <td className="px-3 py-2 font-semibold text-gray-800 dark:text-gray-100 font-arabic">{fmt(s.amount)}</td>
-                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-arabic">{s.notes || '—'}</td>
+                      <tr key={s.id}>
+                        <td dir="ltr">{s.sale_date}</td>
+                        <td>{s.invoice_number || '—'}</td>
+                        <td style={{ fontWeight: 600 }}>{fmt(s.amount)}</td>
+                        <td>{s.notes || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -185,7 +159,6 @@ export default function Submissions() {
       if (f.year)      params.year      = f.year
       const { data } = await api.get('/submissions', { params })
       const rows = data?.submissions || []
-      // Enrich rows with branch info (API returns branch_code + branch_name via join)
       const branchMap = new Map(branches.map(b => [b.id, b]))
       const enriched = rows.map(r => ({
         ...r,
@@ -199,75 +172,63 @@ export default function Submissions() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">تقرير الإرسالات</h1>
-        <Link to="/submit"
-          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800
-                     text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors font-arabic shadow-sm">
+    <div className="submissions-page">
+      <div className="sm-header">
+        <div>
+          <h1 className="sm-title">تقرير الإرسالات</h1>
+          <div className="t-small">سجلات الإرساليات المُنفّذة لكل فرع وفترة</div>
+        </div>
+        <Link to="/submit" className="btn btn-primary">
           <Send size={15} /> إرسال جديد
         </Link>
       </div>
 
-      {/* Filters */}
-      <div className="card-surface p-4">
-        <div className="flex flex-wrap gap-3 items-end">
-          <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">الفرع</label>
-            <select value={filters.branch_id}
-              onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))}
-              className="input-base">
+      <div className="surface">
+        <div className="sm-filter-bar">
+          <div className="field">
+            <label>الفرع</label>
+            <select className="input" value={filters.branch_id} onChange={e => setFilters(f => ({...f, branch_id: e.target.value}))} data-testid="branch-select">
               <option value="">جميع الفروع</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">الشهر</label>
-            <select value={filters.month}
-              onChange={e => setFilters(f => ({...f, month: e.target.value}))}
-              className="input-base">
+          <div className="field">
+            <label>الشهر</label>
+            <select className="input" value={filters.month} onChange={e => setFilters(f => ({...f, month: e.target.value}))} data-testid="month-select">
               <option value="">الكل</option>
               {[...Array(12)].map((_,i) => <option key={i+1} value={i+1}>{MONTHS_AR[i+1]}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 font-arabic mb-1">السنة</label>
-            <select value={filters.year}
-              onChange={e => setFilters(f => ({...f, year: e.target.value}))}
-              className="input-base">
+          <div className="field">
+            <label>السنة</label>
+            <select className="input" value={filters.year} onChange={e => setFilters(f => ({...f, year: e.target.value}))} data-testid="year-select">
               <option value="">الكل</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
-          <button onClick={() => load(filters)}
-            className="bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white
-                       text-sm font-medium px-5 py-2 rounded-xl transition-colors font-arabic shadow-sm">
+          <button type="button" className="btn btn-primary" onClick={() => load(filters)}>
             بحث
           </button>
         </div>
       </div>
 
-      {/* Submission cards */}
       {loading ? (
-        <div className="flex flex-col gap-3">
-          {[1,2,3].map(i => (
-            <div key={i} className="card-surface h-16 skeleton rounded-2xl" />
-          ))}
+        <div className="sm-list">
+          {[1,2,3].map(i => <div key={i} className="sm-loading-card" />)}
         </div>
       ) : submissions.length === 0 ? (
-        <EmptyState
-          icon={AlertCircle}
-          title="لا توجد إرسالات"
-          description="لا توجد إرسالات في الفترة المحددة — جرّب تغيير عوامل التصفية أو أنشئ إرسالاً جديداً"
-          action={
-            <Link to="/submit"
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white
-                         text-sm font-medium px-4 py-2 rounded-xl transition-colors font-arabic">
-              <Send size={15} /> إرسال جديد
-            </Link>
-          }
-        />
+        <div className="sm-empty">
+          <EmptyState
+            icon={AlertCircle}
+            title="لا توجد إرسالات"
+            description="لا توجد إرسالات في الفترة المحددة — جرّب تغيير عوامل التصفية أو أنشئ إرسالاً جديداً"
+            action={
+              <Link to="/submit" className="btn btn-primary">
+                <Send size={15} /> إرسال جديد
+              </Link>
+            }
+          />
+        </div>
       ) : (
         <SubmissionsList submissions={submissions} />
       )}
@@ -283,7 +244,7 @@ function SubmissionsList({ submissions }) {
   const paged       = submissions.slice((currentPage - 1) * SUBMISSIONS_PAGE_SIZE, currentPage * SUBMISSIONS_PAGE_SIZE)
 
   return (
-    <div className="space-y-3">
+    <div className="sm-list">
       {paged.map(sub => <SubmissionCard key={sub.id} sub={sub} />)}
       <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
     </div>

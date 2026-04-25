@@ -38,8 +38,8 @@ test.describe('لوحة تحكم الإدارة', () => {
   test('بطاقات KPI مرئية', async ({ page }) => {
     await page.goto('/admin/dashboard')
     await page.waitForTimeout(2000)
-    // KpiCard renders divs with "hover-lift" class; fall back to grid children
-    const cards = page.locator('[class*="hover-lift"], .grid > div')
+    // KpiCard renders divs with data-testid="kpi-card"
+    const cards = page.locator('[data-testid="kpi-card"]')
     expect(await cards.count()).toBeGreaterThan(0)
   })
 

@@ -1,7 +1,5 @@
 /**
  * FaqPage — Frequently Asked Questions
- * 6 categories × 10 Q&A each (60 total)
- * Features: category pills, search, accordion, RTL, dark mode
  */
 import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -9,8 +7,7 @@ import {
   DollarSign, Building2, Users, BadgeCheck,
   MessageSquare, BarChart2, ChevronDown, Search, HelpCircle,
 } from 'lucide-react'
-
-// ── FAQ Data ───────────────────────────────────────────────────────────────────
+import './faq.css'
 
 const CATEGORIES = [
   {
@@ -117,41 +114,24 @@ const CATEGORIES = [
   },
 ]
 
-// ── Accordion Item ─────────────────────────────────────────────────────────────
 function AccordionItem({ question, answer, isOpen, onToggle }) {
   return (
-    <div className={`border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors ${isOpen ? 'border-r-2 border-yellow-400' : ''}`}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        className="w-full flex items-center justify-between gap-3 py-4 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 rounded"
-      >
-        <span className="text-sm font-medium text-gray-800 dark:text-gray-100 font-arabic text-right flex-1">
-          {question}
-        </span>
-        <ChevronDown
-          size={16}
-          className={`shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-        />
+    <div className={`fq-item ${isOpen ? 'open' : ''}`}>
+      <button type="button" className="fq-item-head" onClick={onToggle} aria-expanded={isOpen}>
+        <span>{question}</span>
+        <ChevronDown size={16} className="fq-item-chev" />
       </button>
-      <div
-        className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-[500px] pb-4' : 'max-h-0'}`}
-        aria-hidden={!isOpen}
-      >
-        <p className="text-sm text-gray-600 dark:text-gray-300 font-arabic leading-relaxed pr-1">
-          {answer}
-        </p>
+      <div className="fq-item-body" aria-hidden={!isOpen}>
+        <p>{answer}</p>
       </div>
     </div>
   )
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
 export default function FaqPage() {
   const navigate              = useNavigate()
   const [activeCategory, setActiveCategory] = useState('all')
-  const [openItem, setOpenItem]             = useState(null)   // 'catId-index'
+  const [openItem, setOpenItem]             = useState(null)
   const [searchQuery, setSearchQuery]       = useState('')
 
   const categoryCounts = useMemo(() => {
@@ -175,11 +155,6 @@ export default function FaqPage() {
       .filter(cat => cat.items.length > 0)
   }, [activeCategory, searchQuery])
 
-  const totalVisible = useMemo(
-    () => filteredCategories.reduce((s, c) => s + c.items.length, 0),
-    [filteredCategories],
-  )
-
   const handleToggle = useCallback((key) => {
     setOpenItem(prev => (prev === key ? null : key))
   }, [])
@@ -190,102 +165,77 @@ export default function FaqPage() {
     if (searchQuery) setSearchQuery('')
   }
 
+  const totalAll = CATEGORIES.reduce((s, c) => s + c.items.length, 0)
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Page header */}
-      <div className="flex items-center gap-3">
-        <HelpCircle size={22} className="text-yellow-600 shrink-0" />
-        <div>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">
-            الأسئلة الشائعة
-          </h1>
-        </div>
+    <div className="faq-page">
+      <div className="fq-header">
+        <HelpCircle size={22} style={{ color: 'var(--brand)', flexShrink: 0 }} />
+        <h1 className="fq-title">الأسئلة الشائعة</h1>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 pointer-events-none" />
+      <div className="fq-search">
+        <Search size={15} className="icon" />
         <input
           type="search"
           value={searchQuery}
           onChange={e => { setSearchQuery(e.target.value); setOpenItem(null) }}
           placeholder="ابحث في الأسئلة..."
           dir="rtl"
-          className="input-base w-full pr-9 pl-4"
+          className="input"
         />
       </div>
 
-      {/* Category pills */}
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="تصنيفات الأسئلة">
+      <div className="fq-pills" role="tablist" aria-label="تصنيفات الأسئلة">
         <button
+          type="button"
           role="tab"
           aria-selected={activeCategory === 'all'}
           onClick={() => handleCategoryChange('all')}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-arabic border transition-colors ${
-            activeCategory === 'all'
-              ? 'bg-yellow-600 text-white border-yellow-600'
-              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-yellow-400 hover:text-yellow-700'
-          }`}
+          className={`fq-pill ${activeCategory === 'all' ? 'all-active' : ''}`}
         >
           الكل
-          <span className="ml-1.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
-            {CATEGORIES.reduce((s, c) => s + c.items.length, 0)}
-          </span>
+          <span className="count">{totalAll}</span>
         </button>
         {CATEGORIES.map(cat => {
           const Icon = cat.icon
           return (
             <button
               key={cat.id}
+              type="button"
               role="tab"
               aria-selected={activeCategory === cat.id}
               onClick={() => handleCategoryChange(cat.id)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-arabic border transition-colors ${
-                activeCategory === cat.id
-                  ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-500 dark:border-yellow-500'
-                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-yellow-400 hover:text-yellow-700'
-              }`}
+              className={`fq-pill ${activeCategory === cat.id ? 'active' : ''}`}
             >
               <Icon size={13} />
               {cat.label}
-              <span className="ml-1.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
-                {categoryCounts[cat.id] || 0}
-              </span>
+              <span className="count">{categoryCounts[cat.id] || 0}</span>
             </button>
           )
         })}
       </div>
 
-      {/* No results */}
       {filteredCategories.length === 0 && (
-        <div className="card-surface p-10 text-center">
-          <p className="text-gray-400 dark:text-gray-500 font-arabic text-sm">لا توجد نتائج مطابقة لبحثك</p>
-          <button
-            onClick={() => { setSearchQuery(''); setActiveCategory('all') }}
-            className="mt-3 text-xs text-yellow-600 hover:underline font-arabic"
-          >
+        <div className="fq-empty">
+          <p>لا توجد نتائج مطابقة لبحثك</p>
+          <button type="button" className="fq-empty-reset" onClick={() => { setSearchQuery(''); setActiveCategory('all') }}>
             مسح البحث
           </button>
         </div>
       )}
 
-      {/* Q&A Sections */}
       {filteredCategories.map(cat => {
         const Icon = cat.icon
         return (
-          <section key={cat.id} aria-labelledby={`cat-${cat.id}`}>
-            <div className="flex items-center gap-2 mb-3">
-              <Icon size={16} className="text-yellow-600 shrink-0" />
-              <h2
-                id={`cat-${cat.id}`}
-                className="font-semibold text-gray-700 dark:text-gray-200 font-arabic text-sm"
-              >
-                {cat.label}
-              </h2>
-              <span className="text-xs text-gray-400 font-arabic">({cat.items.length})</span>
+          <section key={cat.id} className="fq-section" aria-labelledby={`cat-${cat.id}`}>
+            <div className="fq-section-head">
+              <Icon size={16} style={{ color: 'var(--brand)' }} />
+              <h2 id={`cat-${cat.id}`}>{cat.label}</h2>
+              <span className="cnt">({cat.items.length})</span>
             </div>
 
-            <div className="card-surface px-5 py-1">
+            <div className="surface">
               {cat.items.map((item, idx) => {
                 const key = `${cat.id}-${idx}`
                 return (
@@ -303,17 +253,12 @@ export default function FaqPage() {
         )
       })}
 
-      {/* Support CTA */}
-      <div className="card-surface p-5 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
-        <div className="flex-1">
-          <p className="font-semibold text-gray-800 dark:text-gray-100 font-arabic text-sm">لم تجد إجابة لسؤالك؟</p>
-          <p className="text-xs text-gray-400 font-arabic mt-0.5">فريق الدعم جاهز لمساعدتك</p>
+      <div className="fq-cta">
+        <div className="txt">
+          <p className="ttl">لم تجد إجابة لسؤالك؟</p>
+          <p className="sub">فريق الدعم جاهز لمساعدتك</p>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate('/tickets/create')}
-          className="shrink-0 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors font-arabic"
-        >
+        <button type="button" className="btn btn-primary" onClick={() => navigate('/tickets/create')}>
           سجّل تذكرة دعم
         </button>
       </div>

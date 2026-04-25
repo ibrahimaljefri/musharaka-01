@@ -1,0 +1,133 @@
+/* Shared form page for BranchCreate + BranchEdit. Scoped under .branch-form-page. */
+
+.branch-form-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-5, 24px);
+  color: var(--text);
+}
+
+.branch-form-page .bf-header {
+  margin-bottom: var(--space-5, 24px);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+  flex-wrap: wrap;
+}
+.branch-form-page .bf-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--text);
+}
+.branch-form-page .bf-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.branch-form-page .bf-breadcrumb {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.branch-form-page .bf-breadcrumb a {
+  color: var(--brand);
+  text-decoration: none;
+}
+.branch-form-page .bf-breadcrumb a:hover { text-decoration: underline; }
+
+.branch-form-page .surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg, 12px);
+  padding: var(--space-5, 24px);
+}
+
+.branch-form-page .bf-alert {
+  margin-bottom: var(--space-4, 16px);
+}
+
+.branch-form-page .bf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4, 16px);
+}
+
+.branch-form-page .bf-field { margin-bottom: 0; }
+.branch-form-page .bf-field.full { grid-column: 1 / -1; }
+.branch-form-page .bf-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.branch-form-page .bf-label .req { color: #B91C1C; margin-inline-start: 2px; }
+
+.branch-form-page .input {
+  appearance: none;
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong, #D6D3D1);
+  border-radius: var(--r-sm, 6px);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.branch-form-page .input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+.branch-form-page textarea.input {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.branch-form-page .bf-actions {
+  display: flex;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-5, 24px);
+  padding-top: var(--space-4, 16px);
+  border-top: 1px solid var(--border);
+}
+
+.branch-form-page .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--r-sm, 6px);
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.branch-form-page .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.branch-form-page .btn-primary { background: var(--brand); color: #fff; }
+.branch-form-page .btn-primary:hover:not(:disabled) { background: var(--brand-hover); }
+.branch-form-page .btn-ghost {
+  background: transparent;
+  color: var(--text-sec);
+  border-color: var(--border-strong, #D6D3D1);
+}
+.branch-form-page .btn-ghost:hover { background: var(--bg-subtle); }
+
+.branch-form-page .bf-loading,
+.branch-form-page .bf-notfound {
+  padding: var(--space-6, 32px);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.branch-form-page .bf-notfound { color: #B91C1C; }
+
+@media (max-width: 640px) {
+  .branch-form-page { padding: var(--space-4, 16px); }
+  .branch-form-page .bf-grid { grid-template-columns: 1fr; }
+}

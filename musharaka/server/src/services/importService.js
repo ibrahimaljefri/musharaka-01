@@ -57,20 +57,60 @@ function preview(buffer) {
   return rows.slice(0, 100)
 }
 
+// Format a Date or string to 'YYYY-MM-DD' without timezone shift
+function toDateString(d) {
+  if (!d) return null
+  if (typeof d === 'string') return d
+  if (d instanceof Date) {
+    const y = d.getUTCFullYear()
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+  return String(d)
+}
+
+// Direct DB insert fallback — used when BullMQ/Redis is unavailable (cPanel)
+async function insertRowDirect(data, branchId, tenantId) {
+  const monthVal = data.month ?? (data.sale_date ? Number(data.sale_date.slice(5, 7)) : null)
+  const yearVal  = data.year  ?? (data.sale_date ? Number(data.sale_date.slice(0, 4)) : null)
+  await pool.query(
+    `INSERT INTO sales
+       (branch_id, tenant_id, input_type, sale_date, period_start_date, period_end_date,
+        month, year, amount, invoice_number, notes, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending')`,
+    [
+      branchId,
+      tenantId,
+      data.input_type,
+      data.sale_date         || null,
+      data.period_start_date || null,
+      data.period_end_date   || null,
+      monthVal,
+      yearVal,
+      data.amount,
+      data.invoice_number    || null,
+      data.notes             || null,
+    ]
+  )
+}
+
 async function importFile(buffer, branchId, tenantId) {
   const rows     = parseBuffer(buffer)
   const errors   = []
   const warnings = []
   let queued     = 0
 
+  // Detect whether the queue is real (BullMQ) or the no-op mock used when REDIS_URL is absent
+  const queueIsMock = typeof saleImportQueue.add === 'function'
+    && saleImportQueue.constructor?.name !== 'Queue'
+
   // Check for existing sale_dates for this branch (duplicate detection)
   const { rows: existingSales } = await pool.query(
     `SELECT sale_date FROM sales WHERE branch_id = $1`,
     [branchId]
   )
-  const existingDates = new Set(existingSales.map(s => s.sale_date instanceof Date
-    ? s.sale_date.toISOString().slice(0, 10)
-    : s.sale_date))
+  const existingDates = new Set(existingSales.map(s => toDateString(s.sale_date)))
 
   for (let i = 0; i < rows.length; i++) {
     const rowNum = i + 2 // 1-indexed, row 1 is header
@@ -90,14 +130,19 @@ async function importFile(buffer, branchId, tenantId) {
     }
 
     try {
-      await saleImportQueue.add(
-        'import-row',
-        { rowData: data, branchId, tenantId },
-        { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
-      )
+      if (queueIsMock) {
+        // No Redis → insert directly into DB
+        await insertRowDirect(data, branchId, tenantId)
+      } else {
+        await saleImportQueue.add(
+          'import-row',
+          { rowData: data, branchId, tenantId },
+          { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
+        )
+      }
       queued++
     } catch (err) {
-      errors.push(`الصف ${rowNum}: فشل إضافة المهمة — ${err.message}`)
+      errors.push(`الصف ${rowNum}: فشل إضافة السجل — ${err.message}`)
     }
   }
 

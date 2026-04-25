@@ -27,7 +27,7 @@ export default function Pagination({ page, totalPages, onChange, className = '' 
   }
 
   return (
-    <div className="flex items-center justify-center gap-1 mt-4 font-arabic" dir="rtl">
+    <div data-testid="pagination" className="flex items-center justify-center gap-1 mt-4 font-arabic" dir="rtl">
       {/* Prev */}
       <button
         onClick={() => onChange(page - 1)}

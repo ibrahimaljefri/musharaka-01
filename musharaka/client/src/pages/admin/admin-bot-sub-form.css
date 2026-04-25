@@ -1,0 +1,124 @@
+/* Admin · Bot Subscriber Form (create/edit) — scoped under .adm-bot-sub-form */
+
+.adm-bot-sub-form {
+  padding: var(--space-5, 24px);
+  color: var(--text);
+  font-family: inherit;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.adm-bot-sub-form .adm-page-header {
+  display: flex; align-items: center; gap: var(--space-3, 12px);
+  margin-bottom: var(--space-5, 24px);
+}
+.adm-bot-sub-form .adm-back {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--r-sm, 6px); padding: 6px 8px; cursor: pointer;
+  color: var(--text-sec);
+}
+.adm-bot-sub-form .adm-back:hover { background: var(--bg-subtle); color: var(--text); }
+.adm-bot-sub-form .adm-page-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; }
+.adm-bot-sub-form .t-small { font-size: 0.8125rem; color: var(--text-muted); }
+
+.adm-bot-sub-form .input {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: var(--r-sm, 6px);
+  background: var(--surface); color: var(--text);
+  font-size: 0.875rem; font-family: inherit; appearance: none;
+}
+.adm-bot-sub-form .input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.adm-bot-sub-form .input.mono { font-family: ui-monospace, monospace; }
+.adm-bot-sub-form .input.has-error { border-color: #DC2626; }
+
+.adm-bot-sub-form .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 16px; border-radius: var(--r-sm, 6px);
+  border: 1px solid transparent; font-size: 0.875rem; font-weight: 500;
+  cursor: pointer; text-decoration: none; font-family: inherit;
+}
+.adm-bot-sub-form .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.adm-bot-sub-form .btn-primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.adm-bot-sub-form .btn-primary:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.adm-bot-sub-form .btn-ghost { background: var(--bg-subtle); color: var(--text-sec); border-color: var(--border); }
+.adm-bot-sub-form .btn-ghost:hover { background: var(--surface); }
+
+.adm-bot-sub-form .adm-form { display: flex; flex-direction: column; gap: var(--space-4, 16px); }
+.adm-bot-sub-form .adm-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg, 12px);
+  padding: var(--space-5, 24px);
+  display: flex; flex-direction: column; gap: var(--space-4, 16px);
+}
+.adm-bot-sub-form .adm-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.875rem; font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-2, 8px);
+  margin: 0;
+}
+
+.adm-bot-sub-form .field { display: flex; flex-direction: column; gap: 6px; }
+.adm-bot-sub-form .field-label { font-size: 0.75rem; font-weight: 500; color: var(--text-sec); }
+.adm-bot-sub-form .field-required { color: #B91C1C; }
+.adm-bot-sub-form .field-hint { font-size: 0.7rem; color: var(--text-muted); }
+.adm-bot-sub-form .field-error { font-size: 0.7rem; color: #B91C1C; }
+
+.adm-bot-sub-form .grid-2 { display: grid; grid-template-columns: 1fr; gap: var(--space-3, 12px); }
+@media (min-width: 640px) {
+  .adm-bot-sub-form .grid-2 { grid-template-columns: 1fr 1fr; }
+}
+
+.adm-bot-sub-form .adm-info {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: var(--space-3, 12px);
+  background: #DBEAFE; border: 1px solid #93C5FD;
+  border-radius: var(--r-sm, 6px);
+  color: #1E3A8A; font-size: 0.875rem;
+}
+html.dark .adm-bot-sub-form .adm-info { background: #172554; border-color: #1E3A8A; color: #BFDBFE; }
+.adm-bot-sub-form .adm-info svg { flex-shrink: 0; margin-top: 2px; color: #2563EB; }
+html.dark .adm-bot-sub-form .adm-info svg { color: #60A5FA; }
+
+.adm-bot-sub-form .adm-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3, 12px);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  gap: var(--space-3, 12px);
+}
+.adm-bot-sub-form .adm-toggle-row .row-name { font-size: 0.875rem; font-weight: 500; color: var(--text); }
+.adm-bot-sub-form .adm-toggle {
+  position: relative; display: inline-flex; align-items: center;
+  width: 44px; height: 24px; border-radius: 999px;
+  background: #D6D3D1; border: 0; cursor: pointer; flex-shrink: 0;
+  transition: background 150ms ease;
+}
+.adm-bot-sub-form .adm-toggle.on { background: var(--brand); }
+.adm-bot-sub-form .adm-toggle .knob {
+  position: absolute; top: 2px; inset-inline-start: 2px;
+  width: 20px; height: 20px; border-radius: 999px;
+  background: #fff; transition: transform 150ms ease;
+}
+.adm-bot-sub-form .adm-toggle.on .knob { transform: translateX(-20px); }
+html[dir="ltr"] .adm-bot-sub-form .adm-toggle.on .knob { transform: translateX(20px); }
+
+.adm-bot-sub-form .adm-actions { display: flex; gap: var(--space-3, 12px); }
+.adm-bot-sub-form .adm-actions .btn-primary { flex: 1; }
+
+.adm-bot-sub-form .adm-spinner {
+  display: inline-block; width: 24px; height: 24px;
+  border: 2px solid var(--brand); border-top-color: transparent;
+  border-radius: 999px; animation: adm-bot-spin 0.7s linear infinite;
+}
+@keyframes adm-bot-spin { to { transform: rotate(360deg); } }
+.adm-bot-sub-form .adm-loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-6, 32px) 0;
+}
+
+@media (max-width: 900px) {
+  .adm-bot-sub-form { padding: var(--space-4, 16px); }
+}

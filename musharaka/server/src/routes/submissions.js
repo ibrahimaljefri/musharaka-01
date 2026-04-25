@@ -9,6 +9,7 @@ const { authMiddleware }   = require('../middleware/auth')
 const { tenantMiddleware } = require('../middleware/tenantMiddleware')
 const { pool }             = require('../db/query')
 const { standardLimiter }  = require('../middleware/rateLimiter')
+const { applyBranchScope } = require('../utils/branchScope')
 
 router.use(standardLimiter, authMiddleware, tenantMiddleware)
 
@@ -22,6 +23,7 @@ router.get('/', async (req, res, next) => {
     const params = [req.tenantId]
     if (branch_id) { params.push(branch_id);     where.push(`s.branch_id = $${params.length}`) }
     if (status)    { params.push(status);        where.push(`s.status = $${params.length}`) }
+    applyBranchScope(req, where, params, 's.branch_id')
 
     const whereSql = 'WHERE ' + where.join(' AND ')
 

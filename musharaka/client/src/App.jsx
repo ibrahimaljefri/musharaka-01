@@ -26,6 +26,7 @@ const Submissions      = lazy(() => import('./pages/Submissions'))
 const TicketCreate     = lazy(() => import('./pages/TicketCreate'))
 const TicketSuccess    = lazy(() => import('./pages/TicketSuccess'))
 const FaqPage          = lazy(() => import('./pages/FaqPage'))
+const UserScopes       = lazy(() => import('./pages/UserScopes'))
 
 // Admin pages
 const Tenants           = lazy(() => import('./pages/admin/Tenants'))
@@ -142,6 +143,7 @@ export default function App() {
             <Route path="/branches/:id/edit" element={<BranchEdit />} />
             <Route path="/submit"            element={<Submit />} />
             <Route path="/submissions"       element={<Submissions />} />
+            <Route path="/users/scopes"      element={<UserScopes />} />
             <Route path="/tickets/create"    element={<TicketCreate />} />
             <Route path="/tickets/success"   element={<TicketSuccess />} />
             <Route path="/faq"               element={<FaqPage />} />

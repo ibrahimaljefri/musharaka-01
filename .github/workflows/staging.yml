@@ -1,0 +1,66 @@
+name: Build Staging (redesign branch)
+
+# Triggers on every push to the redesign branch.
+# Builds the client and commits the dist to a separate `staging-dist` branch.
+# Configure cPanel to pull from `staging-dist` into a staging subdomain
+# (e.g. staging.apps.stepup2you.com → /public_html/staging/).
+
+on:
+  push:
+    branches: [redesign]
+  workflow_dispatch:
+
+jobs:
+  build-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: musharaka/client/package-lock.json
+
+      - name: Build client
+        working-directory: musharaka/client
+        env:
+          # Staging shares the prod backend (frontend-only redesign).
+          # If a separate staging API ever exists, change this URL only.
+          VITE_API_URL: https://apps.stepup2you.com
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          npm install --legacy-peer-deps
+          npm run build
+
+      - name: Push dist to staging-dist branch
+        run: |
+          git config user.name  "GitHub Actions (staging)"
+          git config user.email "actions+staging@github.com"
+
+          # Move dist to a temp location so we can switch branches cleanly
+          rm -rf /tmp/staging-dist
+          cp -r musharaka/client/dist /tmp/staging-dist
+
+          # Check out (or create) the staging-dist branch as an orphan
+          git fetch origin staging-dist:staging-dist 2>/dev/null || git checkout --orphan staging-dist
+          git checkout staging-dist 2>/dev/null || true
+
+          # Wipe and replace with the new build artifacts
+          git rm -rf . 2>/dev/null || true
+          cp -r /tmp/staging-dist/* .
+          touch .nojekyll
+
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No staging-dist changes"
+          else
+            git commit -m "chore(staging): build from redesign@${GITHUB_SHA::7} [skip ci]"
+            git push origin staging-dist --force
+            echo "Staging build pushed to staging-dist branch."
+            echo "cPanel should pull this branch into /public_html/staging/"
+          fi

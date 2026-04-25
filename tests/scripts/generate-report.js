@@ -3,34 +3,30 @@
  * generate-report.js
  *
  * Reads Playwright JSON reporter output and creates a Word document
- * summarising pass/fail with embedded screenshots for every failure.
+ * summarising pass / fail / skipped with error detail for every failure.
  *
  * Usage:
  *   cd tests && node scripts/generate-report.js
  *
- * Requires: docx
- *   npm install docx
+ * Requires: docx (^8.5.0)
  */
 
 const fs    = require('fs')
 const path  = require('path')
 const {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
-  Table, TableCell, TableRow, WidthType, BorderStyle,
-  ImageRun, AlignmentType, PageBreak,
+  Table, TableCell, TableRow, WidthType, AlignmentType, PageBreak,
 } = require('docx')
 
 const REPORT_JSON = path.join(__dirname, '..', 'playwright-report', 'results.json')
 const OUT_DIR     = path.join(__dirname, '..', 'playwright-report')
 
 function pad(n) { return String(n).padStart(2, '0') }
-
 function today() {
   const d = new Date()
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-/** Walk the Playwright report tree and return a flat list of tests. */
 function flatten(suites, file = '', parents = []) {
   const out = []
   for (const suite of suites || []) {
@@ -40,14 +36,12 @@ function flatten(suites, file = '', parents = []) {
         for (const test of spec.tests || []) {
           const result = test.results?.[0]
           out.push({
-            id:           spec.id || spec.title,
             title:        spec.title,
-            file:         suite.file || file || spec.file,
-            suite:        here.filter(Boolean).join(' › '),
+            file:         suite.file || file || spec.file || '',
+            suite:        here.filter(Boolean).join(' > '),
             status:       result?.status || test.status || 'unknown',
             duration_ms:  result?.duration || 0,
             error:        result?.error?.message || result?.error?.stack || '',
-            attachments:  result?.attachments || [],
           })
         }
       }
@@ -58,30 +52,45 @@ function flatten(suites, file = '', parents = []) {
 }
 
 function stats(tests) {
-  let passed = 0, failed = 0, skipped = 0, flaky = 0
+  const s = { total: tests.length, passed: 0, failed: 0, skipped: 0, flaky: 0 }
   for (const t of tests) {
-    if (t.status === 'passed')  passed++
-    else if (t.status === 'failed' || t.status === 'timedOut') failed++
-    else if (t.status === 'skipped') skipped++
-    else if (t.status === 'flaky') flaky++
+    if (t.status === 'passed')                                  s.passed++
+    else if (t.status === 'failed' || t.status === 'timedOut')  s.failed++
+    else if (t.status === 'skipped')                            s.skipped++
+    else if (t.status === 'flaky')                              s.flaky++
   }
-  return { total: tests.length, passed, failed, skipped, flaky }
+  return s
 }
 
-function H(text, level = HeadingLevel.HEADING_1) {
-  return new Paragraph({ heading: level, children: [new TextRun({ text, bold: true })] })
-}
-function P(text, opts = {}) {
-  return new Paragraph({ children: [new TextRun({ text, ...opts })] })
+// ── Safe text — strip any control chars the docx writer might choke on ──
+function clean(s) {
+  if (s == null) return ''
+  return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
 }
 
-function row(cells, opts = {}) {
-  return new TableRow({
-    children: cells.map(c => new TableCell({
-      children: [typeof c === 'string' ? P(c, opts) : c],
-      width:    { size: 100 / cells.length, type: WidthType.PERCENTAGE },
-    })),
+function H(text, level) {
+  return new Paragraph({
+    heading:  level || HeadingLevel.HEADING_1,
+    children: [new TextRun({ text: clean(text), bold: true })],
   })
+}
+
+function P(text, opts = {}) {
+  return new Paragraph({
+    alignment: opts.align,
+    children: [new TextRun({ text: clean(text), ...opts })],
+  })
+}
+
+function cell(text, opts = {}) {
+  return new TableCell({
+    children: [P(text, opts)],
+    width: { size: opts.pct || 25, type: WidthType.PERCENTAGE },
+  })
+}
+
+function row(cells) {
+  return new TableRow({ children: cells })
 }
 
 async function buildDoc() {
@@ -95,36 +104,42 @@ async function buildDoc() {
   const s      = stats(tests)
   const env    = process.env.BASE_URL || 'https://apps.stepup2you.com'
 
-  // ── Cover page ────────────────────────────────────────────────────────────
-  const cover = [
+  const passRate = s.total ? `${((s.passed / s.total) * 100).toFixed(1)}%` : 'N/A'
+
+  const children = []
+
+  // Cover
+  children.push(
     new Paragraph({
       alignment: AlignmentType.CENTER,
       children:  [new TextRun({ text: 'Musharaka — Test Results', bold: true, size: 48 })],
     }),
-    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Tenant Sales Management System', size: 28 })] }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children:  [new TextRun({ text: 'Tenant Sales Management System', size: 28 })],
+    }),
     P(''),
     P(''),
-    P(`Run date:         ${today()}`),
-    P(`Environment:      ${env}`),
-    P(`Runner host:      ${process.env.HOSTNAME || process.env.COMPUTERNAME || 'localhost'}`),
+    P(`Run date:    ${today()}`),
+    P(`Environment: ${env}`),
+    P(`Duration:    ${Math.round((report.stats?.duration || 0) / 1000)} seconds`),
     P(''),
     H('Summary', HeadingLevel.HEADING_2),
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
-        row(['Metric', 'Count'], { bold: true }),
-        row(['Total',     String(s.total)]),
-        row(['Passed',    String(s.passed)]),
-        row(['Failed',    String(s.failed)]),
-        row(['Skipped',   String(s.skipped)]),
-        row(['Flaky',     String(s.flaky)]),
-        row(['Pass rate', s.total ? `${((s.passed / s.total) * 100).toFixed(1)}%` : 'N/A']),
+        row([cell('Metric', { bold: true, pct: 50 }), cell('Count', { bold: true, pct: 50 })]),
+        row([cell('Total',     { pct: 50 }), cell(String(s.total),   { pct: 50 })]),
+        row([cell('Passed',    { pct: 50 }), cell(String(s.passed),  { pct: 50 })]),
+        row([cell('Failed',    { pct: 50 }), cell(String(s.failed),  { pct: 50 })]),
+        row([cell('Skipped',   { pct: 50 }), cell(String(s.skipped), { pct: 50 })]),
+        row([cell('Flaky',     { pct: 50 }), cell(String(s.flaky),   { pct: 50 })]),
+        row([cell('Pass rate', { pct: 50 }), cell(passRate,          { pct: 50 })]),
       ],
     }),
-    new Paragraph({ children: [new PageBreak()] }),
-  ]
+  )
 
-  // ── Group by suite file ───────────────────────────────────────────────────
+  // Group tests by file
   const bySuite = new Map()
   for (const t of tests) {
     const k = t.file || 'unknown'
@@ -132,69 +147,62 @@ async function buildDoc() {
     bySuite.get(k).push(t)
   }
 
-  const suiteSections = []
+  children.push(new Paragraph({ children: [new PageBreak()] }))
+  children.push(H('Results by Spec File', HeadingLevel.HEADING_1))
+
   for (const [file, list] of bySuite) {
-    const passedHere = list.filter(t => t.status === 'passed').length
-    const failedHere = list.filter(t => ['failed', 'timedOut'].includes(t.status)).length
-    suiteSections.push(H(path.basename(file), HeadingLevel.HEADING_2))
-    suiteSections.push(P(`${passedHere} passed, ${failedHere} failed, of ${list.length} total`))
-    suiteSections.push(new Table({
+    const p = list.filter(t => t.status === 'passed').length
+    const f = list.filter(t => ['failed', 'timedOut'].includes(t.status)).length
+    const sk = list.filter(t => t.status === 'skipped').length
+
+    children.push(H(path.basename(file), HeadingLevel.HEADING_2))
+    children.push(P(`${p} passed, ${f} failed, ${sk} skipped (total ${list.length})`))
+    children.push(P(''))
+
+    const tableRows = [
+      row([
+        cell('Test',      { bold: true, pct: 70 }),
+        cell('Status',    { bold: true, pct: 15 }),
+        cell('Duration',  { bold: true, pct: 15 }),
+      ]),
+    ]
+    for (const t of list) {
+      tableRows.push(row([
+        cell(t.title.slice(0, 120), { pct: 70 }),
+        cell(t.status,              { pct: 15 }),
+        cell(`${t.duration_ms} ms`, { pct: 15 }),
+      ]))
+    }
+    children.push(new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        row(['Test', 'Status', 'Duration'], { bold: true }),
-        ...list.map(t => row([
-          t.title,
-          t.status,
-          `${t.duration_ms} ms`,
-        ])),
-      ],
+      rows:  tableRows,
     }))
-    suiteSections.push(P(''))
+    children.push(P(''))
   }
 
-  // ── Failure details with screenshots ──────────────────────────────────────
+  // Failure details
   const failures = tests.filter(t => ['failed', 'timedOut'].includes(t.status))
-  const failureSections = []
   if (failures.length) {
-    failureSections.push(new Paragraph({ children: [new PageBreak()] }))
-    failureSections.push(H('Failure Details', HeadingLevel.HEADING_1))
-    for (const f of failures) {
-      failureSections.push(H(f.title, HeadingLevel.HEADING_2))
-      failureSections.push(P(`File:  ${f.file}`))
-      failureSections.push(P(`Suite: ${f.suite}`))
-      failureSections.push(P(''))
-      // Error message
-      const errorText = (f.error || '').split('\n').slice(0, 20).join('\n')
-      failureSections.push(P(errorText, { color: 'B91C1C' }))
-      // Screenshots (embedded)
-      for (const att of f.attachments || []) {
-        if (att.contentType?.startsWith('image/') && att.path && fs.existsSync(att.path)) {
-          try {
-            const buf = fs.readFileSync(att.path)
-            failureSections.push(new Paragraph({
-              children: [new ImageRun({ data: buf, transformation: { width: 600, height: 375 } })],
-            }))
-            failureSections.push(P(`Screenshot: ${path.basename(att.path)}`, { italics: true, size: 18 }))
-          } catch (e) {
-            failureSections.push(P(`[could not embed ${att.path}: ${e.message}]`))
-          }
-        }
-      }
-      failureSections.push(P(''))
+    children.push(new Paragraph({ children: [new PageBreak()] }))
+    children.push(H('Failure Details', HeadingLevel.HEADING_1))
+
+    for (const failure of failures) {
+      children.push(H(failure.title.slice(0, 120), HeadingLevel.HEADING_2))
+      children.push(P(`File:  ${path.basename(failure.file)}`))
+      children.push(P(`Suite: ${failure.suite}`))
+      children.push(P(''))
+
+      const errorText = clean((failure.error || '(no error message)').toString()).split('\n').slice(0, 15).join('\n')
+      children.push(P(errorText, { color: 'B91C1C' }))
+      children.push(P(''))
     }
   }
 
   const doc = new Document({
     creator:     'Musharaka Test Suite',
-    title:       'Musharaka — Test Results',
-    description: 'Automated test results with failure screenshots',
-    sections: [{
-      children: [
-        ...cover,
-        ...suiteSections,
-        ...failureSections,
-      ],
-    }],
+    title:       'Musharaka Test Results',
+    description: 'Automated test results',
+    sections: [{ children }],
   })
 
   const filename = `Test_Results_${today()}.docx`
@@ -202,8 +210,8 @@ async function buildDoc() {
   const buf      = await Packer.toBuffer(doc)
   fs.writeFileSync(filepath, buf)
 
-  console.log(`✓ Wrote ${filepath}`)
-  console.log(`  Total: ${s.total}  Pass: ${s.passed}  Fail: ${s.failed}  Skip: ${s.skipped}`)
+  console.log(`[OK] Wrote ${filepath}`)
+  console.log(`     Total: ${s.total}  Pass: ${s.passed}  Fail: ${s.failed}  Skip: ${s.skipped}  (${passRate})`)
 }
 
 buildDoc().catch(e => {

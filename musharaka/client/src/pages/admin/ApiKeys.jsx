@@ -4,6 +4,7 @@ import api from '../../lib/axiosClient'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import { toast } from '../../lib/useToast'
 import { Key, Plus, Trash2, Copy, Check, ArrowRight, Power, PowerOff, Shield, Zap, BookOpen } from 'lucide-react'
+import './admin-apikeys.css'
 
 function fmtDate(d) {
   if (!d) return '—'
@@ -18,7 +19,7 @@ function CopyButton({ text }) {
     })
   }
   return (
-    <button onClick={copy} className={`p-1.5 rounded transition-colors ${copied ? 'text-green-600' : 'text-gray-400 hover:text-gray-700'}`}>
+    <button onClick={copy} className={`adm-copy-btn ${copied ? 'copied' : ''}`} aria-label="نسخ">
       {copied ? <Check size={14} /> : <Copy size={14} />}
     </button>
   )
@@ -58,9 +59,7 @@ export default function ApiKeys() {
     const curr = form.allowed_fields
     setForm(f => ({
       ...f,
-      allowed_fields: curr.includes(field)
-        ? curr.filter(x => x !== field)
-        : [...curr, field],
+      allowed_fields: curr.includes(field) ? curr.filter(x => x !== field) : [...curr, field],
     }))
   }
 
@@ -70,8 +69,7 @@ export default function ApiKeys() {
     setSaving(true)
     try {
       const { data } = await api.post(`/admin/tenants/${id}/api-keys`, {
-        ...form,
-        expires_at: form.expires_at || null,
+        ...form, expires_at: form.expires_at || null,
       })
       setNewKey(data.raw_key)
       setKeys(prev => [data, ...prev])
@@ -112,7 +110,6 @@ export default function ApiKeys() {
     amount: 'المبلغ', status: 'الحالة',
   }
 
-  // Stats derived from the keys list — drives the sidebar metric tiles
   const activeCount   = keys.filter(k => k.is_active).length
   const disabledCount = keys.length - activeCount
   const lastUsed      = keys.reduce((acc, k) => {
@@ -122,215 +119,174 @@ export default function ApiKeys() {
   }, 0)
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/admin/tenants')} className="text-gray-400 hover:text-gray-600">
-          <ArrowRight size={20} />
+    <div className="adm-apikeys">
+      <div className="adm-page-header">
+        <button onClick={() => navigate('/admin/tenants')} className="adm-back" aria-label="رجوع">
+          <ArrowRight size={18} />
         </button>
-        <div>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-arabic">مفاتيح API</h1>
-          <p className="text-xs text-gray-400 font-arabic mt-0.5">{tenantName}</p>
+        <div style={{ flex: 1 }}>
+          <h1 className="adm-page-title">مفاتيح API</h1>
+          <div className="t-small">{tenantName}</div>
         </div>
-        <button onClick={() => setShowForm(s => !s)}
-          className="mr-auto inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors font-arabic shadow-sm">
+        <button onClick={() => setShowForm(s => !s)} className="btn btn-primary">
           <Plus size={14} /> مفتاح جديد
         </button>
       </div>
 
-      {/* Metric tiles — fill the header strip, give the page immediate hierarchy */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <Key size={13} className="text-blue-600 dark:text-blue-400" />
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">إجمالي</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{keys.length}</p>
+      {/* KPIs */}
+      <div className="adm-kpi-grid">
+        <div className="adm-kpi">
+          <div className="adm-kpi-head"><Key size={13} /> إجمالي</div>
+          <div className="adm-kpi-val">{keys.length}</div>
         </div>
-        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <Power size={13} className="text-green-600" />
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">نشط</span>
-          </div>
-          <p className="text-2xl font-bold text-green-700 dark:text-green-400">{activeCount}</p>
+        <div className="adm-kpi">
+          <div className="adm-kpi-head"><Power size={13} /> نشط</div>
+          <div className="adm-kpi-val" style={{ color: '#15803D' }}>{activeCount}</div>
         </div>
-        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <PowerOff size={13} className="text-gray-400" />
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">معطّل</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">{disabledCount}</p>
+        <div className="adm-kpi">
+          <div className="adm-kpi-head"><PowerOff size={13} /> معطّل</div>
+          <div className="adm-kpi-val" style={{ color: 'var(--text-muted)' }}>{disabledCount}</div>
         </div>
-        <div className="card-surface p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-1">
-            <Zap size={13} className="text-yellow-600" />
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-arabic">آخر استخدام</span>
-          </div>
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 font-arabic truncate">
-            {lastUsed ? fmtDate(new Date(lastUsed)) : 'لم يُستخدم بعد'}
-          </p>
+        <div className="adm-kpi">
+          <div className="adm-kpi-head"><Zap size={13} /> آخر استخدام</div>
+          <div className="adm-kpi-val small">{lastUsed ? fmtDate(new Date(lastUsed)) : 'لم يُستخدم بعد'}</div>
         </div>
       </div>
 
-      {/* 2-col layout on lg+: main content + sticky sidebar with docs */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="space-y-6 min-w-0">
-      {/* One-time key reveal */}
-      {newKey && (
-        <div className="card-surface p-5 border-green-200 bg-green-50">
-          <p className="text-sm font-semibold text-green-800 font-arabic mb-2">تم إنشاء المفتاح — احفظه الآن، لن يُعرض مرة أخرى</p>
-          <div className="flex items-center gap-2 bg-white border border-green-200 rounded-lg p-3 font-mono text-sm" dir="ltr">
-            <span className="flex-1 break-all text-gray-800">{newKey}</span>
-            <CopyButton text={newKey} />
-          </div>
-          <button onClick={() => setNewKey(null)} className="mt-3 text-xs text-green-600 hover:underline font-arabic">تم الحفظ، إخفاء المفتاح</button>
-        </div>
-      )}
+      <div className="adm-grid">
+        <div className="adm-main">
+          {/* One-time key reveal */}
+          {newKey && (
+            <div className="adm-reveal">
+              <p className="adm-reveal-msg">تم إنشاء المفتاح — احفظه الآن، لن يُعرض مرة أخرى</p>
+              <div className="adm-reveal-key" dir="ltr">
+                <span className="key-text">{newKey}</span>
+                <CopyButton text={newKey} />
+              </div>
+              <button onClick={() => setNewKey(null)} className="adm-reveal-dismiss">تم الحفظ، إخفاء المفتاح</button>
+            </div>
+          )}
 
-      {/* Create form */}
-      {showForm && (
-        <form onSubmit={handleCreate} className="card-surface p-5 space-y-4">
-          <h3 className="font-semibold text-gray-700 font-arabic text-sm">إنشاء مفتاح جديد</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-gray-500 font-arabic mb-1.5">اسم المفتاح (للتعريف) <span className="text-red-500">*</span></label>
-              <input value={form.label} onChange={e => setForm(f => ({...f, label: e.target.value}))} required
-                placeholder="مثال: ERP Integration"
-                className="input-base" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 font-arabic mb-1.5">تاريخ الانتهاء (اختياري)</label>
-              <input type="date" value={form.expires_at} onChange={e => setForm(f => ({...f, expires_at: e.target.value}))} dir="ltr"
-                className="input-base" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 font-arabic mb-2">الحقول المسموح بها في الاستجابة</label>
-            <div className="flex flex-wrap gap-2">
-              {allFields.map(f => {
-                const active = form.allowed_fields.includes(f)
-                return (
-                  <button key={f} type="button" onClick={() => toggleField(f)}
-                    className={`px-3 py-1 rounded-full text-xs font-arabic border transition-colors ${
-                      active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-500 border-gray-300 hover:border-blue-400'
-                    }`}>
-                    {FIELD_LABELS[f] || f}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-          <div className="flex gap-3 pt-1">
-            <button type="submit" disabled={saving}
-              className="btn-primary flex items-center gap-2 disabled:opacity-60">
-              <Key size={14} /> {saving ? 'جاري الإنشاء...' : 'إنشاء المفتاح'}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)}
-              className="btn-ghost">
-              إلغاء
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Keys list */}
-      <div className="card-surface overflow-hidden">
-        <div className="section-header">
-          <span className="font-semibold text-gray-700 font-arabic text-sm">المفاتيح الحالية</span>
-          <span className="text-xs text-gray-400 font-arabic">{keys.length} مفتاح</span>
-        </div>
-        {loading ? (
-          <div className="p-10 text-center text-gray-400 font-arabic text-sm">جاري التحميل...</div>
-        ) : keys.length === 0 ? (
-          <div className="p-10 text-center">
-            <Key size={32} className="mx-auto text-gray-200 mb-2" />
-            <p className="text-gray-400 font-arabic text-sm">لا توجد مفاتيح API بعد</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {keys.map(k => (
-              <div key={k.id} className="px-5 py-4 flex items-start justify-between gap-4 hover:bg-gray-50/50">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-gray-800 font-arabic text-sm">{k.label}</span>
-                    {k.is_active
-                      ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-arabic">نشط</span>
-                      : <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-arabic">معطّل</span>
-                    }
-                  </div>
-                  <p className="text-xs text-gray-400 font-mono mb-2">{k.key_prefix}••••••••••••••••••••</p>
-                  <div className="flex flex-wrap gap-1 mb-1">
-                    {(k.allowed_fields || []).map(f => (
-                      <span key={f} className="text-xs bg-blue-50 border border-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-arabic">
+          {/* Create form */}
+          {showForm && (
+            <form onSubmit={handleCreate} className="adm-form-card">
+              <h3 className="adm-form-title">إنشاء مفتاح جديد</h3>
+              <div className="adm-form-grid">
+                <div className="field">
+                  <label className="field-label">اسم المفتاح (للتعريف) <span className="field-required">*</span></label>
+                  <input className="input" value={form.label}
+                    onChange={e => setForm(f => ({...f, label: e.target.value}))}
+                    required placeholder="مثال: ERP Integration" />
+                </div>
+                <div className="field">
+                  <label className="field-label">تاريخ الانتهاء (اختياري)</label>
+                  <input className="input" type="date" dir="ltr" value={form.expires_at}
+                    onChange={e => setForm(f => ({...f, expires_at: e.target.value}))} />
+                </div>
+              </div>
+              <div className="field">
+                <label className="field-label">الحقول المسموح بها في الاستجابة</label>
+                <div className="adm-chips">
+                  {allFields.map(f => {
+                    const active = form.allowed_fields.includes(f)
+                    return (
+                      <button key={f} type="button" onClick={() => toggleField(f)}
+                        className={`adm-chip-btn ${active ? 'active' : ''}`}>
                         {FIELD_LABELS[f] || f}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 12, paddingTop: 4 }}>
+                <button type="submit" disabled={saving} className="btn btn-primary">
+                  <Key size={14} /> {saving ? 'جاري الإنشاء...' : 'إنشاء المفتاح'}
+                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="btn btn-ghost">إلغاء</button>
+              </div>
+            </form>
+          )}
+
+          {/* Keys list */}
+          <div className="surface adm-tbl-wrap">
+            <div className="adm-sec-head">
+              <span className="adm-sec-title">المفاتيح الحالية</span>
+              <span className="t-small">{keys.length} مفتاح</span>
+            </div>
+            {loading ? (
+              <div className="adm-state">جاري التحميل...</div>
+            ) : keys.length === 0 ? (
+              <div className="adm-state">
+                <Key size={32} style={{ color: 'var(--border-strong)', display: 'block', margin: '0 auto 8px' }} />
+                لا توجد مفاتيح API بعد
+              </div>
+            ) : (
+              keys.map(k => (
+                <div key={k.id} className="adm-key-row">
+                  <div className="adm-key-info">
+                    <div className="adm-key-head">
+                      <span className="adm-key-label">{k.label}</span>
+                      <span className={`adm-status ${k.is_active ? 's-active' : 's-disabled'}`}>
+                        {k.is_active ? 'نشط' : 'معطّل'}
                       </span>
-                    ))}
+                    </div>
+                    <p className="adm-key-prefix" dir="ltr">{k.key_prefix}••••••••••••••••••••</p>
+                    <div className="adm-field-chips">
+                      {(k.allowed_fields || []).map(f => (
+                        <span key={f} className="adm-field-chip">{FIELD_LABELS[f] || f}</span>
+                      ))}
+                    </div>
+                    <div className="adm-key-meta">
+                      أُنشئ: {fmtDate(k.created_at)}
+                      {k.expires_at && <> · ينتهي: {fmtDate(k.expires_at)}</>}
+                      {k.last_used_at && <> · آخر استخدام: {fmtDate(k.last_used_at)}</>}
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400 font-arabic">
-                    أُنشئ: {fmtDate(k.created_at)}
-                    {k.expires_at && <> · ينتهي: {fmtDate(k.expires_at)}</>}
-                    {k.last_used_at && <> · آخر استخدام: {fmtDate(k.last_used_at)}</>}
-                  </p>
+                  <div className="adm-actions">
+                    <button onClick={() => toggleActive(k.id, k.is_active)} className="adm-icon-btn"
+                      title={k.is_active ? 'تعطيل' : 'تفعيل'}>
+                      {k.is_active ? <Power size={13} /> : <PowerOff size={13} />}
+                    </button>
+                    <button onClick={() => setDeleteTarget(k)} className="adm-icon-btn danger" title="حذف">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => toggleActive(k.id, k.is_active)}
-                    className={`p-1.5 rounded-lg border transition-colors ${k.is_active ? 'text-green-600 bg-green-50 border-green-200 hover:bg-green-100' : 'text-gray-400 bg-gray-50 border-gray-200 hover:bg-gray-100'}`}
-                    title={k.is_active ? 'تعطيل' : 'تفعيل'}>
-                    {k.is_active ? <Power size={13} /> : <PowerOff size={13} />}
-                  </button>
-                  <button onClick={() => setDeleteTarget(k)}
-                    className="p-1.5 rounded-lg text-red-400 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors">
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        )}
-      </div>
+        </div>
 
-        </div>{/* /main column */}
-
-        {/* Sidebar — sticky on lg+ so docs stay in view while scrolling the keys list */}
-        <aside className="space-y-4 lg:sticky lg:top-6 self-start">
-          {/* Usage example */}
-          <div className="card-surface rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen size={14} className="text-blue-600 dark:text-blue-400" />
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-200 font-arabic">مثال على الاستخدام</h3>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 text-xs font-mono text-green-400 overflow-x-auto" dir="ltr">
+        <aside className="adm-sidebar">
+          <div className="adm-side-card">
+            <h3 className="adm-side-title"><BookOpen size={14} /> مثال على الاستخدام</h3>
+            <div className="adm-code-block" dir="ltr">
               <div>GET /api/contracts?api_key=msk_your_key_here</div>
-              <div className="mt-1 text-gray-500"># Optional filters:</div>
-              <div className="break-all">GET /api/contracts?api_key=msk_...&amp;from=2026-01-01&amp;to=2026-03-31</div>
-              <div className="mt-2 text-gray-400 break-all">X-API-Key: msk_your_key_here</div>
-              <div className="mt-0.5 text-gray-500"># Alternative: request header</div>
+              <div className="muted"># Optional filters:</div>
+              <div style={{ wordBreak: 'break-all' }}>GET /api/contracts?api_key=msk_...&amp;from=2026-01-01&amp;to=2026-03-31</div>
+              <div className="light" style={{ marginTop: 8, wordBreak: 'break-all' }}>X-API-Key: msk_your_key_here</div>
+              <div className="muted"># Alternative: request header</div>
             </div>
           </div>
 
-          {/* Security guidance — vendor-neutral best practices */}
-          <div className="rounded-xl border border-blue-200 dark:border-blue-700/50 p-4 bg-blue-50 dark:bg-blue-900/20">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
-                <Shield size={13} className="text-blue-600 dark:text-blue-400" />
-              </div>
-              <span className="text-sm font-bold text-blue-800 dark:text-blue-300 font-arabic">إرشادات الأمان</span>
-            </div>
-            <ul className="space-y-2.5">
+          <div className="adm-tip-card">
+            <div className="adm-tip-title"><Shield size={13} /> إرشادات الأمان</div>
+            <ul className="adm-tip-list">
               {[
                 'انسخ المفتاح الآن — لن يُعرض مجدداً بعد الإغلاق.',
                 'لا تشارك المفتاح في مستودعات Git أو رسائل غير آمنة.',
                 'أنشئ مفتاحاً منفصلاً لكل تكامل، وعطّل غير المستخدم.',
                 'راقب حقل "آخر استخدام" لاكتشاف أي نشاط غير متوقع.',
               ].map((t, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-blue-800 dark:text-blue-200 font-arabic leading-relaxed">
-                  <span className="mt-0.5 shrink-0 w-4 h-4 rounded-full bg-blue-200 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                <li key={i} className="adm-tip-item">
+                  <span className="adm-tip-num">{i + 1}</span>
                   <span>{t}</span>
                 </li>
               ))}
             </ul>
           </div>
         </aside>
-      </div>{/* /grid */}
+      </div>
 
       <ConfirmDialog
         open={!!deleteTarget}

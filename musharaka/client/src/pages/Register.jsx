@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api, { TOKEN_KEY } from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
-import { UserPlus, CheckCircle } from 'lucide-react'
-import FormField from '../components/FormField'
+import { User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import AlertBanner from '../components/AlertBanner'
 import ButtonSpinner from '../components/ButtonSpinner'
 
@@ -20,14 +19,14 @@ export default function Register() {
   const navigate = useNavigate()
   const init = useAuthStore(s => s.init)
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' })
+  const [showPass, setShowPass] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
 
   const strength = getPasswordStrength(form.password)
 
-  // Normalize a Saudi mobile number by stripping spaces/dashes and the +/00 prefix.
-  // Accepts: 0512345678, 512345678, 966512345678, +966512345678, 00966512345678
   const normalizePhone = (v) => (v || '').replace(/[\s\-()]/g, '').replace(/^(\+|00)/, '')
   const isValidSaPhone = (v) => {
     const n = normalizePhone(v)
@@ -82,7 +81,6 @@ export default function Register() {
     setErrors({})
     setGeneralError('')
     setLoading(true)
-    // Normalize to canonical Saudi format: 9665xxxxxxxx (no +, no leading 0)
     const canonicalPhone = (() => {
       const n = normalizePhone(form.phone)
       if (/^966/.test(n)) return n
@@ -105,118 +103,157 @@ export default function Register() {
     }
   }
 
+  const fieldErrorStyle = { color: '#FCA5A5', fontSize: '12px', marginTop: '4px', display: 'block' }
+
   return (
-    <div>
-      <h1 className="text-xl font-bold text-white font-arabic mb-6 text-center">إنشاء حساب جديد</h1>
+    <>
+      <div className="auth-form-title">إنشاء حساب جديد</div>
+      <div className="auth-form-sub">أنشئ حسابك للبدء في إدارة مبيعاتك</div>
 
       <AlertBanner type="error" message={generalError} dismissible onClose={() => setGeneralError('')} />
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        <FormField label="الاسم الكامل" error={errors.name} required>
-          <input
-            type="text"
-            dir="rtl"
-            autoComplete="name"
-            value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            onBlur={() => handleBlur('name')}
-            placeholder="أحمد محمد"
-            className="input-base"
-          />
-        </FormField>
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="auth-field">
+          <label className="auth-label">الاسم الكامل</label>
+          <div className="auth-input-wrap">
+            <span className="auth-input-icon"><User size={16} /></span>
+            <input
+              className="auth-input"
+              type="text"
+              dir="rtl"
+              autoComplete="name"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              onBlur={() => handleBlur('name')}
+              placeholder="أحمد محمد"
+            />
+          </div>
+          {errors.name && <span style={fieldErrorStyle}>{errors.name}</span>}
+        </div>
 
-        <FormField label="البريد الإلكتروني" error={errors.email} required>
-          <input
-            type="email"
-            dir="ltr"
-            autoComplete="email"
-            value={form.email}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            onBlur={() => handleBlur('email')}
-            placeholder="example@email.com"
-            className="input-base"
-          />
-        </FormField>
+        <div className="auth-field">
+          <label className="auth-label">البريد الإلكتروني</label>
+          <div className="auth-input-wrap">
+            <span className="auth-input-icon"><Mail size={16} /></span>
+            <input
+              className="auth-input"
+              type="email"
+              dir="ltr"
+              autoComplete="email"
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              onBlur={() => handleBlur('email')}
+              placeholder="you@company.com"
+            />
+          </div>
+          {errors.email && <span style={fieldErrorStyle}>{errors.email}</span>}
+        </div>
 
-        <FormField label="رقم الجوال" error={errors.phone} required>
-          <input
-            type="tel"
-            dir="ltr"
-            inputMode="tel"
-            autoComplete="tel"
-            value={form.phone}
-            onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-            onBlur={() => handleBlur('phone')}
-            placeholder="05xxxxxxxx"
-            className="input-base"
-          />
-        </FormField>
+        <div className="auth-field">
+          <label className="auth-label">رقم الجوال</label>
+          <div className="auth-input-wrap">
+            <span className="auth-input-icon"><Phone size={16} /></span>
+            <input
+              className="auth-input"
+              type="tel"
+              dir="ltr"
+              inputMode="tel"
+              autoComplete="tel"
+              value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              onBlur={() => handleBlur('phone')}
+              placeholder="05xxxxxxxx"
+            />
+          </div>
+          {errors.phone && <span style={fieldErrorStyle}>{errors.phone}</span>}
+        </div>
 
-        <FormField label="كلمة المرور" error={errors.password} required>
-          <input
-            type="password"
-            dir="ltr"
-            autoComplete="new-password"
-            value={form.password}
-            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            onBlur={() => handleBlur('password')}
-            className="input-base"
-          />
+        <div className="auth-field">
+          <label className="auth-label">كلمة المرور</label>
+          <div className="auth-input-wrap">
+            <span className="auth-input-icon"><Lock size={16} /></span>
+            <input
+              className="auth-input"
+              type={showPass ? 'text' : 'password'}
+              dir="ltr"
+              autoComplete="new-password"
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              onBlur={() => handleBlur('password')}
+              placeholder="••••••••"
+              style={{ paddingInlineEnd: '40px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(p => !p)}
+              className="auth-eye-toggle"
+              aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+            >
+              {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
           {form.password && (
-            <div className="flex gap-1 mt-1.5">
+            <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
-                    i <= strength
-                      ? strength <= 1
-                        ? 'bg-red-400'
-                        : strength === 2
-                        ? 'bg-amber-400'
-                        : 'bg-green-400'
-                      : 'bg-gray-200 dark:bg-gray-700'
-                  }`}
+                  style={{
+                    height: '3px',
+                    flex: 1,
+                    borderRadius: '999px',
+                    transition: 'background-color 150ms',
+                    background: i <= strength
+                      ? (strength <= 1 ? '#F87171' : strength === 2 ? '#FBBF24' : '#34D399')
+                      : 'rgba(255,255,255,0.12)',
+                  }}
                 />
               ))}
             </div>
           )}
-        </FormField>
+          {errors.password && <span style={fieldErrorStyle}>{errors.password}</span>}
+        </div>
 
-        <FormField label="تأكيد كلمة المرور" error={errors.confirm} required>
-          <div className="relative">
+        <div className="auth-field">
+          <label className="auth-label">تأكيد كلمة المرور</label>
+          <div className="auth-input-wrap">
+            <span className="auth-input-icon"><Lock size={16} /></span>
             <input
-              type="password"
+              className="auth-input"
+              type={showConfirm ? 'text' : 'password'}
               dir="ltr"
               autoComplete="new-password"
               value={form.confirm}
               onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
               onBlur={() => handleBlur('confirm')}
-              className="input-base"
+              placeholder="••••••••"
+              style={{ paddingInlineEnd: '40px' }}
             />
-            {form.confirm && form.confirm === form.password && (
-              <CheckCircle size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500" />
-            )}
+            <button
+              type="button"
+              onClick={() => setShowConfirm(p => !p)}
+              className="auth-eye-toggle"
+              aria-label={showConfirm ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+            >
+              {form.confirm && form.confirm === form.password
+                ? <CheckCircle size={16} style={{ color: '#34D399' }} />
+                : (showConfirm ? <EyeOff size={16} /> : <Eye size={16} />)}
+            </button>
           </div>
-        </FormField>
+          {errors.confirm && <span style={fieldErrorStyle}>{errors.confirm}</span>}
+        </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 font-medium py-2.5 rounded-lg transition-all font-arabic text-sm font-bold disabled:opacity-60 hover:brightness-110 mt-2"
-          style={{ background: '#F59E0B', color: '#0a0a0a' }}
-        >
+        <button type="submit" disabled={loading} className="auth-submit-btn">
           {loading ? (
             <><ButtonSpinner /><span>جاري إنشاء الحساب...</span></>
           ) : (
-            <><UserPlus size={16} /><span>إنشاء الحساب</span></>
+            <span>إنشاء الحساب</span>
           )}
         </button>
       </form>
 
-      <p className="mt-5 text-center text-sm font-arabic" style={{ color: 'rgba(255,255,255,0.50)' }}>
-        لديك حساب بالفعل؟{' '}
-        <Link to="/login" className="text-yellow-400 hover:underline font-medium">تسجيل الدخول</Link>
-      </p>
-    </div>
+      <div className="auth-register-cta">
+        لديك حساب بالفعل؟ <Link to="/login">تسجيل الدخول</Link>
+      </div>
+    </>
   )
 }
