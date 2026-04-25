@@ -14,7 +14,7 @@ const PAGE_SIZE = 20
 
 const STATUS_FILTERS = [
   { value: null,        label: 'الكل' },
-  { value: 'open',      label: 'مفتوح' },
+  { value: 'open',      label: 'جديد' },
   { value: 'in_progress', label: 'قيد المعالجة' },
   { value: 'resolved',  label: 'محلول' },
 ]
