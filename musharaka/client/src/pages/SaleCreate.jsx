@@ -2,11 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
-import TipsPanel from '../components/TipsPanel'
 import AlertBanner from '../components/AlertBanner'
-import FormField from '../components/FormField'
 import ButtonSpinner from '../components/ButtonSpinner'
 import { toast } from '../lib/useToast'
+import './sale-create.css'
 
 const MONTHS = [
   { v: 1, l: 'يناير' }, { v: 2, l: 'فبراير' }, { v: 3, l: 'مارس' },
@@ -18,8 +17,14 @@ const MONTHS = [
 const ALL_MODES = [
   { v: 'daily',   l: 'يومي' },
   { v: 'monthly', l: 'شهري' },
-  { v: 'range',   l: 'فترة مخصصة' },
+  { v: 'range',   l: 'فترة' },
 ]
+
+const MODE_HINTS = {
+  daily:   'في النمط اليومي، أدخل مبيعات يوم واحد محدد.',
+  monthly: 'في النمط الشهري، أدخل إجمالي المبيعات للشهر الواحد. سيتم احتساب المتوسط اليومي تلقائياً.',
+  range:   'في نمط الفترة، أدخل نطاق تواريخ ليتم توزيع المبلغ عليها.',
+}
 
 export default function SaleCreate() {
   const navigate           = useNavigate()
@@ -108,166 +113,217 @@ export default function SaleCreate() {
     } finally { setLoading(false) }
   }
 
-  const tips = [
-    'يومي: أدخل مبيعات يوم واحد محدد.',
-    'شهري: يتم توزيع المبلغ تلقائياً على جميع أيام الشهر.',
-    'فترة مخصصة: أدخل نطاق تواريخ ليتم التوزيع عليها.',
-    'رقم الفاتورة اختياري ويستخدم للتتبع.',
-  ]
-
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 dark:text-white font-arabic mb-6">إضافة مبيعات</h1>
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1 card-surface p-6">
-          {daysLeft !== null && daysLeft < 30 && (
-            <AlertBanner type="warning" message={
-              <span className="font-arabic">
-                ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم.{' '}
-                <button
-                  type="button"
-                  onClick={() => navigate('/tickets/create?category=license')}
-                  className="underline font-semibold hover:no-underline"
-                >
-                  سجّل طلب تجديد الآن ←
-                </button>
-              </span>
-            } />
+    <div className="sc-page">
+      <div className="sc-header">
+        <h1 className="sc-title">إضافة المبيعات</h1>
+        <p className="t-small">اختر نمط الإدخال المناسب ثم أدخل التفاصيل</p>
+      </div>
+
+      {daysLeft !== null && daysLeft < 30 && (
+        <div className="sc-alert">
+          <AlertBanner type="warning" message={
+            <span className="font-arabic">
+              ⚠️ ينتهي ترخيصك خلال {daysLeft > 0 ? daysLeft : 0} يوم.{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/tickets/create?category=license')}
+                className="underline font-semibold hover:no-underline"
+              >
+                سجّل طلب تجديد الآن ←
+              </button>
+            </span>
+          } />
+        </div>
+      )}
+
+      {availableModes.length === 0 ? (
+        <div className="sc-mode-hint" style={{ background: '#FEE2E2', color: '#991B1B' }}>
+          <span>⚠️</span>
+          <span>لا توجد أنواع إدخال مفعّلة لحسابك</span>
+        </div>
+      ) : (
+        <div className="sc-segmented" role="tablist">
+          {availableModes.map(({ v, l }) => (
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={mode === v}
+              className={`sc-seg-btn ${mode === v ? 'active' : ''}`}
+              onClick={() => setMode(v)}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {MODE_HINTS[mode] && (
+        <div className="sc-mode-hint">
+          <span>💡</span>
+          <span>{MODE_HINTS[mode]}</span>
+        </div>
+      )}
+
+      <form className="sc-form-card" onSubmit={handleSubmit}>
+        <div className="sc-form-grid">
+          {/* Branch */}
+          <div className="sc-field">
+            <label className="sc-label">الفرع <span className="req">*</span></label>
+            <select
+              className={`input ${errors.branch_id ? 'error' : ''}`}
+              value={form.branch_id}
+              onChange={e => set('branch_id', e.target.value)}
+              onBlur={e => validateField('branch_id', e.target.value)}
+            >
+              <option value="">اختر الفرع</option>
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+              ))}
+            </select>
+            {errors.branch_id && <div className="sc-error-text">⚠ {errors.branch_id}</div>}
+          </div>
+
+          {/* Invoice number */}
+          <div className="sc-field">
+            <label className="sc-label">رقم الفاتورة (اختياري)</label>
+            <input
+              className="input"
+              type="text"
+              dir="ltr"
+              value={form.invoice_number}
+              onChange={e => set('invoice_number', e.target.value)}
+              placeholder="INV-001"
+            />
+            <div className="sc-helper">يجب أن يكون فريداً لكل فرع</div>
+          </div>
+
+          {/* Date fields per mode */}
+          {mode === 'daily' && (
+            <div className="sc-field" style={{ gridColumn: '1 / -1' }}>
+              <label className="sc-label">التاريخ <span className="req">*</span></label>
+              <input
+                className={`input ${errors.sale_date ? 'error' : ''}`}
+                type="date"
+                dir="ltr"
+                min={minDate}
+                max={maxDate}
+                value={form.sale_date}
+                onChange={e => set('sale_date', e.target.value)}
+                onBlur={e => validateField('sale_date', e.target.value)}
+              />
+              {errors.sale_date && <div className="sc-error-text">⚠ {errors.sale_date}</div>}
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Mode selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-2">نوع الإدخال</label>
-              <div className="flex gap-4 flex-wrap">
-                {availableModes.map(({ v, l }) => (
-                  <label key={v} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="mode" value={v} checked={mode === v} onChange={() => setMode(v)} className="text-yellow-600 focus:ring-yellow-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300 font-arabic">{l}</span>
-                  </label>
-                ))}
-                {availableModes.length === 0 && (
-                  <p className="text-sm text-red-500 font-arabic">لا توجد أنواع إدخال مفعّلة لحسابك</p>
-                )}
+          {mode === 'monthly' && (
+            <>
+              <div className="sc-field">
+                <label className="sc-label">السنة <span className="req">*</span></label>
+                <select
+                  className="input"
+                  value={form.year}
+                  onChange={e => set('year', parseInt(e.target.value))}
+                >
+                  {YEARS.map(y => (
+                    <option key={y} value={y} disabled={y > currentYear}>{y}</option>
+                  ))}
+                </select>
               </div>
-            </div>
+              <div className="sc-field">
+                <label className="sc-label">الشهر <span className="req">*</span></label>
+                <select
+                  className="input"
+                  value={form.month}
+                  onChange={e => set('month', parseInt(e.target.value))}
+                >
+                  {MONTHS.map(m => {
+                    const isFuture = form.year === currentYear && m.v > currentMonth
+                    return (
+                      <option key={m.v} value={m.v} disabled={isFuture}>
+                        {m.l}{isFuture ? ' (مستقبلي)' : ''}
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+            </>
+          )}
 
-            {/* Date inputs based on mode */}
-            {mode === 'daily' && (
-              <FormField label="التاريخ" error={errors.sale_date}>
-                <input type="date" value={form.sale_date}
-                  onChange={e => set('sale_date', e.target.value)}
-                  onBlur={e => validateField('sale_date', e.target.value)}
+          {mode === 'range' && (
+            <>
+              <div className="sc-field">
+                <label className="sc-label">من التاريخ <span className="req">*</span></label>
+                <input
+                  className={`input ${errors.period_start_date ? 'error' : ''}`}
+                  type="date"
                   dir="ltr"
-                  min={minDate} max={maxDate}
-                  className="input-base" />
-              </FormField>
-            )}
-            {mode === 'monthly' && (
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">الشهر</label>
-                  <select value={form.month} onChange={e => set('month', parseInt(e.target.value))}
-                    className="input-base font-arabic">
-                    {MONTHS.map(m => {
-                      const isFuture = form.year === currentYear && m.v > currentMonth
-                      return (
-                        <option key={m.v} value={m.v} disabled={isFuture}>
-                          {m.l}{isFuture ? ' (مستقبلي)' : ''}
-                        </option>
-                      )
-                    })}
-                  </select>
-                </div>
-                <div className="w-28">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-arabic mb-1.5">السنة</label>
-                  <select value={form.year} onChange={e => set('year', parseInt(e.target.value))}
-                    className="input-base">
-                    {YEARS.map(y => (
-                      <option key={y} value={y} disabled={y > currentYear}>{y}</option>
-                    ))}
-                  </select>
-                </div>
+                  min={minDate}
+                  max={maxDate}
+                  value={form.period_start_date}
+                  onChange={e => set('period_start_date', e.target.value)}
+                  onBlur={e => validateField('period_start_date', e.target.value)}
+                />
+                {errors.period_start_date && <div className="sc-error-text">⚠ {errors.period_start_date}</div>}
               </div>
-            )}
-            {mode === 'range' && (
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <FormField label="من التاريخ" error={errors.period_start_date}>
-                    <input type="date" value={form.period_start_date}
-                      onChange={e => set('period_start_date', e.target.value)}
-                      onBlur={e => validateField('period_start_date', e.target.value)}
-                      dir="ltr"
-                      min={minDate} max={maxDate}
-                      className="input-base w-full" />
-                  </FormField>
-                </div>
-                <div className="flex-1">
-                  <FormField label="إلى التاريخ" error={errors.period_end_date}>
-                    <input type="date" value={form.period_end_date}
-                      onChange={e => set('period_end_date', e.target.value)}
-                      onBlur={e => validateField('period_end_date', e.target.value)}
-                      dir="ltr"
-                      min={minDate} max={maxDate}
-                      className="input-base w-full" />
-                  </FormField>
-                </div>
+              <div className="sc-field">
+                <label className="sc-label">إلى التاريخ <span className="req">*</span></label>
+                <input
+                  className={`input ${errors.period_end_date ? 'error' : ''}`}
+                  type="date"
+                  dir="ltr"
+                  min={minDate}
+                  max={maxDate}
+                  value={form.period_end_date}
+                  onChange={e => set('period_end_date', e.target.value)}
+                  onBlur={e => validateField('period_end_date', e.target.value)}
+                />
+                {errors.period_end_date && <div className="sc-error-text">⚠ {errors.period_end_date}</div>}
               </div>
-            )}
+            </>
+          )}
 
-            {/* Branch */}
-            <FormField label="الفرع" required error={errors.branch_id}>
-              <select value={form.branch_id}
-                onChange={e => set('branch_id', e.target.value)}
-                onBlur={e => validateField('branch_id', e.target.value)}
-                className="input-base font-arabic">
-                <option value="">اختر الفرع</option>
-                {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
-              </select>
-            </FormField>
+          {/* Amount */}
+          <div className="sc-field" style={{ gridColumn: '1 / -1' }}>
+            <label className="sc-label">إجمالي المبيعات (ر.س) <span className="req">*</span></label>
+            <input
+              className={`input ${errors.amount ? 'error' : ''}`}
+              type="number"
+              min="0.01"
+              step="0.01"
+              dir="ltr"
+              value={form.amount}
+              onChange={e => set('amount', e.target.value)}
+              onBlur={e => validateField('amount', e.target.value)}
+              placeholder="0.00"
+            />
+            {errors.amount && <div className="sc-error-text">⚠ {errors.amount}</div>}
+          </div>
 
-            {/* Amount */}
-            <FormField label="المبلغ (ر.س)" required error={errors.amount}>
-              <input type="number" min="0.01" step="0.01" dir="ltr" value={form.amount}
-                onChange={e => set('amount', e.target.value)}
-                onBlur={e => validateField('amount', e.target.value)}
-                placeholder="0.00"
-                className="input-base" />
-            </FormField>
-
-            {/* Invoice number */}
-            <FormField label="رقم الفاتورة (اختياري)">
-              <input type="text" dir="ltr" value={form.invoice_number}
-                onChange={e => set('invoice_number', e.target.value)}
-                placeholder="INV-001"
-                className="input-base" />
-            </FormField>
-
-            {/* Notes */}
-            <FormField label="ملاحظات (اختياري)">
-              <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
-                className="input-base font-arabic resize-none" />
-            </FormField>
-
-            <div className="flex gap-3 pt-2">
-              <button type="submit" disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors font-arabic text-sm">
-                {loading ? <ButtonSpinner /> : null}
-                {loading ? 'جاري الحفظ...' : 'حفظ المبيعات'}
-              </button>
-              <button type="button" onClick={() => navigate('/dashboard')}
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-arabic">
-                إلغاء
-              </button>
-            </div>
-          </form>
+          {/* Notes */}
+          <div className="sc-field" style={{ gridColumn: '1 / -1' }}>
+            <label className="sc-label">ملاحظات (اختياري)</label>
+            <textarea
+              className="input"
+              rows={3}
+              value={form.notes}
+              onChange={e => set('notes', e.target.value)}
+              placeholder="أي ملاحظات إضافية..."
+            />
+          </div>
         </div>
 
-        {/* Tips panel */}
-        <div className="w-full lg:w-64 shrink-0">
-          <TipsPanel tips={tips} />
+        <div className="sc-actions">
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? <ButtonSpinner /> : null}
+            {loading ? 'جاري الحفظ...' : 'حفظ المبيعة'}
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => navigate('/dashboard')}>
+            إلغاء
+          </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
