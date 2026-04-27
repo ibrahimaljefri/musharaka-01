@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import AlertBanner from '../components/AlertBanner'
+import { useAuthStore } from '../store/authStore'
 import './branch-form.css'
 
 export default function BranchEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const isSuperAdmin = useAuthStore(s => s.isSuperAdmin)
   const [form, setForm] = useState(null)
   const [loading, setLoading]   = useState(false)
   const [fetching, setFetching] = useState(true)
@@ -77,8 +79,22 @@ export default function BranchEdit() {
             <input className="input" value={form.name || ''} onChange={e => set('name', e.target.value)} />
           </div>
           <div className="bf-field">
-            <label className="bf-label">رقم العقد</label>
-            <input className="input" dir="ltr" value={form.contract_number || ''} onChange={e => set('contract_number', e.target.value)} />
+            <label className="bf-label">
+              رقم العقد
+              {form.contract_number && !isSuperAdmin && (
+                <span style={{ marginRight: 6, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  🔒 لا يمكن التعديل
+                </span>
+              )}
+            </label>
+            <input
+              className="input"
+              dir="ltr"
+              value={form.contract_number || ''}
+              onChange={form.contract_number && !isSuperAdmin ? undefined : e => set('contract_number', e.target.value)}
+              readOnly={!!(form.contract_number && !isSuperAdmin)}
+              style={form.contract_number && !isSuperAdmin ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+            />
           </div>
           <div className="bf-field">
             <label className="bf-label">اسم البراند</label>

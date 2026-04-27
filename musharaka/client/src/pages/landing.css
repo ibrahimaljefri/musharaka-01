@@ -721,3 +721,19 @@
 /* ---- Icons -------------------------------------------------------------- */
 .landing-root .icon { width: 16px; height: 16px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
 .landing-root .icon-lg { width: 24px; height: 24px; }
+
+/* ── Hero dashboard mockup: blur numbers/names so they look like sample data ── */
+.landing-root .hero-kpi .value,
+.landing-root .hero-kpi .trend {
+  filter: blur(5px);
+  user-select: none;
+}
+.landing-root .hp-table tbody td {
+  filter: blur(4px);
+  user-select: none;
+}
+
+/* ── Pricing section: hidden until pricing is finalised ── */
+.landing-root .pricing {
+  display: none;
+}

@@ -5,6 +5,28 @@ import AlertBanner from '../components/AlertBanner'
 import { useAuthStore } from '../store/authStore'
 import './branch-form.css'
 
+// ── Field must live OUTSIDE BranchCreate so React keeps the same component
+// identity across re-renders. Defining it inside the parent would create a
+// new function reference on every keystroke → React unmounts/remounts the
+// input → focus is lost after each character typed.
+function Field({ name, label, required, dir = 'rtl', placeholder = '', type = 'text', full = false, form, set }) {
+  return (
+    <div className={`bf-field ${full ? 'full' : ''}`}>
+      <label className="bf-label">
+        {label} {required && <span className="req">*</span>}
+      </label>
+      <input
+        type={type}
+        dir={dir}
+        className="input"
+        value={form[name]}
+        onChange={e => set(name, e.target.value)}
+        placeholder={placeholder}
+      />
+    </div>
+  )
+}
+
 export default function BranchCreate() {
   const navigate     = useNavigate()
   const maxBranches  = useAuthStore(s => s.maxBranches)
@@ -53,22 +75,6 @@ export default function BranchCreate() {
     }
   }
 
-  const Field = ({ name, label, required, dir = 'rtl', placeholder = '', type = 'text', full = false }) => (
-    <div className={`bf-field ${full ? 'full' : ''}`}>
-      <label className="bf-label">
-        {label} {required && <span className="req">*</span>}
-      </label>
-      <input
-        type={type}
-        dir={dir}
-        className="input"
-        value={form[name]}
-        onChange={e => set(name, e.target.value)}
-        placeholder={placeholder}
-      />
-    </div>
-  )
-
   return (
     <div className="branch-form-page">
       <div className="bf-header">
@@ -82,12 +88,12 @@ export default function BranchCreate() {
         {error && <div className="bf-alert"><AlertBanner type="error" message={error} /></div>}
 
         <div className="bf-grid">
-          <Field name="code" label="كود الفرع" required dir="ltr" placeholder="BR-001" />
-          <Field name="name" label="اسم الفرع" required placeholder="فرع الرياض" />
-          <Field name="contract_number" label="رقم العقد" dir="ltr" placeholder="CNT-2024-001" />
-          <Field name="brand_name" label="اسم البراند" />
-          <Field name="unit_number" label="رقم الوحدة" dir="ltr" />
-          <Field name="location" label="الموقع" placeholder="الرياض، حي العليا" />
+          <Field name="code" label="كود الفرع" required dir="ltr" placeholder="BR-001" form={form} set={set} />
+          <Field name="name" label="اسم الفرع" required placeholder="فرع الرياض" form={form} set={set} />
+          <Field name="contract_number" label="رقم العقد" dir="ltr" placeholder="CNT-2024-001" form={form} set={set} />
+          <Field name="brand_name" label="اسم البراند" form={form} set={set} />
+          <Field name="unit_number" label="رقم الوحدة" dir="ltr" form={form} set={set} />
+          <Field name="location" label="الموقع" placeholder="الرياض، حي العليا" form={form} set={set} />
           <div className="bf-field full">
             <label className="bf-label">العنوان</label>
             <textarea

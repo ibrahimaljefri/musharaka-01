@@ -44,7 +44,7 @@ router.get('/:id', async (req, res, next) => {
       return res.status(403).json({ error: 'لا تملك صلاحية الوصول إلى هذا الفرع' })
     }
     const { rows } = await pool.query(
-      `SELECT * FROM branches WHERE id = $1 AND tenant_id = $2 LIMIT 1`,
+      `SELECT * FROM branches WHERE id = $1 AND ($2::uuid IS NULL OR tenant_id = $2) LIMIT 1`,
       [req.params.id, req.tenantId]
     )
     if (!rows[0]) return res.status(404).json({ error: 'الفرع غير موجود' })
@@ -101,16 +101,32 @@ router.put('/:id', adminOnly, async (req, res, next) => {
     if (!code?.trim()) return res.status(422).json({ error: 'كود الفرع مطلوب' })
     if (!name?.trim()) return res.status(422).json({ error: 'اسم الفرع مطلوب' })
 
+    // Fetch existing branch to enforce contract_number lock.
+    // Super-admin has null tenantId so the WHERE uses IS NULL check instead.
+    const { rows: [existing] } = await pool.query(
+      `SELECT contract_number FROM branches
+       WHERE id = $1 AND ($2::uuid IS NULL OR tenant_id = $2)`,
+      [req.params.id, req.tenantId]
+    )
+    if (!existing) return res.status(404).json({ error: 'الفرع غير موجود' })
+
+    // رقم العقد is locked once set — only super-admin can change it.
+    // Non-super-admin clients always get the original value back regardless of
+    // what they sent, so a direct API call cannot bypass the UI lock either.
+    const finalContractNumber = (existing.contract_number && !req.isSuperAdmin)
+      ? existing.contract_number
+      : (contract_number || null)
+
     try {
       const { rows } = await pool.query(
         `UPDATE branches
          SET code = $1, name = $2, contract_number = $3, brand_name = $4,
              unit_number = $5, location = $6, address = $7
-         WHERE id = $8 AND tenant_id = $9
+         WHERE id = $8 AND ($9::uuid IS NULL OR tenant_id = $9)
          RETURNING *`,
         [
           code.trim(), name.trim(),
-          contract_number || null, brand_name || null,
+          finalContractNumber, brand_name || null,
           unit_number || null, location || null, address || null,
           req.params.id, req.tenantId,
         ]
@@ -137,7 +153,7 @@ router.delete('/:id', adminOnly, async (req, res, next) => {
     }
 
     const res2 = await pool.query(
-      `DELETE FROM branches WHERE id = $1 AND tenant_id = $2`,
+      `DELETE FROM branches WHERE id = $1 AND ($2::uuid IS NULL OR tenant_id = $2)`,
       [req.params.id, req.tenantId]
     )
     if (!res2.rowCount) return res.status(404).json({ error: 'الفرع غير موجود' })
