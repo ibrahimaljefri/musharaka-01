@@ -7,6 +7,20 @@
 @layer base {
   * { box-sizing: border-box; }
 
+  /* The <html> element must match the body bg.
+     During React route transitions (login → dashboard, dashboard → login),
+     the browser briefly composites the html element before the new route's
+     styles apply. If html is transparent (the browser default), the user
+     sees a white flash. Painting html with the theme bg eliminates that. */
+  html {
+    background-color: #f4f6fa;
+    color-scheme: light;
+  }
+  html.dark {
+    background-color: #0f1117;
+    color-scheme: dark;
+  }
+
   body {
     font-family: 'Tajawal', sans-serif;
     @apply text-gray-900 dark:text-gray-100;
@@ -22,6 +36,20 @@
     background-color: #0f1117;
     background-image:
       radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1.5px, transparent 0);
+  }
+
+  /* Soft cross-fade for route transitions. Keeps perceived speed (no
+     blocking animation) but eliminates the abrupt snap between
+     /login (GuestLayout) and /dashboard (AppLayout). */
+  #root > * {
+    animation: route-fade-in 180ms ease-out;
+  }
+  @keyframes route-fade-in {
+    from { opacity: 0.6; }
+    to   { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #root > * { animation: none; }
   }
 
   /* Custom scrollbar — webkit */
