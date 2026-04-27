@@ -260,3 +260,48 @@ html.dark .adm-tenants .adm-icon-btn.danger:hover {
   .adm-tenants .adm-cards-mobile { display: block; }
   .adm-tenants .adm-filter-bar .input { max-width: 100%; }
 }
+
+/* ---------- Per-tenant inline branches sub-table ---------- */
+.adm-tenants .adm-tenant-branches-row > td {
+  background: var(--bg-alt, #FAFAF9);
+  border-top: 1px dashed var(--border);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+}
+html.dark .adm-tenants .adm-tenant-branches-row > td {
+  background: var(--bg-alt, #121214);
+}
+
+.adm-tenants .adm-tenant-branches-head {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.8125rem; color: var(--text-sec);
+  margin-bottom: 8px;
+}
+.adm-tenants .adm-tenant-branches-head strong { color: var(--text); }
+
+.adm-tenants .adm-sub-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  overflow: hidden;
+  font-size: 0.875rem;
+}
+.adm-tenants .adm-sub-tbl th {
+  text-align: start;
+  padding: 8px 12px;
+  background: var(--bg-subtle, #F5F5F4);
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: none;
+}
+html.dark .adm-tenants .adm-sub-tbl th { background: var(--bg-subtle, #18181B); }
+.adm-tenants .adm-sub-tbl td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.adm-tenants .adm-sub-tbl tr:last-child td { border-bottom: 0; }
+.adm-tenants .adm-sub-tbl tr:hover td { background: var(--bg-subtle); }

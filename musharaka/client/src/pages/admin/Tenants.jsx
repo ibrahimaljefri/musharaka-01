@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../lib/axiosClient'
 import ConfirmDialog from '../../components/ConfirmDialog'
@@ -6,7 +6,7 @@ import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import EmptyState from '../../components/EmptyState'
-import { Plus, Edit2, Trash2, Key, Building2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Key, Building2, ChevronLeft, ChevronDown, GitBranch } from 'lucide-react'
 import './admin-tenants.css'
 
 const PAGE_SIZE = 20
@@ -44,6 +44,24 @@ export default function Tenants() {
   const [sort, setSort]                 = useState({ field: null, dir: 'asc' })
   const [page, setPage]                 = useState(1)
 
+  // branchesByTenant: { [tenantId]: branches[] } — pre-fetched on page
+  // load via parallel fan-out so search can match branch names without
+  // requiring the user to expand rows first.
+  const [branchesByTenant, setBranchesByTenant] = useState({})
+
+  // Expanded-row state: Set of tenant_ids that are currently open.
+  // Combines user-toggled rows with auto-expansion driven by search.
+  const [userExpanded, setUserExpanded] = useState(new Set())
+
+  function toggleExpand(tenantId) {
+    setUserExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(tenantId)) next.delete(tenantId)
+      else next.add(tenantId)
+      return next
+    })
+  }
+
   useEffect(() => { load() }, [])
   useEffect(() => { setPage(1) }, [search, statusFilter, planFilter])
 
@@ -51,7 +69,20 @@ export default function Tenants() {
     setLoading(true)
     try {
       const { data } = await api.get('/admin/tenants')
-      setTenants(data || [])
+      const tenantList = data || []
+      setTenants(tenantList)
+      // Fan-out: fetch every tenant's branches in parallel so the search
+      // box can match branch names/codes/contract numbers without forcing
+      // the admin to expand rows manually. Failures don't block the page —
+      // a tenant with a failed fetch just won't surface via branch search.
+      const pairs = await Promise.all(
+        tenantList.map(t =>
+          api.get(`/admin/tenants/${t.id}/branches`)
+            .then(r => [t.id, r.data || []])
+            .catch(() => [t.id, []])
+        )
+      )
+      setBranchesByTenant(Object.fromEntries(pairs))
     } catch (err) {
       toast.error(err.response?.data?.error || 'فشل تحميل المستأجرين')
     } finally { setLoading(false) }
@@ -76,13 +107,31 @@ export default function Tenants() {
     return Array.from(set)
   }, [tenants])
 
+  // Tenants whose branches match the search — also drives auto-expansion.
+  const branchMatchedTenantIds = useMemo(() => {
+    if (!search) return new Set()
+    const q = search.toLowerCase()
+    const hits = new Set()
+    for (const [tid, branches] of Object.entries(branchesByTenant)) {
+      for (const b of branches) {
+        if (
+          (b.name || '').toLowerCase().includes(q) ||
+          (b.code || '').toLowerCase().includes(q) ||
+          (b.contract_number || '').toLowerCase().includes(q)
+        ) { hits.add(tid); break }
+      }
+    }
+    return hits
+  }, [search, branchesByTenant])
+
   const filteredSorted = useMemo(() => {
     let list = tenants.filter(t => {
       if (search) {
         const q = search.toLowerCase()
-        const hit = (t.name || '').toLowerCase().includes(q) ||
-                    (t.slug || '').toLowerCase().includes(q)
-        if (!hit) return false
+        const tenantHit = (t.name || '').toLowerCase().includes(q) ||
+                          (t.slug || '').toLowerCase().includes(q)
+        const branchHit = branchMatchedTenantIds.has(t.id)
+        if (!tenantHit && !branchHit) return false
       }
       if (statusFilter) {
         const { cls } = tenantStatusInfo(t)
@@ -106,7 +155,15 @@ export default function Tenants() {
       })
     }
     return list
-  }, [tenants, search, statusFilter, planFilter, sort])
+  }, [tenants, search, statusFilter, planFilter, sort, branchMatchedTenantIds])
+
+  // The set of tenants currently rendered as expanded =
+  //   user-toggled rows  ∪  rows auto-expanded due to a branch search hit.
+  const effectivelyExpanded = useMemo(() => {
+    const merged = new Set(userExpanded)
+    for (const tid of branchMatchedTenantIds) merged.add(tid)
+    return merged
+  }, [userExpanded, branchMatchedTenantIds])
 
   const totalPages = Math.ceil(filteredSorted.length / PAGE_SIZE) || 1
   const paged = filteredSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -142,7 +199,7 @@ export default function Tenants() {
       <div className="adm-filter-bar">
         <input
           className="input"
-          placeholder="🔍 بحث بالاسم أو الرمز..."
+          placeholder="🔍 بحث باسم العميل، الرمز، اسم الفرع، كود الفرع، أو رقم العقد..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -197,6 +254,7 @@ export default function Tenants() {
             <table className="adm-tbl">
               <thead>
                 <tr>
+                  <th style={{ width: 40 }}></th>
                   <th>الاسم</th>
                   <th>الرمز</th>
                   <th>الباقة</th>
@@ -210,8 +268,33 @@ export default function Tenants() {
                 {paged.map(t => {
                   const s = tenantStatusInfo(t)
                   const expired = t.expires_at && new Date(t.expires_at) < new Date()
+                  const isOpen = effectivelyExpanded.has(t.id)
+                  const branches = branchesByTenant[t.id] || []
+                  // When auto-expanded by branch search, highlight only the
+                  // matching branches; otherwise show all.
+                  const branchQuery = search ? search.toLowerCase() : ''
+                  const visibleBranches = branchQuery && branchMatchedTenantIds.has(t.id)
+                    ? branches.filter(b =>
+                        (b.name || '').toLowerCase().includes(branchQuery) ||
+                        (b.code || '').toLowerCase().includes(branchQuery) ||
+                        (b.contract_number || '').toLowerCase().includes(branchQuery)
+                      )
+                    : branches
                   return (
-                    <tr key={t.id}>
+                    <Fragment key={t.id}>
+                    <tr>
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => toggleExpand(t.id)}
+                          className="adm-icon-btn"
+                          title={isOpen ? 'إخفاء الفروع' : 'عرض الفروع'}
+                          aria-label={isOpen ? 'إخفاء الفروع' : 'عرض الفروع'}
+                          aria-expanded={isOpen}
+                        >
+                          {isOpen ? <ChevronDown size={14} /> : <ChevronLeft size={14} />}
+                        </button>
+                      </td>
                       <td>
                         <strong>{t.name}</strong>
                         {t.commercial_registration && (
@@ -263,6 +346,55 @@ export default function Tenants() {
                         </div>
                       </td>
                     </tr>
+                    {isOpen && (
+                      <tr className="adm-tenant-branches-row">
+                        <td></td>
+                        <td colSpan={7}>
+                          <div className="adm-tenant-branches">
+                            <div className="adm-tenant-branches-head">
+                              <GitBranch size={13} />
+                              <span>فروع <strong>{t.name}</strong></span>
+                            </div>
+                            {visibleBranches.length === 0 ? (
+                              <div className="t-small" style={{ padding: '8px 0', color: 'var(--text-muted)' }}>
+                                {branches.length === 0 ? 'لا توجد فروع لهذا العميل' : 'لا توجد فروع مطابقة للبحث'}
+                              </div>
+                            ) : (
+                              <table className="adm-sub-tbl">
+                                <thead>
+                                  <tr>
+                                    <th>كود الفرع</th>
+                                    <th>اسم الفرع</th>
+                                    <th>رقم العقد</th>
+                                    <th style={{ width: 80 }}>إجراء</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {visibleBranches.map(b => (
+                                    <tr key={b.id}>
+                                      <td className="t-mono">{b.code || '—'}</td>
+                                      <td>{b.name}</td>
+                                      <td className="t-mono">{b.contract_number || '—'}</td>
+                                      <td>
+                                        <Link
+                                          to={`/branches/${b.id}/edit`}
+                                          className="adm-icon-btn"
+                                          title="تعديل الفرع"
+                                          aria-label="تعديل الفرع"
+                                        >
+                                          <Edit2 size={13} />
+                                        </Link>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   )
                 })}
               </tbody>
