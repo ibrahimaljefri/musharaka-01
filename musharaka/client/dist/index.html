@@ -3,6 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Tell the browser which color schemes the app supports BEFORE CSS
+         loads. Without this, browsers (esp. with OS-level dark mode on)
+         may briefly paint a default-colored frame during route transitions
+         and produce a visible flash. -->
+    <meta name="color-scheme" content="light dark" />
+    <!-- Pre-CSS background paint: match index.css html bg so the very
+         first frame is the theme color, not the browser default white. -->
+    <style>html { background-color: #f4f6fa; }
+      @media (prefers-color-scheme: dark) {
+        html:not(.light) { background-color: #0f1117; }
+      }</style>
     <link rel="icon" type="image/svg+xml" href="/urwah-logo.svg" />
     <link rel="alternate icon" type="image/png" href="/urwah-logo.png" />
     <link rel="apple-touch-icon" href="/urwah-logo.png" />
@@ -41,10 +52,10 @@
         }
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-qjls47pX.js"></script>
+    <script type="module" crossorigin src="/assets/index-B27wFiL0.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-BrtF_Mog.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-ui-DcA5V555.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-DOCyPr-d.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-BkMyYqbf.css">
   </head>
   <body>
     <div id="root"></div>
