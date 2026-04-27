@@ -141,7 +141,7 @@ export default function ChangePassword({ forced = false }) {
           )}
 
           {forced && (
-            <button type="button" className="pw-cancel danger" onClick={() => { signOut(); navigate('/login') }}>
+            <button type="button" className="pw-cancel danger" onClick={async () => { await signOut(); navigate('/login', { replace: true }) }}>
               تسجيل الخروج
             </button>
           )}

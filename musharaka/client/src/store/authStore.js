@@ -66,6 +66,8 @@ export const useAuthStore = create((set, get) => ({
     try { await api.post('/auth/logout') } catch { /* ignore errors on logout */ }
     localStorage.removeItem(TOKEN_KEY)
     set({ ...CLEAR, loading: false })
-    window.location.href = '/login'
+    // Caller must navigate via React Router (e.g. navigate('/login', { replace: true })).
+    // Doing a hard window.location redirect here would reload the whole app and
+    // produce a visible flash; the soft navigate keeps the layout transition smooth.
   },
 }))
