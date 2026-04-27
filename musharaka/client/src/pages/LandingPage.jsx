@@ -92,7 +92,7 @@ export default function LandingPage() {
             <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 13l4 4L19 7"/></svg>
             تشارك البيانات بدقة امنة
           </span>
-          <h1>إدارة المبيعات بدقة وسرعة</h1>
+          <h1>تشارك البيانات بدقة امنة</h1>
           <p className="lede">
             منصة عروة تمكّن وتسهل تشارك البيانات بدقة امنة
             مع منصات التكامل أتمتة كاملة، تقارير فورية، واجهة عربية .
