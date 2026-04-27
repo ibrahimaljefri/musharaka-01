@@ -92,8 +92,15 @@ fi
 # ────────── 4. Install any new deps ──────────────────────────────────────────
 log "Activating node $NODE_VERSION + installing deps"
 cd "$SRV_DST"
+# cPanel's activate script references CL_VIRTUAL_ENV which is unset, so
+# `set -u` (strict-mode) trips on it and aborts the deploy before we ever
+# get to kill/restart node. Disable nounset around the source, then turn
+# it back on. The empty-string default for CL_VIRTUAL_ENV is also fine
+# but disabling -u is more robust to future activate-script changes.
+set +u
 # shellcheck source=/dev/null
 source "$NODE_ENV_PATH/bin/activate"
+set -u
 npm install --no-audit --no-fund --legacy-peer-deps 2>&1 | tail -5
 ok "Deps installed"
 
