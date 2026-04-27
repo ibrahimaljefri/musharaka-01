@@ -157,7 +157,7 @@ export default function LandingPage() {
                   <div className="trend">+3.8% ↑</div>
                 </div>
                 <div className="hero-kpi">
-                  <div className="label">فواتير مرسلة</div>
+                  <div className="label">بيانات مرسلة</div>
                   <div className="value">١٨٢</div>
                   <div className="trend" style={{ color: 'var(--text-muted)' }}>هذا الشهر</div>
                 </div>
@@ -188,7 +188,7 @@ export default function LandingPage() {
                 <span className="pill">٥ جديدة</span>
               </div>
               <table className="hp-table">
-                <thead><tr><th>الفرع</th><th>الفاتورة</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+                <thead><tr><th>الفرع</th><th>البيان</th><th>المبلغ</th><th>الحالة</th></tr></thead>
                 <tbody>
                   <tr><td>الرياض — مول العرب</td><td>INV-342</td><td>٥,٨٤٠</td><td><span className="badge hp-badge-ok">مُرسل</span></td></tr>
                   <tr><td>جدة — النخيل</td><td>INV-341</td><td>٣,٢٠٠</td><td><span className="badge hp-badge-ok">مُرسل</span></td></tr>
@@ -229,7 +229,7 @@ export default function LandingPage() {
             </div>
             <div className="feature-text">
               <h3>تكامل كامل مع المنصات</h3>
-              <p>إرسال تلقائي للفواتير — متزامن ومؤرشف وآمن</p>
+              <p>إرسال تلقائي للبيانات — متزامن ومؤرشف وآمن</p>
             </div>
           </div>
 
@@ -299,7 +299,7 @@ export default function LandingPage() {
             <div className="how-step">
               <div className="num">02</div>
               <h3>راجع البيانات</h3>
-              <p>تحقق من كل فاتورة، عدّل إن احتجت، وأكّد الأرقام قبل الإرسال النهائي</p>
+              <p>تحقق من كل بيان، عدّل إن احتجت، وأكّد الأرقام قبل الإرسال النهائي</p>
             </div>
             <div className="how-step">
               <div className="num">03</div>
