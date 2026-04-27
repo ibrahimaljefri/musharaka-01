@@ -11,8 +11,8 @@ export default function GuestLayout() {
             <UrwahLogo variant="mark" width={56} />
           </div>
           <div className="auth-brand-content">
-            <h1 className="auth-brand-title">الأسلوب الحديث لإدارة المبيعات</h1>
-            <p className="auth-brand-sub">منصة عروة تساعدك على تنظيم مبيعات فروعك</p>
+            <h1 className="auth-brand-title">تشارك البيانات بدقة وأمان</h1>
+            <p className="auth-brand-sub">منصة عروة تساعدك على تشارك بيانات فروعك مع منصات التكامل بأمان</p>
           </div>
           <div className="auth-brand-footer">© 2026 عروة. جميع الحقوق محفوظة.</div>
         </aside>

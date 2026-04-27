@@ -108,7 +108,7 @@ export default function Register() {
   return (
     <>
       <div className="auth-form-title">إنشاء حساب جديد</div>
-      <div className="auth-form-sub">أنشئ حسابك للبدء في إدارة مبيعاتك</div>
+      <div className="auth-form-sub">أنشئ حسابك للبدء في تشارك بيانات فروعك بأمان</div>
 
       <AlertBanner type="error" message={generalError} dismissible onClose={() => setGeneralError('')} />
 
