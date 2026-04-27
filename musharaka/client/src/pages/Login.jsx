@@ -53,7 +53,7 @@ export default function Login() {
   return (
     <>
       <div className="auth-form-title">تسجيل الدخول</div>
-      <div className="auth-form-sub">أدخل بياناتك للدخول إلى لوحة التحكم</div>
+      <div className="auth-form-sub">أدخل بياناتك للدخول إلى منصة تشارك البيانات</div>
 
       <AlertBanner type="error" message={error} dismissible onClose={() => setError('')} />
 
@@ -114,7 +114,7 @@ export default function Login() {
       <div className="auth-divider">أو</div>
 
       <div className="auth-register-cta">
-        هل أنت مستخدم جديد؟ <Link to="/register">تواصل مع فريق المبيعات</Link>
+        هل أنت مستخدم جديد؟ <Link to="/register">تواصل معنا</Link>
       </div>
     </>
   )
