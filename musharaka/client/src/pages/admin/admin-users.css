@@ -155,12 +155,47 @@ html.dark .adm-users .adm-icon-btn.danger:hover { color: #F87171; border-color: 
   text-align: center; color: var(--text-muted); font-size: 0.9rem;
 }
 
-/* ---------- Modal ---------- */
+/* ---------- Modal ----------
+   These modals are rendered via createPortal(..., document.body), so they
+   live OUTSIDE the .app-root container where the design tokens are scoped.
+   Without their own copy of the tokens, var(--surface) etc. resolve to
+   nothing and the modal-card paints transparent over the backdrop.
+   Declaring the tokens directly on .adm-users-modal makes the portal
+   self-sufficient regardless of mount point. */
 .adm-users-modal {
+  --surface:       #FFFFFF;
+  --border:        #E7E5E4;
+  --border-strong: #D6D3D1;
+  --text:          #0C0A09;
+  --text-sec:      #57534E;
+  --text-muted:    #78716C;
+  --brand:         #B8860B;
+  --brand-hover:   #92400E;
+  --bg-subtle:     #F5F5F4;
+  --shadow-lg:     0 2px 6px rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.08);
+  --r-lg:          12px;
+  --r-sm:          6px;
+  --space-2:       8px;
+  --space-3:       12px;
+  --space-4:       16px;
+  --space-5:       24px;
+
   position: fixed; inset: 0; z-index: 50;
   display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.5);
-  padding: var(--space-4, 16px);
+  padding: var(--space-4);
+}
+html.dark .adm-users-modal {
+  --surface:       #18181B;
+  --border:        #27272A;
+  --border-strong: #3F3F46;
+  --text:          #FAFAF9;
+  --text-sec:      #D4D4D8;
+  --text-muted:    #A1A1AA;
+  --brand:         #FBBF24;
+  --brand-hover:   #F59E0B;
+  --bg-subtle:     #27272A;
+  --shadow-lg:     0 2px 6px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.4);
 }
 .adm-users-modal .modal-card {
   background: var(--surface);
