@@ -50,7 +50,6 @@ export default function LandingPage() {
             <a href="#features" className="nav-link">الميزات</a>
             <a href="#how" className="nav-link">كيف يعمل؟</a>
             <button type="button" className="nav-link" onClick={openContact}>تواصل معنا</button>
-            <a href="#pricing" className="nav-link">الأسعار</a>
           </div>
           <div className="nav-cta">
             <Link to="/login" className="btn btn-ghost btn-sm">دخول</Link>
@@ -91,12 +90,12 @@ export default function LandingPage() {
         <div className="hero-content">
           <span className="eyebrow">
             <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 13l4 4L19 7"/></svg>
-            منصة متكاملة لإدارة المبيعات
+            تشارك البيانات بدقة امنة
           </span>
           <h1>إدارة المبيعات بدقة وسرعة</h1>
           <p className="lede">
-            منصة عروة تمكّن وتسهل جمع المبيعات شهرياً وتسويتها
-            مع منصة التكامل الخاصة بهم — أتمتة كاملة، تقارير فورية، واجهة عربية أولاً.
+            منصة عروة تمكّن وتسهل تشارك البيانات بدقة امنة
+            مع منصات التكامل أتمتة كاملة، تقارير فورية، واجهة عربية .
           </p>
           <div className="hero-ctas">
             <Link to="/register" className="btn btn-primary">
@@ -294,56 +293,20 @@ export default function LandingPage() {
           <div className="how-steps">
             <div className="how-step">
               <div className="num">01</div>
-              <h3>شارك المبيعات بسلاسة</h3>
+              <h3>شارك البيانات بسلاسة</h3>
               <p>يدوياً أو عبر استيراد Excel  المرونة الكاملة لأسلوبك المفضل</p>
             </div>
             <div className="how-step">
               <div className="num">02</div>
-              <h3>راجع الفواتير</h3>
+              <h3>راجع البيانات</h3>
               <p>تحقق من كل فاتورة، عدّل إن احتجت، وأكّد الأرقام قبل الإرسال النهائي</p>
             </div>
             <div className="how-step">
               <div className="num">03</div>
-              <h3>أرسل الدفعة بضغطة</h3>
+              <h3>شارك البيانات بكل سهولة و امان</h3>
               <p>تُرسل الدفعة كاملة إلى منصة التكامل وتُؤرشف لديك بنسخة قابلة للتدقيق</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section className="pricing" id="pricing">
-        <div className="pricing-header">
-          <h2>خطط تناسب حجم مراكزك</h2>
-          <p>اختر الباقة المناسبة لعدد الفروع والمستخدمين — ترقية سهلة متى احتجت</p>
-        </div>
-        <div className="pricing-grid">
-          <div className="pricing-card">
-            <h3>أساسي</h3>
-            <p className="desc">للمراكز الصغيرة</p>
-            <div className="price"><span className="amount">999</span><span className="currency">ر.س / سنة</span></div>
-            <p className="monthly">83 ر.س / شهر</p>
-          </div>
-
-          <div className="pricing-card highlight">
-            <h3>متوسط</h3>
-            <p className="desc">للسلاسل المتنامية</p>
-            <div className="price"><span className="amount">1,999</span><span className="currency">ر.س / سنة</span></div>
-            <p className="monthly">167 ر.س / شهر</p>
-          </div>
-
-          <div className="pricing-card">
-            <h3>متقدم</h3>
-            <p className="desc">للشبكات الكبيرة</p>
-            <div className="price"><span className="amount">3,999</span><span className="currency">ر.س / سنة</span></div>
-            <p className="monthly">333 ر.س / شهر</p>
-          </div>
-        </div>
-
-        <div className="pricing-cta-row">
-          <button type="button" className="btn btn-primary" onClick={openContact} style={{ padding: '14px 32px', fontSize: '1rem' }}>
-            تواصل معنا للاشتراك
-          </button>
         </div>
       </section>
 
@@ -355,7 +318,6 @@ export default function LandingPage() {
           </div>
           <div className="links">
             <a href="#features">الميزات</a>
-            <a href="#pricing">الأسعار</a>
             <button type="button" onClick={openContact}>تواصل معنا</button>
             <Link to="/faq">الأسئلة الشائعة</Link>
           </div>

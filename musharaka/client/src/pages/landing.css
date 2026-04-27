@@ -733,7 +733,3 @@
   user-select: none;
 }
 
-/* ── Pricing section: hidden until pricing is finalised ── */
-.landing-root .pricing {
-  display: none;
-}
