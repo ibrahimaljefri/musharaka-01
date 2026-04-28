@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import { toast } from '../lib/useToast'
 import { TableSkeleton, KpiSkeleton } from '../components/SkeletonLoader'
 import {
-  DollarSign, TrendingUp, Hash, Lock, Trash2,
+  Banknote, TrendingUp, Hash, Lock, Trash2,
   ChevronLeft, ChevronRight, PlusCircle, Clock,
   CheckCircle2, BarChart2, ArrowUpRight, BadgeCheck, CalendarDays,
   Send, ChevronDown,
@@ -343,7 +343,7 @@ export default function Dashboard() {
       .catch(() => {})
   }, [tenantId, maxBranches])
 
-  useEffect(() => { load() }, [branchId, page])
+  useEffect(() => { load() }, [branchId, page, tenantId])
 
   async function load() {
     setLoading(true)
@@ -781,7 +781,7 @@ export default function Dashboard() {
         ) : sales.length === 0 ? (
           <div className="recent-empty">
             <EmptyState
-              icon={DollarSign}
+              icon={Banknote}
               title="لا توجد مبيعات بعد"
               description="ابدأ بتسجيل مبيعاتك اليومية أو الشهرية لمتابعة أداء فروعك"
               action={
@@ -898,7 +898,7 @@ export default function Dashboard() {
         {/* Cumulative totals + confirmed count (retained from original 5-KPI layout) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="card-surface p-4 flex items-center gap-3">
-            <DollarSign size={22} className="text-green-600 dark:text-green-400 shrink-0" />
+            <span className="text-green-600 dark:text-green-400 shrink-0 text-xl font-bold leading-none">﷼</span>
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-arabic mb-0.5">إجمالي المبيعات التراكمي</p>
               <p className="text-lg font-bold text-gray-800 dark:text-gray-100 font-arabic">{fmt(kpis.total)} ر.س</p>

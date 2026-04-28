@@ -107,7 +107,14 @@ export default function SaleCreate() {
     try {
       const { data } = await api.post('/sales', payload)
       toast.success(data.message)
-      setTimeout(() => navigate('/dashboard'), 1500)
+      setForm(prev => ({
+        ...prev,
+        amount: '',
+        invoice_number: '',
+        notes: '',
+        month: prev.month === 12 ? 1 : prev.month + 1,
+        year:  prev.month === 12 ? prev.year + 1 : prev.year,
+      }))
     } catch (err) {
       toast.error(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
     } finally { setLoading(false) }
