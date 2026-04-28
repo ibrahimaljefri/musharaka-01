@@ -36,6 +36,7 @@ export default function TenantForm({ mode = 'create' }) {
     plan: 'basic', status: 'active',
     activated_at: new Date().toISOString().split('T')[0],
     expires_at: '',
+    data_entry_from: '',
     notes: '',
     allowed_input_types: ['daily'],
     allow_advanced_dashboard: false,
@@ -63,8 +64,9 @@ export default function TenantForm({ mode = 'create' }) {
         account_number:           data.account_number          || '',
         plan:                     data.plan,
         status:                   data.status,
-        activated_at:             data.activated_at?.split('T')[0] || '',
-        expires_at:               data.expires_at?.split('T')[0] || '',
+        activated_at:             data.activated_at?.split('T')[0]     || '',
+        expires_at:               data.expires_at?.split('T')[0]       || '',
+        data_entry_from:          data.data_entry_from?.split('T')[0]  || '',
         notes:                    data.notes || '',
         allowed_input_types:      data.allowed_input_types || ['daily'],
         allow_advanced_dashboard: data.allow_advanced_dashboard || false,
@@ -105,9 +107,10 @@ export default function TenantForm({ mode = 'create' }) {
     try {
       const payload = {
         ...form,
-        expires_at:   form.expires_at || null,
-        max_branches: form.max_branches,
-        plan_id:      form.plan_id || null,
+        expires_at:      form.expires_at      || null,
+        data_entry_from: form.data_entry_from || null,
+        max_branches:    form.max_branches,
+        plan_id:         form.plan_id || null,
         ...(isEdit ? {} : userForm),
       }
       if (isEdit) {
@@ -209,6 +212,15 @@ export default function TenantForm({ mode = 'create' }) {
               <label className="field-label">تاريخ الانتهاء <span className="field-muted">(اختياري)</span></label>
               <input className="input" type="date" dir="ltr" value={form.expires_at}
                 onChange={e => set('expires_at', e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="field-label">
+                أقدم تاريخ لإدخال البيانات
+                <span className="field-muted"> (اختياري — إذا كان مختلفاً عن تاريخ التفعيل)</span>
+              </label>
+              <input className="input" type="date" dir="ltr"
+                value={form.data_entry_from || ''}
+                onChange={e => set('data_entry_from', e.target.value || null)} />
             </div>
           </div>
 

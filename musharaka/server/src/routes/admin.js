@@ -119,7 +119,7 @@ router.post('/tenants', async (req, res, next) => {
   const client = await pool.connect()
   try {
     const {
-      name, slug, plan = 'basic', activated_at, expires_at, notes,
+      name, slug, plan = 'basic', activated_at, expires_at, data_entry_from, notes,
       allowed_input_types = ['daily'],
       user_email, user_password, user_name,
       cenomi_api_token,
@@ -135,14 +135,15 @@ router.post('/tenants', async (req, res, next) => {
     let tenant
     try {
       const { rows } = await client.query(
-        `INSERT INTO tenants (name, slug, plan, activated_at, expires_at, notes,
+        `INSERT INTO tenants (name, slug, plan, activated_at, expires_at, data_entry_from, notes,
                               allowed_input_types, cenomi_api_token)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
          RETURNING *`,
         [
           name, slug, plan,
           activated_at || new Date().toISOString(),
           expires_at || null,
+          data_entry_from || null,
           notes || null,
           JSON.stringify(allowed_input_types),
           cenomi_api_token || null,
@@ -204,7 +205,7 @@ router.get('/tenants/:id', async (req, res, next) => {
 router.put('/tenants/:id', async (req, res, next) => {
   try {
     const allowed = [
-      'name','slug','plan','status','activated_at','expires_at',
+      'name','slug','plan','status','activated_at','expires_at','data_entry_from',
       'notes','allowed_input_types','allow_advanced_dashboard',
       'allow_import','allow_reports',
       'commercial_registration','primary_phone','account_number',

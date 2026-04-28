@@ -27,9 +27,10 @@ async function tenantMiddleware(req, res, next) {
     req.tenantId         = isSA ? null : 'test-tenant-id'
     req.userRole         = isSA ? 'super_admin' : 'admin'
     req.allowedInputTypes = ['daily', 'monthly', 'range']
-    req.tenantActivatedAt = '2020-01-01'
-    req.tenantExpiresAt   = null
-    req.allowedBranchIds  = null    // wildcard in test mode
+    req.tenantActivatedAt  = '2020-01-01'
+    req.tenantExpiresAt    = null
+    req.tenantDataEntryFrom = null
+    req.allowedBranchIds   = null    // wildcard in test mode
     return next()
   }
 
@@ -49,16 +50,17 @@ async function tenantMiddleware(req, res, next) {
         return res.status(403).json({ error: 'تم تعليق حساب المؤسسة، يرجى التواصل مع الدعم' })
       if (cached.expires_at && new Date(cached.expires_at) < new Date())
         return res.status(402).json({ error: 'انتهت صلاحية الاشتراك، يرجى التجديد للمتابعة' })
-      req.allowedInputTypes  = cached.allowed_input_types || ['daily']
-      req.tenantActivatedAt  = cached.activated_at || null
-      req.tenantExpiresAt    = cached.expires_at   || null
+      req.allowedInputTypes   = cached.allowed_input_types || ['daily']
+      req.tenantActivatedAt   = cached.activated_at    || null
+      req.tenantExpiresAt     = cached.expires_at      || null
+      req.tenantDataEntryFrom = cached.data_entry_from || null
       await populateAllowedBranches(req)
       return next()
     }
 
     // Cache miss — fetch tenant status from DB
     const { rows } = await pool.query(
-      `SELECT status, activated_at, expires_at, allowed_input_types
+      `SELECT status, activated_at, expires_at, allowed_input_types, data_entry_from
        FROM tenants WHERE id = $1`,
       [req.tenantId]
     )
@@ -71,9 +73,10 @@ async function tenantMiddleware(req, res, next) {
     if (t.expires_at && new Date(t.expires_at) < new Date())
       return res.status(402).json({ error: 'انتهت صلاحية الاشتراك، يرجى التجديد للمتابعة' })
 
-    req.allowedInputTypes  = t.allowed_input_types || ['daily']
-    req.tenantActivatedAt  = t.activated_at || null
-    req.tenantExpiresAt    = t.expires_at   || null
+    req.allowedInputTypes   = t.allowed_input_types || ['daily']
+    req.tenantActivatedAt   = t.activated_at    || null
+    req.tenantExpiresAt     = t.expires_at      || null
+    req.tenantDataEntryFrom = t.data_entry_from || null
     await populateAllowedBranches(req)
     return next()
   }
@@ -81,7 +84,7 @@ async function tenantMiddleware(req, res, next) {
   // No tenantId in token — do a full DB lookup (old token or fresh signup)
   const { rows } = await pool.query(
     `SELECT tu.tenant_id, tu.role,
-            t.status, t.activated_at, t.expires_at, t.allowed_input_types,
+            t.status, t.activated_at, t.expires_at, t.allowed_input_types, t.data_entry_from,
             EXISTS(SELECT 1 FROM super_admins WHERE user_id = $1) AS is_super_admin
      FROM tenant_users tu
      JOIN tenants t ON t.id = tu.tenant_id
@@ -110,9 +113,10 @@ async function tenantMiddleware(req, res, next) {
   req.isSuperAdmin      = false
   req.tenantId          = row.tenant_id
   req.userRole          = row.role
-  req.allowedInputTypes = row.allowed_input_types || ['daily']
-  req.tenantActivatedAt = row.activated_at || null
-  req.tenantExpiresAt   = row.expires_at   || null
+  req.allowedInputTypes   = row.allowed_input_types || ['daily']
+  req.tenantActivatedAt   = row.activated_at    || null
+  req.tenantExpiresAt     = row.expires_at      || null
+  req.tenantDataEntryFrom = row.data_entry_from || null
   await populateAllowedBranches(req)
   next()
 }

@@ -7,15 +7,18 @@ const { saleSchema } = require('../schemas/saleSchemas')
  * and are not in the future.
  */
 function validateLicenseDates(req, data) {
-  const today      = new Date(); today.setHours(0, 0, 0, 0)
-  const activatedAt = req.tenantActivatedAt ? new Date(req.tenantActivatedAt) : null
-  const expiresAt   = req.tenantExpiresAt   ? new Date(req.tenantExpiresAt)   : null
+  const today        = new Date(); today.setHours(0, 0, 0, 0)
+  const activatedAt  = req.tenantActivatedAt   ? new Date(req.tenantActivatedAt)   : null
+  const expiresAt    = req.tenantExpiresAt     ? new Date(req.tenantExpiresAt)     : null
+  const dataEntryFrom = req.tenantDataEntryFrom ? new Date(req.tenantDataEntryFrom) : null
+  // Admin-controlled lower bound: data_entry_from takes precedence when set, else fall back to activated_at
+  const lowerBound   = dataEntryFrom || activatedAt
 
   function checkDate(dateStr) {
     const d = new Date(dateStr); d.setHours(0, 0, 0, 0)
     if (d > today)
       return 'لا يمكن إدخال مبيعات لتاريخ مستقبلي.'
-    if (activatedAt && d < activatedAt)
+    if (lowerBound && d < lowerBound)
       return 'التاريخ المحدد قبل تاريخ بداية الترخيص.'
     if (expiresAt && d > expiresAt)
       return 'التاريخ المحدد بعد تاريخ انتهاء الترخيص.'
@@ -37,9 +40,9 @@ function validateLicenseDates(req, data) {
 
     const firstOfMonth = new Date(data.year, data.month - 1, 1)
     firstOfMonth.setHours(0, 0, 0, 0)
-    if (activatedAt) {
-      const firstOfActivated = new Date(activatedAt.getFullYear(), activatedAt.getMonth(), 1)
-      if (firstOfMonth < firstOfActivated)
+    if (lowerBound) {
+      const firstOfLower = new Date(lowerBound.getFullYear(), lowerBound.getMonth(), 1)
+      if (firstOfMonth < firstOfLower)
         return 'التاريخ المحدد قبل تاريخ بداية الترخيص.'
     }
     if (expiresAt) {
