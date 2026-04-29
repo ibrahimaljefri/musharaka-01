@@ -79,14 +79,26 @@ EOF
 fi
 ok "Server code synced"
 
-# ────────── 3. Sync frontend dist ────────────────────────────────────────────
+# ────────── 3. Build + sync frontend dist ────────────────────────────────────
+# dist/ is gitignored, so we must rebuild it on the server after every pull.
+# Otherwise the rsync below would either copy a stale dist or skip entirely.
+CLI_DIR=$REPO/musharaka/client
+log "Building frontend in $CLI_DIR"
+cd "$CLI_DIR"
+set +u
+source "$NODE_ENV_PATH/bin/activate"
+set -u
+npm install --no-audit --no-fund --legacy-peer-deps 2>&1 | tail -5
+npm run build 2>&1 | tail -5
+ok "Frontend built"
+
 if [ -d "$CLI_SRC" ]; then
   log "Syncing frontend dist → $CLI_DST"
   mkdir -p "$CLI_DST"
   rsync -a --delete "$CLI_SRC/" "$CLI_DST/"
   ok "Frontend dist synced"
 else
-  warn "No dist folder at $CLI_SRC — skipping frontend sync (build it locally first?)"
+  fatal "Build did not produce $CLI_SRC — aborting"
 fi
 
 # ────────── 4. Install any new deps ──────────────────────────────────────────

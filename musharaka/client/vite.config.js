@@ -13,9 +13,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react':    ['react', 'react-dom', 'react-router-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-d3':       ['d3-selection', 'd3-scale', 'd3-axis', 'd3-array', 'd3-shape'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-d3':    ['d3-selection', 'd3-scale', 'd3-axis', 'd3-array', 'd3-shape'],
           'vendor-ui':       ['lucide-react'],
         },
       },
