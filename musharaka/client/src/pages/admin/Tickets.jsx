@@ -13,18 +13,16 @@ import './admin-tickets.css'
 const PAGE_SIZE = 20
 
 const STATUS_FILTERS = [
-  { value: null,        label: 'الكل' },
-  { value: 'open',      label: 'جديد' },
+  { value: null,          label: 'الكل' },
+  { value: 'new',         label: 'جديد' },
   { value: 'in_progress', label: 'قيد المعالجة' },
-  { value: 'resolved',  label: 'محلول' },
+  { value: 'resolved',    label: 'محلول' },
 ]
 
 const STATUS_CLASS = {
-  open: 's-open',
+  new:         's-open',
   in_progress: 's-progress',
-  resolved: 's-resolved',
-  closed: 's-closed',
-  new: 's-open',
+  resolved:    's-resolved',
 }
 
 export default function Tickets() {
