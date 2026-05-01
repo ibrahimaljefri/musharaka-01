@@ -163,9 +163,9 @@ export default function AppLayout() {
             onClick={() => setCollapsed(c => !c)}
             type="button"
             aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
+            title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
           >
             <ChevronRight size={14} />
-            <span className="label">طيّ القائمة</span>
           </button>
         </aside>
 
