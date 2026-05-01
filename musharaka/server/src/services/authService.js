@@ -62,6 +62,8 @@ async function loadUserWithContext(userId) {
        t.max_branches,
        t.max_users,
        t.activated_at  AS tenant_activated_at,
+       t.data_entry_from AS tenant_data_entry_from,
+       t.cenomi_post_mode AS tenant_cenomi_post_mode,
        t.plan          AS tenant_plan,
        (SELECT count(*)::int FROM tenant_users tu2 WHERE tu2.tenant_id = tu.tenant_id) AS user_count
      FROM app_users u

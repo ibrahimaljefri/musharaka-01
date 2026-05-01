@@ -232,6 +232,8 @@ function publicUser(u) {
     max_branches:             u.max_branches         || 3,
     max_users:                u.max_users            || 10,
     activated_at:             u.tenant_activated_at  || null,
+    data_entry_from:          u.tenant_data_entry_from || null,
+    cenomi_post_mode:         u.tenant_cenomi_post_mode || 'monthly',
     plan:                     u.tenant_plan          || null,
     user_count:               u.user_count           ?? null,
   }
