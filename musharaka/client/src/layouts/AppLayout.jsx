@@ -6,7 +6,7 @@ import UrwahLogo from '../components/UrwahLogo'
 import {
   LayoutDashboard, PlusCircle, Upload, BarChart2, GitBranch, Send, FileText,
   LifeBuoy, HelpCircle, Building2, Users, MessageCircle,
-  Menu, ChevronRight, Moon, Sun, LogOut, ShieldCheck, Clock, AlertTriangle, BookOpen,
+  Menu, ChevronRight, ChevronLeft, Moon, Sun, LogOut, ShieldCheck, Clock, AlertTriangle, BookOpen,
   KeyRound,
 } from 'lucide-react'
 import './app-shell.css'
@@ -165,7 +165,7 @@ export default function AppLayout() {
             aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
             title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
           >
-            <ChevronRight size={14} />
+            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
         </aside>
 

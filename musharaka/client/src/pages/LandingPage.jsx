@@ -216,7 +216,7 @@ export default function LandingPage() {
         </svg>
 
         <div className="features-header">
-          <h2>كل ما تحتاجة لتشارك البيانات</h2>
+          <h2>كل ما تحتاجه لتشارك البيانات</h2>
         </div>
 
         <div className="features-grid">

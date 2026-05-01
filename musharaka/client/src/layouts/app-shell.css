@@ -189,8 +189,6 @@
 }
 .app-root .collapse-toggle:hover { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
 .app-root .collapse-toggle svg { transition: transform var(--dur-base) var(--ease-out); }
-.app-root .app-shell.collapsed .collapse-toggle .label { display: none; }
-.app-root .app-shell.collapsed .collapse-toggle svg { transform: rotate(180deg); }
 
 /* ---- Main area --------------------------------------------------------- */
 .app-root .app-main {
