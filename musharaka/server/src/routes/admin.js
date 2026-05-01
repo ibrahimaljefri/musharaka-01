@@ -7,6 +7,16 @@ const crypto   = require('crypto')
 const router   = express.Router()
 const { pool, selectOne, selectMany, insertOne, updateOne, deleteWhere } = require('../db/query')
 const { hashPassword } = require('../services/authService')
+const { encrypt }      = require('../utils/crypto')
+
+// True iff the token is already encrypted (matches "iv-hex:cipher-hex")
+const ENCRYPTED_RE = /^[0-9a-f]+:[0-9a-f]+$/i
+function maybeEncryptToken(value) {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value !== 'string') return null
+  if (ENCRYPTED_RE.test(value)) return value          // already encrypted
+  return encrypt(value)
+}
 const { authMiddleware } = require('../middleware/auth')
 const { tenantMiddleware, superAdminOnly } = require('../middleware/tenantMiddleware')
 const { standardLimiter, adminWriteOnly } = require('../middleware/rateLimiter')
@@ -122,7 +132,7 @@ router.post('/tenants', async (req, res, next) => {
       name, slug, plan = 'basic', activated_at, expires_at, data_entry_from, notes,
       allowed_input_types = ['daily'],
       user_email, user_password, user_name,
-      cenomi_api_token,
+      cenomi_api_token, cenomi_api_url, cenomi_post_mode,
     } = req.body
 
     if (!name || !slug) {
@@ -136,8 +146,9 @@ router.post('/tenants', async (req, res, next) => {
     try {
       const { rows } = await client.query(
         `INSERT INTO tenants (name, slug, plan, activated_at, expires_at, data_entry_from, notes,
-                              allowed_input_types, cenomi_api_token)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
+                              allowed_input_types, cenomi_api_token,
+                              cenomi_api_url, cenomi_post_mode)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)
          RETURNING *`,
         [
           name, slug, plan,
@@ -146,7 +157,9 @@ router.post('/tenants', async (req, res, next) => {
           data_entry_from || null,
           notes || null,
           JSON.stringify(allowed_input_types),
-          cenomi_api_token || null,
+          maybeEncryptToken(cenomi_api_token),         // encrypt-at-write
+          cenomi_api_url || null,
+          cenomi_post_mode || 'monthly',
         ]
       )
       tenant = rows[0]
@@ -209,12 +222,14 @@ router.put('/tenants/:id', async (req, res, next) => {
       'notes','allowed_input_types','allow_advanced_dashboard',
       'allow_import','allow_reports',
       'commercial_registration','primary_phone','account_number',
-      'cenomi_api_token',
+      'cenomi_api_token','cenomi_api_url','cenomi_post_mode',
     ]
     const patch = {}
     for (const k of allowed) {
       if (req.body[k] !== undefined) {
-        patch[k] = k === 'allowed_input_types' ? JSON.stringify(req.body[k]) : req.body[k]
+        if (k === 'allowed_input_types')      patch[k] = JSON.stringify(req.body[k])
+        else if (k === 'cenomi_api_token')    patch[k] = maybeEncryptToken(req.body[k])  // encrypt-at-write
+        else                                  patch[k] = req.body[k]
       }
     }
     if (req.body.max_branches !== undefined) patch.max_branches = parseInt(req.body.max_branches) || 5
