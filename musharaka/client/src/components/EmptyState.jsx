@@ -5,7 +5,7 @@
  *   <EmptyState
  *     icon={Building2}
  *     title="لا توجد فروع بعد"
- *     description="أضف فرعاً جديداً للبدء في إدارة المبيعات"
+ *     description="أضف فرعاً جديداً للبدء في مشاركة البيانات"
  *     action={<Link to="/branches/create">...</Link>}
  *   />
  */

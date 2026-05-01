@@ -142,7 +142,7 @@ export default function Branches() {
             <EmptyState
               icon={Building2}
               title="لا توجد فروع بعد"
-              description="أضف فرعاً جديداً للبدء في إدارة مبيعاتك وإرسال الفواتير"
+              description="أضف فرعاً جديداً للبدء في مشاركة بياناتك وإرسال الفواتير"
               action={<AddBranchButton />}
             />
           </div>
