@@ -617,4 +617,122 @@ router.put('/tickets/:id', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// ── CENOMI: revert a submission + audit log viewer ───────────────────────────
+
+/**
+ * POST /api/admin/submissions/:id/revert
+ * Marks the submission 'reverted' and returns the linked sales to 'pending'
+ * with submission_id = NULL so the tenant can edit and re-send. Scope is
+ * ONE submission row = ONE branch + ONE period (no cross-branch effects).
+ */
+router.post('/submissions/:id/revert', async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT revert_seinomy_submission($1::uuid) AS result`,
+      [req.params.id]
+    )
+    const result = rows[0]?.result
+    if (!result?.success) {
+      return res.status(400).json({ error: result?.error || 'تعذّر التراجع عن الإرسال' })
+    }
+    res.json({
+      message:      'تم التراجع عن الإرسال — يمكن للمستأجر التعديل وإعادة الإرسال',
+      branch_id:    result.branch_id,
+      period_start: result.period_start,
+      period_end:   result.period_end,
+    })
+  } catch (err) { next(err) }
+})
+
+/**
+ * GET /api/admin/cenomi-logs
+ *
+ * Filterable, paginated audit-log viewer for super-admin. Supports filtering
+ * by tenant_id, branch_id, and a created_at range. Tokens in request_headers
+ * are stored already-redacted ("***").
+ *
+ * Query params (all optional):
+ *   tenant_id  UUID
+ *   branch_id  UUID
+ *   from       ISO date (>= created_at)
+ *   to         ISO date (<= created_at)
+ *   limit      default 50, max 200
+ *   offset     default 0
+ */
+router.get('/cenomi-logs', async (req, res, next) => {
+  try {
+    const { tenant_id, branch_id, from, to } = req.query
+    const limit  = Math.min(parseInt(req.query.limit, 10)  || 50, 200)
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0,  0)
+
+    const where = []
+    const args  = []
+    if (tenant_id) { args.push(tenant_id); where.push(`l.tenant_id = $${args.length}`) }
+    if (branch_id) { args.push(branch_id); where.push(`l.branch_id = $${args.length}`) }
+    if (from)      { args.push(from);      where.push(`l.created_at >= $${args.length}`) }
+    if (to)        { args.push(to);        where.push(`l.created_at <= $${args.length}`) }
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
+
+    const countQ = pool.query(
+      `SELECT count(*)::int AS n FROM cenomi_logs l ${whereSql}`,
+      args
+    )
+    args.push(limit); args.push(offset)
+    const rowsQ = pool.query(
+      `SELECT l.id, l.tenant_id, l.branch_id, l.submission_id,
+              l.request_url, l.request_headers, l.request_body,
+              l.response_status, l.response_body, l.error_message, l.created_at,
+              t.name AS tenant_name, t.slug AS tenant_slug,
+              b.code AS branch_code, b.name AS branch_name
+       FROM cenomi_logs l
+       LEFT JOIN tenants  t ON t.id = l.tenant_id
+       LEFT JOIN branches b ON b.id = l.branch_id
+       ${whereSql}
+       ORDER BY l.created_at DESC
+       LIMIT $${args.length - 1} OFFSET $${args.length}`,
+      args
+    )
+
+    const [{ rows: countRows }, { rows }] = await Promise.all([countQ, rowsQ])
+    res.json({ total: countRows[0].n, limit, offset, rows })
+  } catch (err) { next(err) }
+})
+
+/**
+ * GET /api/admin/submissions
+ *
+ * Lists submissions with tenant + branch context for the admin "Revert" page.
+ * Filters by tenant_id and status.
+ */
+router.get('/submissions', async (req, res, next) => {
+  try {
+    const { tenant_id, status } = req.query
+    const where = []
+    const args  = []
+    if (tenant_id) { args.push(tenant_id); where.push(`s.tenant_id = $${args.length}`) }
+    if (status)    { args.push(status);    where.push(`s.status    = $${args.length}`) }
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
+
+    const limit  = Math.min(parseInt(req.query.limit, 10)  || 50, 200)
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0,  0)
+    args.push(limit); args.push(offset)
+
+    const { rows } = await pool.query(
+      `SELECT s.id, s.tenant_id, s.branch_id, s.month, s.year,
+              s.period_start, s.period_end, s.post_mode,
+              s.status, s.invoice_count, s.total_amount, s.submitted_at,
+              t.name AS tenant_name, t.slug AS tenant_slug,
+              b.code AS branch_code, b.name AS branch_name
+       FROM submissions s
+       LEFT JOIN tenants  t ON t.id = s.tenant_id
+       LEFT JOIN branches b ON b.id = s.branch_id
+       ${whereSql}
+       ORDER BY s.submitted_at DESC
+       LIMIT $${args.length - 1} OFFSET $${args.length}`,
+      args
+    )
+    res.json(rows)
+  } catch (err) { next(err) }
+})
+
 module.exports = router
