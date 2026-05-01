@@ -28,6 +28,8 @@ const adminNav = [
   { to: '/admin/dashboard',       label: 'لوحة المشرف',       icon: LayoutDashboard },
   { to: '/admin/tenants',         label: 'إدارة المستأجرين',  icon: Building2 },
   { to: '/admin/users',           label: 'إدارة المستخدمين',  icon: Users },
+  { to: '/admin/submissions',     label: 'مراجعة الإرسالات',   icon: Send },
+  { to: '/admin/cenomi-logs',     label: 'سجلات سينومي',      icon: FileText },
   { to: '/admin/bot-subscribers', label: 'مشتركو الروبوت',    icon: MessageCircle },
   { to: '/admin/tickets',         label: 'تذاكر الدعم',       icon: LifeBuoy },
 ]

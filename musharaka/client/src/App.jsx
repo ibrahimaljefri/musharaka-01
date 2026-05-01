@@ -38,6 +38,8 @@ const BotSubscriberForm = lazy(() => import('./pages/admin/BotSubscriberForm'))
 const AdminDashboard    = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminTickets      = lazy(() => import('./pages/admin/Tickets'))
 const AdminTicketDetail = lazy(() => import('./pages/admin/TicketDetail'))
+const CenomiLogs        = lazy(() => import('./pages/admin/CenomiLogs'))
+const AdminSubmissions  = lazy(() => import('./pages/admin/AdminSubmissions'))
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
@@ -160,6 +162,8 @@ export default function App() {
             <Route path="/admin/bot-subscribers/:id/edit"     element={<AdminRoute><BotSubscriberForm mode="edit" /></AdminRoute>} />
             <Route path="/admin/tickets"                      element={<AdminRoute><AdminTickets /></AdminRoute>} />
             <Route path="/admin/tickets/:id"                  element={<AdminRoute><AdminTicketDetail /></AdminRoute>} />
+            <Route path="/admin/cenomi-logs"                  element={<AdminRoute><CenomiLogs /></AdminRoute>} />
+            <Route path="/admin/submissions"                  element={<AdminRoute><AdminSubmissions /></AdminRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

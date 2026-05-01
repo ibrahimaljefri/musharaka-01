@@ -30,12 +30,16 @@ export default function SaleCreate() {
   const navigate           = useNavigate()
   const allowedInputTypes  = useAuthStore(s => s.allowedInputTypes)
   const activatedAt        = useAuthStore(s => s.activatedAt)
+  const dataEntryFrom      = useAuthStore(s => s.dataEntryFrom)
   const expiresAt          = useAuthStore(s => s.expiresAt)
   const availableModes     = ALL_MODES.filter(m => allowedInputTypes.includes(m.v))
 
   // ── License date window ───────────────────────────────────────────────────────
+  // The lower bound is admin-controlled `data_entry_from` when set, else the
+  // billing/license `activated_at`. Matches server-side validateLicenseDates().
+  const lowerBound = dataEntryFrom || activatedAt
   const today    = new Date().toISOString().split('T')[0]           // 'YYYY-MM-DD'
-  const minDate  = activatedAt ? activatedAt.split('T')[0] : '2020-01-01'
+  const minDate  = lowerBound ? lowerBound.split('T')[0] : '2020-01-01'
   const maxDate  = (expiresAt && expiresAt.split('T')[0] < today)
     ? expiresAt.split('T')[0]
     : today
@@ -46,9 +50,9 @@ export default function SaleCreate() {
     return Math.ceil((new Date(expiresAt) - new Date()) / 86400000)
   }, [expiresAt])
 
-  // Year options: from activatedAt year to current year (inclusive)
+  // Year options: from lowerBound year to current year (inclusive)
   const currentYear   = new Date().getFullYear()
-  const licenseStartY = activatedAt ? new Date(activatedAt).getFullYear() : 2021
+  const licenseStartY = lowerBound ? new Date(lowerBound).getFullYear() : 2021
   const YEARS = Array.from(
     { length: currentYear - licenseStartY + 1 },
     (_, i) => licenseStartY + i,

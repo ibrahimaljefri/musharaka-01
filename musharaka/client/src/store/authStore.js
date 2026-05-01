@@ -15,8 +15,10 @@ function applyUser(u) {
     allowImport:           u.allow_import            || false,
     allowReports:          u.allow_reports           || false,
     activatedAt:           u.activated_at            || null,
+    dataEntryFrom:         u.data_entry_from         || null,
     expiresAt:             u.tenant_expires_at       || null,
     planName:              u.plan                    || null,
+    cenomiPostMode:        u.cenomi_post_mode        || 'monthly',
     maxBranches:           u.max_branches            ?? null,
     userCount:             u.user_count              ?? null,
     mustChangePassword:    u.mustChangePassword      || false,
@@ -28,8 +30,8 @@ const CLEAR = {
   isSuperAdmin: false, tenantId: null, role: null, tenantStatus: null,
   allowedInputTypes: ['daily'], allowAdvancedDashboard: false,
   allowImport: false, allowReports: false, mustChangePassword: false,
-  activatedAt: null, expiresAt: null, planName: null, maxBranches: null,
-  userCount: null,
+  activatedAt: null, dataEntryFrom: null, expiresAt: null, planName: null,
+  cenomiPostMode: 'monthly', maxBranches: null, userCount: null,
 }
 
 export const useAuthStore = create((set, get) => ({

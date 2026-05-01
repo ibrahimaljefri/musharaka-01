@@ -45,6 +45,8 @@ export default function TenantForm({ mode = 'create' }) {
     max_branches: 3,
     plan_id:      '',
     cenomi_api_token: '',
+    cenomi_api_url:  '',
+    cenomi_post_mode: 'monthly',
   })
   const [showCenomiToken, setShowCenomiToken] = useState(false)
   const [userForm, setUserForm] = useState({
@@ -75,6 +77,8 @@ export default function TenantForm({ mode = 'create' }) {
         max_branches:             data.max_branches || 3,
         plan_id:                  data.plan_id || '',
         cenomi_api_token:         data.cenomi_api_token || '',
+        cenomi_api_url:           data.cenomi_api_url   || '',
+        cenomi_post_mode:         data.cenomi_post_mode || 'monthly',
       })
       setFetching(false)
     }).catch(() => setFetching(false))
@@ -107,10 +111,12 @@ export default function TenantForm({ mode = 'create' }) {
     try {
       const payload = {
         ...form,
-        expires_at:      form.expires_at      || null,
-        data_entry_from: form.data_entry_from || null,
-        max_branches:    form.max_branches,
-        plan_id:         form.plan_id || null,
+        expires_at:       form.expires_at      || null,
+        data_entry_from:  form.data_entry_from || null,
+        cenomi_api_url:   form.cenomi_api_url  || null,
+        cenomi_post_mode: form.cenomi_post_mode || 'monthly',
+        max_branches:     form.max_branches,
+        plan_id:          form.plan_id || null,
         ...(isEdit ? {} : userForm),
       }
       if (isEdit) {
@@ -302,6 +308,35 @@ export default function TenantForm({ mode = 'create' }) {
               </button>
             </div>
             <span className="field-hint">يُصدر سينومي توكناً واحداً لكل حساب. يُستخدم لإرسال بيانات المبيعات تلقائياً.</span>
+          </div>
+          <div className="field">
+            <label className="field-label">
+              رابط Cenomi API <span className="field-muted">(http:// أو https://)</span>
+            </label>
+            <input className="input mono" type="url" dir="ltr"
+              pattern="^https?://.+"
+              value={form.cenomi_api_url}
+              onChange={e => set('cenomi_api_url', e.target.value)}
+              placeholder="https://uat.tenantsapi.cenomicenters.com/api/v1/sales-data/daily" />
+            <span className="field-hint">الرابط الكامل لإرسال البيانات. عادةً ينتهي بـ /daily أو /monthly.</span>
+          </div>
+          <div className="field">
+            <label className="field-label">نمط الإرسال إلى سينومي</label>
+            <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input type="radio" name="cenomi_post_mode" value="monthly"
+                  checked={form.cenomi_post_mode === 'monthly'}
+                  onChange={() => set('cenomi_post_mode', 'monthly')} />
+                <span>شهري — صف واحد مجمَّع لكل شهر</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input type="radio" name="cenomi_post_mode" value="daily"
+                  checked={form.cenomi_post_mode === 'daily'}
+                  onChange={() => set('cenomi_post_mode', 'daily')} />
+                <span>يومي — صف لكل يوم في النطاق</span>
+              </label>
+            </div>
+            <span className="field-hint">يحدد كيفية تجميع البيانات قبل إرسالها لسينومي.</span>
           </div>
         </div>
 

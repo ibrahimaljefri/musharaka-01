@@ -90,7 +90,11 @@ function SubmissionCard({ sub }) {
             <div className="lbl">الإجمالي</div>
             <div className="val">{fmt(sub.total_amount)} ر.س</div>
           </div>
-          <span className="sm-pill keep">مرسل</span>
+          {sub.status === 'reverted'
+            ? <span className="sm-pill" style={{ background: 'rgba(120,113,108,0.12)', color: '#78716c', textDecoration: 'line-through' }}>تم التراجع</span>
+            : sub.status === 'failed'
+              ? <span className="sm-pill" style={{ background: 'rgba(220,38,38,0.12)', color: '#dc2626' }}>فشل</span>
+              : <span className="sm-pill keep">مُرسل</span>}
           {open
             ? <ChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
             : <ChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
