@@ -1,0 +1,25 @@
+<IfModule mod_headers.c>
+  # ── CSP: strip any restrictive policy cPanel/Apache may inject ──────────────
+  Header always unset Content-Security-Policy
+  Header unset Content-Security-Policy
+
+  # Explicit permissive override — allows calls to Render API and Supabase.
+  # If "always unset" fails to suppress a VirtualHost-level CSP, this
+  # override wins because .htaccess runs last in Apache's merge order.
+  Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; connect-src *;"
+
+  # ── Cache: never cache index.html so stale CSP headers can't linger ─────────
+  <FilesMatch "^index\.html$">
+    Header always set Cache-Control "no-store, no-cache, must-revalidate"
+    Header always set Pragma "no-cache"
+    Header always set Expires "0"
+  </FilesMatch>
+</IfModule>
+
+# SPA fallback — serve index.html for all routes (React Router)
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
