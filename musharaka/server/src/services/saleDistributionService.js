@@ -1,8 +1,10 @@
-const { getDaysInRange, getDaysInMonth } = require('../utils/dateUtils')
+const { getDaysInRange } = require('../utils/dateUtils')
 
 /**
- * Expand a sale entry into one atomic daily row per calendar day.
- * All monetary arithmetic done in integer cents to avoid float errors.
+ * Expand a sale entry into sale row(s) ready for DB insert.
+ * - daily:   one row for the given date
+ * - monthly: one row for the whole month (sale_date = first of month)
+ * - range:   one row per calendar day in the range, amount split evenly
  *
  * @param {Object} data - Validated sale data from request body
  * @param {string} data.branch_id
@@ -32,7 +34,22 @@ function expand(data) {
     days = [sale_date]
   } else if (input_type === 'monthly') {
     if (!month || !year) throw new Error('الشهر والسنة مطلوبان للإدخال الشهري')
-    days = getDaysInMonth(month, year)
+    // Monthly mode: one single row for the whole month (sale_date = first of month)
+    const mm   = String(month).padStart(2, '0')
+    const singleDate = `${year}-${mm}-01`
+    return [{
+      branch_id,
+      input_type,
+      sale_date:         singleDate,
+      month,
+      year,
+      period_start_date: null,
+      period_end_date:   null,
+      amount,
+      invoice_number:    invoice_number || null,
+      notes:             notes || null,
+      status:            'pending',
+    }]
   } else if (input_type === 'range') {
     if (!period_start_date || !period_end_date) throw new Error('تاريخ البداية والنهاية مطلوبان للفترة المخصصة')
     if (period_start_date > period_end_date) throw new Error('تاريخ البداية يجب أن يكون قبل تاريخ النهاية')
