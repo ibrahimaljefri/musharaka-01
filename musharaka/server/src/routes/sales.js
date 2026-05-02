@@ -11,7 +11,7 @@ const { applyBranchScope, isBranchOutOfScope } = require('../utils/branchScope')
 // Query params: branch_id, status, from, to, month, year, limit, offset
 router.get('/', standardLimiter, authMiddleware, tenantMiddleware, async (req, res, next) => {
   try {
-    const { branch_id, status, from, to, month, year } = req.query
+    const { branch_id, status, from, to, month, year, submission_id } = req.query
     const limit  = Math.min(parseInt(req.query.limit)  || 500, 1000)
     const offset = Math.max(parseInt(req.query.offset) || 0, 0)
 
@@ -26,6 +26,7 @@ router.get('/', standardLimiter, authMiddleware, tenantMiddleware, async (req, r
     if (to)              { params.push(to);                  where.push(`sale_date <= $${params.length}`) }
     if (month)           { params.push(parseInt(month));     where.push(`month = $${params.length}`) }
     if (year)            { params.push(parseInt(year));      where.push(`year = $${params.length}`) }
+    if (submission_id)   { params.push(submission_id);        where.push(`submission_id = $${params.length}`) }
 
     const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : ''
 

@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import BranchBadge from '../components/BranchBadge'
 import Pagination from '../components/Pagination'
-import { ChevronDown, ChevronUp, Send, AlertCircle } from 'lucide-react'
+import SortHeader from '../components/SortHeader'
+import { useSortable } from '../lib/useSortable'
+import { exportNodeAsPdf } from '../lib/pdfExport'
+import { toast } from '../lib/useToast'
+import { ChevronDown, ChevronUp, Send, AlertCircle, FileDown } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import './submissions.css'
 
@@ -56,11 +60,15 @@ function SubmissionCard({ sub }) {
   const [open, setOpen] = useState(false)
   const [sales, setSales] = useState([])
   const [loadingSales, setLoadingSales] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const printRef = useRef(null)
 
   const toggle = async () => {
     if (!open && sales.length === 0) {
       setLoadingSales(true)
       try {
+        // submission_id is now respected by the server (sales.js was patched
+        // to accept the param). Returns ONLY rows linked to this submission.
         const { data } = await api.get('/sales', { params: { submission_id: sub.id, limit: 5000 } })
         setSales(data?.sales || [])
       } catch { setSales([]) }
@@ -70,6 +78,21 @@ function SubmissionCard({ sub }) {
   }
 
   const sentDates = sales.map(s => s.sale_date)
+  // Sort the row table inside the expanded card
+  const { sorted: sortedSales, sortKey, sortDir, toggle: toggleSort } = useSortable(sales, 'sale_date', 'asc')
+
+  // PDF export — html2canvas + jsPDF, lazy loaded
+  const handleExportPdf = async (e) => {
+    e.stopPropagation()
+    if (!printRef.current) return
+    setExporting(true)
+    try {
+      const fname = `submission-${sub.branches?.code || 'branch'}-${sub.month}-${sub.year}.pdf`
+      await exportNodeAsPdf(printRef.current, fname)
+    } catch (err) {
+      toast.error('فشل تصدير PDF — يرجى المحاولة مجدداً')
+    } finally { setExporting(false) }
+  }
 
   return (
     <div className="sm-card" data-testid="submission-card">
@@ -108,20 +131,42 @@ function SubmissionCard({ sub }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[1,2,3].map(i => <div key={i} className="sm-loading-card" />)}
             </div>
+          ) : sales.length === 0 ? (
+            <div style={{ padding: 16, color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' }}>
+              لا توجد سجلات فاتورة مرتبطة بهذا الإرسال (قد يكون إرسالاً قديماً قبل ربط الفواتير).
+            </div>
           ) : (
             <>
-              <div style={{ overflowX: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+                <button
+                  type="button"
+                  className="sm-export-btn"
+                  onClick={handleExportPdf}
+                  disabled={exporting}
+                  title="تصدير ملف PDF بمحتوى هذا الإرسال"
+                >
+                  <FileDown size={14} /> {exporting ? 'جاري التصدير…' : 'تصدير PDF'}
+                </button>
+              </div>
+              <div style={{ overflowX: 'auto' }} ref={printRef}>
+                {/* Print-only header — rendered always but only visible to PDF capture via @media-like styling */}
+                <div className="sm-print-header" style={{ display: exporting ? 'block' : 'none', marginBottom: 16, paddingBottom: 12, borderBottom: '2px solid var(--border)' }}>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>تقرير إرسال — عروة</h2>
+                  <div style={{ marginTop: 6, fontSize: 13, color: '#444' }}>
+                    الفرع: {sub.branches?.name} ({sub.branches?.code}) · الفترة: {MONTHS_AR[sub.month]} {sub.year} · عدد الفواتير: {sub.invoice_count} · الإجمالي: ﷼ {fmt(sub.total_amount)}
+                  </div>
+                </div>
                 <table className="sm-tbl">
                   <thead>
                     <tr>
-                      <th>التاريخ</th>
-                      <th>رقم الفاتورة</th>
-                      <th>المبلغ (ر.س)</th>
+                      <SortHeader k="sale_date"      label="التاريخ"        sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                      <SortHeader k="invoice_number" label="رقم الفاتورة"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                      <SortHeader k="amount"         label="المبلغ (ر.س)"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                       <th>ملاحظات</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {sales.map(s => (
+                    {sortedSales.map(s => (
                       <tr key={s.id}>
                         <td dir="ltr">{s.sale_date}</td>
                         <td>{s.invoice_number || '—'}</td>

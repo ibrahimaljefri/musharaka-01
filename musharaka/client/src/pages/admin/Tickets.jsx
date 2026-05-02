@@ -8,6 +8,8 @@ import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import { STATUS_LABELS, CATEGORY_LABELS, fmtTicketDate } from '../../lib/ticketConstants'
+import SortHeader from '../../components/SortHeader'
+import { useSortable } from '../../lib/useSortable'
 import './admin-tickets.css'
 
 const PAGE_SIZE = 20
@@ -59,9 +61,10 @@ export default function Tickets() {
     })
   }, [tickets, search, statusFilter])
 
-  const totalPages   = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const { sorted: sortedRows, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const totalPages   = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
   const currentPage  = Math.min(page, totalPages)
-  const paged        = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const paged        = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const firstIdx     = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
   const lastIdx      = Math.min(currentPage * PAGE_SIZE, filtered.length)
 
@@ -105,11 +108,11 @@ export default function Tickets() {
             <table className="adm-tbl">
               <thead>
                 <tr>
-                  <th>رقم التذكرة والحالة</th>
-                  <th>المستأجر</th>
-                  <th>العميل</th>
-                  <th>التصنيف</th>
-                  <th>تاريخ الإنشاء</th>
+                  <SortHeader k="ticket_number" label="رقم التذكرة والحالة" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="tenant_name"   label="المستأجر"           sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="submitter_name" label="العميل"            sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="category"      label="التصنيف"            sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="created_at"    label="تاريخ الإنشاء"       sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                 </tr>
               </thead>
               <tbody>

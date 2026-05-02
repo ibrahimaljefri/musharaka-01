@@ -239,3 +239,18 @@
   .submissions-page .sm-card-stat { display: none; }
   .submissions-page .sm-card-stat.keep { display: block; }
 }
+
+/* PDF export button (top-right of expanded card body) */
+.sm-export-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #B8860B;
+  background: transparent;
+  color: #B8860B;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.sm-export-btn:hover { background: #B8860B; color: white; }
+.sm-export-btn:disabled { opacity: 0.5; cursor: wait; }

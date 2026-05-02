@@ -9,6 +9,8 @@ import {
   UserPlus, Trash2, Clock, UserCheck,
   Building2, Eye, EyeOff, X, Pencil
 } from 'lucide-react'
+import SortHeader from '../../components/SortHeader'
+import { useSortable } from '../../lib/useSortable'
 import './admin-users.css'
 
 const PAGE_SIZE = 20
@@ -420,9 +422,10 @@ export default function Users() {
     )
   }, [users, search])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const { sorted: sortedRows, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const paged = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const firstIdx = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
   const lastIdx  = Math.min(currentPage * PAGE_SIZE, filtered.length)
 
@@ -485,13 +488,13 @@ export default function Users() {
             <table className="adm-tbl">
               <thead>
                 <tr>
-                  <th>الاسم</th>
-                  <th>البريد الإلكتروني</th>
-                  <th>رقم الجوال</th>
-                  <th>الحالة</th>
-                  <th>المستأجر</th>
-                  <th>الدور</th>
-                  <th>تاريخ التسجيل</th>
+                  <SortHeader k="full_name"   label="الاسم"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="email"       label="البريد الإلكتروني" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="phone"       label="رقم الجوال"      sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="status"      label="الحالة"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="tenant_name" label="المستأجر"        sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="role"        label="الدور"           sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="created_at"  label="تاريخ التسجيل"    sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                   <th>إجراءات</th>
                 </tr>
               </thead>

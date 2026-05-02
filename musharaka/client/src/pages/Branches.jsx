@@ -8,6 +8,8 @@ import { TableSkeleton } from '../components/SkeletonLoader'
 import { toast } from '../lib/useToast'
 import { Plus, Edit2, Trash2, Building2, AlertTriangle } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
+import SortHeader from '../components/SortHeader'
+import { useSortable } from '../lib/useSortable'
 import { useAuthStore } from '../store/authStore'
 import './branches.css'
 
@@ -59,9 +61,10 @@ export default function Branches() {
 
   const [page, setPage] = useState(1)
   useEffect(() => { setPage(1) }, [search])
-  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const { sorted: sortedRows, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const totalPages  = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const paged       = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const paged       = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   const atLimit    = maxBranches != null && branches.length >= maxBranches
   const overLimit  = maxBranches != null && branches.length > maxBranches
@@ -154,10 +157,10 @@ export default function Branches() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>كود الفرع</th>
-                  <th>اسم الفرع</th>
-                  <th>رقم العقد</th>
-                  <th>الموقع</th>
+                  <SortHeader k="code"            label="كود الفرع"  sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="name"            label="اسم الفرع"  sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="contract_number" label="رقم العقد"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="location"        label="الموقع"      sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                   <th>الإجراءات</th>
                 </tr>
               </thead>

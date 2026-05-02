@@ -12,6 +12,9 @@ import api from '../../lib/axiosClient'
 import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
+import SearchableTenantSelect from '../../components/SearchableTenantSelect'
+import { useSortable } from '../../lib/useSortable'
+import { SortDropdown } from './AdminSubmissions'
 import {
   ChevronDown, ChevronUp, Copy, Check, FileText,
   CheckCircle2, XCircle, WifiOff, Activity, Building2, GitBranch,
@@ -99,6 +102,9 @@ export default function CenomiLogs() {
   }, [rows])
   const successRate = metrics.total > 0 ? Math.round((metrics.ok / metrics.total) * 100) : null
 
+  // Sort over the filtered rows
+  const { sorted, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+
   const clearFilters = () => {
     setTenantId(''); setFrom(''); setTo(''); setStatusFilter(null)
   }
@@ -131,10 +137,7 @@ export default function CenomiLogs() {
           <Pill active={statusFilter === '4xx'}  onClick={() => setStatusFilter('4xx')}  label="فشل"        count={metrics.fail} />
           <Pill active={statusFilter === 'none'} onClick={() => setStatusFilter('none')} label="بدون رد"   count={metrics.none} />
         </div>
-        <select className="cen-input" value={tenantId} onChange={e => setTenantId(e.target.value)}>
-          <option value="">جميع المستأجرين</option>
-          {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
+        <SearchableTenantSelect tenants={tenants} value={tenantId} onChange={setTenantId} />
         <input className="cen-input" type="date" dir="ltr" value={from}
                onChange={e => setFrom(e.target.value)} placeholder="من" title="من تاريخ" />
         <input className="cen-input" type="date" dir="ltr" value={to}
@@ -142,17 +145,23 @@ export default function CenomiLogs() {
         {(tenantId || from || to || statusFilter) && (
           <button className="cen-btn-ghost" onClick={clearFilters}>مسح</button>
         )}
+        <SortDropdown sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} options={[
+          { k: 'created_at',      label: 'التاريخ' },
+          { k: 'tenant_name',     label: 'المستأجر' },
+          { k: 'branch_name',     label: 'الفرع' },
+          { k: 'response_status', label: 'الحالة' },
+        ]} />
       </div>
 
       {/* Rows */}
       {loading ? (
         <div className="cen-row" style={{ padding: 20 }}><TableSkeleton rows={4} cols={1} /></div>
-      ) : filtered.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <EmptyState />
       ) : (
         <>
           <div className="cen-rows">
-            {filtered.map(r => (
+            {sorted.map(r => (
               <LogRow key={r.id} row={r} expanded={!!expanded[r.id]} onToggle={() => toggleRow(r.id)} />
             ))}
           </div>

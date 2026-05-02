@@ -12,6 +12,8 @@ import api from '../../lib/axiosClient'
 import { TableSkeleton } from '../../components/SkeletonLoader'
 import { toast } from '../../lib/useToast'
 import ConfirmDialog from '../../components/ConfirmDialog'
+import SearchableTenantSelect from '../../components/SearchableTenantSelect'
+import { useSortable } from '../../lib/useSortable'
 import {
   RotateCcw, Send, CheckCircle2, XCircle, Inbox, Calendar, GitBranch,
   Building2,
@@ -85,6 +87,14 @@ export default function AdminSubmissions() {
     [rows, statusFilter]
   )
 
+  // Card-row layout — sort via dropdown above the cards
+  const getter = (row, key) => {
+    if (key === 'total_amount') return parseFloat(row.total_amount || 0)
+    if (key === 'invoice_count') return Number(row.invoice_count || 0)
+    return row?.[key]
+  }
+  const { sorted, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'submitted_at', 'desc', getter)
+
   const handleRevert = async () => {
     if (!confirmRow) return
     setReverting(true)
@@ -124,20 +134,25 @@ export default function AdminSubmissions() {
           <Pill active={statusFilter === 'reverted'} onClick={() => setStatusFilter('reverted')} label="تم التراجع"  count={metrics.reverted} />
           <Pill active={statusFilter === 'failed'}   onClick={() => setStatusFilter('failed')}  label="فشل"          count={metrics.failed} />
         </div>
-        <select className="cen-input" value={tenantId} onChange={e => setTenantId(e.target.value)}>
-          <option value="">جميع المستأجرين</option>
-          {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
+        <SearchableTenantSelect tenants={tenants} value={tenantId} onChange={setTenantId} />
+        <SortDropdown sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} options={[
+          { k: 'submitted_at',  label: 'تاريخ الإرسال' },
+          { k: 'tenant_name',   label: 'المستأجر' },
+          { k: 'branch_name',   label: 'الفرع' },
+          { k: 'total_amount',  label: 'المبلغ' },
+          { k: 'invoice_count', label: 'عدد الفواتير' },
+          { k: 'status',        label: 'الحالة' },
+        ]} />
       </div>
 
       {/* Rows */}
       {loading ? (
         <div className="cen-row" style={{ padding: 20 }}><TableSkeleton rows={4} cols={1} /></div>
-      ) : filtered.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="cen-rows">
-          {filtered.map(r => (
+          {sorted.map(r => (
             <SubmissionRow key={r.id} row={r} onRevert={setConfirmRow} />
           ))}
         </div>
@@ -234,5 +249,30 @@ function EmptyState() {
         ستظهر هنا جميع إرسالات سينومي بمجرد قيام أي مستأجر بالضغط على "إرسال الفواتير".
       </div>
     </div>
+  )
+}
+
+// Card-row pages can't use SortHeader on a <th>; this dropdown gives super-admin
+// the same sort capability for the cen-row layout.
+export function SortDropdown({ sortKey, sortDir, onToggle, options }) {
+  return (
+    <select
+      className="cen-input"
+      value={`${sortKey}:${sortDir}`}
+      onChange={e => {
+        const [k, d] = e.target.value.split(':')
+        // Toggle direction: call onToggle once for key change (sets asc),
+        // then again if desc was requested
+        if (k !== sortKey) onToggle(k)
+        if (d === 'desc' && sortDir !== 'desc') onToggle(k)
+      }}
+      style={{ minWidth: 180 }}
+      title="ترتيب حسب"
+    >
+      {options.flatMap(opt => [
+        <option key={`${opt.k}:asc`}  value={`${opt.k}:asc`}>{`${opt.label} ↑`}</option>,
+        <option key={`${opt.k}:desc`} value={`${opt.k}:desc`}>{`${opt.label} ↓`}</option>,
+      ])}
+    </select>
   )
 }

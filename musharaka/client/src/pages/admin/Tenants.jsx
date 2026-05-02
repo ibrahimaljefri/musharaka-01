@@ -6,8 +6,23 @@ import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import EmptyState from '../../components/EmptyState'
+import SortHeader from '../../components/SortHeader'
 import { Plus, Edit2, Trash2, Key, Building2, ChevronLeft, ChevronDown, GitBranch } from 'lucide-react'
 import './admin-tenants.css'
+
+// Adapter so SortHeader's (key, dir) API drives Tenants' existing
+// `sort = { field, dir }` state without changing the sort logic itself.
+function makeSortAdapter(sort, setSort) {
+  return {
+    sortKey: sort.field,
+    sortDir: sort.dir,
+    toggle:  (field) => setSort(prev =>
+      prev.field === field
+        ? { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+        : { field, dir: 'asc' }
+    ),
+  }
+}
 
 const PAGE_SIZE = 20
 
@@ -165,6 +180,7 @@ export default function Tenants() {
     return merged
   }, [userExpanded, branchMatchedTenantIds])
 
+  const sortAdapter = makeSortAdapter(sort, setSort)
   const totalPages = Math.ceil(filteredSorted.length / PAGE_SIZE) || 1
   const paged = filteredSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const firstIdx = filteredSorted.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
@@ -255,12 +271,12 @@ export default function Tenants() {
               <thead>
                 <tr>
                   <th style={{ width: 40 }}></th>
-                  <th>الاسم</th>
-                  <th>الرمز</th>
-                  <th>الباقة</th>
+                  <SortHeader k="name"       label="الاسم"          {...sortAdapter} />
+                  <SortHeader k="slug"       label="الرمز"           {...sortAdapter} />
+                  <SortHeader k="plan"       label="الباقة"          {...sortAdapter} />
                   <th>أنواع الإدخال</th>
-                  <th>الحالة</th>
-                  <th>تاريخ الانتهاء</th>
+                  <SortHeader k="status"     label="الحالة"          {...sortAdapter} />
+                  <SortHeader k="expires_at" label="تاريخ الانتهاء"   {...sortAdapter} />
                   <th>إجراءات</th>
                 </tr>
               </thead>

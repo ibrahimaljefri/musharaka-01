@@ -14,6 +14,8 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import AlertBanner from '../components/AlertBanner'
 import BranchBadge from '../components/BranchBadge'
 import EmptyState from '../components/EmptyState'
+import SortHeader from '../components/SortHeader'
+import { useSortable } from '../lib/useSortable'
 import './dashboard.css'
 
 const PAGE_SIZE  = 25
@@ -793,54 +795,13 @@ export default function Dashboard() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table className="recent-table">
-              <thead>
-                <tr>
-                  <th>الفرع</th>
-                  <th>رقم الفاتورة</th>
-                  <th>المبلغ</th>
-                  <th>التاريخ</th>
-                  <th>الحالة</th>
-                  <th>إجراء</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sales.slice(0, 8).map(s => (
-                  <tr key={s.id} data-testid="sale-row">
-                    <td>
-                      {s.branches
-                        ? <BranchBadge code={s.branches.code || '—'} />
-                        : <span style={{ color: 'var(--text-muted)' }}>—</span>}
-                    </td>
-                    <td className="t-mono">{s.invoice_number || '—'}</td>
-                    <td className="t-mono" dir="ltr">{fmt(s.amount)} ر.س</td>
-                    <td>{fmtShortDate(s.sale_date)}</td>
-                    <td>
-                      <span className={`status-pill ${s.status === 'sent' ? 'status-submitted' : 'status-pending'}`}>
-                        {statusLabel(s.status)}
-                      </span>
-                    </td>
-                    <td>
-                      {s.status === 'sent' ? (
-                        <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
-                          <Lock size={10} /> محمية
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setDeleteId(s.id)}
-                          style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 4 }}
-                          aria-label="حذف"
-                          data-testid="delete-sale-btn"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <RecentSalesTable
+              sales={sales}
+              setDeleteId={setDeleteId}
+              fmt={fmt}
+              fmtShortDate={fmtShortDate}
+              statusLabel={statusLabel}
+            />
           </div>
         )}
 
@@ -950,3 +911,69 @@ export default function Dashboard() {
 // Unused import guards (retained for backward compat during incremental refactor)
 // eslint-disable-next-line no-unused-vars
 const _unused = { Hash, TrendingUp }
+
+/**
+ * Recent-sales table on the dashboard. Renders the FULL `sales` page (not
+ * a hardcoded slice — fixes the bug where KPI count didn't match table
+ * row count). Click any column header to sort by that field.
+ */
+function RecentSalesTable({ sales, setDeleteId, fmt, fmtShortDate, statusLabel }) {
+  // Custom getter: branches.code lives nested; sale_date sorts as ISO string OK
+  const getter = (row, key) => {
+    if (key === 'branch_code') return row.branches?.code || ''
+    if (key === 'amount')      return parseFloat(row.amount || 0)
+    return row?.[key]
+  }
+  const { sorted, sortKey, sortDir, toggle } = useSortable(sales, 'sale_date', 'desc', getter)
+
+  return (
+    <table className="recent-table">
+      <thead>
+        <tr>
+          <SortHeader k="branch_code"     label="الفرع"        sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
+          <SortHeader k="invoice_number"  label="رقم الفاتورة"  sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
+          <SortHeader k="amount"          label="المبلغ"         sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
+          <SortHeader k="sale_date"       label="التاريخ"        sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
+          <SortHeader k="status"          label="الحالة"         sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
+          <th>إجراء</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map(s => (
+          <tr key={s.id} data-testid="sale-row">
+            <td>
+              {s.branches
+                ? <BranchBadge code={s.branches.code || '—'} />
+                : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+            </td>
+            <td className="t-mono">{s.invoice_number || '—'}</td>
+            <td className="t-mono" dir="ltr">{fmt(s.amount)} ر.س</td>
+            <td>{fmtShortDate(s.sale_date)}</td>
+            <td>
+              <span className={`status-pill ${s.status === 'sent' ? 'status-submitted' : 'status-pending'}`}>
+                {statusLabel(s.status)}
+              </span>
+            </td>
+            <td>
+              {s.status === 'sent' ? (
+                <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
+                  <Lock size={10} /> محمية
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDeleteId(s.id)}
+                  style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 4 }}
+                  aria-label="حذف"
+                  data-testid="delete-sale-btn"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}

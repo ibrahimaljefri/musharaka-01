@@ -6,6 +6,8 @@ import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle } from 'lucide-react'
+import SortHeader from '../../components/SortHeader'
+import { useSortable } from '../../lib/useSortable'
 import './admin-bot-subs.css'
 
 const PAGE_SIZE = 20
@@ -62,9 +64,10 @@ export default function BotSubscribers() {
     )
   }, [subscribers, search])
 
-  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const { sorted: sortedRows, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const totalPages  = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const paged       = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const paged       = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const firstIdx    = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
   const lastIdx     = Math.min(currentPage * PAGE_SIZE, filtered.length)
 
@@ -98,13 +101,13 @@ export default function BotSubscribers() {
             <table className="adm-tbl">
               <thead>
                 <tr>
-                  <th>المستأجر</th>
-                  <th>الفرع</th>
-                  <th>المنصة</th>
-                  <th>معرّف الدردشة</th>
-                  <th>الاسم</th>
-                  <th>الحالة</th>
-                  <th>آخر رسالة</th>
+                  <SortHeader k="tenant_name" label="المستأجر"      sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="branch_name" label="الفرع"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="platform"    label="المنصة"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="chat_id"     label="معرّف الدردشة"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="name"        label="الاسم"           sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="active"      label="الحالة"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <SortHeader k="last_message_at" label="آخر رسالة"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                   <th>إجراءات</th>
                 </tr>
               </thead>
