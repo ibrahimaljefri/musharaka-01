@@ -665,19 +665,30 @@ router.get('/cenomi-logs', async (req, res, next) => {
     const limit  = Math.min(parseInt(req.query.limit, 10)  || 50, 200)
     const offset = Math.max(parseInt(req.query.offset, 10) || 0,  0)
 
+    // Build the WHERE clause + filter args once, then use SEPARATE arg arrays
+    // for the count and rows queries. Sharing one array between two
+    // pool.query calls fails: pushing limit/offset to it after countQ is
+    // built mutates the same reference, and both queries fire under
+    // Promise.all with the now-bigger array — Postgres rejects the count
+    // query with "bind message supplies N parameters, but prepared
+    // statement requires 0".
     const where = []
-    const args  = []
-    if (tenant_id) { args.push(tenant_id); where.push(`l.tenant_id = $${args.length}`) }
-    if (branch_id) { args.push(branch_id); where.push(`l.branch_id = $${args.length}`) }
-    if (from)      { args.push(from);      where.push(`l.created_at >= $${args.length}`) }
-    if (to)        { args.push(to);        where.push(`l.created_at <= $${args.length}`) }
+    const filterArgs = []
+    if (tenant_id) { filterArgs.push(tenant_id); where.push(`l.tenant_id = $${filterArgs.length}`) }
+    if (branch_id) { filterArgs.push(branch_id); where.push(`l.branch_id = $${filterArgs.length}`) }
+    if (from)      { filterArgs.push(from);      where.push(`l.created_at >= $${filterArgs.length}`) }
+    if (to)        { filterArgs.push(to);        where.push(`l.created_at <= $${filterArgs.length}`) }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
+
+    const countArgs = [...filterArgs]
+    const rowsArgs  = [...filterArgs, limit, offset]
+    const limitIdx  = filterArgs.length + 1
+    const offsetIdx = filterArgs.length + 2
 
     const countQ = pool.query(
       `SELECT count(*)::int AS n FROM cenomi_logs l ${whereSql}`,
-      args
+      countArgs
     )
-    args.push(limit); args.push(offset)
     const rowsQ = pool.query(
       `SELECT l.id, l.tenant_id, l.branch_id, l.submission_id,
               l.request_url, l.request_headers, l.request_body,
@@ -689,8 +700,8 @@ router.get('/cenomi-logs', async (req, res, next) => {
        LEFT JOIN branches b ON b.id = l.branch_id
        ${whereSql}
        ORDER BY l.created_at DESC
-       LIMIT $${args.length - 1} OFFSET $${args.length}`,
-      args
+       LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      rowsArgs
     )
 
     const [{ rows: countRows }, { rows }] = await Promise.all([countQ, rowsQ])
