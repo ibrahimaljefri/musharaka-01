@@ -1,7 +1,7 @@
 /**
  * GET /api/submissions — list submission history for current tenant
  *
- * Query params: branch_id, status, limit, offset
+ * Query params: branch_id, status, month, year, limit, offset
  */
 const express = require('express')
 const router  = express.Router()
@@ -16,13 +16,21 @@ router.use(standardLimiter, authMiddleware, tenantMiddleware)
 router.get('/', async (req, res, next) => {
   try {
     const { branch_id, status } = req.query
+    const month  = req.query.month ? parseInt(req.query.month, 10) : null
+    const year   = req.query.year  ? parseInt(req.query.year,  10) : null
     const limit  = Math.min(parseInt(req.query.limit)  || 500, 1000)
     const offset = Math.max(parseInt(req.query.offset) || 0, 0)
 
     const where = ['s.tenant_id = $1']
     const params = [req.tenantId]
-    if (branch_id) { params.push(branch_id);     where.push(`s.branch_id = $${params.length}`) }
-    if (status)    { params.push(status);        where.push(`s.status = $${params.length}`) }
+    if (branch_id)                  { params.push(branch_id); where.push(`s.branch_id = $${params.length}`) }
+    if (status)                     { params.push(status);    where.push(`s.status    = $${params.length}`) }
+    if (month && month >= 1 && month <= 12) {
+      params.push(month);           where.push(`s.month = $${params.length}`)
+    }
+    if (year && year >= 2000 && year <= 2100) {
+      params.push(year);            where.push(`s.year  = $${params.length}`)
+    }
     applyBranchScope(req, where, params, 's.branch_id')
 
     const whereSql = 'WHERE ' + where.join(' AND ')
