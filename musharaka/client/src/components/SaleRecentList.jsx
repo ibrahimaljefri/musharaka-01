@@ -1,14 +1,11 @@
 /**
  * SaleRecentList — self-contained "آخر المبيعات" table.
  *
- * Used on the SaleCreate page below the entry form so the user can
- * immediately see newly submitted rows without navigating away.
- *
  * Props:
  *   branchId    — pre-filter to this branch (optional; '' = all)
  *   refreshTick — increment from parent after a successful save to refetch
  */
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import api from '../lib/axiosClient'
 import { toast } from '../lib/useToast'
 import { useSortable } from '../lib/useSortable'
@@ -44,13 +41,20 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
   const [rows, setRows]         = useState([])
   const [branches, setBranches] = useState([])
   const [loading, setLoading]   = useState(true)
-  const [deleteId, setDeleteId] = useState(null)
+  const [deleteId, setDeleteId] = useState(null)       // single-row delete
+  const [bulkConfirm, setBulkConfirm] = useState(false) // bulk delete confirm
   const [page, setPage]         = useState(0)
 
   // Filters
   const [filterBranch, setFilterBranch] = useState(branchId)
   const [filterYear,   setFilterYear]   = useState(new Date().getFullYear())
   const [filterMonth,  setFilterMonth]  = useState('')
+
+  // Multi-select (Set of IDs)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+
+  // Ref for indeterminate state on the "select-all" checkbox
+  const selectAllRef = useRef(null)
 
   // When the form's selected branch changes, mirror it in the filter
   useEffect(() => {
@@ -64,14 +68,17 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     load()
   }, [refreshTick]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset page on any filter change
-  useEffect(() => { setPage(0) }, [filterBranch, filterYear, filterMonth])
+  // Reset page + clear selection on any filter change
+  useEffect(() => {
+    setPage(0)
+    setSelectedIds(new Set())
+  }, [filterBranch, filterYear, filterMonth])
 
   async function load() {
     setLoading(true)
     try {
       const [salesRes, branchRes] = await Promise.all([
-        api.get('/sales', { params: { limit: 5000 } }),   // fetch all — branch filtered client-side
+        api.get('/sales', { params: { limit: 5000 } }),
         api.get('/branches'),
       ])
       setRows(salesRes.data?.sales || [])
@@ -82,6 +89,7 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     setLoading(false)
   }
 
+  // ── Single delete ──────────────────────────────────────────────────────────
   async function handleDelete() {
     try {
       await api.delete(`/sales/${deleteId}`)
@@ -94,7 +102,24 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     }
   }
 
-  // Available years from data
+  // ── Bulk delete ────────────────────────────────────────────────────────────
+  async function handleBulkDelete() {
+    setBulkConfirm(false)
+    const ids = [...selectedIds]
+    let failed = 0
+    await Promise.all(
+      ids.map(id =>
+        api.delete(`/sales/${id}`).catch(() => { failed++ }),
+      ),
+    )
+    const deleted = ids.length - failed
+    if (deleted > 0) toast.success(`تم حذف ${deleted} سجل بنجاح`)
+    if (failed > 0)  toast.error(`لم يمكن حذف ${failed} سجل (محمية أو خطأ)`)
+    setSelectedIds(new Set())
+    load()
+  }
+
+  // ── Filter pipeline ────────────────────────────────────────────────────────
   const availableYears = useMemo(() => {
     const ySet = new Set([new Date().getFullYear()])
     for (const r of rows) {
@@ -103,7 +128,6 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     return [...ySet].sort((a, b) => b - a)
   }, [rows])
 
-  // Filter by branch + year + month
   const filtered = useMemo(() => {
     return rows.filter(r => {
       if (filterBranch && r.branch_id !== filterBranch) return false
@@ -115,7 +139,6 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     })
   }, [rows, filterBranch, filterYear, filterMonth])
 
-  // Enrich with branch info
   const enriched = useMemo(() => {
     const bMap = new Map(branches.map(b => [b.id, b]))
     return filtered.map(r => {
@@ -124,7 +147,6 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     })
   }, [filtered, branches])
 
-  // Sort
   const getter = useCallback((row, key) => {
     if (key === 'branch_code') return row._branch?.code || ''
     if (key === 'amount')      return parseFloat(row.amount || 0)
@@ -133,17 +155,57 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
 
   const { sorted, sortKey, sortDir, toggle } = useSortable(enriched, 'sale_date', 'desc', getter)
 
-  // Paginate
   const totalRows  = sorted.length
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE))
   const paged      = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
-  // Monthly total for the selected month (quick summary)
   const monthTotal = useMemo(() => {
     if (!filterMonth) return null
     return filtered.reduce((s, r) => s + parseFloat(r.amount || 0), 0)
   }, [filtered, filterMonth])
 
+  // ── Selection helpers ──────────────────────────────────────────────────────
+  // Only pending rows can be deleted/selected
+  const deletableFiltered = useMemo(
+    () => sorted.filter(s => s.status !== 'sent'),
+    [sorted],
+  )
+  const selectedCount      = selectedIds.size
+  const allSelected        = deletableFiltered.length > 0 && deletableFiltered.every(s => selectedIds.has(s.id))
+  const someSelected       = !allSelected && deletableFiltered.some(s => selectedIds.has(s.id))
+
+  // Sync indeterminate attribute (can't be set via React prop)
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected
+  }, [someSelected])
+
+  function toggleRow(id) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    if (allSelected || someSelected) {
+      // Deselect all in current filter
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        deletableFiltered.forEach(s => next.delete(s.id))
+        return next
+      })
+    } else {
+      // Select all deletable in current filter
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        deletableFiltered.forEach(s => next.add(s.id))
+        return next
+      })
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="srl-wrap">
       {/* Header */}
@@ -218,9 +280,35 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
         )}
       </div>
 
+      {/* Bulk action bar — appears when rows are selected */}
+      {selectedCount > 0 && (
+        <div className="srl-bulk-bar">
+          <span className="srl-bulk-count">
+            تم تحديد <strong>{selectedCount}</strong> سجل
+          </span>
+          <div className="srl-bulk-actions">
+            <button
+              type="button"
+              className="srl-bulk-delete-btn"
+              onClick={() => setBulkConfirm(true)}
+            >
+              <Trash2 size={13} />
+              حذف المحدد
+            </button>
+            <button
+              type="button"
+              className="srl-bulk-clear-btn"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              إلغاء التحديد
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       {loading ? (
-        <div style={{ padding: '12px 0' }}><TableSkeleton rows={5} cols={5} /></div>
+        <div style={{ padding: '12px 0' }}><TableSkeleton rows={5} cols={6} /></div>
       ) : paged.length === 0 ? (
         <div className="srl-empty">
           {rows.length > 0 ? 'لا توجد مبيعات تطابق الفلاتر المحددة' : 'لا توجد مبيعات مسجّلة بعد'}
@@ -231,6 +319,18 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
             <table className="srl-table">
               <thead>
                 <tr>
+                  {/* Select-all checkbox */}
+                  <th className="srl-th-check">
+                    <input
+                      type="checkbox"
+                      ref={selectAllRef}
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      className="srl-checkbox"
+                      title={allSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل القابلة للحذف'}
+                      disabled={deletableFiltered.length === 0}
+                    />
+                  </th>
                   <SortHeader k="branch_code"    label="الفرع"        sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
                   <SortHeader k="invoice_number" label="رقم الفاتورة" sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
                   <SortHeader k="amount"         label="المبلغ"        sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
@@ -240,39 +340,58 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
                 </tr>
               </thead>
               <tbody>
-                {paged.map(s => (
-                  <tr key={s.id}>
-                    <td>
-                      {s._branch
-                        ? <BranchBadge code={s._branch.code || '—'} />
-                        : <span className="srl-muted">—</span>}
-                    </td>
-                    <td className="srl-mono">{s.invoice_number || '—'}</td>
-                    <td className="srl-mono" dir="ltr">{fmt(s.amount)} ر.س</td>
-                    <td>{fmtDate(s.sale_date)}</td>
-                    <td>
-                      <span className={`srl-status ${s.status === 'sent' ? 'srl-sent' : 'srl-pending'}`}>
-                        {statusLabel(s.status)}
-                      </span>
-                    </td>
-                    <td>
-                      {s.status === 'sent' ? (
-                        <span className="srl-protected">
-                          <Lock size={10} /> محمية
+                {paged.map(s => {
+                  const canDelete  = s.status !== 'sent'
+                  const isSelected = selectedIds.has(s.id)
+                  return (
+                    <tr
+                      key={s.id}
+                      className={isSelected ? 'srl-row-selected' : ''}
+                    >
+                      <td className="srl-td-check">
+                        {canDelete ? (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleRow(s.id)}
+                            className="srl-checkbox"
+                          />
+                        ) : (
+                          <span style={{ display: 'inline-block', width: 16 }} />
+                        )}
+                      </td>
+                      <td>
+                        {s._branch
+                          ? <BranchBadge code={s._branch.code || '—'} />
+                          : <span className="srl-muted">—</span>}
+                      </td>
+                      <td className="srl-mono">{s.invoice_number || '—'}</td>
+                      <td className="srl-mono" dir="ltr">{fmt(s.amount)} ر.س</td>
+                      <td>{fmtDate(s.sale_date)}</td>
+                      <td>
+                        <span className={`srl-status ${s.status === 'sent' ? 'srl-sent' : 'srl-pending'}`}>
+                          {statusLabel(s.status)}
                         </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setDeleteId(s.id)}
-                          className="srl-delete-btn"
-                          aria-label="حذف"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td>
+                        {s.status === 'sent' ? (
+                          <span className="srl-protected">
+                            <Lock size={10} /> محمية
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteId(s.id)}
+                            className="srl-delete-btn"
+                            aria-label="حذف"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -301,12 +420,22 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
         </>
       )}
 
+      {/* Single-row delete */}
       <ConfirmDialog
         open={!!deleteId}
         title="حذف السجل"
         message="هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء."
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
+      />
+
+      {/* Bulk delete */}
+      <ConfirmDialog
+        open={bulkConfirm}
+        title="حذف المحدد"
+        message={`هل أنت متأكد من حذف ${selectedCount} سجل؟ لا يمكن التراجع عن هذا الإجراء.`}
+        onConfirm={handleBulkDelete}
+        onCancel={() => setBulkConfirm(false)}
       />
     </div>
   )
