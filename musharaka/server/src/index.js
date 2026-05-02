@@ -20,6 +20,13 @@ const tenantAdminRoutes = require('./routes/tenantAdmin')
 const app  = express()
 const PORT = process.env.PORT || 3001
 
+// Trust the cPanel reverse proxy so req.ip resolves to the real client
+// (not the proxy) and express-rate-limit can key per-user. Without this
+// the rate limiter sees the same IP for every request and one heavy
+// user could rate-limit everyone, plus express-rate-limit emits
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR ValidationError on every request.
+app.set('trust proxy', 1)
+
 // Security headers — CSP disabled: frontend may be served from this server or from cPanel.
 // We strip CSP entirely so the frontend can call the Render API without browser blocks.
 // Everything else (HSTS, X-Frame-Options, nosniff, Referrer-Policy) stays on.

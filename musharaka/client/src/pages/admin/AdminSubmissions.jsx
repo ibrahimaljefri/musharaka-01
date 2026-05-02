@@ -1,45 +1,40 @@
 /**
  * Admin: Submissions — review + revert
  *
- * Reads from GET /api/admin/submissions (filterable by tenant + status).
- * Super-admin can revert a 'sent' submission via the "إعادة التعيين" button,
- * which calls POST /api/admin/submissions/:id/revert. The revert returns the
- * linked sales for that branch+period to 'pending' so the tenant can edit
- * and re-send. Other branches of the same tenant are unaffected.
+ * Card-row layout with traffic-light status bars (green=sent, gold=reverted,
+ * red=failed). 4 metric cards at the top show the distribution at a glance.
+ * Reverting a row marks the submission 'reverted' and returns the linked
+ * sales for that branch+period to 'pending' so the tenant can edit and
+ * re-send. Other branches of the same tenant are unaffected.
  */
 import { useState, useEffect, useMemo } from 'react'
 import api from '../../lib/axiosClient'
 import { TableSkeleton } from '../../components/SkeletonLoader'
 import { toast } from '../../lib/useToast'
 import ConfirmDialog from '../../components/ConfirmDialog'
-import { RotateCcw } from 'lucide-react'
+import {
+  RotateCcw, Send, CheckCircle2, XCircle, Inbox, Calendar, GitBranch,
+  Building2,
+} from 'lucide-react'
+import './cenomi-admin.css'
 
-const STATUS_FILTERS = [
-  { value: null,       label: 'الكل' },
-  { value: 'sent',     label: 'مُرسل' },
-  { value: 'reverted', label: 'تم التراجع' },
-  { value: 'failed',   label: 'فشل' },
-]
-
-const STATUS_CLASS = {
-  sent:     's-resolved',
-  reverted: 's-progress',
-  failed:   's-open',
-}
-const STATUS_LABELS = {
-  sent:     'مُرسل',
-  reverted: 'تم التراجع',
-  failed:   'فشل',
-}
+const STATUS_CLASS = { sent: 'green', reverted: 'gold', failed: 'red' }
+const STATUS_LABEL = { sent: 'مُرسل', reverted: 'تم التراجع', failed: 'فشل' }
+const STATUS_ICON  = { sent: CheckCircle2, reverted: RotateCcw, failed: XCircle }
 
 function fmtDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })
 }
+function fmtDateTime(d) {
+  if (!d) return '—'
+  return new Date(d).toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' })
+}
 function fmtPeriod(start, end, mode) {
   if (!start || !end) return '—'
-  if (start === end) return fmtDate(start)
-  return `${fmtDate(start)} → ${fmtDate(end)}${mode ? ` (${mode === 'daily' ? 'يومي' : 'شهري'})` : ''}`
+  const modeChip = mode === 'daily' ? 'يومي' : 'شهري'
+  if (start === end) return `${fmtDate(start)} · ${modeChip}`
+  return `${fmtDate(start)} → ${fmtDate(end)} · ${modeChip}`
 }
 function fmtAmount(n) {
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -62,8 +57,9 @@ export default function AdminSubmissions() {
     setLoading(true)
     try {
       const params = { limit: 200 }
-      if (tenantId)     params.tenant_id = tenantId
-      if (statusFilter) params.status    = statusFilter
+      if (tenantId) params.tenant_id = tenantId
+      // Note: NOT passing status here — we want all rows for the metric cards.
+      // The status filter is applied client-side below.
       const { data } = await api.get('/admin/submissions', { params })
       setRows(data || [])
     } catch (err) {
@@ -71,7 +67,23 @@ export default function AdminSubmissions() {
     } finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [tenantId, statusFilter])
+  useEffect(() => { load() }, [tenantId])
+
+  // Metrics (computed from full list, before status filter)
+  const metrics = useMemo(() => {
+    const m = { total: rows.length, sent: 0, reverted: 0, failed: 0, sentAmount: 0 }
+    for (const r of rows) {
+      if (r.status === 'sent')     { m.sent++;     m.sentAmount += parseFloat(r.total_amount || 0) }
+      if (r.status === 'reverted')   m.reverted++
+      if (r.status === 'failed')     m.failed++
+    }
+    return m
+  }, [rows])
+
+  const filtered = useMemo(
+    () => statusFilter ? rows.filter(r => r.status === statusFilter) : rows,
+    [rows, statusFilter]
+  )
 
   const handleRevert = async () => {
     if (!confirmRow) return
@@ -87,81 +99,55 @@ export default function AdminSubmissions() {
   }
 
   return (
-    <div className="adm-tickets">
-      <div className="adm-page-header">
-        <div>
-          <h1 className="adm-page-title">مراجعة الإرسالات</h1>
-          <div className="t-small">{rows.length} سجل · يمكنك التراجع عن أي إرسال للسماح للمستأجر بالتعديل وإعادة الإرسال</div>
+    <div className="cen-page">
+      <div className="cen-page-head">
+        <h1 className="cen-page-title">مراجعة الإرسالات</h1>
+        <div className="cen-page-sub">
+          نظرة عامة على جميع إرسالات سينومي · يمكنك التراجع عن أي إرسال للسماح للمستأجر بالتعديل وإعادة الإرسال
         </div>
       </div>
 
-      <div className="adm-filter-bar" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <select className="input" style={{ flex: '1 1 240px' }}
-          value={tenantId} onChange={e => setTenantId(e.target.value)}>
+      {/* Metric cards */}
+      <div className="cen-metrics">
+        <Metric icon={Inbox}        tone="gray"  value={metrics.total}    label="إجمالي الإرسالات" />
+        <Metric icon={CheckCircle2} tone="green" value={metrics.sent}     label="مُرسل بنجاح"
+                aux={metrics.sentAmount > 0 ? `﷼ ${fmtAmount(metrics.sentAmount)}` : null} />
+        <Metric icon={RotateCcw}    tone="gold"  value={metrics.reverted} label="تم التراجع" />
+        <Metric icon={XCircle}      tone="red"   value={metrics.failed}   label="فشل" />
+      </div>
+
+      {/* Filters: status pills with counts + tenant dropdown */}
+      <div className="cen-filters">
+        <div className="cen-filter-row">
+          <Pill active={statusFilter === null}       onClick={() => setStatusFilter(null)}      label="الكل"        count={metrics.total} />
+          <Pill active={statusFilter === 'sent'}     onClick={() => setStatusFilter('sent')}    label="مُرسل"        count={metrics.sent} />
+          <Pill active={statusFilter === 'reverted'} onClick={() => setStatusFilter('reverted')} label="تم التراجع"  count={metrics.reverted} />
+          <Pill active={statusFilter === 'failed'}   onClick={() => setStatusFilter('failed')}  label="فشل"          count={metrics.failed} />
+        </div>
+        <select className="cen-input" value={tenantId} onChange={e => setTenantId(e.target.value)}>
           <option value="">جميع المستأجرين</option>
           {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
       </div>
 
-      <div className="adm-pills" dir="rtl">
-        {STATUS_FILTERS.map(f => (
-          <button key={String(f.value)}
-            onClick={() => setStatusFilter(f.value)}
-            className={`adm-pill ${statusFilter === f.value ? 'active' : ''}`}>
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="surface adm-tbl-wrap">
-        {loading ? (
-          <div style={{ padding: 16 }}><TableSkeleton rows={5} cols={6} /></div>
-        ) : rows.length === 0 ? (
-          <div className="adm-state">لا توجد إرسالات</div>
-        ) : (
-          <table className="adm-tbl">
-            <thead>
-              <tr>
-                <th>تاريخ الإرسال</th>
-                <th>المستأجر</th>
-                <th>الفرع</th>
-                <th>الفترة</th>
-                <th>عدد · المجموع</th>
-                <th>الحالة</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(r => (
-                <tr key={r.id}
-                    style={{ textDecoration: r.status === 'reverted' ? 'line-through' : 'none', opacity: r.status === 'reverted' ? 0.6 : 1 }}>
-                  <td className="t-small">{fmtDate(r.submitted_at)}</td>
-                  <td>{r.tenant_name || '—'}</td>
-                  <td>{r.branch_name ? `${r.branch_name} (${r.branch_code})` : '—'}</td>
-                  <td>{fmtPeriod(r.period_start, r.period_end, r.post_mode)}</td>
-                  <td>{r.invoice_count} · ﷼ {fmtAmount(r.total_amount)}</td>
-                  <td><span className={`adm-tag ${STATUS_CLASS[r.status] || ''}`}>{STATUS_LABELS[r.status] || r.status}</span></td>
-                  <td>
-                    {r.status === 'sent' && (
-                      <button className="btn btn-ghost" style={{ padding: '4px 10px' }}
-                        onClick={() => setConfirmRow(r)}
-                        title="إعادة الإرسال إلى pending">
-                        <RotateCcw size={14} /> إعادة التعيين
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {/* Rows */}
+      {loading ? (
+        <div className="cen-row" style={{ padding: 20 }}><TableSkeleton rows={4} cols={1} /></div>
+      ) : filtered.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="cen-rows">
+          {filtered.map(r => (
+            <SubmissionRow key={r.id} row={r} onRevert={setConfirmRow} />
+          ))}
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!confirmRow}
         title="تأكيد التراجع عن الإرسال"
         message={confirmRow
-          ? `سيتم إرجاع جميع المبيعات للفترة ${fmtPeriod(confirmRow.period_start, confirmRow.period_end)} ` +
+          ? `سيتم إرجاع جميع المبيعات للفترة ${fmtPeriod(confirmRow.period_start, confirmRow.period_end, confirmRow.post_mode)} ` +
             `للفرع ${confirmRow.branch_name} (${confirmRow.branch_code}) إلى حالة "معلَّقة" بحيث يمكن للمستأجر ` +
             `تعديلها وإعادة إرسالها إلى سينومي. الفروع الأخرى لن تتأثر.`
           : ''}
@@ -169,6 +155,84 @@ export default function AdminSubmissions() {
         onCancel={() => { if (!reverting) setConfirmRow(null) }}
         danger={false}
       />
+    </div>
+  )
+}
+
+// ─── Subcomponents ──────────────────────────────────────────────────────────
+
+function Metric({ icon: Icon, tone, value, label, aux }) {
+  return (
+    <div className={`cen-metric ${tone}`}>
+      <div className="cen-metric-icon"><Icon size={18} /></div>
+      <div className="cen-metric-body">
+        <div className="cen-metric-value">{value}</div>
+        <div className="cen-metric-label">{label}</div>
+        {aux && <div className="cen-metric-aux">{aux}</div>}
+      </div>
+    </div>
+  )
+}
+
+function Pill({ active, onClick, label, count }) {
+  return (
+    <button onClick={onClick} className={`cen-pill ${active ? 'active' : ''}`}>
+      <span>{label}</span>
+      {typeof count === 'number' && <span className="count">{count}</span>}
+    </button>
+  )
+}
+
+function SubmissionRow({ row, onRevert }) {
+  const Icon  = STATUS_ICON[row.status] || Send
+  const tone  = STATUS_CLASS[row.status] || 'gray'
+  const isReverted = row.status === 'reverted'
+  return (
+    <div className={`cen-row ${tone} ${isReverted ? 'faded' : ''}`}>
+      <div className="cen-row-top">
+        <div className="cen-row-meta">
+          <span className={`cen-status ${tone}`}>
+            <Icon size={12} /> {STATUS_LABEL[row.status] || row.status}
+          </span>
+          <span className="cen-row-time">{fmtDateTime(row.submitted_at)}</span>
+        </div>
+        <div className="cen-row-actions">
+          {row.status === 'sent' && (
+            <button className="cen-revert-btn" onClick={() => onRevert(row)}
+                    title="إعادة الإرسال إلى pending">
+              <RotateCcw size={12} /> إعادة التعيين
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="cen-row-body">
+        <div className="cen-row-line">
+          <Building2 size={14} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
+          <strong>{row.tenant_name || '—'}</strong>
+          <span className="muted">→</span>
+          <GitBranch size={13} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
+          <span>{row.branch_name} <span className="muted">({row.branch_code})</span></span>
+        </div>
+        <div className="cen-row-line">
+          <Calendar size={13} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
+          <span className="muted">{fmtPeriod(row.period_start, row.period_end, row.post_mode)}</span>
+          <span className="cen-chip">{row.invoice_count} فاتورة</span>
+          <span className="cen-chip" style={{ fontWeight: 600 }}>﷼ {fmtAmount(row.total_amount)}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="cen-empty">
+      <div className="cen-empty-icon"><Send size={20} /></div>
+      <div className="cen-empty-title">لا توجد إرسالات</div>
+      <div className="cen-empty-desc">
+        ستظهر هنا جميع إرسالات سينومي بمجرد قيام أي مستأجر بالضغط على "إرسال الفواتير".
+      </div>
     </div>
   )
 }

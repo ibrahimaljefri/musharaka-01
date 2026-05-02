@@ -1,0 +1,218 @@
+/* Shared styles for /admin/submissions and /admin/cenomi-logs.
+ * Card-row layout with traffic-light status bars (green/gold/red).
+ * Reuses design tokens already defined elsewhere (--surface, --text, --border…).
+ */
+
+/* ─── Page header ───────────────────────────────────────────────────── */
+.cen-page          { padding: 16px 20px; max-width: 1280px; margin: 0 auto; }
+.cen-page-head     { margin-bottom: 16px; }
+.cen-page-title    { font-size: 22px; font-weight: 700; color: var(--text); margin: 0 0 4px 0; }
+.cen-page-sub      { font-size: 13px; color: var(--text-muted); }
+
+/* ─── Metric cards row ──────────────────────────────────────────────── */
+.cen-metrics       { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+@media (max-width: 720px) { .cen-metrics { grid-template-columns: repeat(2, 1fr); } }
+
+.cen-metric        {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  position: relative; overflow: hidden;
+}
+.cen-metric-icon   {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: 9px; display: grid; place-items: center;
+  background: rgba(184, 134, 11, 0.1); color: #B8860B;
+}
+.cen-metric.green  .cen-metric-icon { background: rgba(34, 197, 94, 0.12);  color: #16a34a; }
+.cen-metric.gold   .cen-metric-icon { background: rgba(184, 134, 11, 0.12); color: #B8860B; }
+.cen-metric.red    .cen-metric-icon { background: rgba(220, 38, 38, 0.12);  color: #dc2626; }
+.cen-metric.gray   .cen-metric-icon { background: rgba(120, 113, 108, 0.12); color: #78716c; }
+
+.cen-metric-body   { display: flex; flex-direction: column; min-width: 0; }
+.cen-metric-value  { font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--text); }
+.cen-metric-label  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.cen-metric-aux    { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* ─── Filter bar (pills + dropdown + dates) ─────────────────────────── */
+.cen-filters       { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.cen-filter-row    { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1 1 auto; }
+
+.cen-pill          {
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 13px; color: var(--text-muted); cursor: pointer;
+  transition: all 0.15s ease; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.cen-pill:hover    { background: var(--surface-2, var(--surface)); border-color: var(--border-strong, var(--border)); }
+.cen-pill.active   { background: #B8860B; border-color: #B8860B; color: white; }
+.cen-pill .count   { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: rgba(0, 0, 0, 0.08); }
+.cen-pill.active .count { background: rgba(255, 255, 255, 0.25); }
+
+.cen-input         {
+  padding: 7px 10px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 13px; color: var(--text);
+  font-family: inherit; min-width: 160px;
+}
+.cen-input:focus   { outline: 2px solid #B8860B; outline-offset: -1px; border-color: #B8860B; }
+.cen-btn-ghost     {
+  padding: 6px 12px; border-radius: 8px;
+  background: transparent; border: 1px solid var(--border);
+  font-size: 13px; color: var(--text-muted); cursor: pointer;
+}
+.cen-btn-ghost:hover { background: var(--surface-2, var(--surface)); }
+
+/* ─── Card row (one log entry / submission) ─────────────────────────── */
+.cen-rows          { display: flex; flex-direction: column; gap: 10px; }
+
+.cen-row           {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px 14px 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+.cen-row:hover     { border-color: var(--border-strong, var(--border)); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); }
+
+/* The traffic-light left bar (RTL → it's on the RIGHT visually).
+ * We use ::before instead of border-left because flex-edge borders
+ * inside RTL containers don't behave consistently across browsers.
+ */
+.cen-row::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;     /* left in LTR, right in RTL — what we want */
+  top: 0; bottom: 0;
+  width: 4px;
+  background: var(--border);
+}
+.cen-row.green::before { background: #16a34a; }
+.cen-row.gold::before  { background: #B8860B; }
+.cen-row.red::before   { background: #dc2626; }
+.cen-row.gray::before  { background: #78716c; }
+
+.cen-row.faded     { opacity: 0.55; }
+.cen-row.faded .cen-row-body { text-decoration: line-through; }
+
+.cen-row-top       { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.cen-row-meta      { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.cen-row-time      { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.cen-row-actions   { display: flex; gap: 8px; flex-shrink: 0; }
+
+.cen-status        {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cen-status.green  { background: rgba(34, 197, 94, 0.12);  color: #16a34a; }
+.cen-status.gold   { background: rgba(184, 134, 11, 0.12); color: #B8860B; }
+.cen-status.red    { background: rgba(220, 38, 38, 0.12);  color: #dc2626; }
+.cen-status.gray   { background: rgba(120, 113, 108, 0.12); color: #78716c; }
+
+.cen-row-body      { display: flex; flex-direction: column; gap: 6px; }
+.cen-row-line      { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--text); }
+.cen-row-line .muted { color: var(--text-muted); font-size: 12px; }
+.cen-chip          {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 6px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.04));
+  font-size: 12px; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.cen-row-url       {
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+  font-size: 12px; color: var(--text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 100%;
+  direction: ltr; text-align: left;
+}
+.cen-row-error     { font-size: 12px; color: #dc2626; margin-top: 4px; }
+
+.cen-revert-btn    {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #B8860B;
+  background: transparent;
+  color: #B8860B;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.cen-revert-btn:hover { background: #B8860B; color: white; }
+.cen-revert-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cen-expand-btn    {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px;
+  border: none; background: transparent;
+  font-size: 12px; color: var(--text-muted); cursor: pointer;
+  border-radius: 6px;
+}
+.cen-expand-btn:hover { background: var(--surface-2, rgba(0, 0, 0, 0.04)); color: var(--text); }
+
+/* ─── Expanded JSON viewer (cenomi-logs only) ───────────────────────── */
+.cen-expand        {
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.cen-json-block    { display: flex; flex-direction: column; gap: 4px; }
+.cen-json-head     {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+}
+.cen-copy-btn      {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 6px;
+  background: transparent; border: 1px solid var(--border);
+  font-size: 11px; color: var(--text-muted); cursor: pointer;
+}
+.cen-copy-btn:hover { background: var(--surface-2, var(--surface)); color: var(--text); }
+.cen-copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+.cen-json-body     {
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+  font-size: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
+  margin: 0;
+  max-height: 320px;
+  direction: ltr; text-align: left;
+  white-space: pre;
+  color: var(--text);
+}
+
+/* ─── Empty + loading states ────────────────────────────────────────── */
+.cen-empty         {
+  padding: 60px 20px; text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--text-muted);
+}
+.cen-empty-icon    {
+  width: 48px; height: 48px;
+  border-radius: 50%; background: var(--surface-2, rgba(184, 134, 11, 0.08));
+  color: #B8860B;
+  display: grid; place-items: center;
+  margin: 0 auto 12px;
+}
+.cen-empty-title   { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.cen-empty-desc    { font-size: 13px; color: var(--text-muted); max-width: 320px; margin: 0 auto; }
+
+/* ─── Pagination ────────────────────────────────────────────────────── */
+.cen-pagination    {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 16px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.cen-pagination-info { font-size: 12px; color: var(--text-muted); }
