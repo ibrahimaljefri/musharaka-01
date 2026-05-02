@@ -205,3 +205,180 @@
   .sc-form-grid { grid-template-columns: 1fr; }
   .sc-segmented { grid-template-columns: 1fr; }
 }
+
+/* ── SaleRecentList ────────────────────────────────────────────────────────── */
+.srl-wrap {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #E7E5E4);
+  border-radius: var(--r-md, 8px);
+  overflow: hidden;
+  margin-top: var(--space-5, 24px);
+}
+
+.srl-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border, #E7E5E4);
+}
+
+.srl-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text, #1C1917);
+  font-family: 'Tajawal', sans-serif;
+}
+
+.srl-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted, #78716C);
+  margin-top: 2px;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.srl-refresh-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #78716C);
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 150ms;
+}
+.srl-refresh-btn:hover { color: var(--brand, #D97706); }
+
+.srl-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--bg-subtle, #F5F5F4);
+  border-bottom: 1px solid var(--border, #E7E5E4);
+}
+
+.srl-filter-label {
+  font-size: 0.75rem;
+  color: var(--text-sec, #57534E);
+  white-space: nowrap;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.srl-select {
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong, #D6D3D1);
+  border-radius: 6px;
+  font: 400 0.8rem 'Tajawal', sans-serif;
+  background: var(--surface, #fff);
+  color: var(--text, #1C1917);
+  outline: none;
+}
+.srl-select:focus { border-color: #D97706; }
+
+.srl-clear-btn {
+  background: none;
+  border: none;
+  font-size: 0.72rem;
+  color: var(--text-muted, #78716C);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.srl-clear-btn:hover { background: var(--border, #E7E5E4); }
+
+.srl-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted, #78716C);
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.875rem;
+}
+
+.srl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.82rem;
+}
+
+.srl-table thead th {
+  background: var(--bg-subtle, #F5F5F4);
+  color: var(--text-sec, #57534E);
+  font-weight: 600;
+  padding: 9px 14px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border, #E7E5E4);
+  cursor: pointer;
+  user-select: none;
+}
+
+.srl-table tbody tr {
+  border-bottom: 1px solid var(--border, #E7E5E4);
+  transition: background 120ms;
+}
+.srl-table tbody tr:last-child { border-bottom: none; }
+.srl-table tbody tr:hover { background: var(--bg-subtle, #F5F5F4); }
+
+.srl-table td {
+  padding: 9px 14px;
+  color: var(--text, #1C1917);
+  vertical-align: middle;
+}
+
+.srl-mono   { font-family: 'Courier New', monospace; font-size: 0.78rem; }
+.srl-muted  { color: var(--text-muted, #78716C); }
+
+.srl-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.srl-sent    { background: #D1FAE5; color: #065F46; }
+.srl-pending { background: #FEF3C7; color: #92400E; }
+
+.srl-protected {
+  color: var(--text-muted, #78716C);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+}
+
+.srl-delete-btn {
+  background: none;
+  border: none;
+  color: #EF4444;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.srl-delete-btn:hover { background: #FEE2E2; }
+
+.srl-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border, #E7E5E4);
+  background: var(--bg-subtle, #F5F5F4);
+}
+.srl-page-info { font-size: 0.72rem; color: var(--text-muted, #78716C); font-family: 'Tajawal', sans-serif; }
+.srl-page-btn {
+  background: none;
+  border: 1px solid var(--border-strong, #D6D3D1);
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-sec, #57534E);
+}
+.srl-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.srl-page-btn:not(:disabled):hover { background: var(--border, #E7E5E4); }

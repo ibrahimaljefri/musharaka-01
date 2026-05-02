@@ -19,6 +19,8 @@ export function useSortable(rows, defaultKey = null, defaultDir = 'desc', getter
 
   const sorted = useMemo(() => {
     if (!sortKey || !Array.isArray(rows)) return rows
+    // ISO date string pattern: YYYY-MM-DD or YYYY-MM-DDTHH:...
+    const ISO_DATE = /^\d{4}-\d{2}-\d{2}/
     const arr = [...rows]
     arr.sort((a, b) => {
       const av = get(a, sortKey)
@@ -27,14 +29,19 @@ export function useSortable(rows, defaultKey = null, defaultDir = 'desc', getter
       if (av == null && bv == null) return 0
       if (av == null) return 1
       if (bv == null) return -1
-      // Numbers
-      const an = typeof av === 'number' ? av : Number(av)
-      const bn = typeof bv === 'number' ? bv : Number(bv)
+      // Numbers (explicit number type from getter, e.g. parseFloat)
+      if (typeof av === 'number' && typeof bv === 'number') return av - bv
+      const an = Number(av), bn = Number(bv)
       if (!Number.isNaN(an) && !Number.isNaN(bn) && typeof av !== 'string' && typeof bv !== 'string') {
         return an - bn
       }
-      // ISO date strings sort lexicographically — localeCompare handles them correctly
-      return String(av).localeCompare(String(bv), 'ar', { numeric: true })
+      // ISO date strings — compare lexicographically (YYYY-MM-DD sorts correctly as string)
+      const sa = String(av), sb = String(bv)
+      if (ISO_DATE.test(sa) && ISO_DATE.test(sb)) {
+        return sa < sb ? -1 : sa > sb ? 1 : 0
+      }
+      // Default: Arabic-aware locale compare
+      return sa.localeCompare(sb, 'ar', { numeric: true })
     })
     return sortDir === 'desc' ? arr.reverse() : arr
   }, [rows, sortKey, sortDir, get])

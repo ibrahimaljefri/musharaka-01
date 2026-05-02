@@ -3,22 +3,16 @@ import { Link } from 'react-router-dom'
 import api from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
 import { toast } from '../lib/useToast'
-import { TableSkeleton, KpiSkeleton } from '../components/SkeletonLoader'
+import { KpiSkeleton } from '../components/SkeletonLoader'
 import {
-  Banknote, TrendingUp, Hash, Lock, Trash2,
-  ChevronLeft, ChevronRight, PlusCircle, Clock,
+  Banknote, TrendingUp, Hash,
+  PlusCircle, Clock,
   CheckCircle2, BarChart2, ArrowUpRight, BadgeCheck, CalendarDays,
   Send, ChevronDown,
 } from 'lucide-react'
-import ConfirmDialog from '../components/ConfirmDialog'
 import AlertBanner from '../components/AlertBanner'
-import BranchBadge from '../components/BranchBadge'
-import EmptyState from '../components/EmptyState'
-import SortHeader from '../components/SortHeader'
-import { useSortable } from '../lib/useSortable'
 import './dashboard.css'
 
-const PAGE_SIZE  = 25
 const MONTHS_AR  = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
 
 function fmt(n) {
@@ -316,14 +310,9 @@ export default function Dashboard() {
 
   const [branches, setBranches]   = useState([])
   const [branchId, setBranchId]   = useState('')
-  const [sales, setSales]         = useState([])
   const [allSalesCache, setAllSalesCache] = useState([])
   const [kpis, setKpis]           = useState({ total: 0, month: 0, count: 0, pendingCount: 0, confirmedCount: 0 })
   const [kpisLoading, setKpisLoading] = useState(true)
-  const [page, setPage]           = useState(0)
-  const [totalRows, setTotalRows] = useState(0)
-  const [loading, setLoading]     = useState(true)
-  const [deleteId, setDeleteId]   = useState(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [branchQuota, setBranchQuota] = useState(null)
   const [chartRange, setChartRange] = useState('monthly') // 'daily' | 'monthly' | 'yearly'
@@ -345,10 +334,9 @@ export default function Dashboard() {
       .catch(() => {})
   }, [tenantId, maxBranches])
 
-  useEffect(() => { load() }, [branchId, page, tenantId])
+  useEffect(() => { load() }, [branchId, tenantId])
 
   async function load() {
-    setLoading(true)
     setKpisLoading(true)
     const now     = new Date()
     const m       = now.getMonth() + 1
@@ -363,55 +351,25 @@ export default function Dashboard() {
       const allRes = await api.get('/sales', { params: allParams })
       const allSales = allRes.data?.sales || []
 
-      const total        = allSales.reduce((s, r) => s + parseFloat(r.amount || 0), 0)
-      const month        = allSales
+      const total          = allSales.reduce((s, r) => s + parseFloat(r.amount || 0), 0)
+      const month          = allSales
         .filter(r => r.sale_date >= mFrom && r.sale_date <= mTo)
         .reduce((s, r) => s + parseFloat(r.amount || 0), 0)
-      const count        = allSales.length
-      const pendingCount = allSales.filter(r => r.status === 'pending').length
+      const count          = allSales.length
+      const pendingCount   = allSales.filter(r => r.status === 'pending').length
       const confirmedCount = allSales.filter(r => r.status === 'sent').length
 
       setKpis({ total, month, count, pendingCount, confirmedCount })
       setKpisLoading(false)
+      // Store raw rows — pagination / sort / filter are all derived memos
       setAllSalesCache(allSales)
-
-      const start = page * PAGE_SIZE
-      const end   = start + PAGE_SIZE
-      const branchMap = new Map(branches.map(b => [b.id, b]))
-      const enriched = allSales
-        .sort((a, b) => new Date(b.created_at || b.sale_date) - new Date(a.created_at || a.sale_date))
-        .slice(start, end)
-        .map(r => ({
-          ...r,
-          branches: branchMap.get(r.branch_id)
-            ? { code: branchMap.get(r.branch_id).code, name: branchMap.get(r.branch_id).name }
-            : null,
-        }))
-      setSales(enriched)
-      setTotalRows(count)
-    } catch (e) {
+    } catch {
       setKpis({ total: 0, month: 0, count: 0, pendingCount: 0, confirmedCount: 0 })
       setKpisLoading(false)
       setAllSalesCache([])
-      setSales([])
-      setTotalRows(0)
-    }
-    setLoading(false)
-  }
-
-  async function handleDelete() {
-    try {
-      await api.delete(`/sales/${deleteId}`)
-      setDeleteId(null)
-      toast.success('تم حذف السجل بنجاح')
-      load()
-    } catch (err) {
-      setDeleteId(null)
-      toast.error(err.response?.data?.error || 'لا يمكن حذف هذا السجل')
     }
   }
 
-  const totalPages = Math.ceil(totalRows / PAGE_SIZE)
   const now = new Date()
 
   // ── Derived chart/sparkline data ────────────────────────────────────────
@@ -596,7 +554,7 @@ export default function Dashboard() {
         <label className="t-small" style={{ whiteSpace: 'nowrap' }}>الفرع:</label>
         <select
           value={branchId}
-          onChange={e => { setBranchId(e.target.value); setPage(0) }}
+          onChange={e => setBranchId(e.target.value)}
           className="input-base"
           style={{ maxWidth: 260 }}
           data-testid="branch-filter"
@@ -769,76 +727,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent sales */}
-      <div className="surface" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="recent-header">
-          <div className="chart-title">آخر المبيعات</div>
-          <Link to="/submissions" className="t-small">عرض الكل ←</Link>
-        </div>
-
-        {loading ? (
-          <div style={{ padding: 'var(--space-4)' }}>
-            <TableSkeleton rows={6} cols={5} />
-          </div>
-        ) : sales.length === 0 ? (
-          <div className="recent-empty">
-            <EmptyState
-              icon={Banknote}
-              title="لا توجد مبيعات بعد"
-              description="ابدأ بتسجيل مبيعاتك اليومية أو الشهرية لمتابعة أداء فروعك"
-              action={
-                <Link to="/sales/create" className="btn-sm btn-primary">
-                  <PlusCircle size={15} /> إضافة أول مبيعة
-                </Link>
-              }
-            />
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <RecentSalesTable
-              sales={sales}
-              setDeleteId={setDeleteId}
-              fmt={fmt}
-              fmtShortDate={fmtShortDate}
-              statusLabel={statusLabel}
-            />
-          </div>
-        )}
-
-        {totalPages > 1 && (
-          <div data-testid="pagination" style={{
-            padding: 'var(--space-3) var(--space-5)',
-            borderTop: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'var(--bg-subtle)',
-          }}>
-            <span className="t-micro">صفحة {page + 1} من {totalPages} — {fmtInt(totalRows)} سجل</span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <button
-                type="button"
-                disabled={page === 0}
-                onClick={() => setPage(p => p - 1)}
-                className="btn-sm btn-ghost"
-                style={{ opacity: page === 0 ? 0.4 : 1 }}
-              >
-                <ChevronRight size={15} />
-              </button>
-              <button
-                type="button"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage(p => p + 1)}
-                className="btn-sm btn-ghost"
-                style={{ opacity: page >= totalPages - 1 ? 0.4 : 1 }}
-              >
-                <ChevronLeft size={15} />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Secondary section — quick actions + advanced analytics + extra KPIs */}
       <div className="dash-secondary">
         {/* Quick actions */}
@@ -897,13 +785,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      <ConfirmDialog
-        open={!!deleteId}
-        title="حذف السجل"
-        message="هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء."
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
-      />
     </div>
   )
 }
@@ -911,69 +792,3 @@ export default function Dashboard() {
 // Unused import guards (retained for backward compat during incremental refactor)
 // eslint-disable-next-line no-unused-vars
 const _unused = { Hash, TrendingUp }
-
-/**
- * Recent-sales table on the dashboard. Renders the FULL `sales` page (not
- * a hardcoded slice — fixes the bug where KPI count didn't match table
- * row count). Click any column header to sort by that field.
- */
-function RecentSalesTable({ sales, setDeleteId, fmt, fmtShortDate, statusLabel }) {
-  // Custom getter: branches.code lives nested; sale_date sorts as ISO string OK
-  const getter = (row, key) => {
-    if (key === 'branch_code') return row.branches?.code || ''
-    if (key === 'amount')      return parseFloat(row.amount || 0)
-    return row?.[key]
-  }
-  const { sorted, sortKey, sortDir, toggle } = useSortable(sales, 'sale_date', 'desc', getter)
-
-  return (
-    <table className="recent-table">
-      <thead>
-        <tr>
-          <SortHeader k="branch_code"     label="الفرع"        sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
-          <SortHeader k="invoice_number"  label="رقم الفاتورة"  sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
-          <SortHeader k="amount"          label="المبلغ"         sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
-          <SortHeader k="sale_date"       label="التاريخ"        sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
-          <SortHeader k="status"          label="الحالة"         sortKey={sortKey} sortDir={sortDir} onToggle={toggle} />
-          <th>إجراء</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sorted.map(s => (
-          <tr key={s.id} data-testid="sale-row">
-            <td>
-              {s.branches
-                ? <BranchBadge code={s.branches.code || '—'} />
-                : <span style={{ color: 'var(--text-muted)' }}>—</span>}
-            </td>
-            <td className="t-mono">{s.invoice_number || '—'}</td>
-            <td className="t-mono" dir="ltr">{fmt(s.amount)} ر.س</td>
-            <td>{fmtShortDate(s.sale_date)}</td>
-            <td>
-              <span className={`status-pill ${s.status === 'sent' ? 'status-submitted' : 'status-pending'}`}>
-                {statusLabel(s.status)}
-              </span>
-            </td>
-            <td>
-              {s.status === 'sent' ? (
-                <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
-                  <Lock size={10} /> محمية
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setDeleteId(s.id)}
-                  style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 4 }}
-                  aria-label="حذف"
-                  data-testid="delete-sale-btn"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}

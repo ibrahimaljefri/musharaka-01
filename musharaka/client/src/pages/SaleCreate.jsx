@@ -4,6 +4,7 @@ import api from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
 import AlertBanner from '../components/AlertBanner'
 import ButtonSpinner from '../components/ButtonSpinner'
+import SaleRecentList from '../components/SaleRecentList'
 import { toast } from '../lib/useToast'
 import './sale-create.css'
 
@@ -70,6 +71,7 @@ export default function SaleCreate() {
   })
   const [loading, setLoading]   = useState(false)
   const [errors, setErrors]     = useState({})
+  const [refreshTick, setRefreshTick] = useState(0) // increments after each save → triggers SaleRecentList refetch
 
   useEffect(() => {
     api.get('/branches')
@@ -111,6 +113,7 @@ export default function SaleCreate() {
     try {
       const { data } = await api.post('/sales', payload)
       toast.success(data.message)
+      setRefreshTick(t => t + 1)  // refresh recent list
       setForm(prev => ({
         ...prev,
         amount: '',
@@ -338,6 +341,9 @@ export default function SaleCreate() {
           </button>
         </div>
       </form>
+
+      {/* Recent sales — auto-refreshes after each save, pre-filtered to the selected branch */}
+      <SaleRecentList branchId={form.branch_id} refreshTick={refreshTick} />
     </div>
   )
 }
