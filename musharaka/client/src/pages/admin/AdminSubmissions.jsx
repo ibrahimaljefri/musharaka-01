@@ -1,11 +1,11 @@
 /**
  * Admin: Submissions — review + revert
  *
- * Card-row layout with traffic-light status bars (green=sent, gold=reverted,
- * red=failed). 4 metric cards at the top show the distribution at a glance.
- * Reverting a row marks the submission 'reverted' and returns the linked
- * sales for that branch+period to 'pending' so the tenant can edit and
- * re-send. Other branches of the same tenant are unaffected.
+ * Tabular layout with metric cards, status pill filters, tenant picker,
+ * and per-row revert action. Reverting a row marks the submission
+ * 'reverted' and returns the linked sales for that branch+period to
+ * 'pending' so the tenant can edit and re-send. Other branches of the
+ * same tenant are unaffected.
  */
 import { useState, useEffect, useMemo } from 'react'
 import api from '../../lib/axiosClient'
@@ -14,15 +14,16 @@ import { toast } from '../../lib/useToast'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import SearchableTenantSelect from '../../components/SearchableTenantSelect'
 import { useSortable } from '../../lib/useSortable'
+import DraggableHeaderRow from '../../components/DraggableHeaderRow'
+import DraggableSortHeader from '../../components/DraggableSortHeader'
+import { useColumnOrder } from '../../lib/useColumnOrder'
 import {
-  RotateCcw, Send, CheckCircle2, XCircle, Inbox, Calendar, GitBranch,
-  Building2,
+  RotateCcw, Send, CheckCircle2, XCircle, Inbox,
 } from 'lucide-react'
 import './cenomi-admin.css'
 
-const STATUS_CLASS = { sent: 'green', reverted: 'gold', failed: 'red' }
+const STATUS_TONE  = { sent: 'green', reverted: 'gold', failed: 'red' }
 const STATUS_LABEL = { sent: 'مُرسل', reverted: 'تم التراجع', failed: 'فشل' }
-const STATUS_ICON  = { sent: CheckCircle2, reverted: RotateCcw, failed: XCircle }
 
 function fmtDate(d) {
   if (!d) return '—'
@@ -38,8 +39,54 @@ function fmtPeriod(start, end, mode) {
   if (start === end) return `${fmtDate(start)} · ${modeChip}`
   return `${fmtDate(start)} → ${fmtDate(end)} · ${modeChip}`
 }
-function fmtAmount(n) {
+function fmtAmountSAR(n) {
+  return Number(n || 0).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+function fmtAmountPlain(n) {
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const SB_COLS = ['submitted_at', 'tenant_name', 'branch_name', 'period', 'total_amount', 'invoice_count', 'status']
+const SB_COL_META = {
+  submitted_at:  { label: 'تاريخ الإرسال' },
+  tenant_name:   { label: 'المستأجر' },
+  branch_name:   { label: 'الفرع' },
+  period:        { label: 'الفترة' },
+  total_amount:  { label: 'المبلغ الإجمالي' },
+  invoice_count: { label: 'عدد الفواتير' },
+  status:        { label: 'الحالة' },
+}
+
+function renderSubmissionCell(r, key) {
+  switch (key) {
+    case 'submitted_at':
+      return <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDateTime(r.submitted_at)}</span>
+    case 'tenant_name':
+      return <strong>{r.tenant_name || '—'}</strong>
+    case 'branch_name':
+      return (
+        <span>
+          {r.branch_name || '—'}
+          {r.branch_code && <span style={{ color: 'var(--text-muted)', fontSize: 12 }}> ({r.branch_code})</span>}
+        </span>
+      )
+    case 'period':
+      return <span style={{ color: 'var(--text-muted)' }}>{fmtPeriod(r.period_start, r.period_end, r.post_mode)}</span>
+    case 'total_amount':
+      return (
+        <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+          {fmtAmountSAR(r.total_amount)} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>ر.س</span>
+        </span>
+      )
+    case 'invoice_count':
+      return <span style={{ fontVariantNumeric: 'tabular-nums' }}>{r.invoice_count ?? 0}</span>
+    case 'status': {
+      const tone = STATUS_TONE[r.status] || 'gray'
+      return <span className={`cen-status-pill ${tone}`}>{STATUS_LABEL[r.status] || r.status}</span>
+    }
+    default:
+      return '—'
+  }
 }
 
 export default function AdminSubmissions() {
@@ -50,6 +97,8 @@ export default function AdminSubmissions() {
   const [statusFilter, setStatusFilter] = useState(null)
   const [confirmRow, setConfirmRow] = useState(null)
   const [reverting, setReverting] = useState(false)
+
+  const [colOrder, setColOrder] = useColumnOrder(SB_COLS, 'adm_sb_col_order')
 
   useEffect(() => {
     api.get('/admin/tenants').then(({ data }) => setTenants(data || [])).catch(() => {})
@@ -87,10 +136,12 @@ export default function AdminSubmissions() {
     [rows, statusFilter]
   )
 
-  // Card-row layout — sort via dropdown above the cards
+  // Sort across all columns; map computed/composite keys to a sortable value
   const getter = (row, key) => {
-    if (key === 'total_amount') return parseFloat(row.total_amount || 0)
+    if (key === 'total_amount')  return parseFloat(row.total_amount || 0)
     if (key === 'invoice_count') return Number(row.invoice_count || 0)
+    if (key === 'period')        return row.period_start || ''
+    if (key === 'submitted_at')  return row.submitted_at || ''
     return row?.[key]
   }
   const { sorted, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'submitted_at', 'desc', getter)
@@ -121,7 +172,7 @@ export default function AdminSubmissions() {
       <div className="cen-metrics">
         <Metric icon={Inbox}        tone="gray"  value={metrics.total}    label="إجمالي الإرسالات" />
         <Metric icon={CheckCircle2} tone="green" value={metrics.sent}     label="مُرسل بنجاح"
-                aux={metrics.sentAmount > 0 ? `﷼ ${fmtAmount(metrics.sentAmount)}` : null} />
+                aux={metrics.sentAmount > 0 ? `﷼ ${fmtAmountPlain(metrics.sentAmount)}` : null} />
         <Metric icon={RotateCcw}    tone="gold"  value={metrics.reverted} label="تم التراجع" />
         <Metric icon={XCircle}      tone="red"   value={metrics.failed}   label="فشل" />
       </div>
@@ -135,28 +186,58 @@ export default function AdminSubmissions() {
           <Pill active={statusFilter === 'failed'}   onClick={() => setStatusFilter('failed')}  label="فشل"          count={metrics.failed} />
         </div>
         <SearchableTenantSelect tenants={tenants} value={tenantId} onChange={setTenantId} />
-        <SortDropdown sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} options={[
-          { k: 'submitted_at',  label: 'تاريخ الإرسال' },
-          { k: 'tenant_name',   label: 'المستأجر' },
-          { k: 'branch_name',   label: 'الفرع' },
-          { k: 'total_amount',  label: 'المبلغ' },
-          { k: 'invoice_count', label: 'عدد الفواتير' },
-          { k: 'status',        label: 'الحالة' },
-        ]} />
       </div>
 
-      {/* Rows */}
-      {loading ? (
-        <div className="cen-row" style={{ padding: 20 }}><TableSkeleton rows={4} cols={1} /></div>
-      ) : sorted.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="cen-rows">
-          {sorted.map(r => (
-            <SubmissionRow key={r.id} row={r} onRevert={setConfirmRow} />
-          ))}
-        </div>
-      )}
+      {/* Table */}
+      <div className="adm-tbl-wrap">
+        {loading ? (
+          <div style={{ padding: 16 }}>
+            <TableSkeleton rows={5} cols={7} />
+          </div>
+        ) : sorted.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <table className="adm-tbl">
+            <thead>
+              <tr>
+                <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                  {colOrder.map(k => (
+                    <DraggableSortHeader
+                      key={k}
+                      id={k}
+                      label={SB_COL_META[k].label}
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onToggle={toggleSort}
+                    />
+                  ))}
+                </DraggableHeaderRow>
+                <th style={{ width: 120 }}>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map(r => (
+                <tr key={r.id} className={r.status === 'reverted' ? 'cen-row-reverted' : undefined}>
+                  {colOrder.map(k => <td key={k}>{renderSubmissionCell(r, k)}</td>)}
+                  <td>
+                    {r.status === 'sent' ? (
+                      <button
+                        className="cen-row-revert-mini"
+                        onClick={() => setConfirmRow(r)}
+                        title="إعادة الإرسال إلى pending"
+                      >
+                        <RotateCcw size={11} /> إعادة التعيين
+                      </button>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
 
       <ConfirmDialog
         open={!!confirmRow}
@@ -198,48 +279,6 @@ function Pill({ active, onClick, label, count }) {
   )
 }
 
-function SubmissionRow({ row, onRevert }) {
-  const Icon  = STATUS_ICON[row.status] || Send
-  const tone  = STATUS_CLASS[row.status] || 'gray'
-  const isReverted = row.status === 'reverted'
-  return (
-    <div className={`cen-row ${tone} ${isReverted ? 'faded' : ''}`}>
-      <div className="cen-row-top">
-        <div className="cen-row-meta">
-          <span className={`cen-status ${tone}`}>
-            <Icon size={12} /> {STATUS_LABEL[row.status] || row.status}
-          </span>
-          <span className="cen-row-time">{fmtDateTime(row.submitted_at)}</span>
-        </div>
-        <div className="cen-row-actions">
-          {row.status === 'sent' && (
-            <button className="cen-revert-btn" onClick={() => onRevert(row)}
-                    title="إعادة الإرسال إلى pending">
-              <RotateCcw size={12} /> إعادة التعيين
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="cen-row-body">
-        <div className="cen-row-line">
-          <Building2 size={14} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
-          <strong>{row.tenant_name || '—'}</strong>
-          <span className="muted">→</span>
-          <GitBranch size={13} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
-          <span>{row.branch_name} <span className="muted">({row.branch_code})</span></span>
-        </div>
-        <div className="cen-row-line">
-          <Calendar size={13} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
-          <span className="muted">{fmtPeriod(row.period_start, row.period_end, row.post_mode)}</span>
-          <span className="cen-chip">{row.invoice_count} فاتورة</span>
-          <span className="cen-chip" style={{ fontWeight: 600 }}>﷼ {fmtAmount(row.total_amount)}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function EmptyState() {
   return (
     <div className="cen-empty">
@@ -252,27 +291,7 @@ function EmptyState() {
   )
 }
 
-// Card-row pages can't use SortHeader on a <th>; this dropdown gives super-admin
-// the same sort capability for the cen-row layout.
-export function SortDropdown({ sortKey, sortDir, onToggle, options }) {
-  return (
-    <select
-      className="cen-input"
-      value={`${sortKey}:${sortDir}`}
-      onChange={e => {
-        const [k, d] = e.target.value.split(':')
-        // Toggle direction: call onToggle once for key change (sets asc),
-        // then again if desc was requested
-        if (k !== sortKey) onToggle(k)
-        if (d === 'desc' && sortDir !== 'desc') onToggle(k)
-      }}
-      style={{ minWidth: 180 }}
-      title="ترتيب حسب"
-    >
-      {options.flatMap(opt => [
-        <option key={`${opt.k}:asc`}  value={`${opt.k}:asc`}>{`${opt.label} ↑`}</option>,
-        <option key={`${opt.k}:desc`} value={`${opt.k}:desc`}>{`${opt.label} ↓`}</option>,
-      ])}
-    </select>
-  )
-}
+// Backwards-compat: CenomiLogs.jsx imports SortDropdown from this module.
+// Now that both pages use draggable sortable headers, this component is
+// effectively unused but exported to avoid breaking the import chain.
+export function SortDropdown() { return null }

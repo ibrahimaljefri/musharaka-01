@@ -6,26 +6,16 @@
  *   refreshTick — increment from parent after a successful save to refetch
  */
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
-import {
-  DndContext, closestCenter,
-  PointerSensor, KeyboardSensor,
-  useSensor, useSensors,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  horizontalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import api from '../lib/axiosClient'
 import { toast } from '../lib/useToast'
 import { useSortable as useTableSort } from '../lib/useSortable'
+import { useColumnOrder } from '../lib/useColumnOrder'
+import DraggableHeaderRow from './DraggableHeaderRow'
+import DraggableSortHeader from './DraggableSortHeader'
 import BranchBadge from './BranchBadge'
 import ConfirmDialog from './ConfirmDialog'
 import { TableSkeleton } from './SkeletonLoader'
-import { Lock, Trash2, RefreshCw, GripHorizontal } from 'lucide-react'
+import { Lock, Trash2, RefreshCw } from 'lucide-react'
 
 // ── Column definitions ─────────────────────────────────────────────────────
 const DEFAULT_COL_ORDER = ['branch_code', 'invoice_number', 'amount', 'sale_date', 'status']
@@ -37,71 +27,6 @@ const COL_META = {
   amount:         { label: 'المبلغ' },
   sale_date:      { label: 'التاريخ' },
   status:         { label: 'الحالة' },
-}
-
-function loadColOrder() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(COL_LS_KEY) || 'null')
-    if (
-      Array.isArray(saved) &&
-      saved.length === DEFAULT_COL_ORDER.length &&
-      saved.every(k => DEFAULT_COL_ORDER.includes(k))
-    ) return saved
-  } catch {}
-  return [...DEFAULT_COL_ORDER]
-}
-
-// ── Draggable column header ────────────────────────────────────────────────
-function DraggableColTh({ id, label, sortKey, sortDir, onToggle }) {
-  const {
-    attributes, listeners, setNodeRef,
-    transform, transition, isDragging,
-  } = useSortable({ id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.45 : 1,
-    position: 'relative',
-    zIndex: isDragging ? 20 : undefined,
-  }
-
-  const active = sortKey === id
-
-  return (
-    <th
-      ref={setNodeRef}
-      style={style}
-      className={`srl-th-col${isDragging ? ' srl-col-dragging' : ''}`}
-    >
-      {/* Sort click area */}
-      <span
-        className="srl-th-sort-area"
-        onClick={() => onToggle(id)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onToggle(id)}
-        aria-label={`ترتيب حسب ${label}`}
-      >
-        {label}
-        <span className={`srl-sort-arrow${active ? ' srl-sort-active' : ''}`}>
-          {active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
-        </span>
-      </span>
-
-      {/* Drag handle */}
-      <span
-        className="srl-col-drag-handle"
-        {...attributes}
-        {...listeners}
-        onClick={e => e.stopPropagation()}
-        title="اسحب لإعادة الترتيب"
-        aria-label="اسحب لإعادة ترتيب العمود"
-      >
-        <GripHorizontal size={11} />
-      </span>
-    </th>
-  )
 }
 
 // ── Cell renderer ──────────────────────────────────────────────────────────
@@ -160,8 +85,8 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
   const [bulkConfirm, setBulkConfirm] = useState(false)
   const [page, setPage]         = useState(0)
 
-  // Column order (draggable)
-  const [colOrder, setColOrder] = useState(loadColOrder)
+  // Column order (draggable, persisted to localStorage)
+  const [colOrder, setColOrder] = useColumnOrder(DEFAULT_COL_ORDER, COL_LS_KEY)
 
   // Filters
   const [filterBranch, setFilterBranch] = useState(branchId)
@@ -235,22 +160,6 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     if (failed > 0)  toast.error(`لم يمكن حذف ${failed} سجل (محمية أو خطأ)`)
     setSelectedIds(new Set())
     load()
-  }
-
-  // ── Column drag-and-drop ───────────────────────────────────────────────
-  const colSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-
-  function handleColDragEnd(event) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    setColOrder(prev => {
-      const next = arrayMove(prev, prev.indexOf(active.id), prev.indexOf(over.id))
-      localStorage.setItem(COL_LS_KEY, JSON.stringify(next))
-      return next
-    })
   }
 
   // ── Filter pipeline ────────────────────────────────────────────────────
@@ -446,96 +355,90 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
       ) : (
         <>
           <div style={{ overflowX: 'auto' }}>
-            <DndContext
-              sensors={colSensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleColDragEnd}
-            >
-              <table className="srl-table">
-                <thead>
-                  <tr>
-                    {/* Fixed: select-all checkbox */}
-                    <th className="srl-th-check">
-                      <input
-                        type="checkbox"
-                        ref={selectAllRef}
-                        checked={allSelected}
-                        onChange={toggleAll}
-                        className="srl-checkbox"
-                        title={allSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل القابلة للحذف'}
-                        disabled={deletableFiltered.length === 0}
+            <table className="srl-table">
+              <thead>
+                <tr>
+                  {/* Fixed: select-all checkbox */}
+                  <th className="srl-th-check">
+                    <input
+                      type="checkbox"
+                      ref={selectAllRef}
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      className="srl-checkbox"
+                      title={allSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل القابلة للحذف'}
+                      disabled={deletableFiltered.length === 0}
+                    />
+                  </th>
+
+                  {/* Draggable sortable columns */}
+                  <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                    {colOrder.map(colKey => (
+                      <DraggableSortHeader
+                        key={colKey}
+                        id={colKey}
+                        label={COL_META[colKey].label}
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onToggle={toggle}
                       />
-                    </th>
+                    ))}
+                  </DraggableHeaderRow>
 
-                    {/* Draggable sortable columns */}
-                    <SortableContext items={colOrder} strategy={horizontalListSortingStrategy}>
+                  {/* Fixed: actions column */}
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {paged.map(s => {
+                  const canDelete  = s.status !== 'sent'
+                  const isSelected = selectedIds.has(s.id)
+                  return (
+                    <tr
+                      key={s.id}
+                      className={isSelected ? 'srl-row-selected' : ''}
+                    >
+                      {/* Fixed: checkbox */}
+                      <td className="srl-td-check">
+                        {canDelete ? (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleRow(s.id)}
+                            className="srl-checkbox"
+                          />
+                        ) : (
+                          <span style={{ display: 'inline-block', width: 16 }} />
+                        )}
+                      </td>
+
+                      {/* Data cells follow colOrder */}
                       {colOrder.map(colKey => (
-                        <DraggableColTh
-                          key={colKey}
-                          id={colKey}
-                          label={COL_META[colKey].label}
-                          sortKey={sortKey}
-                          sortDir={sortDir}
-                          onToggle={toggle}
-                        />
+                        <td key={colKey}>{renderCell(s, colKey)}</td>
                       ))}
-                    </SortableContext>
 
-                    {/* Fixed: actions column */}
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paged.map(s => {
-                    const canDelete  = s.status !== 'sent'
-                    const isSelected = selectedIds.has(s.id)
-                    return (
-                      <tr
-                        key={s.id}
-                        className={isSelected ? 'srl-row-selected' : ''}
-                      >
-                        {/* Fixed: checkbox */}
-                        <td className="srl-td-check">
-                          {canDelete ? (
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleRow(s.id)}
-                              className="srl-checkbox"
-                            />
-                          ) : (
-                            <span style={{ display: 'inline-block', width: 16 }} />
-                          )}
-                        </td>
-
-                        {/* Data cells follow colOrder */}
-                        {colOrder.map(colKey => (
-                          <td key={colKey}>{renderCell(s, colKey)}</td>
-                        ))}
-
-                        {/* Fixed: delete button */}
-                        <td>
-                          {s.status === 'sent' ? (
-                            <span className="srl-protected">
-                              <Lock size={10} /> محمية
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setDeleteId(s.id)}
-                              className="srl-delete-btn"
-                              aria-label="حذف"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </DndContext>
+                      {/* Fixed: delete button */}
+                      <td>
+                        {s.status === 'sent' ? (
+                          <span className="srl-protected">
+                            <Lock size={10} /> محمية
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteId(s.id)}
+                            className="srl-delete-btn"
+                            aria-label="حذف"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
 
           {totalPages > 1 && (

@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
+import './components/draggable-header.css'
 import { useAuthStore } from './store/authStore.js'
 
 // Initialize auth state before rendering

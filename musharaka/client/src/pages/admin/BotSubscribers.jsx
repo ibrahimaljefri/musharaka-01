@@ -6,8 +6,10 @@ import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle } from 'lucide-react'
-import SortHeader from '../../components/SortHeader'
 import { useSortable } from '../../lib/useSortable'
+import DraggableHeaderRow from '../../components/DraggableHeaderRow'
+import DraggableSortHeader from '../../components/DraggableSortHeader'
+import { useColumnOrder } from '../../lib/useColumnOrder'
 import './admin-bot-subs.css'
 
 const PAGE_SIZE = 20
@@ -19,6 +21,46 @@ const PLATFORM_LABELS = { telegram: 'تيليجرام', whatsapp: 'واتساب'
 function fmtDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('ar-SA')
+}
+
+const BS_COLS = ['tenant_name', 'branch_name', 'platform', 'chat_id', 'name', 'active', 'last_message_at']
+const BS_COL_META = {
+  tenant_name:     { label: 'المستأجر' },
+  branch_name:     { label: 'الفرع' },
+  platform:        { label: 'المنصة' },
+  chat_id:         { label: 'معرّف الدردشة' },
+  name:            { label: 'الاسم' },
+  active:          { label: 'الحالة' },
+  last_message_at: { label: 'آخر رسالة' },
+}
+
+function renderSubscriberCell(s, key) {
+  switch (key) {
+    case 'tenant_name': return (
+      <>
+        <strong>{s.tenant_name}</strong>
+        {s.contract_number && <div className="t-mono" style={{ fontSize: '0.7rem' }}>{s.contract_number}</div>}
+      </>
+    )
+    case 'branch_name': return (
+      <>
+        <div>{s.branch_name}</div>
+        <div className="t-mono" style={{ fontSize: '0.7rem' }}>{s.branch_code}</div>
+      </>
+    )
+    case 'platform': return (
+      <span className={`adm-tag s-${s.platform}`}>
+        {PLATFORM_LABELS[s.platform] || s.platform}
+      </span>
+    )
+    case 'chat_id': return <span className="t-mono" dir="ltr">{s.chat_id}</span>
+    case 'name':    return s.contact_name || '—'
+    case 'active':  return s.is_active
+      ? <span className="adm-tag s-active"><CheckCircle2 size={10} />نشط</span>
+      : <span className="adm-tag s-inactive"><XCircle size={10} />معطل</span>
+    case 'last_message_at': return <span className="t-small">{fmtDate(s.last_message_at)}</span>
+    default: return '—'
+  }
 }
 
 export default function BotSubscribers() {
@@ -65,6 +107,7 @@ export default function BotSubscribers() {
   }, [subscribers, search])
 
   const { sorted: sortedRows, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const [colOrder, setColOrder] = useColumnOrder(BS_COLS, 'adm_bs_col_order')
   const totalPages  = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
   const paged       = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -101,41 +144,25 @@ export default function BotSubscribers() {
             <table className="adm-tbl">
               <thead>
                 <tr>
-                  <SortHeader k="tenant_name" label="المستأجر"      sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="branch_name" label="الفرع"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="platform"    label="المنصة"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="chat_id"     label="معرّف الدردشة"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="name"        label="الاسم"           sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="active"      label="الحالة"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="last_message_at" label="آخر رسالة"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                    {colOrder.map(k => (
+                      <DraggableSortHeader
+                        key={k}
+                        id={k}
+                        label={BS_COL_META[k].label}
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onToggle={toggleSort}
+                      />
+                    ))}
+                  </DraggableHeaderRow>
                   <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {paged.map(s => (
                   <tr key={s.id}>
-                    <td>
-                      <strong>{s.tenant_name}</strong>
-                      {s.contract_number && <div className="t-mono" style={{ fontSize: '0.7rem' }}>{s.contract_number}</div>}
-                    </td>
-                    <td>
-                      <div>{s.branch_name}</div>
-                      <div className="t-mono" style={{ fontSize: '0.7rem' }}>{s.branch_code}</div>
-                    </td>
-                    <td>
-                      <span className={`adm-tag s-${s.platform}`}>
-                        {PLATFORM_LABELS[s.platform] || s.platform}
-                      </span>
-                    </td>
-                    <td className="t-mono" dir="ltr">{s.chat_id}</td>
-                    <td>{s.contact_name || '—'}</td>
-                    <td>
-                      {s.is_active
-                        ? <span className="adm-tag s-active"><CheckCircle2 size={10} />نشط</span>
-                        : <span className="adm-tag s-inactive"><XCircle size={10} />معطل</span>
-                      }
-                    </td>
-                    <td className="t-small">{fmtDate(s.last_message_at)}</td>
+                    {colOrder.map(k => <td key={k}>{renderSubscriberCell(s, k)}</td>)}
                     <td>
                       <div className="adm-actions">
                         <Link to={`/admin/bot-subscribers/${s.id}/edit`} className="adm-icon-btn" title="تعديل" aria-label="تعديل">

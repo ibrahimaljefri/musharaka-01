@@ -1,22 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { GripVertical } from 'lucide-react'
 import api from '../lib/axiosClient'
 import { useAuthStore } from '../store/authStore'
 import AlertBanner from '../components/AlertBanner'
@@ -44,54 +27,8 @@ const MODE_HINTS = {
   range:   'في نمط الفترة، أدخل نطاق تواريخ ليتم توزيع المبلغ عليها.',
 }
 
-// Ordered list of draggable field IDs — persisted to localStorage
-const DEFAULT_FIELD_ORDER = ['branch', 'invoice_number', 'date', 'amount', 'notes']
-const LS_KEY = 'sc_field_order'
-
-function loadFieldOrder() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(LS_KEY))
-    if (Array.isArray(saved) && saved.length === DEFAULT_FIELD_ORDER.length) return saved
-  } catch { /* ignore */ }
-  return DEFAULT_FIELD_ORDER
-}
-
-// ── Sortable field wrapper ────────────────────────────────────────────────────
-function SortableField({ id, children }) {
-  const {
-    attributes, listeners,
-    setNodeRef,
-    transform, transition,
-    isDragging,
-  } = useSortable({ id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 200ms ease',
-    zIndex: isDragging ? 20 : undefined,
-    position: 'relative',
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`sc-drag-row${isDragging ? ' sc-drag-active' : ''}`}
-    >
-      <div className="sc-drag-content">{children}</div>
-      <button
-        type="button"
-        className="sc-drag-handle"
-        aria-label="اسحب لتغيير الترتيب"
-        title="اسحب لتغيير الترتيب"
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical size={16} />
-      </button>
-    </div>
-  )
-}
+// Fixed field order in the form
+const FIELD_ORDER = ['branch', 'invoice_number', 'date', 'amount', 'notes']
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function SaleCreate() {
@@ -136,24 +73,6 @@ export default function SaleCreate() {
   const [errors, setErrors]           = useState({})
   const [refreshTick, setRefreshTick] = useState(0)
 
-  // Draggable field order — persisted across sessions
-  const [fieldOrder, setFieldOrder] = useState(loadFieldOrder)
-
-  // ── DnD sensors ──────────────────────────────────────────────────────────
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-
-  function handleDragEnd({ active, over }) {
-    if (!over || active.id === over.id) return
-    setFieldOrder(order => {
-      const next = arrayMove(order, order.indexOf(active.id), order.indexOf(over.id))
-      localStorage.setItem(LS_KEY, JSON.stringify(next))
-      return next
-    })
-  }
-
   // ── Data ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     api.get('/branches')
@@ -194,13 +113,14 @@ export default function SaleCreate() {
       const { data } = await api.post('/sales', payload)
       toast.success(data.message)
       setRefreshTick(t => t + 1)
+      // Reset only the per-record fields. Keep branch/date/period selection so
+      // the user can quickly add another invoice for the same context without
+      // re-picking month/year/branch every time.
       setForm(prev => ({
         ...prev,
         amount: '',
         invoice_number: '',
         notes: '',
-        month: prev.month === 12 ? 1 : prev.month + 1,
-        year:  prev.month === 12 ? prev.year + 1 : prev.year,
       }))
     } catch (err) {
       toast.error(err.response?.data?.error || 'حدث خطأ، يرجى المحاولة مجدداً')
@@ -430,21 +350,13 @@ export default function SaleCreate() {
       )}
 
       <form className="sc-form-card" onSubmit={handleSubmit}>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={fieldOrder} strategy={verticalListSortingStrategy}>
-            <div className="sc-drag-list">
-              {fieldOrder.map(id => (
-                <SortableField key={id} id={id}>
-                  {renderField(id)}
-                </SortableField>
-              ))}
+        <div className="sc-form-fields">
+          {FIELD_ORDER.map(id => (
+            <div key={id} className="sc-form-field-row">
+              {renderField(id)}
             </div>
-          </SortableContext>
-        </DndContext>
+          ))}
+        </div>
 
         <div className="sc-actions">
           <button type="submit" className="btn btn-primary" disabled={loading}>

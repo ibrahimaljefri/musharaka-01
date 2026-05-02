@@ -8,12 +8,32 @@ import { TableSkeleton } from '../components/SkeletonLoader'
 import { toast } from '../lib/useToast'
 import { Plus, Edit2, Trash2, Building2, AlertTriangle } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
-import SortHeader from '../components/SortHeader'
+import DraggableHeaderRow from '../components/DraggableHeaderRow'
+import DraggableSortHeader from '../components/DraggableSortHeader'
 import { useSortable } from '../lib/useSortable'
+import { useColumnOrder } from '../lib/useColumnOrder'
 import { useAuthStore } from '../store/authStore'
 import './branches.css'
 
 const PAGE_SIZE = 20
+
+const BR_COLS = ['code', 'name', 'contract_number', 'location']
+const BR_COL_META = {
+  code:            { label: 'كود الفرع' },
+  name:            { label: 'اسم الفرع' },
+  contract_number: { label: 'رقم العقد' },
+  location:        { label: 'الموقع' },
+}
+
+function renderBranchCell(b, key) {
+  switch (key) {
+    case 'code':            return <BranchBadge code={b.code} />
+    case 'name':            return <span style={{ fontWeight: 500 }}>{b.name}</span>
+    case 'contract_number': return b.contract_number || '—'
+    case 'location':        return b.location || '—'
+    default:                return '—'
+  }
+}
 
 export default function Branches() {
   const [branches, setBranches]       = useState([])
@@ -22,6 +42,7 @@ export default function Branches() {
   const [search, setSearch]           = useState('')
 
   const maxBranches = useAuthStore(s => s.maxBranches)
+  const [colOrder, setColOrder] = useColumnOrder(BR_COLS, 'br_col_order')
 
   useEffect(() => { load() }, [])
 
@@ -157,10 +178,18 @@ export default function Branches() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <SortHeader k="code"            label="كود الفرع"  sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="name"            label="اسم الفرع"  sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="contract_number" label="رقم العقد"   sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="location"        label="الموقع"      sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                    {colOrder.map(k => (
+                      <DraggableSortHeader
+                        key={k}
+                        id={k}
+                        label={BR_COL_META[k].label}
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onToggle={toggleSort}
+                      />
+                    ))}
+                  </DraggableHeaderRow>
                   <th>الإجراءات</th>
                 </tr>
               </thead>
@@ -168,10 +197,9 @@ export default function Branches() {
                 {paged.map((b, i) => (
                   <tr key={b.id}>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
-                    <td><BranchBadge code={b.code} /></td>
-                    <td style={{ fontWeight: 500 }}>{b.name}</td>
-                    <td>{b.contract_number || '—'}</td>
-                    <td>{b.location || '—'}</td>
+                    {colOrder.map(k => (
+                      <td key={k}>{renderBranchCell(b, k)}</td>
+                    ))}
                     <td>
                       <div className="br-actions">
                         <Link to={`/branches/${b.id}/edit`} className="br-icon-btn" title="تعديل" aria-label="تعديل">

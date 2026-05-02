@@ -9,8 +9,10 @@ import {
   UserPlus, Trash2, Clock, UserCheck,
   Building2, Eye, EyeOff, X, Pencil
 } from 'lucide-react'
-import SortHeader from '../../components/SortHeader'
 import { useSortable } from '../../lib/useSortable'
+import DraggableHeaderRow from '../../components/DraggableHeaderRow'
+import DraggableSortHeader from '../../components/DraggableSortHeader'
+import { useColumnOrder } from '../../lib/useColumnOrder'
 import './admin-users.css'
 
 const PAGE_SIZE = 20
@@ -23,6 +25,37 @@ function statusInfo(status) {
 function fmtDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const US_COLS = ['full_name', 'email', 'phone', 'status', 'tenant_name', 'role', 'created_at']
+const US_COL_META = {
+  full_name:   { label: 'الاسم' },
+  email:       { label: 'البريد الإلكتروني' },
+  phone:       { label: 'رقم الجوال' },
+  status:      { label: 'الحالة' },
+  tenant_name: { label: 'المستأجر' },
+  role:        { label: 'الدور' },
+  created_at:  { label: 'تاريخ التسجيل' },
+}
+
+function renderUserCell(u, key) {
+  switch (key) {
+    case 'full_name':   return <strong>{u.full_name || '—'}</strong>
+    case 'email':       return <span className="t-mono">{u.email}</span>
+    case 'phone':       return <span className="t-mono" dir="ltr">{u.phone || '—'}</span>
+    case 'status': {
+      const s = statusInfo(u.status)
+      return (
+        <span className={`adm-status s-${s.cls}`}>
+          <s.Icon size={10} /> {s.label}
+        </span>
+      )
+    }
+    case 'tenant_name': return u.tenant_name || <span style={{ color: 'var(--text-muted)' }}>غير مُعيَّن</span>
+    case 'role':        return u.role === 'admin' ? 'مدير' : u.role === 'member' ? 'مستخدم' : '—'
+    case 'created_at':  return <span className="t-small">{fmtDate(u.registered_at)}</span>
+    default:            return '—'
+  }
 }
 
 // ── Assign Modal ──────────────────────────────────────────────────────────────
@@ -423,6 +456,7 @@ export default function Users() {
   }, [users, search])
 
   const { sorted: sortedRows, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const [colOrder, setColOrder] = useColumnOrder(US_COLS, 'adm_us_col_order')
   const totalPages = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
   const paged = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -488,50 +522,42 @@ export default function Users() {
             <table className="adm-tbl">
               <thead>
                 <tr>
-                  <SortHeader k="full_name"   label="الاسم"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="email"       label="البريد الإلكتروني" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="phone"       label="رقم الجوال"      sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="status"      label="الحالة"          sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="tenant_name" label="المستأجر"        sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="role"        label="الدور"           sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="created_at"  label="تاريخ التسجيل"    sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                    {colOrder.map(k => (
+                      <DraggableSortHeader
+                        key={k}
+                        id={k}
+                        label={US_COL_META[k].label}
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onToggle={toggleSort}
+                      />
+                    ))}
+                  </DraggableHeaderRow>
                   <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody>
-                {paged.map(u => {
-                  const s = statusInfo(u.status)
-                  return (
-                    <tr key={u.id}>
-                      <td><strong>{u.full_name || '—'}</strong></td>
-                      <td className="t-mono">{u.email}</td>
-                      <td className="t-mono" dir="ltr">{u.phone || '—'}</td>
-                      <td>
-                        <span className={`adm-status s-${s.cls}`}>
-                          <s.Icon size={10} /> {s.label}
-                        </span>
-                      </td>
-                      <td>{u.tenant_name || <span style={{ color: 'var(--text-muted)' }}>غير مُعيَّن</span>}</td>
-                      <td>{u.role === 'admin' ? 'مدير' : u.role === 'member' ? 'مستخدم' : '—'}</td>
-                      <td className="t-small">{fmtDate(u.registered_at)}</td>
-                      <td>
-                        <div className="adm-actions">
-                          {u.status === 'pending' && (
-                            <button onClick={() => setAssignTarget(u)} className="adm-icon-btn" title="تعيين مستأجر">
-                              <Building2 size={13} />
-                            </button>
-                          )}
-                          <button onClick={() => setEditTarget(u)} className="adm-icon-btn" title="تعديل">
-                            <Pencil size={13} />
+                {paged.map(u => (
+                  <tr key={u.id}>
+                    {colOrder.map(k => <td key={k}>{renderUserCell(u, k)}</td>)}
+                    <td>
+                      <div className="adm-actions">
+                        {u.status === 'pending' && (
+                          <button onClick={() => setAssignTarget(u)} className="adm-icon-btn" title="تعيين مستأجر">
+                            <Building2 size={13} />
                           </button>
-                          <button onClick={() => setDeleteTarget(u)} className="adm-icon-btn danger" title="حذف">
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
+                        )}
+                        <button onClick={() => setEditTarget(u)} className="adm-icon-btn" title="تعديل">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => setDeleteTarget(u)} className="adm-icon-btn danger" title="حذف">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
 

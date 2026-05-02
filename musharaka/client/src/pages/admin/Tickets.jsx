@@ -8,8 +8,10 @@ import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import { STATUS_LABELS, CATEGORY_LABELS, fmtTicketDate } from '../../lib/ticketConstants'
-import SortHeader from '../../components/SortHeader'
 import { useSortable } from '../../lib/useSortable'
+import DraggableHeaderRow from '../../components/DraggableHeaderRow'
+import DraggableSortHeader from '../../components/DraggableSortHeader'
+import { useColumnOrder } from '../../lib/useColumnOrder'
 import './admin-tickets.css'
 
 const PAGE_SIZE = 20
@@ -25,6 +27,38 @@ const STATUS_CLASS = {
   new:         's-open',
   in_progress: 's-progress',
   resolved:    's-resolved',
+}
+
+const TK_COLS = ['ticket_number', 'tenant_name', 'submitter_name', 'category', 'created_at']
+const TK_COL_META = {
+  ticket_number:  { label: 'رقم التذكرة والحالة' },
+  tenant_name:    { label: 'المستأجر' },
+  submitter_name: { label: 'العميل' },
+  category:       { label: 'التصنيف' },
+  created_at:     { label: 'تاريخ الإنشاء' },
+}
+
+function renderTicketCell(t, key) {
+  switch (key) {
+    case 'ticket_number': return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span className="t-mono" style={{ fontWeight: 600, color: 'var(--text)' }}>{t.ticket_number}</span>
+        <span className={`adm-tag ${STATUS_CLASS[t.status] || ''}`} style={{ width: 'fit-content' }}>
+          {STATUS_LABELS[t.status] || t.status}
+        </span>
+      </div>
+    )
+    case 'tenant_name': return t.tenant_name
+    case 'submitter_name': return (
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontWeight: 500 }}>{t.submitter_name}</span>
+        <span className="t-mono" dir="ltr">{t.submitter_email}</span>
+      </div>
+    )
+    case 'category':   return <span className="adm-tag">{CATEGORY_LABELS[t.category] || t.category}</span>
+    case 'created_at': return <span className="t-small">{fmtTicketDate(t.created_at)}</span>
+    default:           return '—'
+  }
 }
 
 export default function Tickets() {
@@ -62,6 +96,7 @@ export default function Tickets() {
   }, [tickets, search, statusFilter])
 
   const { sorted: sortedRows, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const [colOrder, setColOrder] = useColumnOrder(TK_COLS, 'adm_tk_col_order')
   const totalPages   = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE))
   const currentPage  = Math.min(page, totalPages)
   const paged        = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -108,33 +143,24 @@ export default function Tickets() {
             <table className="adm-tbl">
               <thead>
                 <tr>
-                  <SortHeader k="ticket_number" label="رقم التذكرة والحالة" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="tenant_name"   label="المستأجر"           sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="submitter_name" label="العميل"            sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="category"      label="التصنيف"            sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                  <SortHeader k="created_at"    label="تاريخ الإنشاء"       sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                  <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                    {colOrder.map(k => (
+                      <DraggableSortHeader
+                        key={k}
+                        id={k}
+                        label={TK_COL_META[k].label}
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onToggle={toggleSort}
+                      />
+                    ))}
+                  </DraggableHeaderRow>
                 </tr>
               </thead>
               <tbody>
                 {paged.map(t => (
                   <tr key={t.id} onClick={() => navigate(`/admin/tickets/${t.id}`)}>
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <span className="t-mono" style={{ fontWeight: 600, color: 'var(--text)' }}>{t.ticket_number}</span>
-                        <span className={`adm-tag ${STATUS_CLASS[t.status] || ''}`} style={{ width: 'fit-content' }}>
-                          {STATUS_LABELS[t.status] || t.status}
-                        </span>
-                      </div>
-                    </td>
-                    <td>{t.tenant_name}</td>
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: 500 }}>{t.submitter_name}</span>
-                        <span className="t-mono" dir="ltr">{t.submitter_email}</span>
-                      </div>
-                    </td>
-                    <td><span className="adm-tag">{CATEGORY_LABELS[t.category] || t.category}</span></td>
-                    <td className="t-small">{fmtTicketDate(t.created_at)}</td>
+                    {colOrder.map(k => <td key={k}>{renderTicketCell(t, k)}</td>)}
                   </tr>
                 ))}
               </tbody>

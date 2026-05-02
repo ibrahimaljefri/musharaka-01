@@ -1,0 +1,83 @@
+/* ── Shared draggable column-header styles ─────────────────────────────────
+ * Used by <DraggableSortHeader> across every list/table page.
+ * Tokens fall back to brand defaults when not provided by the page theme.
+ */
+
+.dh-th {
+  padding: 0 !important;
+  white-space: nowrap;
+  cursor: default;
+}
+
+/* Sort click area — fills the header, makes the label clickable */
+.dh-sort-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 10px 9px 28px; /* extra inline-end padding for the drag handle */
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--text-sec, #57534E);
+  font-weight: 600;
+  font-size: 0.78rem;
+  font-family: 'Tajawal', sans-serif;
+}
+.dh-sort-area:hover { color: var(--text, #1C1917); }
+.dh-sort-area:focus-visible {
+  outline: 2px solid var(--accent, #D97706);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.dh-sort-arrow {
+  opacity: 0.3;
+  font-size: 0.65em;
+  transition: opacity 120ms;
+}
+.dh-sort-arrow.dh-sort-active {
+  opacity: 1;
+  color: var(--accent, #D97706);
+}
+
+/* Drag handle — small icon anchored to the inline-start edge (left in RTL) */
+.dh-drag-handle {
+  position: absolute;
+  inset-inline-start: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: var(--border-strong, #A8A29E);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 120ms, background 120ms;
+  z-index: 1;
+}
+.dh-th:hover .dh-drag-handle,
+.dh-th-dragging .dh-drag-handle {
+  opacity: 1;
+}
+.dh-drag-handle:hover {
+  background: var(--bg-subtle, #F5F5F4);
+  color: var(--accent, #D97706);
+}
+.dh-drag-handle:active { cursor: grabbing; }
+
+/* Column being dragged */
+.dh-th-dragging {
+  background: #FEF9EE !important;
+  outline: 2px dashed var(--accent, #D97706);
+  outline-offset: -2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .dh-drag-handle { transition: none; }
+  .dh-sort-arrow  { transition: none; }
+}

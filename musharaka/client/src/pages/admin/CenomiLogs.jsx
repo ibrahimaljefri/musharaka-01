@@ -1,37 +1,83 @@
 /**
  * Admin: Cenomi Logs — request/response audit viewer
  *
- * Card-row layout with traffic-light status bars (green=2xx, red=4xx/5xx,
- * gray=connection failure). Each row expands in-place to reveal three
- * JSON viewers (request headers / request body / Cenomi response) with
- * copy-to-clipboard buttons. The x-api-key header is server-side
- * redacted to "***" before insert into cenomi_logs — never leaves the DB.
+ * Tabular layout. Each row expands in-place to reveal three JSON viewers
+ * (request headers / request body / Cenomi response) with copy-to-clipboard
+ * buttons. The x-api-key header is server-side redacted to "***" before
+ * insert into cenomi_logs — never leaves the DB.
  */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Fragment } from 'react'
 import api from '../../lib/axiosClient'
 import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import SearchableTenantSelect from '../../components/SearchableTenantSelect'
 import { useSortable } from '../../lib/useSortable'
-import { SortDropdown } from './AdminSubmissions'
+import DraggableHeaderRow from '../../components/DraggableHeaderRow'
+import DraggableSortHeader from '../../components/DraggableSortHeader'
+import { useColumnOrder } from '../../lib/useColumnOrder'
 import {
   ChevronDown, ChevronUp, Copy, Check, FileText,
-  CheckCircle2, XCircle, WifiOff, Activity, Building2, GitBranch,
+  CheckCircle2, XCircle, WifiOff, Activity,
 } from 'lucide-react'
 import './cenomi-admin.css'
 
 const PAGE_SIZE = 25
 
-function classify(status) {
-  if (status == null)              return { tone: 'gray',  label: 'بدون رد' }
-  if (status >= 200 && status < 300) return { tone: 'green', label: String(status) }
-  return { tone: 'red', label: String(status) }
+function classifyTone(status) {
+  if (status == null)                return 'gray'
+  if (status >= 200 && status < 300) return 'green'
+  return 'red'
 }
 
 function fmtDateTime(d) {
   if (!d) return '—'
   return new Date(d).toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'medium' })
+}
+
+const CL_COLS = ['created_at', 'tenant_name', 'branch_name', 'request_url', 'response_status', 'error_message']
+const CL_COL_META = {
+  created_at:      { label: 'التاريخ' },
+  tenant_name:     { label: 'المستأجر' },
+  branch_name:     { label: 'الفرع' },
+  request_url:     { label: 'رابط الطلب' },
+  response_status: { label: 'رمز الاستجابة' },
+  error_message:   { label: 'رسالة الخطأ' },
+}
+
+function renderLogCell(r, key) {
+  switch (key) {
+    case 'created_at':
+      return <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDateTime(r.created_at)}</span>
+    case 'tenant_name':
+      return <strong>{r.tenant_name || '—'}</strong>
+    case 'branch_name': {
+      if (!r.branch_name && !r.branch_code) return <span style={{ color: 'var(--text-muted)' }}>—</span>
+      return (
+        <span>
+          {r.branch_name || '—'}
+          {r.branch_code && <span style={{ color: 'var(--text-muted)', fontSize: 12 }}> ({r.branch_code})</span>}
+        </span>
+      )
+    }
+    case 'request_url': {
+      const url = r.request_url || '—'
+      return <span className="adm-truncate mono" title={url}>{url}</span>
+    }
+    case 'response_status': {
+      const s = r.response_status
+      const tone = classifyTone(s)
+      const label = s == null ? 'بدون رد' : String(s)
+      return <span className={`cen-status-pill ${tone}`}>{label}</span>
+    }
+    case 'error_message': {
+      const msg = r.error_message || ''
+      if (!msg) return <span style={{ color: 'var(--text-muted)' }}>—</span>
+      return <span className="adm-truncate" title={msg} style={{ color: '#dc2626' }}>{msg}</span>
+    }
+    default:
+      return '—'
+  }
 }
 
 export default function CenomiLogs() {
@@ -48,6 +94,8 @@ export default function CenomiLogs() {
   const [statusFilter, setStatusFilter] = useState(null)   // null | '2xx' | '4xx' | 'none'
 
   const [expanded, setExpanded] = useState({})
+
+  const [colOrder, setColOrder] = useColumnOrder(CL_COLS, 'adm_cl_col_order')
 
   useEffect(() => {
     api.get('/admin/tenants').then(({ data }) => setTenants(data || [])).catch(() => {})
@@ -75,9 +123,6 @@ export default function CenomiLogs() {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total])
 
   // Status filter is applied client-side over the loaded page.
-  // (Server-side filtering by HTTP-status range would require an extra
-  // index; the audit log is naturally bounded by the date range so
-  // local filtering is fine.)
   const filtered = useMemo(() => {
     if (!statusFilter) return rows
     return rows.filter(r => {
@@ -94,16 +139,20 @@ export default function CenomiLogs() {
     const m = { total: rows.length, ok: 0, fail: 0, none: 0 }
     for (const r of rows) {
       const s = r.response_status
-      if (s == null)              m.none++
+      if (s == null)                m.none++
       else if (s >= 200 && s < 300) m.ok++
-      else                         m.fail++
+      else                          m.fail++
     }
     return m
   }, [rows])
   const successRate = metrics.total > 0 ? Math.round((metrics.ok / metrics.total) * 100) : null
 
   // Sort over the filtered rows
-  const { sorted, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc')
+  const getter = (row, key) => {
+    if (key === 'response_status') return row.response_status == null ? -1 : Number(row.response_status)
+    return row?.[key]
+  }
+  const { sorted, sortKey, sortDir, toggle: toggleSort } = useSortable(filtered, 'created_at', 'desc', getter)
 
   const clearFilters = () => {
     setTenantId(''); setFrom(''); setTo(''); setStatusFilter(null)
@@ -145,35 +194,80 @@ export default function CenomiLogs() {
         {(tenantId || from || to || statusFilter) && (
           <button className="cen-btn-ghost" onClick={clearFilters}>مسح</button>
         )}
-        <SortDropdown sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} options={[
-          { k: 'created_at',      label: 'التاريخ' },
-          { k: 'tenant_name',     label: 'المستأجر' },
-          { k: 'branch_name',     label: 'الفرع' },
-          { k: 'response_status', label: 'الحالة' },
-        ]} />
       </div>
 
-      {/* Rows */}
-      {loading ? (
-        <div className="cen-row" style={{ padding: 20 }}><TableSkeleton rows={4} cols={1} /></div>
-      ) : sorted.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <>
-          <div className="cen-rows">
-            {sorted.map(r => (
-              <LogRow key={r.id} row={r} expanded={!!expanded[r.id]} onToggle={() => toggleRow(r.id)} />
-            ))}
+      {/* Table */}
+      <div className="adm-tbl-wrap">
+        {loading ? (
+          <div style={{ padding: 16 }}>
+            <TableSkeleton rows={5} cols={6} />
           </div>
+        ) : sorted.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <>
+            <table className="adm-tbl">
+              <thead>
+                <tr>
+                  <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                    {colOrder.map(k => (
+                      <DraggableSortHeader
+                        key={k}
+                        id={k}
+                        label={CL_COL_META[k].label}
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onToggle={toggleSort}
+                      />
+                    ))}
+                  </DraggableHeaderRow>
+                  <th style={{ width: 110 }}>تفاصيل</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map(r => {
+                  const isOpen = !!expanded[r.id]
+                  return (
+                    <Fragment key={r.id}>
+                      <tr>
+                        {colOrder.map(k => <td key={k}>{renderLogCell(r, k)}</td>)}
+                        <td>
+                          <button className="cen-expand-btn" onClick={() => toggleRow(r.id)}>
+                            {isOpen
+                              ? <><ChevronUp size={12} /> إخفاء</>
+                              : <><ChevronDown size={12} /> عرض</>}
+                          </button>
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr className="cen-expand-row">
+                          <td colSpan={colOrder.length + 1}>
+                            <div className="cen-expand">
+                              <JsonBlock title="Request headers (token redacted)" data={r.request_headers} />
+                              <JsonBlock title="Request body" data={r.request_body} />
+                              <JsonBlock
+                                title={`Cenomi response — ${r.response_status != null ? `HTTP ${r.response_status}` : 'لا يوجد رد (فشل اتصال)'}`}
+                                data={r.response_body || (r.error_message ? { error: r.error_message } : null)}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
 
-          <div className="cen-pagination">
-            <span className="cen-pagination-info">
-              عرض {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} من {total}
-            </span>
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-          </div>
-        </>
-      )}
+            <div className="cen-pagination">
+              <span className="cen-pagination-info">
+                عرض {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} من {total}
+              </span>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
@@ -199,54 +293,6 @@ function Pill({ active, onClick, label, count }) {
       <span>{label}</span>
       {typeof count === 'number' && <span className="count">{count}</span>}
     </button>
-  )
-}
-
-function LogRow({ row, expanded, onToggle }) {
-  const { tone, label } = classify(row.response_status)
-  return (
-    <div className={`cen-row ${tone}`}>
-      <div className="cen-row-top">
-        <div className="cen-row-meta">
-          <span className={`cen-status ${tone}`}>{label}</span>
-          <span className="cen-row-time">{fmtDateTime(row.created_at)}</span>
-        </div>
-        <div className="cen-row-actions">
-          <button className="cen-expand-btn" onClick={onToggle}>
-            {expanded
-              ? <><ChevronUp size={12} /> إخفاء</>
-              : <><ChevronDown size={12} /> عرض التفاصيل</>}
-          </button>
-        </div>
-      </div>
-
-      <div className="cen-row-body">
-        <div className="cen-row-line">
-          <Building2 size={13} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
-          <strong>{row.tenant_name || '—'}</strong>
-          {row.branch_code && (
-            <>
-              <span className="muted">·</span>
-              <GitBranch size={13} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
-              <span>{row.branch_name} <span className="muted">({row.branch_code})</span></span>
-            </>
-          )}
-        </div>
-        <div className="cen-row-url" title={row.request_url}>POST {row.request_url}</div>
-        {row.error_message && <div className="cen-row-error">⚠ {row.error_message}</div>}
-      </div>
-
-      {expanded && (
-        <div className="cen-expand">
-          <JsonBlock title="Request headers (token redacted)" data={row.request_headers} />
-          <JsonBlock title="Request body" data={row.request_body} />
-          <JsonBlock
-            title={`Cenomi response — ${row.response_status != null ? `HTTP ${row.response_status}` : 'لا يوجد رد (فشل اتصال)'}`}
-            data={row.response_body || (row.error_message ? { error: row.error_message } : null)}
-          />
-        </div>
-      )}
-    </div>
   )
 }
 

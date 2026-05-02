@@ -196,3 +196,147 @@
   .reports-page { padding: var(--space-4, 16px); }
   .reports-page .rp-filter-bar .field { min-width: 100%; }
 }
+
+/* ── Export buttons in table header ───────────────────────────────────── */
+.reports-page .rp-actions {
+  display: flex;
+  gap: 8px;
+}
+.reports-page .rp-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border, #E7E5E4);
+  background: #fff;
+  color: var(--text, #1C1917);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.reports-page .rp-export-btn:hover:not(:disabled) {
+  background: #FFF7ED;
+  border-color: #D97706;
+  color: #92400E;
+}
+.reports-page .rp-export-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Off-screen PDF document — captured by html2canvas ────────────────── */
+.rp-pdf-mount {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+.rp-pdf-doc {
+  font-family: 'Tajawal', sans-serif;
+  color: #1C1917;
+  background: #ffffff;
+  padding: 36px 44px;
+  width: 794px;
+  direction: rtl;
+  box-sizing: border-box;
+}
+.rp-pdf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 3px solid #D97706;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+}
+.rp-pdf-brand          { display: flex; gap: 14px; align-items: center; }
+.rp-pdf-logo-wrap {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #D97706, #92400E);
+  color: #fff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+.rp-pdf-brand-name     { font-size: 24px; font-weight: 800; color: #92400E; line-height: 1.1; }
+.rp-pdf-brand-sub      { font-size: 13px; color: #78716C; margin-top: 2px; }
+.rp-pdf-meta           { font-size: 14px; line-height: 1.85; min-width: 280px; }
+.rp-pdf-meta-row       { display: flex; gap: 6px; }
+.rp-pdf-meta-row span  { color: #78716C; }
+
+.rp-pdf-banner {
+  background: linear-gradient(90deg, #FEF3C7, #FFF7ED);
+  color: #92400E;
+  font-weight: 700;
+  font-size: 18px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  margin-bottom: 22px;
+  text-align: center;
+  border-inline-start: 4px solid #D97706;
+}
+
+.rp-pdf-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.rp-pdf-kpi {
+  background: #FAFAF9;
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.rp-pdf-kpi .lbl { font-size: 11px; color: #78716C; margin-bottom: 4px; }
+.rp-pdf-kpi .val { font-size: 14px; font-weight: 700; color: #1C1917; }
+
+.rp-pdf-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.rp-pdf-tbl thead th {
+  background: #FFF7ED;
+  color: #92400E;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 11px 10px;
+  border-bottom: 2px solid #D97706;
+  text-align: start;
+  letter-spacing: 0.3px;
+}
+.rp-pdf-tbl tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #E7E5E4;
+  vertical-align: middle;
+  font-size: 13px;
+}
+.rp-pdf-tbl tbody tr:nth-child(even) td {
+  background: rgba(217, 119, 6, 0.04);
+}
+.rp-pdf-tbl .rp-pdf-total-row td {
+  font-weight: 800;
+  font-size: 14px;
+  background: #FEF3C7;
+  border-top: 2px solid #D97706;
+  border-bottom: none;
+  padding: 13px 10px;
+}
+
+.rp-pdf-footer {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid #E7E5E4;
+  font-size: 12px;
+  color: #A8A29E;
+  text-align: center;
+}

@@ -6,7 +6,9 @@ import { TableSkeleton } from '../../components/SkeletonLoader'
 import Pagination from '../../components/Pagination'
 import { toast } from '../../lib/useToast'
 import EmptyState from '../../components/EmptyState'
-import SortHeader from '../../components/SortHeader'
+import DraggableHeaderRow from '../../components/DraggableHeaderRow'
+import DraggableSortHeader from '../../components/DraggableSortHeader'
+import { useColumnOrder } from '../../lib/useColumnOrder'
 import { Plus, Edit2, Trash2, Key, Building2, ChevronLeft, ChevronDown, GitBranch } from 'lucide-react'
 import './admin-tenants.css'
 
@@ -47,6 +49,53 @@ const INPUT_TYPE_LABELS = { daily: 'يومي', monthly: 'شهري' }
 function inputTypesList(value) {
   if (Array.isArray(value)) return value
   return String(value || 'daily').split(',').map(s => s.trim()).filter(Boolean)
+}
+
+const TN_COLS = ['name', 'slug', 'plan', 'input_types', 'status', 'expires_at']
+const TN_COL_META = {
+  name:        { label: 'الاسم' },
+  slug:        { label: 'الرمز' },
+  plan:        { label: 'الباقة' },
+  input_types: { label: 'أنواع الإدخال' },
+  status:      { label: 'الحالة' },
+  expires_at:  { label: 'تاريخ الانتهاء' },
+}
+
+function renderTenantCell(t, key) {
+  switch (key) {
+    case 'name': return (
+      <>
+        <strong>{t.name}</strong>
+        {t.commercial_registration && (
+          <div className="t-micro">{t.commercial_registration}</div>
+        )}
+      </>
+    )
+    case 'slug': return <span className="t-mono">{t.slug || '—'}</span>
+    case 'plan': return PLAN_LABELS[t.plan] || t.plan || '—'
+    case 'input_types': return (
+      <>
+        {inputTypesList(t.allowed_input_types).map(type => (
+          <span key={type} className="adm-chip">
+            {INPUT_TYPE_LABELS[type] || 'مخصص'}
+          </span>
+        ))}
+      </>
+    )
+    case 'status': {
+      const s = tenantStatusInfo(t)
+      return <span className={`adm-status s-${s.cls}`}>{s.label}</span>
+    }
+    case 'expires_at': {
+      const expired = t.expires_at && new Date(t.expires_at) < new Date()
+      return (
+        <span className="t-mono" style={expired ? { color: '#B91C1C', fontWeight: 600 } : undefined}>
+          {t.expires_at ? fmtDate(t.expires_at) : 'غير محدد'}
+        </span>
+      )
+    }
+    default: return '—'
+  }
 }
 
 export default function Tenants() {
@@ -181,6 +230,7 @@ export default function Tenants() {
   }, [userExpanded, branchMatchedTenantIds])
 
   const sortAdapter = makeSortAdapter(sort, setSort)
+  const [colOrder, setColOrder] = useColumnOrder(TN_COLS, 'adm_tn_col_order')
   const totalPages = Math.ceil(filteredSorted.length / PAGE_SIZE) || 1
   const paged = filteredSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const firstIdx = filteredSorted.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
@@ -271,19 +321,23 @@ export default function Tenants() {
               <thead>
                 <tr>
                   <th style={{ width: 40 }}></th>
-                  <SortHeader k="name"       label="الاسم"          {...sortAdapter} />
-                  <SortHeader k="slug"       label="الرمز"           {...sortAdapter} />
-                  <SortHeader k="plan"       label="الباقة"          {...sortAdapter} />
-                  <th>أنواع الإدخال</th>
-                  <SortHeader k="status"     label="الحالة"          {...sortAdapter} />
-                  <SortHeader k="expires_at" label="تاريخ الانتهاء"   {...sortAdapter} />
+                  <DraggableHeaderRow order={colOrder} onReorder={setColOrder}>
+                    {colOrder.map(k => (
+                      <DraggableSortHeader
+                        key={k}
+                        id={k}
+                        label={TN_COL_META[k].label}
+                        sortKey={sortAdapter.sortKey}
+                        sortDir={sortAdapter.sortDir}
+                        onToggle={sortAdapter.toggle}
+                      />
+                    ))}
+                  </DraggableHeaderRow>
                   <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {paged.map(t => {
-                  const s = tenantStatusInfo(t)
-                  const expired = t.expires_at && new Date(t.expires_at) < new Date()
                   const isOpen = effectivelyExpanded.has(t.id)
                   const branches = branchesByTenant[t.id] || []
                   // When auto-expanded by branch search, highlight only the
@@ -311,27 +365,7 @@ export default function Tenants() {
                           {isOpen ? <ChevronDown size={14} /> : <ChevronLeft size={14} />}
                         </button>
                       </td>
-                      <td>
-                        <strong>{t.name}</strong>
-                        {t.commercial_registration && (
-                          <div className="t-micro">{t.commercial_registration}</div>
-                        )}
-                      </td>
-                      <td className="t-mono">{t.slug || '—'}</td>
-                      <td>{PLAN_LABELS[t.plan] || t.plan || '—'}</td>
-                      <td>
-                        {inputTypesList(t.allowed_input_types).map(type => (
-                          <span key={type} className="adm-chip">
-                            {INPUT_TYPE_LABELS[type] || 'مخصص'}
-                          </span>
-                        ))}
-                      </td>
-                      <td>
-                        <span className={`adm-status s-${s.cls}`}>{s.label}</span>
-                      </td>
-                      <td className="t-mono" style={expired ? { color: '#B91C1C', fontWeight: 600 } : undefined}>
-                        {t.expires_at ? fmtDate(t.expires_at) : 'غير محدد'}
-                      </td>
+                      {colOrder.map(k => <td key={k}>{renderTenantCell(t, k)}</td>)}
                       <td>
                         <div className="adm-actions">
                           <Link
