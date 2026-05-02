@@ -9,6 +9,11 @@ export default function BranchEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
   const isSuperAdmin = useAuthStore(s => s.isSuperAdmin)
+  // Super-admin reaches BranchEdit by expanding a tenant on /admin/tenants;
+  // /branches has no link in the admin sidebar so dumping them there strands
+  // them. Route them back to /admin/tenants instead.
+  const backPath  = isSuperAdmin ? '/admin/tenants' : '/branches'
+  const backLabel = isSuperAdmin ? 'إدارة المستأجرين' : 'الفروع'
   const [form, setForm] = useState(null)
   const [loading, setLoading]   = useState(false)
   const [fetching, setFetching] = useState(true)
@@ -39,7 +44,7 @@ export default function BranchEdit() {
         address:         form.address         || null,
       })
       setSuccess('تم حفظ التغييرات بنجاح')
-      setTimeout(() => navigate('/branches'), 1200)
+      setTimeout(() => navigate(backPath), 1200)
     } catch (e) {
       const msg = e.response?.data?.error || 'حدث خطأ غير متوقع. يرجى المحاولة مجدداً.'
       setError(msg)
@@ -56,7 +61,7 @@ export default function BranchEdit() {
       <div className="bf-header">
         <div>
           <div className="bf-breadcrumb">
-            <Link to="/branches">الفروع</Link> / تعديل
+            <Link to={backPath}>{backLabel}</Link> / تعديل
           </div>
           <h1 className="bf-title">{form.name || form.code}</h1>
           <div className="bf-subtitle">
@@ -118,7 +123,7 @@ export default function BranchEdit() {
           <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => navigate('/branches')}>
+          <button type="button" className="btn btn-ghost" onClick={() => navigate(backPath)}>
             إلغاء
           </button>
         </div>

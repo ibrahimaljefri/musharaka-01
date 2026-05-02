@@ -30,6 +30,10 @@ function Field({ name, label, required, dir = 'rtl', placeholder = '', type = 't
 export default function BranchCreate() {
   const navigate     = useNavigate()
   const maxBranches  = useAuthStore(s => s.maxBranches)
+  const isSuperAdmin = useAuthStore(s => s.isSuperAdmin)
+  // Same reason as BranchEdit: super-admin came from /admin/tenants and
+  // /branches has no admin sidebar link, so route them back where they came from.
+  const backPath = isSuperAdmin ? '/admin/tenants' : '/branches'
 
   useEffect(() => {
     async function checkLimit() {
@@ -66,7 +70,7 @@ export default function BranchCreate() {
         location:        form.location        || null,
         address:         form.address         || null,
       })
-      navigate('/branches')
+      navigate(backPath)
     } catch (e) {
       const msg = e.response?.data?.error
       setError(msg || 'حدث خطأ غير متوقع. يرجى المحاولة مجدداً.')
@@ -109,7 +113,7 @@ export default function BranchCreate() {
           <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'جاري الحفظ...' : 'حفظ الفرع'}
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => navigate('/branches')}>
+          <button type="button" className="btn btn-ghost" onClick={() => navigate(backPath)}>
             إلغاء
           </button>
         </div>
