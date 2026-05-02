@@ -41,30 +41,37 @@ function statusLabel(s) {
 }
 
 export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
-  const [rows, setRows]       = useState([])
+  const [rows, setRows]         = useState([])
   const [branches, setBranches] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]   = useState(true)
   const [deleteId, setDeleteId] = useState(null)
-  const [page, setPage]       = useState(0)
+  const [page, setPage]         = useState(0)
 
   // Filters
-  const [filterYear, setFilterYear]   = useState(new Date().getFullYear())
-  const [filterMonth, setFilterMonth] = useState('')
+  const [filterBranch, setFilterBranch] = useState(branchId)
+  const [filterYear,   setFilterYear]   = useState(new Date().getFullYear())
+  const [filterMonth,  setFilterMonth]  = useState('')
 
-  // Fetch whenever branch/refreshTick changes
+  // When the form's selected branch changes, mirror it in the filter
+  useEffect(() => {
+    setFilterBranch(branchId)
+    setPage(0)
+  }, [branchId])
+
+  // Reload on refreshTick (includes initial mount)
   useEffect(() => {
     setPage(0)
     load()
-  }, [branchId, refreshTick]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshTick]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset page on filter change
-  useEffect(() => { setPage(0) }, [filterYear, filterMonth])
+  // Reset page on any filter change
+  useEffect(() => { setPage(0) }, [filterBranch, filterYear, filterMonth])
 
   async function load() {
     setLoading(true)
     try {
       const [salesRes, branchRes] = await Promise.all([
-        api.get('/sales', { params: { limit: 5000, ...(branchId ? { branch_id: branchId } : {}) } }),
+        api.get('/sales', { params: { limit: 5000 } }),   // fetch all — branch filtered client-side
         api.get('/branches'),
       ])
       setRows(salesRes.data?.sales || [])
@@ -96,16 +103,17 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
     return [...ySet].sort((a, b) => b - a)
   }, [rows])
 
-  // Filter by year + month
+  // Filter by branch + year + month
   const filtered = useMemo(() => {
     return rows.filter(r => {
+      if (filterBranch && r.branch_id !== filterBranch) return false
       if (!r.sale_date) return true
       const d = new Date(r.sale_date)
       if (filterYear && d.getFullYear() !== Number(filterYear)) return false
       if (filterMonth && d.getMonth() + 1 !== Number(filterMonth)) return false
       return true
     })
-  }, [rows, filterYear, filterMonth])
+  }, [rows, filterBranch, filterYear, filterMonth])
 
   // Enrich with branch info
   const enriched = useMemo(() => {
@@ -165,6 +173,18 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
 
       {/* Filters */}
       <div className="srl-filters">
+        <label className="srl-filter-label">الفرع:</label>
+        <select
+          value={filterBranch}
+          onChange={e => setFilterBranch(e.target.value)}
+          className="srl-select"
+        >
+          <option value="">جميع الفروع</option>
+          {branches.map(b => (
+            <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+          ))}
+        </select>
+
         <label className="srl-filter-label">السنة:</label>
         <select
           value={filterYear}
@@ -187,13 +207,13 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
           ))}
         </select>
 
-        {(filterMonth || (filterYear && String(filterYear) !== String(new Date().getFullYear()))) && (
+        {(filterBranch || filterMonth || (filterYear && String(filterYear) !== String(new Date().getFullYear()))) && (
           <button
             type="button"
             className="srl-clear-btn"
-            onClick={() => { setFilterYear(new Date().getFullYear()); setFilterMonth('') }}
+            onClick={() => { setFilterBranch(''); setFilterYear(new Date().getFullYear()); setFilterMonth('') }}
           >
-            ✕ مسح
+            ✕ مسح الكل
           </button>
         )}
       </div>
@@ -203,7 +223,7 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
         <div style={{ padding: '12px 0' }}><TableSkeleton rows={5} cols={5} /></div>
       ) : paged.length === 0 ? (
         <div className="srl-empty">
-          {rows.length > 0 ? 'لا توجد مبيعات لهذا الشهر' : 'لا توجد مبيعات مسجّلة بعد'}
+          {rows.length > 0 ? 'لا توجد مبيعات تطابق الفلاتر المحددة' : 'لا توجد مبيعات مسجّلة بعد'}
         </div>
       ) : (
         <>
