@@ -74,6 +74,74 @@
   padding: var(--space-5, 24px);
 }
 
+/* ── Draggable field list ───────────────────────────────────────────────── */
+.sc-drag-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+/* Each draggable row: field content + grip handle */
+.sc-drag-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border-radius: var(--r-sm, 6px);
+  padding: 2px 0;
+  transition: box-shadow 150ms ease, background 150ms ease;
+}
+
+/* While actively dragging: lift with shadow */
+.sc-drag-row.sc-drag-active {
+  background: var(--surface, #fff);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: var(--r-md, 8px);
+}
+
+/* Field takes all remaining space */
+.sc-drag-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Grip handle — subtle until hovered */
+.sc-drag-handle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 38px;
+  margin-top: 22px;   /* align with input top */
+  background: none;
+  border: none;
+  border-radius: var(--r-sm, 6px);
+  color: var(--border-strong, #D6D3D1);
+  cursor: grab;
+  transition: color 120ms, background 120ms;
+  touch-action: none;
+}
+.sc-drag-handle:hover  { color: var(--text-sec, #57534E); background: var(--bg-subtle, #F5F5F4); }
+.sc-drag-handle:active { cursor: grabbing; }
+
+/* Inline pair: two sub-fields side by side (year+month, from+to) */
+.sc-inline-pair {
+  display: flex;
+  gap: 12px;
+}
+.sc-inline-item {
+  flex: 1;
+}
+.sc-sublabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-sec, #57534E);
+  margin-bottom: 4px;
+  font-family: 'Tajawal', system-ui, sans-serif;
+}
+
+/* Legacy grid (kept for any refs elsewhere, hidden behind drag list now) */
 .sc-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
