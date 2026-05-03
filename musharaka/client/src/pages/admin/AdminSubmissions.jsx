@@ -219,7 +219,7 @@ export default function AdminSubmissions() {
               {sorted.map(r => (
                 <tr key={r.id} className={r.status === 'reverted' ? 'cen-row-reverted' : undefined}>
                   {colOrder.map(k => <td key={k}>{renderSubmissionCell(r, k)}</td>)}
-                  <td>
+                  <td className="adm-td-actions">
                     {r.status === 'sent' ? (
                       <button
                         className="cen-row-revert-mini"

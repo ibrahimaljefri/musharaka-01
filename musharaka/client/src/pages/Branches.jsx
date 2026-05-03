@@ -200,7 +200,7 @@ export default function Branches() {
                     {colOrder.map(k => (
                       <td key={k}>{renderBranchCell(b, k)}</td>
                     ))}
-                    <td>
+                    <td className="adm-td-actions">
                       <div className="br-actions">
                         <Link to={`/branches/${b.id}/edit`} className="br-icon-btn" title="تعديل" aria-label="تعديل">
                           <Edit2 size={13} />

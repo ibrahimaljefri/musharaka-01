@@ -163,7 +163,7 @@ export default function BotSubscribers() {
                 {paged.map(s => (
                   <tr key={s.id}>
                     {colOrder.map(k => <td key={k}>{renderSubscriberCell(s, k)}</td>)}
-                    <td>
+                    <td className="adm-td-actions">
                       <div className="adm-actions">
                         <Link to={`/admin/bot-subscribers/${s.id}/edit`} className="adm-icon-btn" title="تعديل" aria-label="تعديل">
                           <Edit2 size={13} />

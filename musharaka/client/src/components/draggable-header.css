@@ -83,16 +83,12 @@
 }
 
 /* Trailing actions column — shrinks to fit its icon buttons so it
-   doesn't leave a wide empty band beside the last sortable column. */
+   doesn't leave a wide empty band beside the last sortable column.
+   Apply BOTH classes — header AND body cell — so the column actually
+   collapses to content width instead of stretching to auto. */
 .adm-th-actions,
-table thead th.adm-th-actions {
+.adm-td-actions {
   width: 1%;
   white-space: nowrap;
   text-align: center;
-}
-table tbody tr td:last-child:has(> .br-actions),
-table tbody tr td:last-child:has(> .users-actions),
-table tbody tr td:last-child:has(> .adm-actions) {
-  text-align: center;
-  white-space: nowrap;
 }

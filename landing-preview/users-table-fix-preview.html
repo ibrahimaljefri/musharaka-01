@@ -1,0 +1,248 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <title>Users table — actions column fix preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: #F5F5F4;
+      padding: 30px;
+      color: #1C1917;
+    }
+    h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      color: #92400E;
+    }
+    .label {
+      font-size: 13px;
+      color: #57534E;
+      margin-bottom: 16px;
+    }
+    .demo {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead th {
+      background: #FAFAF9;
+      color: #57534E;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #E7E5E4;
+      text-align: right;
+    }
+    tbody td {
+      padding: 14px;
+      border-bottom: 1px solid #F5F5F4;
+    }
+    .users-actions {
+      display: inline-flex;
+      gap: 4px;
+    }
+    .icon-btn {
+      width: 28px; height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #E7E5E4;
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #57534E;
+    }
+
+    /* Highlight the empty band so the gap is obvious */
+    .gap-marker {
+      outline: 2px dashed #DC2626;
+      background: rgba(220, 38, 38, 0.06);
+    }
+
+    /* PROPOSED FIX: shrink the actions column to fit its buttons */
+    .fixed thead th.actions-col,
+    .fixed tbody td.actions-col {
+      width: 1%;
+      white-space: nowrap;
+      padding-inline-start: 14px;
+      padding-inline-end: 14px;
+    }
+    .fixed thead th.actions-col {
+      text-align: center;
+    }
+    .fixed tbody td.actions-col {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>① الوضع الحالي — يوجد فراغ كبير قبل عمود "إجراءات"</h2>
+  <div class="label">السهم في الصورة يشير إلى هذا الفراغ. السبب: عمود "إجراءات" يأخذ عرضًا واسعًا (auto), والأيقونات بداخله تظهر على اليمين فقط.</div>
+  <div class="demo">
+    <table>
+      <thead>
+        <tr>
+          <th class="gap-marker">إجراءات</th>
+          <th>الدور</th>
+          <th>تاريخ التسجيل ▼</th>
+          <th>المستأجر</th>
+          <th>الحالة</th>
+          <th>رقم الجوال</th>
+          <th>البريد الإلكتروني</th>
+          <th>الاسم</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="gap-marker">
+            <span class="users-actions">
+              <button class="icon-btn">🗑</button>
+              <button class="icon-btn">✏</button>
+              <button class="icon-btn">📋</button>
+            </span>
+          </td>
+          <td>—</td>
+          <td>٢٤ أبريل ٢٠٢٦</td>
+          <td>غير مُعيَّن</td>
+          <td><span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:99px;font-size:12px">في الانتظار</span></td>
+          <td>—</td>
+          <td>tmp-1777033250887@musharaka.test</td>
+          <td>Test User</td>
+        </tr>
+        <tr>
+          <td class="gap-marker">
+            <span class="users-actions">
+              <button class="icon-btn">🗑</button>
+              <button class="icon-btn">✏</button>
+              <button class="icon-btn">📋</button>
+            </span>
+          </td>
+          <td>—</td>
+          <td>٢٤ أبريل ٢٠٢٦</td>
+          <td>غير مُعيَّن</td>
+          <td><span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:99px;font-size:12px">في الانتظار</span></td>
+          <td>966565815092</td>
+          <td>com.123@123</td>
+          <td>ibrahim aljefri</td>
+        </tr>
+        <tr>
+          <td class="gap-marker">
+            <span class="users-actions">
+              <button class="icon-btn">🗑</button>
+              <button class="icon-btn">✏</button>
+            </span>
+          </td>
+          <td>مدير</td>
+          <td>٢٨ أبريل ٢٠٢٦</td>
+          <td>مؤسسة رؤيتنا لتقنية المعلومات</td>
+          <td><span style="background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:99px;font-size:12px">مُعيَّن</span></td>
+          <td>966553049974</td>
+          <td>mohamed.aljefri@gmail.com</td>
+          <td>Mohamed Aljefri</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <h2>② الإصلاح المقترح — العمود يتقلّص ليناسب الأيقونات بالضبط</h2>
+  <div class="label">العمود يصبح بعرض 1% (يأخذ فقط مساحة الأيقونات)، الأيقونات تتوسط رأسياً، الفراغ يختفي. باقي الأعمدة تستفيد من المساحة المتبقية بشكل تلقائي.</div>
+  <div class="demo">
+    <table class="fixed">
+      <thead>
+        <tr>
+          <th class="actions-col">إجراءات</th>
+          <th>الدور</th>
+          <th>تاريخ التسجيل ▼</th>
+          <th>المستأجر</th>
+          <th>الحالة</th>
+          <th>رقم الجوال</th>
+          <th>البريد الإلكتروني</th>
+          <th>الاسم</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="actions-col">
+            <span class="users-actions">
+              <button class="icon-btn">🗑</button>
+              <button class="icon-btn">✏</button>
+              <button class="icon-btn">📋</button>
+            </span>
+          </td>
+          <td>—</td>
+          <td>٢٤ أبريل ٢٠٢٦</td>
+          <td>غير مُعيَّن</td>
+          <td><span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:99px;font-size:12px">في الانتظار</span></td>
+          <td>—</td>
+          <td>tmp-1777033250887@musharaka.test</td>
+          <td>Test User</td>
+        </tr>
+        <tr>
+          <td class="actions-col">
+            <span class="users-actions">
+              <button class="icon-btn">🗑</button>
+              <button class="icon-btn">✏</button>
+              <button class="icon-btn">📋</button>
+            </span>
+          </td>
+          <td>—</td>
+          <td>٢٤ أبريل ٢٠٢٦</td>
+          <td>غير مُعيَّن</td>
+          <td><span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:99px;font-size:12px">في الانتظار</span></td>
+          <td>966565815092</td>
+          <td>com.123@123</td>
+          <td>ibrahim aljefri</td>
+        </tr>
+        <tr>
+          <td class="actions-col">
+            <span class="users-actions">
+              <button class="icon-btn">🗑</button>
+              <button class="icon-btn">✏</button>
+            </span>
+          </td>
+          <td>مدير</td>
+          <td>٢٨ أبريل ٢٠٢٦</td>
+          <td>مؤسسة رؤيتنا لتقنية المعلومات</td>
+          <td><span style="background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:99px;font-size:12px">مُعيَّن</span></td>
+          <td>966553049974</td>
+          <td>mohamed.aljefri@gmail.com</td>
+          <td>Mohamed Aljefri</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <h2>التطبيق</h2>
+  <div class="label" style="line-height:1.8">
+    سيتم تطبيق نفس الإصلاح على كل صفحات الإدارة التي تحتوي على عمود "إجراءات":
+    <br>• /admin/users (الصفحة في الصورة)
+    <br>• /admin/tenants
+    <br>• /admin/submissions
+    <br>• /admin/bot-subscribers
+    <br>• /branches
+    <br><br>
+    التغيير الفعلي: إضافة <code style="background:#FFF7ED;padding:2px 6px;border-radius:4px">className="adm-th-actions"</code> + <code style="background:#FFF7ED;padding:2px 6px;border-radius:4px">className="adm-td-actions"</code> على عمود الإجراءات في الرأس والخلية. ثم قاعدة CSS مشتركة:
+    <br><br>
+    <pre style="background:#FAFAF9;padding:14px;border-radius:8px;font-family:monospace;font-size:12px;direction:ltr;text-align:left;overflow-x:auto">
+.adm-th-actions, .adm-td-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+    </pre>
+  </div>
+
+</body>
+</html>

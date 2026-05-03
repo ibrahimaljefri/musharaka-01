@@ -541,7 +541,7 @@ export default function Users() {
                 {paged.map(u => (
                   <tr key={u.id}>
                     {colOrder.map(k => <td key={k}>{renderUserCell(u, k)}</td>)}
-                    <td>
+                    <td className="adm-td-actions">
                       <div className="adm-actions">
                         {u.status === 'pending' && (
                           <button onClick={() => setAssignTarget(u)} className="adm-icon-btn" title="تعيين مستأجر">

@@ -366,7 +366,7 @@ export default function Tenants() {
                         </button>
                       </td>
                       {colOrder.map(k => <td key={k}>{renderTenantCell(t, k)}</td>)}
-                      <td>
+                      <td className="adm-td-actions">
                         <div className="adm-actions">
                           <Link
                             to={`/admin/tenants/${t.id}/edit`}
