@@ -281,43 +281,52 @@
   box-sizing: border-box;
 }
 
-.sm-pdf-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+/* Title block — gold-underlined header with filter context */
+.sm-pdf-titleblock {
   border-bottom: 3px solid #D97706;
-  padding-bottom: 18px;
-  margin-bottom: 22px;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
 }
-.sm-pdf-brand          { display: flex; gap: 14px; align-items: center; }
-.sm-pdf-logo-wrap {
-  width: 56px; height: 56px;
-  background: linear-gradient(135deg, #D97706, #92400E);
-  color: #fff;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.sm-pdf-title {
+  margin: 0 0 12px;
+  font-size: 26px;
   font-weight: 800;
-  font-size: 20px;
-  letter-spacing: 1px;
-}
-.sm-pdf-brand-name     { font-size: 24px; font-weight: 800; color: #92400E; line-height: 1.1; }
-.sm-pdf-brand-sub      { font-size: 13px; color: #78716C; margin-top: 2px; }
-
-.sm-pdf-meta           { font-size: 14px; line-height: 1.85; min-width: 280px; }
-.sm-pdf-meta-row       { display: flex; gap: 6px; }
-.sm-pdf-meta-row span  { color: #78716C; }
-
-.sm-pdf-banner {
-  background: linear-gradient(90deg, #FEF3C7, #FFF7ED);
   color: #92400E;
-  font-weight: 700;
-  font-size: 18px;
-  padding: 14px 20px;
-  border-radius: 8px;
+  line-height: 1.1;
+}
+.sm-pdf-subtitle-row {
+  display: flex;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.85;
+}
+.sm-pdf-subtitle-row .lbl { color: #78716C; }
+.sm-pdf-subtitle-row strong { color: #1C1917; font-weight: 700; }
+
+/* KPI strip — 2 cards */
+.sm-pdf-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
   margin-bottom: 22px;
+}
+.sm-pdf-kpi {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  padding: 14px 12px;
   text-align: center;
+}
+.sm-pdf-kpi .lbl { font-size: 11px; color: #92400E; font-weight: 600; margin-bottom: 6px; }
+.sm-pdf-kpi .val { font-size: 16px; font-weight: 800; color: #1C1917; }
+
+/* Section title above the data table */
+.sm-pdf-section-title {
+  margin: 4px 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1C1917;
+  padding-inline-start: 10px;
   border-inline-start: 4px solid #D97706;
 }
 
@@ -358,11 +367,4 @@
   padding: 16px 12px;
 }
 
-.sm-pdf-footer {
-  margin-top: 28px;
-  padding-top: 14px;
-  border-top: 1px solid #E7E5E4;
-  font-size: 12px;
-  color: #A8A29E;
-  text-align: center;
-}
+/* In-page footer no longer used — Page X of Y is overlaid by jsPDF */

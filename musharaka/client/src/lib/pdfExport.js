@@ -77,5 +77,18 @@ export async function exportNodeAsPdf(node, filename = 'export.pdf') {
     pageIdx += 1
   }
 
+  // Page X of Y overlay — drawn natively by jsPDF (Latin chars, so no font
+  // embedding required). Also a generation timestamp on the opposite side.
+  const totalPages = pdf.internal.getNumberOfPages()
+  const ts = new Date().toISOString().slice(0, 16).replace('T', ' ')
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(9)
+  pdf.setTextColor(140, 140, 140)
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i)
+    pdf.text(`Page ${i} of ${totalPages}`, pageWidthMm - 12, pageHeightMm - 8, { align: 'right' })
+    pdf.text(`Generated ${ts}`, 12, pageHeightMm - 8, { align: 'left' })
+  }
+
   pdf.save(filename)
 }

@@ -247,60 +247,54 @@
   text-align: right;
   box-sizing: border-box;
 }
-.rp-pdf-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+/* Title block — gold-underlined header with filter context */
+.rp-pdf-titleblock {
   border-bottom: 3px solid #D97706;
-  padding-bottom: 18px;
-  margin-bottom: 22px;
-}
-.rp-pdf-brand          { display: flex; gap: 14px; align-items: center; }
-.rp-pdf-logo-wrap {
-  width: 56px; height: 56px;
-  background: linear-gradient(135deg, #D97706, #92400E);
-  color: #fff;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: 1px;
-}
-.rp-pdf-brand-name     { font-size: 24px; font-weight: 800; color: #92400E; line-height: 1.1; }
-.rp-pdf-brand-sub      { font-size: 13px; color: #78716C; margin-top: 2px; }
-.rp-pdf-meta           { font-size: 14px; line-height: 1.85; min-width: 280px; }
-.rp-pdf-meta-row       { display: flex; gap: 6px; }
-.rp-pdf-meta-row span  { color: #78716C; }
-
-.rp-pdf-banner {
-  background: linear-gradient(90deg, #FEF3C7, #FFF7ED);
-  color: #92400E;
-  font-weight: 700;
-  font-size: 18px;
-  padding: 14px 20px;
-  border-radius: 8px;
-  margin-bottom: 22px;
-  text-align: center;
-  border-inline-start: 4px solid #D97706;
-}
-
-.rp-pdf-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  padding-bottom: 16px;
   margin-bottom: 20px;
 }
+.rp-pdf-title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #92400E;
+  line-height: 1.1;
+}
+.rp-pdf-subtitle-row {
+  display: flex;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.85;
+}
+.rp-pdf-subtitle-row .lbl { color: #78716C; }
+.rp-pdf-subtitle-row strong { color: #1C1917; font-weight: 700; }
+
+/* KPI strip — 2 cards in cream/gold */
+.rp-pdf-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
 .rp-pdf-kpi {
-  background: #FAFAF9;
-  border: 1px solid #E7E5E4;
-  border-radius: 8px;
-  padding: 12px 14px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  padding: 14px 12px;
   text-align: center;
 }
-.rp-pdf-kpi .lbl { font-size: 11px; color: #78716C; margin-bottom: 4px; }
-.rp-pdf-kpi .val { font-size: 14px; font-weight: 700; color: #1C1917; }
+.rp-pdf-kpi .lbl { font-size: 11px; color: #92400E; font-weight: 600; margin-bottom: 6px; }
+.rp-pdf-kpi .val { font-size: 16px; font-weight: 800; color: #1C1917; }
+
+/* Section title above the data table */
+.rp-pdf-section-title {
+  margin: 4px 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1C1917;
+  padding-inline-start: 10px;
+  border-inline-start: 4px solid #D97706;
+}
 
 .rp-pdf-tbl {
   width: 100%;
@@ -338,11 +332,4 @@
   padding: 14px 10px;
 }
 
-.rp-pdf-footer {
-  margin-top: 24px;
-  padding-top: 12px;
-  border-top: 1px solid #E7E5E4;
-  font-size: 12px;
-  color: #A8A29E;
-  text-align: center;
-}
+/* In-page footer no longer used — Page X of Y is overlaid by jsPDF */

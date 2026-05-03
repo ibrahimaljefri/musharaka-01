@@ -207,35 +207,40 @@ function SubmissionCard({ sub }) {
               {exporting && (
                 <div className="sm-pdf-mount" aria-hidden="true">
                   <div className="sm-pdf-doc" ref={printRef}>
-                    <div className="sm-pdf-header">
-                      <div className="sm-pdf-brand-text">
-                        <div className="sm-pdf-brand-name">عروة</div>
-                        <div className="sm-pdf-brand-sub">نظام إدارة المبيعات</div>
+                    <div className="sm-pdf-titleblock">
+                      <h1 className="sm-pdf-title">تقرير إرسال فواتير المبيعات</h1>
+                      <div className="sm-pdf-subtitle-row">
+                        <span className="lbl">التقرير للفترة:</span>
+                        <strong>{MONTHS_AR[sub.month]} {sub.year}</strong>
                       </div>
-                      <div className="sm-pdf-meta">
-                        <div className="sm-pdf-meta-row">
-                          <span>الفرع:</span>
-                          <strong>{sub.branches?.name} ({sub.branches?.code})</strong>
+                      <div className="sm-pdf-subtitle-row">
+                        <span className="lbl">الفرع:</span>
+                        <strong>{sub.branches?.name} ({sub.branches?.code})</strong>
+                      </div>
+                      {sub.contract_number && (
+                        <div className="sm-pdf-subtitle-row">
+                          <span className="lbl">رقم العقد:</span>
+                          <strong dir="ltr">{sub.contract_number}</strong>
                         </div>
-                        <div className="sm-pdf-meta-row">
-                          <span>الفترة:</span>
-                          <strong>{MONTHS_AR[sub.month]} {sub.year}</strong>
-                        </div>
-                        <div className="sm-pdf-meta-row">
-                          <span>تاريخ الإصدار:</span>
-                          <strong dir="ltr">{new Date().toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-                        </div>
+                      )}
+                      <div className="sm-pdf-subtitle-row">
+                        <span className="lbl">تاريخ الإصدار:</span>
+                        <strong dir="ltr">{new Date().toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
                       </div>
                     </div>
 
-                    <div className="sm-pdf-banner">تقرير إرسال فواتير المبيعات</div>
+                    <div className="sm-pdf-kpis">
+                      <div className="sm-pdf-kpi"><div className="lbl">إجمالي المبيعات</div><div className="val">{fmt(sub.total_amount)} ر.س</div></div>
+                      <div className="sm-pdf-kpi"><div className="lbl">عدد الفواتير</div><div className="val">{sub.invoice_count}</div></div>
+                    </div>
 
+                    <h2 className="sm-pdf-section-title">تفاصيل الفواتير المُرسَلة</h2>
                     <table className="sm-pdf-tbl">
                       <thead>
                         <tr>
                           <th>التاريخ</th>
                           <th>رقم الفاتورة</th>
-                          <th>المبلغ (ر.س)</th>
+                          <th>المبلغ</th>
                           <th>ملاحظات</th>
                         </tr>
                       </thead>
@@ -244,21 +249,17 @@ function SubmissionCard({ sub }) {
                           <tr key={s.id}>
                             <td dir="ltr">{(s.sale_date || '').slice(0, 10)}</td>
                             <td>{s.invoice_number || '—'}</td>
-                            <td dir="ltr">{fmt(s.amount)}</td>
+                            <td dir="ltr">{fmt(s.amount)} ر.س</td>
                             <td>{s.notes || '—'}</td>
                           </tr>
                         ))}
                         <tr className="sm-pdf-total-row">
                           <td colSpan={2}>الإجمالي</td>
-                          <td dir="ltr">{fmt(sub.total_amount)}</td>
+                          <td dir="ltr">{fmt(sub.total_amount)} ر.س</td>
                           <td>{sub.invoice_count} فاتورة</td>
                         </tr>
                       </tbody>
                     </table>
-
-                    <div className="sm-pdf-footer">
-                      تم إنشاء هذا التقرير تلقائياً من نظام عروة — {new Date().toLocaleString('ar-SA')}
-                    </div>
                   </div>
                 </div>
               )}
@@ -294,12 +295,16 @@ export default function Submissions() {
       const { data } = await api.get('/submissions', { params })
       const rows = data?.submissions || []
       const branchMap = new Map(branches.map(b => [b.id, b]))
-      const enriched = rows.map(r => ({
-        ...r,
-        branches: r.branch_code
-          ? { code: r.branch_code, name: r.branch_name }
-          : (branchMap.get(r.branch_id) ? { code: branchMap.get(r.branch_id).code, name: branchMap.get(r.branch_id).name } : null),
-      }))
+      const enriched = rows.map(r => {
+        const b = branchMap.get(r.branch_id)
+        return {
+          ...r,
+          branches: r.branch_code
+            ? { code: r.branch_code, name: r.branch_name }
+            : (b ? { code: b.code, name: b.name } : null),
+          contract_number: r.contract_number || b?.contract_number || null,
+        }
+      })
       setSubmissions(enriched)
     } catch { setSubmissions([]) }
     setLoading(false)

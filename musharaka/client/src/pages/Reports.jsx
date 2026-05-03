@@ -143,8 +143,25 @@ export default function Reports() {
       : 'جميع الأشهر'
     const yearName = applied.year || 'جميع السنوات'
     const statusName = applied.status === 'pending' ? 'معلقة' : applied.status === 'sent' ? 'مرسلة' : 'الكل'
-    return { branchName, monthName, yearName, statusName }
-  }, [applied, branches])
+
+    // Lease codes: one branch → that branch's contract_number; all/multi →
+    // unique non-empty contract numbers from branches present in the dataset
+    let leaseCodes = '—'
+    if (applied.branch_id) {
+      const b = branches.find(x => x.id === applied.branch_id)
+      leaseCodes = b?.contract_number || '—'
+    } else {
+      const branchIdsInData = new Set(sales.map(s => s.branch_id))
+      const codes = branches
+        .filter(b => branchIdsInData.has(b.id))
+        .map(b => b.contract_number)
+        .filter(Boolean)
+      const unique = [...new Set(codes)]
+      leaseCodes = unique.length ? unique.join('، ') : '—'
+    }
+
+    return { branchName, monthName, yearName, statusName, leaseCodes }
+  }, [applied, branches, sales])
 
   const fileBase = useMemo(() => {
     const b = applied.branch_id
@@ -351,28 +368,32 @@ export default function Reports() {
       {exporting && sortedSales.length > 0 && (
         <div className="rp-pdf-mount" aria-hidden="true">
           <div className="rp-pdf-doc" ref={pdfRef}>
-            <div className="rp-pdf-header">
-              <div className="rp-pdf-brand-text">
-                <div className="rp-pdf-brand-name">عروة</div>
-                <div className="rp-pdf-brand-sub">نظام إدارة المبيعات</div>
+            <div className="rp-pdf-titleblock">
+              <h1 className="rp-pdf-title">تقرير المبيعات الشهري</h1>
+              <div className="rp-pdf-subtitle-row">
+                <span className="lbl">التقرير للفترة:</span>
+                <strong>{filterSummary.monthName} {filterSummary.yearName}</strong>
               </div>
-              <div className="rp-pdf-meta">
-                <div className="rp-pdf-meta-row"><span>الفرع:</span><strong>{filterSummary.branchName}</strong></div>
-                <div className="rp-pdf-meta-row"><span>الفترة:</span><strong>{filterSummary.monthName} {filterSummary.yearName}</strong></div>
-                <div className="rp-pdf-meta-row"><span>الحالة:</span><strong>{filterSummary.statusName}</strong></div>
-                <div className="rp-pdf-meta-row"><span>تاريخ الإصدار:</span><strong dir="ltr">{new Date().toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></div>
+              <div className="rp-pdf-subtitle-row">
+                <span className="lbl">الفروع:</span>
+                <strong>{filterSummary.branchName}</strong>
+              </div>
+              <div className="rp-pdf-subtitle-row">
+                <span className="lbl">رقم العقد:</span>
+                <strong dir="ltr">{filterSummary.leaseCodes}</strong>
+              </div>
+              <div className="rp-pdf-subtitle-row">
+                <span className="lbl">تاريخ الإصدار:</span>
+                <strong dir="ltr">{new Date().toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
               </div>
             </div>
-
-            <div className="rp-pdf-banner">تقرير تفاصيل المبيعات</div>
 
             <div className="rp-pdf-kpis">
               <div className="rp-pdf-kpi"><div className="lbl">إجمالي المبيعات</div><div className="val">{fmt(kpis.total)} ر.س</div></div>
-              <div className="rp-pdf-kpi"><div className="lbl">متوسط المبيعة</div><div className="val">{fmt(kpis.avg)} ر.س</div></div>
               <div className="rp-pdf-kpi"><div className="lbl">عدد السجلات</div><div className="val">{kpis.count.toLocaleString('ar-SA')}</div></div>
-              <div className="rp-pdf-kpi"><div className="lbl">متوسط يومي</div><div className="val">{fmt(kpis.dailyAvg)} ر.س</div></div>
             </div>
 
+            <h2 className="rp-pdf-section-title">تفاصيل المبيعات</h2>
             <table className="rp-pdf-tbl">
               <thead>
                 <tr>
@@ -400,10 +421,6 @@ export default function Reports() {
                 </tr>
               </tbody>
             </table>
-
-            <div className="rp-pdf-footer">
-              تم إنشاء هذا التقرير تلقائياً من نظام عروة — {new Date().toLocaleString('ar-SA')}
-            </div>
           </div>
         </div>
       )}

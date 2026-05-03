@@ -1,0 +1,233 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <title>تقرير المبيعات الشهري — معاينة PDF</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: #E7E5E4;
+      padding: 30px;
+      font-family: 'Tajawal', 'Noto Sans Arabic', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+    }
+    .preview-label {
+      max-width: 794px;
+      margin: 0 auto 12px;
+      font-size: 13px;
+      color: #57534E;
+      text-align: center;
+    }
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;            /* A4 portrait at 96dpi */
+      margin: 0 auto 24px;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      padding: 36px 44px;
+      box-sizing: border-box;
+      direction: rtl;
+      text-align: right;
+      color: #1C1917;
+      position: relative;
+    }
+
+    /* ── Title block ───────────────────────────────────────────── */
+    .rp-pdf-titleblock {
+      border-bottom: 3px solid #D97706;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .rp-pdf-title {
+      margin: 0 0 12px;
+      font-size: 28px;
+      font-weight: 800;
+      color: #92400E;
+      line-height: 1.1;
+    }
+    .rp-pdf-subtitle-row {
+      display: flex;
+      gap: 6px;
+      font-size: 14px;
+      line-height: 1.85;
+    }
+    .rp-pdf-subtitle-row .lbl { color: #78716C; }
+    .rp-pdf-subtitle-row strong { color: #1C1917; font-weight: 700; }
+
+    /* ── KPI strip ─────────────────────────────────────────────── */
+    .rp-pdf-kpis {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .rp-pdf-kpi {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .rp-pdf-kpi .lbl { font-size: 11px; color: #92400E; font-weight: 600; margin-bottom: 6px; }
+    .rp-pdf-kpi .val { font-size: 16px; font-weight: 800; color: #1C1917; }
+
+    /* ── Section title ─────────────────────────────────────────── */
+    .rp-pdf-section-title {
+      margin: 4px 0 12px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1C1917;
+      padding-inline-start: 10px;
+      border-inline-start: 4px solid #D97706;
+    }
+
+    /* ── Table ─────────────────────────────────────────────────── */
+    .rp-pdf-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+      direction: rtl;
+    }
+    .rp-pdf-tbl thead th {
+      background: #92400E;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 14px 10px;
+      border-bottom: 3px solid #D97706;
+      text-align: right;
+    }
+    .rp-pdf-tbl tbody td {
+      padding: 11px 10px;
+      border-bottom: 1px solid #E7E5E4;
+      vertical-align: middle;
+      font-size: 14px;
+      text-align: right;
+    }
+    .rp-pdf-tbl tbody tr:nth-child(even) td { background: rgba(217, 119, 6, 0.04); }
+    .rp-pdf-tbl .rp-pdf-total-row td {
+      font-weight: 800;
+      font-size: 15px;
+      background: #FEF3C7;
+      border-top: 2px solid #D97706;
+      border-bottom: none;
+      padding: 14px 10px;
+    }
+
+    /* ── Page footer (added by jsPDF over the rendered image) ─ */
+    .rp-pdf-footer {
+      position: absolute;
+      bottom: 24px;
+      left: 44px;
+      right: 44px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #A8A29E;
+      padding-top: 10px;
+      border-top: 1px solid #E7E5E4;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-label">معاينة PDF — Page 1 of 2</div>
+
+  <div class="pdf-page">
+    <!-- Title block -->
+    <div class="rp-pdf-titleblock">
+      <h1 class="rp-pdf-title">تقرير المبيعات الشهري</h1>
+      <div class="rp-pdf-subtitle-row"><span class="lbl">التقرير للفترة:</span><strong>أبريل 2026</strong></div>
+      <div class="rp-pdf-subtitle-row"><span class="lbl">الفروع:</span><strong>فرع الملقا (BR-002)</strong></div>
+      <div class="rp-pdf-subtitle-row"><span class="lbl">رقم العقد:</span><strong dir="ltr">CNT-2026-00041</strong></div>
+      <div class="rp-pdf-subtitle-row"><span class="lbl">تاريخ الإصدار:</span><strong dir="ltr">3 مايو 2026</strong></div>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="rp-pdf-kpis">
+      <div class="rp-pdf-kpi"><div class="lbl">إجمالي المبيعات</div><div class="val">٥٠,٠٠٠٫٠٠ ر.س</div></div>
+      <div class="rp-pdf-kpi"><div class="lbl">عدد السجلات</div><div class="val">٣٠</div></div>
+    </div>
+
+    <!-- Table -->
+    <h2 class="rp-pdf-section-title">تفاصيل المبيعات</h2>
+    <table class="rp-pdf-tbl">
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>الفرع</th>
+          <th>النوع</th>
+          <th>المبلغ</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td dir="ltr">2026-04-01</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-02</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-03</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-04</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-05</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-06</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-07</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-08</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-09</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-10</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-11</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-12</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-13</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-14</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-15</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Page footer (overlaid by jsPDF in production) -->
+    <div class="rp-pdf-footer">
+      <span dir="ltr">Generated 2026-05-03 11:49</span>
+      <span dir="ltr">Page 1 of 2</span>
+    </div>
+  </div>
+
+  <div class="preview-label">معاينة PDF — Page 2 of 2</div>
+
+  <div class="pdf-page">
+    <h2 class="rp-pdf-section-title">تفاصيل المبيعات (تكملة)</h2>
+    <table class="rp-pdf-tbl">
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>الفرع</th>
+          <th>النوع</th>
+          <th>المبلغ</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td dir="ltr">2026-04-16</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-17</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-18</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-19</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-20</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-21</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-22</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-23</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-24</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-25</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-26</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-27</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-28</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-29</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr><td dir="ltr">2026-04-30</td><td>BR-002</td><td>شهري</td><td dir="ltr">١,٦٦٦٫٦٧ ر.س</td><td>معلقة</td></tr>
+        <tr class="rp-pdf-total-row">
+          <td colspan="3">الإجمالي</td>
+          <td dir="ltr">٥٠,٠٠٠٫٠٠ ر.س</td>
+          <td>30 سجل</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="rp-pdf-footer">
+      <span dir="ltr">Generated 2026-05-03 11:49</span>
+      <span dir="ltr">Page 2 of 2</span>
+    </div>
+  </div>
+</body>
+</html>
