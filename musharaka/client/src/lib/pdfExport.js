@@ -47,17 +47,51 @@ export async function exportNodeAsPdf(node, filename = 'export.pdf') {
   const pageWidthMm  = pdf.internal.pageSize.getWidth()    // 210
   const pageHeightMm = pdf.internal.pageSize.getHeight()   // 297
 
-  // Map: page width = full image width
-  const pxPerMm    = canvas.width / pageWidthMm
-  const pageHeightPx = Math.floor(pageHeightMm * pxPerMm)
+  // Reserve a 14mm strip at the bottom of every PDF page for the footer
+  // (Page X of Y + Generated timestamp). The image tile fills only the
+  // top portion so it never collides with the footer text.
+  const FOOTER_MARGIN_MM = 14
+  const usableHeightMm = pageHeightMm - FOOTER_MARGIN_MM
+
+  // Map: page width = full image width (canvas was rendered at width 794px
+  // which corresponds to 210mm at 96dpi × scale 2)
+  const pxPerMm        = canvas.width / pageWidthMm
+  const usableHeightPx = Math.floor(usableHeightMm * pxPerMm)
+
+  /**
+   * Walk upward from `targetY` looking for a horizontal band of mostly-white
+   * pixels — that's the visual gap between two table rows. Cutting there
+   * means we never split a row of text across two pages. Returns `targetY`
+   * unchanged if no safe break is found within the search window.
+   */
+  const sourceCtx = canvas.getContext('2d')
+  function findSafeBreak(targetY, prevY) {
+    if (targetY >= canvas.height) return canvas.height
+    const minY = Math.max(prevY + 200, targetY - 240)   // don't shrink the page too aggressively
+    const sampleW = Math.min(canvas.width, 600)
+    const sampleX = Math.floor((canvas.width - sampleW) / 2)
+    for (let y = targetY; y >= minY; y--) {
+      const data = sourceCtx.getImageData(sampleX, y, sampleW, 1).data
+      let whiteish = 0
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i] > 235 && data[i + 1] > 230 && data[i + 2] > 220) whiteish++
+      }
+      // 96% of sampled pixels look like background → safe to cut here
+      if (whiteish / sampleW >= 0.96) return y
+    }
+    return targetY
+  }
 
   // Slice the source canvas vertically and add one tile per PDF page.
-  // Each tile is an independent JPEG, so the final PDF only contains the
-  // pixels actually used per page (no duplicated image bytes).
   let yPx = 0
   let pageIdx = 0
   while (yPx < canvas.height) {
-    const sliceHeightPx = Math.min(pageHeightPx, canvas.height - yPx)
+    const naiveEnd = yPx + usableHeightPx
+    const endPx = naiveEnd >= canvas.height
+      ? canvas.height
+      : findSafeBreak(naiveEnd, yPx)
+    const sliceHeightPx = endPx - yPx
+    if (sliceHeightPx <= 0) break
 
     const tile = document.createElement('canvas')
     tile.width  = canvas.width
@@ -73,21 +107,23 @@ export async function exportNodeAsPdf(node, filename = 'export.pdf') {
     if (pageIdx > 0) pdf.addPage()
     pdf.addImage(tileData, 'JPEG', 0, 0, pageWidthMm, sliceHeightMm)
 
-    yPx += sliceHeightPx
+    yPx = endPx
     pageIdx += 1
   }
 
-  // Page X of Y overlay — drawn natively by jsPDF (Latin chars, so no font
-  // embedding required). Also a generation timestamp on the opposite side.
+  // Page X of Y overlay — drawn natively by jsPDF in Latin chars (no font
+  // embedding needed). Sits in the reserved 14mm bottom strip so it never
+  // overlays content. Generation timestamp on the opposite side.
   const totalPages = pdf.internal.getNumberOfPages()
   const ts = new Date().toISOString().slice(0, 16).replace('T', ' ')
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(9)
   pdf.setTextColor(140, 140, 140)
+  const footerY = pageHeightMm - 6
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i)
-    pdf.text(`Page ${i} of ${totalPages}`, pageWidthMm - 12, pageHeightMm - 8, { align: 'right' })
-    pdf.text(`Generated ${ts}`, 12, pageHeightMm - 8, { align: 'left' })
+    pdf.text(`Page ${i} of ${totalPages}`, pageWidthMm - 12, footerY, { align: 'right' })
+    pdf.text(`Generated ${ts}`, 12, footerY, { align: 'left' })
   }
 
   pdf.save(filename)
