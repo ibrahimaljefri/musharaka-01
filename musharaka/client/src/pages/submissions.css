@@ -330,13 +330,13 @@
 .sm-pdf-tbl thead th {
   background: #92400E;            /* dark gold ↔ white text — max contrast */
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 18px;
   padding: 16px 12px;
   border-bottom: 3px solid #D97706;
   text-align: right;              /* explicit RTL — html2canvas-safe */
-  letter-spacing: 0.2px;
-  white-space: nowrap;
+  /* Do NOT set letter-spacing or white-space:nowrap on Arabic headers —
+     both break glyph ligatures in html2canvas captures. */
 }
 .sm-pdf-tbl tbody td {
   padding: 13px 12px;

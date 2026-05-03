@@ -103,9 +103,14 @@ function SubmissionCard({ sub }) {
   // PDF export — html2canvas + jsPDF, lazy loaded
   const handleExportPdf = async (e) => {
     e.stopPropagation()
-    if (!printRef.current) return
     setExporting(true)
     try {
+      // Wait two animation frames so React has mounted the off-screen
+      // wrapper (which only renders when exporting === true) and the
+      // browser has had a chance to lay it out before we capture.
+      await new Promise(r => requestAnimationFrame(r))
+      await new Promise(r => requestAnimationFrame(r))
+      if (!printRef.current) throw new Error('PDF wrapper not mounted')
       const fname = `submission-${sub.branches?.code || 'branch'}-${sub.month}-${sub.year}.pdf`
       await exportNodeAsPdf(printRef.current, fname)
     } catch (err) {
@@ -203,12 +208,9 @@ function SubmissionCard({ sub }) {
                 <div className="sm-pdf-mount" aria-hidden="true">
                   <div className="sm-pdf-doc" ref={printRef}>
                     <div className="sm-pdf-header">
-                      <div className="sm-pdf-brand">
-                        <div className="sm-pdf-logo-wrap">عروة</div>
-                        <div className="sm-pdf-brand-text">
-                          <div className="sm-pdf-brand-name">عروة</div>
-                          <div className="sm-pdf-brand-sub">نظام إدارة المبيعات</div>
-                        </div>
+                      <div className="sm-pdf-brand-text">
+                        <div className="sm-pdf-brand-name">عروة</div>
+                        <div className="sm-pdf-brand-sub">نظام إدارة المبيعات</div>
                       </div>
                       <div className="sm-pdf-meta">
                         <div className="sm-pdf-meta-row">
@@ -240,7 +242,7 @@ function SubmissionCard({ sub }) {
                       <tbody>
                         {sortedSales.map(s => (
                           <tr key={s.id}>
-                            <td dir="ltr">{s.sale_date}</td>
+                            <td dir="ltr">{(s.sale_date || '').slice(0, 10)}</td>
                             <td>{s.invoice_number || '—'}</td>
                             <td dir="ltr">{fmt(s.amount)}</td>
                             <td>{s.notes || '—'}</td>

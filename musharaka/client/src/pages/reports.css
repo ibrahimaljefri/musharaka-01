@@ -311,13 +311,13 @@
 .rp-pdf-tbl thead th {
   background: #92400E;            /* dark gold ↔ white text — max contrast */
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 16px;
   padding: 14px 10px;
   border-bottom: 3px solid #D97706;
   text-align: right;              /* explicit RTL — html2canvas-safe */
-  letter-spacing: 0.2px;
-  white-space: nowrap;
+  /* NOTE: do NOT set letter-spacing or white-space:nowrap on Arabic
+     headers — both break glyph ligatures in html2canvas captures. */
 }
 .rp-pdf-tbl tbody td {
   padding: 11px 10px;

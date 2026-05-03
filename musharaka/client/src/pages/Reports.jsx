@@ -195,7 +195,9 @@ export default function Reports() {
     if (sortedSales.length === 0) return
     setExporting(true)
     try {
-      // Wait one tick so the off-screen wrapper mounts before capture
+      // Two rAF ticks so React has mounted the off-screen wrapper AND the
+      // browser has laid it out before we capture.
+      await new Promise(r => requestAnimationFrame(r))
       await new Promise(r => requestAnimationFrame(r))
       if (!pdfRef.current) throw new Error('pdf wrapper not mounted')
       await exportNodeAsPdf(pdfRef.current, `${fileBase}.pdf`)
@@ -350,12 +352,9 @@ export default function Reports() {
         <div className="rp-pdf-mount" aria-hidden="true">
           <div className="rp-pdf-doc" ref={pdfRef}>
             <div className="rp-pdf-header">
-              <div className="rp-pdf-brand">
-                <div className="rp-pdf-logo-wrap">عروة</div>
-                <div className="rp-pdf-brand-text">
-                  <div className="rp-pdf-brand-name">عروة</div>
-                  <div className="rp-pdf-brand-sub">نظام إدارة المبيعات</div>
-                </div>
+              <div className="rp-pdf-brand-text">
+                <div className="rp-pdf-brand-name">عروة</div>
+                <div className="rp-pdf-brand-sub">نظام إدارة المبيعات</div>
               </div>
               <div className="rp-pdf-meta">
                 <div className="rp-pdf-meta-row"><span>الفرع:</span><strong>{filterSummary.branchName}</strong></div>
@@ -380,25 +379,23 @@ export default function Reports() {
                   <th>التاريخ</th>
                   <th>الفرع</th>
                   <th>النوع</th>
-                  <th>رقم الفاتورة</th>
-                  <th>المبلغ (ر.س)</th>
+                  <th>المبلغ</th>
                   <th>الحالة</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedSales.map(s => (
                   <tr key={s.id}>
-                    <td dir="ltr">{s.sale_date}</td>
+                    <td dir="ltr">{(s.sale_date || '').slice(0, 10)}</td>
                     <td>{s.branches?.code || '—'}</td>
                     <td>{s.input_type === 'daily' ? 'يومي' : s.input_type === 'monthly' ? 'شهري' : 'مخصص'}</td>
-                    <td>{s.invoice_number || '—'}</td>
-                    <td dir="ltr">{fmt(s.amount)}</td>
+                    <td dir="ltr">{fmt(s.amount)} ر.س</td>
                     <td>{s.status === 'sent' ? 'مرسلة' : 'معلقة'}</td>
                   </tr>
                 ))}
                 <tr className="rp-pdf-total-row">
-                  <td colSpan={4}>الإجمالي</td>
-                  <td dir="ltr">{fmt(kpis.total)}</td>
+                  <td colSpan={3}>الإجمالي</td>
+                  <td dir="ltr">{fmt(kpis.total)} ر.س</td>
                   <td>{kpis.count} سجل</td>
                 </tr>
               </tbody>
