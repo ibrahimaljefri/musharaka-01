@@ -298,3 +298,15 @@
   background: var(--bg-subtle, rgba(0,0,0,0.02));
   padding: 12px 16px;
 }
+
+
+/* Tighten the trailing تفاصيل column so it doesn't leave a wide gap */
+.cen-page .adm-tbl .cen-th-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+.cen-page .adm-tbl tbody td:last-child {
+  text-align: center;
+  white-space: nowrap;
+}

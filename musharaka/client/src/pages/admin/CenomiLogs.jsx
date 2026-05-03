@@ -221,7 +221,7 @@ export default function CenomiLogs() {
                       />
                     ))}
                   </DraggableHeaderRow>
-                  <th style={{ width: 110 }}>تفاصيل</th>
+                  <th className="cen-th-actions">تفاصيل</th>
                 </tr>
               </thead>
               <tbody>
