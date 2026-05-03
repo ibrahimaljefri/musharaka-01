@@ -333,7 +333,7 @@ export default function Tenants() {
                       />
                     ))}
                   </DraggableHeaderRow>
-                  <th>إجراءات</th>
+                  <th className="adm-th-actions">إجراءات</th>
                 </tr>
               </thead>
               <tbody>

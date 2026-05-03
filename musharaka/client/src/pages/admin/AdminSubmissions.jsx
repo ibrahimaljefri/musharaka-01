@@ -212,7 +212,7 @@ export default function AdminSubmissions() {
                     />
                   ))}
                 </DraggableHeaderRow>
-                <th style={{ width: 120 }}>إجراءات</th>
+                <th className="adm-th-actions">إجراءات</th>
               </tr>
             </thead>
             <tbody>

@@ -190,7 +190,7 @@ export default function Branches() {
                       />
                     ))}
                   </DraggableHeaderRow>
-                  <th>الإجراءات</th>
+                  <th className="adm-th-actions">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
