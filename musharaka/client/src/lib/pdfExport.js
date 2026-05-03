@@ -59,25 +59,49 @@ export async function exportNodeAsPdf(node, filename = 'export.pdf') {
   const usableHeightPx = Math.floor(usableHeightMm * pxPerMm)
 
   /**
-   * Walk upward from `targetY` looking for a horizontal band of mostly-white
-   * pixels — that's the visual gap between two table rows. Cutting there
-   * means we never split a row of text across two pages. Returns `targetY`
-   * unchanged if no safe break is found within the search window.
+   * Walk upward from `targetY` looking for a horizontal band of NEARLY
+   * UNIFORM pixels. A row with text shows high variance (text vs. bg);
+   * a row that is all whitespace, all border, or all alternating-row tint
+   * shows very low variance. We cut at any low-variance row — that's
+   * either a table border, an empty gap, or a bg-only line — never inside
+   * a row of text. Falls back to `targetY` if nothing safe is found.
    */
   const sourceCtx = canvas.getContext('2d')
   function findSafeBreak(targetY, prevY) {
     if (targetY >= canvas.height) return canvas.height
-    const minY = Math.max(prevY + 200, targetY - 240)   // don't shrink the page too aggressively
+    // Allow searching back up to half a page; require at least 200px of
+    // forward progress so we never produce vanishingly small pages.
+    const minY = Math.max(prevY + 200, targetY - Math.floor(usableHeightPx / 2))
     const sampleW = Math.min(canvas.width, 600)
     const sampleX = Math.floor((canvas.width - sampleW) / 2)
-    for (let y = targetY; y >= minY; y--) {
-      const data = sourceCtx.getImageData(sampleX, y, sampleW, 1).data
-      let whiteish = 0
-      for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 235 && data[i + 1] > 230 && data[i + 2] > 220) whiteish++
+
+    // Pull the whole strip in one go — much faster than 1 row per loop tick
+    const stripHeight = Math.max(1, targetY - minY)
+    if (stripHeight < 1) return targetY
+    const stripY = Math.max(0, targetY - stripHeight)
+    const strip = sourceCtx.getImageData(sampleX, stripY, sampleW, stripHeight).data
+    const rowBytes = sampleW * 4
+
+    // Iterate rows from bottom (= targetY) upward
+    for (let row = stripHeight - 1; row >= 0; row--) {
+      const off = row * rowBytes
+      // Compute mean absolute deviation across R/G/B in this row
+      let sumR = 0, sumG = 0, sumB = 0
+      for (let i = 0; i < rowBytes; i += 4) {
+        sumR += strip[off + i]
+        sumG += strip[off + i + 1]
+        sumB += strip[off + i + 2]
       }
-      // 96% of sampled pixels look like background → safe to cut here
-      if (whiteish / sampleW >= 0.96) return y
+      const avgR = sumR / sampleW, avgG = sumG / sampleW, avgB = sumB / sampleW
+      let dev = 0
+      for (let i = 0; i < rowBytes; i += 4) {
+        dev += Math.abs(strip[off + i]     - avgR)
+        dev += Math.abs(strip[off + i + 1] - avgG)
+        dev += Math.abs(strip[off + i + 2] - avgB)
+      }
+      const meanDev = dev / (3 * sampleW)
+      // Low variance = uniform pixel row = safe to cut
+      if (meanDev < 4) return stripY + row
     }
     return targetY
   }
