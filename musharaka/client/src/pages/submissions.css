@@ -269,12 +269,15 @@
 }
 
 .sm-pdf-doc {
-  font-family: 'Tajawal', sans-serif;
+  /* Arabic-first stack with system fallbacks — keeps headers readable
+     even if Tajawal is mid-load when html2canvas captures. */
+  font-family: 'Tajawal', 'Noto Sans Arabic', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
   color: #1C1917;
   background: #ffffff;
   padding: 36px 44px;
   width: 794px;          /* A4 portrait at 96dpi */
   direction: rtl;
+  text-align: right;
   box-sizing: border-box;
 }
 
@@ -322,22 +325,25 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 16px;
+  direction: rtl;
 }
 .sm-pdf-tbl thead th {
-  background: #FFF7ED;
-  color: #92400E;
-  font-weight: 700;
-  font-size: 17px;
-  padding: 14px 12px;
-  border-bottom: 2px solid #D97706;
-  text-align: start;
-  letter-spacing: 0.3px;
+  background: #92400E;            /* dark gold ↔ white text — max contrast */
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 18px;
+  padding: 16px 12px;
+  border-bottom: 3px solid #D97706;
+  text-align: right;              /* explicit RTL — html2canvas-safe */
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
 .sm-pdf-tbl tbody td {
   padding: 13px 12px;
   border-bottom: 1px solid #E7E5E4;
   vertical-align: middle;
-  font-size: 15px;
+  font-size: 16px;
+  text-align: right;
 }
 .sm-pdf-tbl tbody tr:nth-child(even) td {
   background: rgba(217, 119, 6, 0.04);
