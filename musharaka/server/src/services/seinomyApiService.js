@@ -50,7 +50,7 @@ function buildFriendlyCenomiError(status, body) {
   }
   if (lower.includes('record already exists') || lower.includes('already exists') ||
       lower.includes('duplicate')) {
-    return 'سبق إرسال هذه الفترة إلى المركز التجاري. الحل المقترح: لا حاجة لإعادة الإرسال — راجع تقرير الإرسالات للتأكد من السجل السابق.'
+    return 'سبق إرسال هذه الفترة. الحل المقترح: لا حاجة لإعادة الإرسال او قم برفع تذكرة سوف يتواصل معك فريق الدعم'
   }
   if (status === 401 || lower.includes('unauthorized') || lower.includes('invalid token') || lower.includes('invalid api key')) {
     return 'فشل التحقق. الحل المقترح: تواصل مع الإدارة للتحقق من توكن واجهة API الخاص بحسابك.'
