@@ -44,37 +44,41 @@ function buildFriendlyCenomiError(status, body) {
   const lower = raw.toLowerCase()
 
   // Known patterns → actionable Arabic guidance with proposed fix
-  if (lower.includes('lease not found') || lower.includes('contract not found')) {
-    return 'رقم العقد غير مسجل لدى المركز التجاري. الحل المقترح: تأكد من صحة رقم العقد المحفوظ على بيانات الفرع وقم بتعديله إن لزم.'
-  }
-  if (lower.includes('invalid lease') || lower.includes('invalid contract')) {
-    return 'رقم العقد غير صالح. الحل المقترح: راجع رقم العقد على بيانات الفرع وتأكد من تطابقه مع ما زوّدك به المركز التجاري.'
+  if (lower.includes('lease not found') || lower.includes('contract not found') ||
+      lower.includes('invalid lease')   || lower.includes('invalid contract')) {
+    return 'رقم العقد غير مسجل صحيح. الحل المقترح: تأكد من صحة رقم العقد.'
   }
   if (status === 401 || lower.includes('unauthorized') || lower.includes('invalid token') || lower.includes('invalid api key')) {
-    return 'فشل التحقق من توكن المركز التجاري. الحل المقترح: تواصل مع الإدارة للتحقق من توكن واجهة API الخاص بحسابك.'
+    return 'فشل التحقق. الحل المقترح: تواصل مع الإدارة للتحقق من توكن واجهة API الخاص بحسابك.'
   }
   if (status === 403 || lower.includes('forbidden')) {
     return 'لا تملك صلاحية الإرسال لهذه الفترة أو الفرع. الحل المقترح: تواصل مع المركز التجاري للتأكد من صلاحيات حسابك.'
   }
   if (status === 404) {
-    return 'لم يتم العثور على المسار المطلوب لدى المركز التجاري. الحل المقترح: تواصل مع الإدارة للتحقق من رابط API.'
+    return 'لم يتم العثور على المسار المطلوب. الحل المقترح: تواصل مع الإدارة للتحقق من رابط API.'
   }
   if (status === 422 || lower.includes('validation')) {
-    return `بيانات غير صحيحة: ${raw || 'تحقق من المبالغ والتواريخ ثم أعد المحاولة.'}`
+    // Translate well-known validation messages; otherwise echo the raw text
+    if (lower.includes('amount') && (lower.includes('positive') || lower.includes('greater'))) {
+      return 'بيانات غير صحيحة: لابد من ايكون المبلغ موجبا'
+    }
+    if (lower.includes('amount') && lower.includes('negative')) {
+      return 'بيانات غير صحيحة: لابد من ايكون المبلغ موجبا'
+    }
+    return raw
+      ? `بيانات غير صحيحة: ${raw}`
+      : 'بيانات غير صحيحة. الحل المقترح: راجع المبالغ والتواريخ ثم أعد المحاولة.'
   }
   if (status >= 500) {
-    return 'خلل مؤقت في خادم المركز التجاري. الحل المقترح: حاول الإرسال مجدداً بعد بضع دقائق.'
+    return 'خلل مؤقت في الخادم. الحل المقترح: حاول الإرسال مجدداً بعد بضع دقائق.'
   }
   if (status === 400) {
-    // 400 with no recognized substring — surface the raw message + generic hint
-    return raw
-      ? `رفض المركز التجاري الإرسال: ${raw}. الحل المقترح: راجع بيانات الفرع (رقم العقد) والمبالغ ثم أعد المحاولة.`
-      : 'رفض المركز التجاري الإرسال (HTTP 400). الحل المقترح: راجع رقم العقد للفرع والمبالغ المُرسَلة.'
+    return 'رفض الإرسال: الحل المقترح: راجع بيانات الفرع (رقم العقد) والمبالغ ثم أعد المحاولة.'
   }
   // Fallback — show what Cenomi said + generic hint
   return raw
-    ? `فشل الإرسال إلى المركز التجاري: ${raw}`
-    : `فشل الإرسال إلى المركز التجاري (HTTP ${status}).`
+    ? `فشل الإرسال: ${raw}`
+    : `فشل الإرسال (HTTP ${status}).`
 }
 
 /**
@@ -247,8 +251,8 @@ async function submit({ branchId, tenantId, periodStart, periodEnd, mode }) {
       // Network / timeout / DNS failure — never reached the Cenomi server.
       const isTimeout = err.code === 'ECONNABORTED' || /timeout/i.test(err.message || '')
       const friendly = isTimeout
-        ? 'انتهت مهلة الاتصال بالمركز التجاري. الحل المقترح: تحقق من اتصال الإنترنت ثم أعد المحاولة.'
-        : 'تعذّر الاتصال بخادم المركز التجاري. الحل المقترح: تأكد من صحة رابط API ثم أعد المحاولة.'
+        ? 'انتهت مهلة الاتصال بالخادم. الحل المقترح: تحقق من اتصال الإنترنت ثم أعد المحاولة.'
+        : 'تعذّر الاتصال بالخادم. الحل المقترح: تأكد من صحة رابط API ثم أعد المحاولة.'
       errorMessage = `${friendly} (${err.message || 'unknown'})`
       await writeAuditLog({
         tenantId, branchId, submissionId: null,
