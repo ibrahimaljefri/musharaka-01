@@ -1,0 +1,314 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <title>آخر المبيعات — empty band fix preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #F5F5F4;
+      --surface:      #FFFFFF;
+      --bg-subtle:    #F5F5F4;
+      --border:       #E7E5E4;
+      --border-strong:#D6D3D1;
+      --text:         #1C1917;
+      --text-sec:     #57534E;
+      --text-muted:   #78716C;
+      --brand:        #D97706;
+      --brand-50:     #FFFBEB;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 30px 20px;
+    }
+    .lbl {
+      max-width: 1100px;
+      margin: 0 auto 10px;
+      font-size: 13px;
+      color: var(--text-sec);
+      font-weight: 700;
+    }
+    .lbl small { font-weight: 400; color: var(--text-muted); }
+    .card {
+      max-width: 1100px;
+      margin: 0 auto 30px;
+      background: var(--surface);
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    /* ── Current production styles (mirrored) ─────────────────────── */
+    .srl-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .srl-title { font-size: 1rem; font-weight: 700; }
+    .srl-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .srl-refresh-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); padding: 4px;
+    }
+    .srl-filters {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+    .srl-filter-label { font-size: 0.75rem; color: var(--text-sec); }
+    .srl-select {
+      padding: 5px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      font: 400 0.8rem 'Tajawal', sans-serif;
+      background: var(--surface);
+    }
+    .srl-clear-btn {
+      background: none; border: none;
+      font-size: 0.72rem; color: var(--text-muted);
+      cursor: pointer; padding: 4px 6px; border-radius: 4px;
+    }
+
+    .srl-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 0.82rem;
+    }
+    .srl-table thead th {
+      background: var(--bg-subtle);
+      color: var(--text-sec);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: start;
+    }
+    .srl-table tbody td {
+      padding: 9px 14px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+    }
+    .srl-th-check, .srl-td-check { width: 36px; text-align: center; padding: 9px 6px; }
+    .srl-checkbox { accent-color: var(--brand); }
+
+    /* Existing fix from earlier deploy */
+    th.srl-th-actions, td.srl-td-actions {
+      width: 1% !important;
+      white-space: nowrap !important;
+      text-align: center !important;
+      padding-inline-start: 12px !important;
+      padding-inline-end: 12px !important;
+    }
+
+    /* Branch badge / pills */
+    .branch-badge {
+      display: inline-flex; padding: 2px 8px;
+      background: var(--brand-50); color: #92400E;
+      font-weight: 700; font-size: 0.72rem;
+      border-radius: 4px; letter-spacing: 0.5px;
+    }
+    .pill {
+      display: inline-flex; padding: 3px 10px;
+      font-size: 0.72rem; border-radius: 99px; font-weight: 600;
+    }
+    .pill-pending { background: rgba(245,158,11,0.12); color: #B45309; }
+    .pill-sent    { background: rgba(21,128,61,0.12); color: #15803D; }
+    .delete-btn {
+      width: 26px; height: 26px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface); cursor: pointer;
+      color: #B91C1C;
+    }
+    .protected-pill {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 0.7rem; color: var(--text-muted);
+    }
+
+    /* Visual marker showing the empty band */
+    .gap-marker {
+      outline: 2px dashed #DC2626;
+      background: rgba(220, 38, 38, 0.08);
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       PROPOSED FIX (preview only — applied to .after table)
+       ════════════════════════════════════════════════════════════════
+       Goal: collapse the trailing actions column visually so there's
+       no empty band beside الحالة. Header cell stays in DOM (for the
+       column-count alignment) but is rendered with zero padding and
+       merges into the cell to its inline-end (الحالة).            */
+    .after .srl-table thead th.srl-th-actions {
+      width: 1px !important;       /* hard-collapse */
+      padding: 0 !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    /* Body cell still needs room for the delete button */
+    .after .srl-table tbody td.srl-td-actions {
+      width: 1% !important;
+      white-space: nowrap !important;
+      text-align: center !important;
+      padding-inline-start: 6px !important;
+      padding-inline-end: 12px !important;
+    }
+    /* Pull the visible last header (الحالة) right up to the table
+       edge by removing its trailing padding only. */
+    .after .srl-table thead th.is-last-data {
+      padding-inline-start: 4px !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lbl">قبل <small>(الوضع الحالي — يظهر شريط فارغ بين "الحالة ↕" وحدّ الجدول)</small></div>
+  <div class="card before">
+    <div class="srl-header">
+      <div>
+        <div class="srl-title">آخر المبيعات</div>
+        <div class="srl-subtitle">إجمالي فبراير: 100,150.00 ر.س — 3 سجل</div>
+      </div>
+      <button class="srl-refresh-btn">↻</button>
+    </div>
+    <div class="srl-filters">
+      <span class="srl-filter-label">الفرع:</span>
+      <select class="srl-select"><option>جميع الفروع</option></select>
+      <span class="srl-filter-label">السنة:</span>
+      <select class="srl-select"><option>2026</option></select>
+      <span class="srl-filter-label">الشهر:</span>
+      <select class="srl-select"><option>فبراير</option></select>
+      <button class="srl-clear-btn">✕ مسح الكل</button>
+    </div>
+    <table class="srl-table">
+      <thead>
+        <tr>
+          <th class="srl-th-check"><input type="checkbox" class="srl-checkbox" /></th>
+          <th>الفرع <span style="opacity:.4">↕</span></th>
+          <th>رقم الفاتورة <span style="opacity:.4">↕</span></th>
+          <th>المبلغ <span style="opacity:.4">↕</span></th>
+          <th>التاريخ <span style="opacity:1; color:var(--brand)">▼</span></th>
+          <th>الحالة <span style="opacity:.4">↕</span></th>
+          <th class="gap-marker"></th>   <!-- ← THE EMPTY BAND -->
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="srl-td-check"><input type="checkbox" class="srl-checkbox" /></td>
+          <td><span class="branch-badge">BR-002</span></td>
+          <td>—</td>
+          <td dir="ltr">75.00 ر.س</td>
+          <td>3 فبراير 2026</td>
+          <td><span class="pill pill-pending">معلّق</span></td>
+          <td><button class="delete-btn">🗑</button></td>
+        </tr>
+        <tr>
+          <td class="srl-td-check"><input type="checkbox" class="srl-checkbox" /></td>
+          <td><span class="branch-badge">BR-002</span></td>
+          <td>—</td>
+          <td dir="ltr">75.00 ر.س</td>
+          <td>2 فبراير 2026</td>
+          <td><span class="pill pill-pending">معلّق</span></td>
+          <td><button class="delete-btn">🗑</button></td>
+        </tr>
+        <tr>
+          <td class="srl-td-check"></td>
+          <td><span class="branch-badge">BR-002</span></td>
+          <td>—</td>
+          <td dir="ltr">100,000.00 ر.س</td>
+          <td>1 فبراير 2026</td>
+          <td><span class="pill pill-sent">مُرسل</span></td>
+          <td><span class="protected-pill">🔒 محمية</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="lbl">بعد <small>(نفس التصميم — تم إزالة الشريط الفارغ بجانب "الحالة ↕")</small></div>
+  <div class="card after">
+    <div class="srl-header">
+      <div>
+        <div class="srl-title">آخر المبيعات</div>
+        <div class="srl-subtitle">إجمالي فبراير: 100,150.00 ر.س — 3 سجل</div>
+      </div>
+      <button class="srl-refresh-btn">↻</button>
+    </div>
+    <div class="srl-filters">
+      <span class="srl-filter-label">الفرع:</span>
+      <select class="srl-select"><option>جميع الفروع</option></select>
+      <span class="srl-filter-label">السنة:</span>
+      <select class="srl-select"><option>2026</option></select>
+      <span class="srl-filter-label">الشهر:</span>
+      <select class="srl-select"><option>فبراير</option></select>
+      <button class="srl-clear-btn">✕ مسح الكل</button>
+    </div>
+    <table class="srl-table">
+      <thead>
+        <tr>
+          <th class="srl-th-check"><input type="checkbox" class="srl-checkbox" /></th>
+          <th>الفرع <span style="opacity:.4">↕</span></th>
+          <th>رقم الفاتورة <span style="opacity:.4">↕</span></th>
+          <th>المبلغ <span style="opacity:.4">↕</span></th>
+          <th>التاريخ <span style="opacity:1; color:var(--brand)">▼</span></th>
+          <th class="is-last-data">الحالة <span style="opacity:.4">↕</span></th>
+          <th class="srl-th-actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="srl-td-check"><input type="checkbox" class="srl-checkbox" /></td>
+          <td><span class="branch-badge">BR-002</span></td>
+          <td>—</td>
+          <td dir="ltr">75.00 ر.س</td>
+          <td>3 فبراير 2026</td>
+          <td><span class="pill pill-pending">معلّق</span></td>
+          <td class="srl-td-actions"><button class="delete-btn">🗑</button></td>
+        </tr>
+        <tr>
+          <td class="srl-td-check"><input type="checkbox" class="srl-checkbox" /></td>
+          <td><span class="branch-badge">BR-002</span></td>
+          <td>—</td>
+          <td dir="ltr">75.00 ر.س</td>
+          <td>2 فبراير 2026</td>
+          <td><span class="pill pill-pending">معلّق</span></td>
+          <td class="srl-td-actions"><button class="delete-btn">🗑</button></td>
+        </tr>
+        <tr>
+          <td class="srl-td-check"></td>
+          <td><span class="branch-badge">BR-002</span></td>
+          <td>—</td>
+          <td dir="ltr">100,000.00 ر.س</td>
+          <td>1 فبراير 2026</td>
+          <td><span class="pill pill-sent">مُرسل</span></td>
+          <td class="srl-td-actions"><span class="protected-pill">🔒</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="lbl" style="line-height:1.85; color: var(--text); font-weight: 400;">
+    <strong>التغييرات (CSS فقط، لا JSX):</strong><br>
+    • زيادة قوة قاعدة <code>th.srl-th-actions</code> الموجودة:
+    تصبح <code>width: 1px</code> + <code>padding: 0</code> فيختفي
+    الشريط الفارغ من الرأس.<br>
+    • <code>td.srl-td-actions</code> يبقى عرضه auto لاستيعاب زر الحذف
+    + padding-inline-start مُخفّف من 12px إلى 6px ليلتصق برأس "الحالة".<br>
+    • باقي التصميم (الترويسة، الفلاتر، الترتيب، أيقونات السحب، حالة الترتيب
+    النشط) يبقى كما هو تماماً.<br>
+    <br>
+    <strong>الملف الذي سيُعدَّل:</strong><br>
+    <code>client/src/pages/sale-create.css</code> — تعديل قاعدة
+    <code>th.srl-th-actions</code> الحالية + إضافة قاعدة لطيفة
+    <code>td.srl-td-actions</code>.<br>
+    <strong>JSX:</strong> لا تعديلات — الفئتان <code>srl-th-actions</code>
+    و<code>srl-td-actions</code> موجودتان أصلاً منذ آخر تحديث.
+  </div>
+
+</body>
+</html>

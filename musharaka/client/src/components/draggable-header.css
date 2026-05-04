@@ -98,3 +98,15 @@ td.srl-td-actions {
   padding-inline-start: 12px !important;
   padding-inline-end: 12px !important;
 }
+
+/* SaleRecentList — collapse the trailing actions HEADER to a hairline so
+   no empty band sits next to "الحالة". The body cells stay at content
+   width to host the delete button or "محمية" lock chip. */
+th.srl-th-actions {
+  width: 1px !important;
+  padding: 0 !important;
+}
+td.srl-td-actions {
+  padding-inline-start: 6px !important;
+  padding-inline-end: 12px !important;
+}
