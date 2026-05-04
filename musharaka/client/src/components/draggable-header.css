@@ -111,10 +111,23 @@ th.srl-th-actions {
   padding: 0 !important;
   background: var(--bg-subtle, #F5F5F4) !important;
 }
-.srl-table thead tr {
-  background: var(--bg-subtle, #F5F5F4) !important;
-}
 td.srl-td-actions {
   padding-inline-start: 6px !important;
   padding-inline-end: 12px !important;
+}
+
+/* ── Unified header-row background — applies to every list table ────
+ * Painting the <tr> guarantees no white wrapper background can ever
+ * leak through between a squished header cell and the body column,
+ * regardless of how draggable column code sizes individual <th>s.
+ * Each table keeps its own bg variable so the row blends seamlessly
+ * with that page's existing header-cell color. */
+.srl-table thead tr {
+  background: var(--bg-subtle, #F5F5F4) !important;
+}
+.adm-tbl thead tr,
+.br-tbl thead tr,
+.rp-tbl thead tr,
+.sm-tbl thead tr {
+  background: var(--bg-alt, #FAFAF9) !important;
 }
