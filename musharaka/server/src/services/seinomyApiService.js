@@ -22,6 +22,62 @@ const { decrypt } = require('../utils/crypto')
 const REDACTED = '***'
 
 /**
+ * Translate a Cenomi error response into a friendly Arabic message that
+ * tells the tenant what to fix. Cenomi returns either:
+ *   { errors: [{ code, message }], success: false }
+ * or, less often, { message } / { error } / a plain string.
+ *
+ * Returns the Arabic string to display in the toast / banner.
+ */
+function buildFriendlyCenomiError(status, body) {
+  // Walk the response shape to find the raw English message Cenomi sent
+  let raw = ''
+  if (typeof body === 'string') {
+    raw = body
+  } else if (body && typeof body === 'object') {
+    if (Array.isArray(body.errors) && body.errors[0]) {
+      raw = body.errors[0].message || body.errors[0].error || ''
+    }
+    if (!raw) raw = body.message || body.error || ''
+  }
+  raw = String(raw || '').trim()
+  const lower = raw.toLowerCase()
+
+  // Known patterns → actionable Arabic guidance with proposed fix
+  if (lower.includes('lease not found') || lower.includes('contract not found')) {
+    return 'رقم العقد غير مسجل لدى المركز التجاري. الحل المقترح: تأكد من صحة رقم العقد المحفوظ على بيانات الفرع وقم بتعديله إن لزم.'
+  }
+  if (lower.includes('invalid lease') || lower.includes('invalid contract')) {
+    return 'رقم العقد غير صالح. الحل المقترح: راجع رقم العقد على بيانات الفرع وتأكد من تطابقه مع ما زوّدك به المركز التجاري.'
+  }
+  if (status === 401 || lower.includes('unauthorized') || lower.includes('invalid token') || lower.includes('invalid api key')) {
+    return 'فشل التحقق من توكن المركز التجاري. الحل المقترح: تواصل مع الإدارة للتحقق من توكن واجهة API الخاص بحسابك.'
+  }
+  if (status === 403 || lower.includes('forbidden')) {
+    return 'لا تملك صلاحية الإرسال لهذه الفترة أو الفرع. الحل المقترح: تواصل مع المركز التجاري للتأكد من صلاحيات حسابك.'
+  }
+  if (status === 404) {
+    return 'لم يتم العثور على المسار المطلوب لدى المركز التجاري. الحل المقترح: تواصل مع الإدارة للتحقق من رابط API.'
+  }
+  if (status === 422 || lower.includes('validation')) {
+    return `بيانات غير صحيحة: ${raw || 'تحقق من المبالغ والتواريخ ثم أعد المحاولة.'}`
+  }
+  if (status >= 500) {
+    return 'خلل مؤقت في خادم المركز التجاري. الحل المقترح: حاول الإرسال مجدداً بعد بضع دقائق.'
+  }
+  if (status === 400) {
+    // 400 with no recognized substring — surface the raw message + generic hint
+    return raw
+      ? `رفض المركز التجاري الإرسال: ${raw}. الحل المقترح: راجع بيانات الفرع (رقم العقد) والمبالغ ثم أعد المحاولة.`
+      : 'رفض المركز التجاري الإرسال (HTTP 400). الحل المقترح: راجع رقم العقد للفرع والمبالغ المُرسَلة.'
+  }
+  // Fallback — show what Cenomi said + generic hint
+  return raw
+    ? `فشل الإرسال إلى المركز التجاري: ${raw}`
+    : `فشل الإرسال إلى المركز التجاري (HTTP ${status}).`
+}
+
+/**
  * Build the Cenomi request body. In daily mode each sale-day with non-zero
  * sales becomes its own row. In monthly mode it's one aggregated row.
  */
@@ -163,25 +219,30 @@ async function submit({ branchId, tenantId, periodStart, periodEnd, mode }) {
       cenomiStatus = resp.status
       cenomiBody   = resp.data
       if (resp.status < 200 || resp.status >= 300) {
-        const msg = resp.data?.message || `HTTP ${resp.status}`
-        errorMessage = msg
+        const friendly = buildFriendlyCenomiError(resp.status, resp.data)
+        errorMessage = friendly
         await writeAuditLog({
           tenantId, branchId, submissionId: null,
           url: apiUrl, headers, body: payload,
           responseStatus: cenomiStatus, responseBody: cenomiBody,
-          errorMessage: msg,
+          errorMessage: friendly,
         })
-        return { success: false, error: `فشل إرسال الفواتير: ${msg}`, cenomiStatus }
+        return { success: false, error: friendly, cenomiStatus }
       }
     } catch (err) {
-      errorMessage = err.message || 'فشل الاتصال بسينومي'
+      // Network / timeout / DNS failure — never reached the Cenomi server.
+      const isTimeout = err.code === 'ECONNABORTED' || /timeout/i.test(err.message || '')
+      const friendly = isTimeout
+        ? 'انتهت مهلة الاتصال بالمركز التجاري. الحل المقترح: تحقق من اتصال الإنترنت ثم أعد المحاولة.'
+        : 'تعذّر الاتصال بخادم المركز التجاري. الحل المقترح: تأكد من صحة رابط API ثم أعد المحاولة.'
+      errorMessage = `${friendly} (${err.message || 'unknown'})`
       await writeAuditLog({
         tenantId, branchId, submissionId: null,
         url: apiUrl, headers, body: payload,
         responseStatus: null, responseBody: null,
         errorMessage,
       })
-      return { success: false, error: `فشل إرسال الفواتير: ${errorMessage}`, cenomiStatus: null }
+      return { success: false, error: friendly, cenomiStatus: null }
     }
   }
 
@@ -246,7 +307,7 @@ if (process.env.NODE_ENV === 'test') {
     _setSubmit: (fn)  => { stub.submit = fn },
     _reset:     ()    => { stub.submit = async () => ({ success: false, error: 'test-not-configured' }) },
   }
-  module.exports = { seinomyApiService: stub, _internals: { buildPayload } }
+  module.exports = { seinomyApiService: stub, _internals: { buildPayload, buildFriendlyCenomiError } }
 } else {
-  module.exports = { seinomyApiService: { submit }, _internals: { buildPayload } }
+  module.exports = { seinomyApiService: { submit }, _internals: { buildPayload, buildFriendlyCenomiError } }
 }
