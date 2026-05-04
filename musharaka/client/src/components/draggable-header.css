@@ -99,12 +99,20 @@ td.srl-td-actions {
   padding-inline-end: 12px !important;
 }
 
-/* SaleRecentList — collapse the trailing actions HEADER to a hairline so
-   no empty band sits next to "الحالة". The body cells stay at content
-   width to host the delete button or "محمية" lock chip. */
+/* SaleRecentList — fix the white band that appeared next to "الحالة".
+   Earlier override forced the th to width:1px which made the header
+   shrink while the body cell kept rendering at ~63px (delete button +
+   padding). The width mismatch let the white wrapper bg show through.
+   Fix: drop the explicit width on the header so the column lays out
+   naturally using the body cell's content width, AND paint the entire
+   header row with the same subtle grey other thead cells use — so even
+   if the column boundary lands oddly, no white gap can show through. */
 th.srl-th-actions {
-  width: 1px !important;
   padding: 0 !important;
+  background: var(--bg-subtle, #F5F5F4) !important;
+}
+.srl-table thead tr {
+  background: var(--bg-subtle, #F5F5F4) !important;
 }
 td.srl-td-actions {
   padding-inline-start: 6px !important;
