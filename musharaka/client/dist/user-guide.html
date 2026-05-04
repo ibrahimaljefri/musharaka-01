@@ -199,7 +199,7 @@ html.dark .bg-dots::before {
 .brand {
   position: absolute;
   top: 16px;
-  left: 24px;
+  right: 24px;
   z-index: 20;
   user-select: none;
 }
@@ -247,29 +247,35 @@ html.dark .bg-dots::before {
   top: 50%;
   transform: translateY(-50%);
   z-index: 50;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--border);
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--brand);
   border-radius: 50%;
-  background: var(--surface);
+  background: var(--brand);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
-  color: var(--brand);
-  box-shadow: var(--shadow-md);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(184, 134, 11, 0.45);
 }
 #nav-prev { right: 20px; }
 #nav-next { left: 20px; }
 
 #nav-prev:hover, #nav-next:hover {
-  background: var(--brand-soft);
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.05);
+}
+html.dark #nav-prev, html.dark #nav-next {
+  background: var(--brand-hover);
   border-color: var(--brand);
-  color: var(--brand-hover);
 }
 html.dark #nav-prev:hover, html.dark #nav-next:hover {
-  color: var(--brand-ink);
+  background: var(--brand);
+  color: #0A0A0B;
 }
 #nav-prev svg, #nav-next svg { width: 18px; height: 18px; }
 
@@ -324,9 +330,9 @@ html.dark #nav-prev:hover, html.dark #nav-next:hover {
 
 /* ─── Section tag ───────────────────────────────────────────── */
 .section-tag {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--brand);
   margin-bottom: 12px;
@@ -842,17 +848,13 @@ html.dark {
     <div class="brand"><div class="ug-flc"><span class="ug-logo-slot" data-type="full" data-size="58"></span></div></div>
 
     <div class="cover-content">
-      <div class="cover-tag">دليل المستخدم — الإصدار 1.0</div>
+      <div class="cover-tag">دليل المستخدم</div>
       <div class="cover-bar"></div>
       <h1 class="cover-title">
         <span class="gold">عروة</span><br />
         لمشاركة البيانات
       </h1>
       <p class="cover-sub">نظام مشاركة وإرسال بيانات الفروع — دليلك الشامل لاستخدام المنصة</p>
-      <div class="cover-meta">
-        <span class="badge">الإصدار 1.0</span>
-        <span class="badge">2025</span>
-      </div>
     </div>
 
     <div class="slide-num">01 / 14</div>
