@@ -60,10 +60,16 @@ async function submitInvoices(req, res, next) {
       return res.status(400).json({ error: result.error, cenomi_status: result.cenomiStatus ?? null })
     }
 
+    const invoiceCount = result.submission?.invoice_count || 0
+    const totalAmount  = Number(result.submission?.total_amount || 0)
+    const totalFmt     = totalAmount.toLocaleString('ar-SA', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2,
+    })
     res.json({
-      message:       'تم إرسال الفواتير إلى سينومي بنجاح',
+      message:       `✅ تم تسليم ${invoiceCount} فاتورة إلى المركز التجاري بنجاح بإجمالي ${totalFmt} ر.س`,
       submission:    result.submission,
       cenomi_status: result.cenomiStatus,           // tenant proof-of-delivery
+      cenomi_confirmation: result.cenomiConfirmation, // e.g. "Success"
       cenomi_at:     new Date().toISOString(),
     })
   } catch (err) {

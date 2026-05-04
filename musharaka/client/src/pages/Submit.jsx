@@ -114,11 +114,13 @@ export default function Submit() {
     setLoading(true)
     try {
       const { data } = await api.post('/submit', body)
-      toast.success(`${data.message} — عدد الفواتير: ${data.submission?.invoice_count || 0}`)
+      toast.success(data.message)
       setLastSuccess({
-        cenomi_status: data.cenomi_status,
-        cenomi_at:     data.cenomi_at,
-        invoice_count: data.submission?.invoice_count || 0,
+        cenomi_status:       data.cenomi_status,
+        cenomi_confirmation: data.cenomi_confirmation,
+        cenomi_at:           data.cenomi_at,
+        invoice_count:       data.submission?.invoice_count || 0,
+        total_amount:        data.submission?.total_amount || 0,
       })
       setPreflight(p => ({ ...p, count: 0, reason: 'لا توجد فواتير معلقة لهذه الفترة' }))
     } catch (err) {
@@ -208,12 +210,22 @@ export default function Submit() {
         )}
 
         {lastSuccess && (
-          <div className="sb-preflight ok" data-testid="last-success">
-            <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-            <span>
-              تم تسليم {lastSuccess.invoice_count} فاتورة إلى سينومي — استجابة HTTP {lastSuccess.cenomi_status}{' '}
-              {lastSuccess.cenomi_at && `(${new Date(lastSuccess.cenomi_at).toLocaleString('ar-SA')})`}
-            </span>
+          <div className="sb-preflight ok" data-testid="last-success" style={{ alignItems: 'flex-start' }}>
+            <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 2, color: '#15803D' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <strong>✅ تم التسليم بنجاح إلى المركز التجاري</strong>
+              <span style={{ fontSize: '0.85rem' }}>
+                عدد الفواتير: {lastSuccess.invoice_count}
+                {lastSuccess.total_amount > 0 && (
+                  <> — الإجمالي: {Number(lastSuccess.total_amount).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س</>
+                )}
+              </span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                استجابة المركز التجاري: HTTP {lastSuccess.cenomi_status}
+                {lastSuccess.cenomi_confirmation && ` — ${lastSuccess.cenomi_confirmation}`}
+                {lastSuccess.cenomi_at && ` · ${new Date(lastSuccess.cenomi_at).toLocaleString('ar-SA')}`}
+              </span>
+            </div>
           </div>
         )}
 

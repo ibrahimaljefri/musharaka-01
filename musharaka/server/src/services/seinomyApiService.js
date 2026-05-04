@@ -218,6 +218,7 @@ async function submit({ branchId, tenantId, periodStart, periodEnd, mode }) {
       })
       cenomiStatus = resp.status
       cenomiBody   = resp.data
+      // HTTP non-2xx → friendly error
       if (resp.status < 200 || resp.status >= 300) {
         const friendly = buildFriendlyCenomiError(resp.status, resp.data)
         errorMessage = friendly
@@ -226,6 +227,19 @@ async function submit({ branchId, tenantId, periodStart, periodEnd, mode }) {
           url: apiUrl, headers, body: payload,
           responseStatus: cenomiStatus, responseBody: cenomiBody,
           errorMessage: friendly,
+        })
+        return { success: false, error: friendly, cenomiStatus }
+      }
+      // HTTP 2xx but Cenomi flagged the request as failed at the app layer
+      // (e.g. { success: false, errors: [...] } returned with status 200)
+      if (resp.data && typeof resp.data === 'object' && resp.data.success === false) {
+        const friendly = buildFriendlyCenomiError(resp.status, resp.data)
+        errorMessage = friendly
+        await writeAuditLog({
+          tenantId, branchId, submissionId: null,
+          url: apiUrl, headers, body: payload,
+          responseStatus: cenomiStatus, responseBody: cenomiBody,
+          errorMessage: `Cenomi returned 2xx with success=false: ${friendly}`,
         })
         return { success: false, error: friendly, cenomiStatus }
       }
@@ -285,9 +299,16 @@ async function submit({ branchId, tenantId, periodStart, periodEnd, mode }) {
     errorMessage: null,
   })
 
+  // Capture Cenomi's confirmation payload (e.g. { data: 'Success', success: true })
+  // so the UI can show that the merchant-side actually accepted the data.
+  const cenomiConfirmation = (cenomiBody && typeof cenomiBody === 'object')
+    ? (cenomiBody.data || cenomiBody.message || null)
+    : null
+
   return {
     success: true,
     cenomiStatus,
+    cenomiConfirmation,
     submission: {
       id:            submissionId,
       branch_id:     branchId,
