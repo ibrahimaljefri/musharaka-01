@@ -14,7 +14,7 @@ import './app-shell.css'
 const tenantNav = [
   { to: '/dashboard',      label: 'لوحة التحكم',     icon: LayoutDashboard },
   { to: '/sales/create',   label: 'إضافة مبيعات',     icon: PlusCircle },
-  { to: '/sales/import',   label: 'استيراد Excel',    icon: Upload, flag: 'allowImport' },
+  { to: '/sales/import',   label: 'استيراد ملف',      icon: Upload, flag: 'allowImport' },
   { to: '/reports',        label: 'التقارير',         icon: BarChart2, flag: 'allowReports' },
   { to: '/branches',       label: 'الفروع',           icon: GitBranch },
   { to: '/submit',         label: 'إرسال الفواتير',    icon: Send },

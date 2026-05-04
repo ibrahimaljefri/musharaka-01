@@ -386,7 +386,7 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
                   </DraggableHeaderRow>
 
                   {/* Fixed: actions column */}
-                  <th></th>
+                  <th className="srl-th-actions" aria-hidden="true"></th>
                 </tr>
               </thead>
               <tbody>
@@ -418,7 +418,7 @@ export default function SaleRecentList({ branchId = '', refreshTick = 0 }) {
                       ))}
 
                       {/* Fixed: delete button */}
-                      <td>
+                      <td className="srl-td-actions">
                         {s.status === 'sent' ? (
                           <span className="srl-protected">
                             <Lock size={10} /> محمية

@@ -7,7 +7,7 @@ import { KpiSkeleton } from '../components/SkeletonLoader'
 import {
   Banknote, TrendingUp, Hash,
   PlusCircle, Clock,
-  CheckCircle2, BarChart2, ArrowUpRight, BadgeCheck, CalendarDays,
+  CheckCircle2, BarChart2, ArrowUpRight, CalendarDays,
   Send, ChevronDown,
 } from 'lucide-react'
 import AlertBanner from '../components/AlertBanner'
@@ -139,13 +139,6 @@ function LicenseWidget({ activatedAt, expiresAt, planName }) {
     <div className="card-surface p-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center gap-4 flex-1 flex-wrap">
-          {planName && (
-            <div className="flex items-center gap-1.5">
-              <BadgeCheck size={14} className="text-yellow-600 shrink-0" />
-              <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic">الباقة:</span>
-              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 font-arabic capitalize">{planName}</span>
-            </div>
-          )}
           {expiryLabel && (
             <div className="flex items-center gap-1.5">
               <CalendarDays size={14} className="text-gray-400 shrink-0" />

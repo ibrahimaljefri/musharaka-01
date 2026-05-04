@@ -124,6 +124,15 @@
   position: relative;
   z-index: 1;
   filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.25));
+  /* Clickable: link back to landing page */
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.auth-brand-logo:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
 }
 
 .auth-brand-content { position: relative; z-index: 1; }
@@ -222,6 +231,20 @@
 }
 
 .auth-input::placeholder { color: var(--text-muted); }
+
+/* Force LTR-left alignment for inputs that hold Latin content
+   (email, password). Otherwise the parent .auth-root direction:rtl
+   makes the placeholder & typed text drift to the right edge. */
+.auth-input[type="email"],
+.auth-input[type="password"] {
+  direction: ltr;
+  text-align: left;
+}
+.auth-input[type="email"]::placeholder,
+.auth-input[type="password"]::placeholder {
+  text-align: left;
+  direction: ltr;
+}
 
 .auth-input:focus {
   outline: 0;

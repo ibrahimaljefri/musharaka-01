@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, Link } from 'react-router-dom'
 import UrwahLogo from '../components/UrwahLogo'
 import './../pages/auth.css'
 
@@ -7,9 +7,9 @@ export default function GuestLayout() {
     <div className="auth-root">
       <div className="auth-split">
         <aside className="auth-brand-panel">
-          <div className="auth-brand-logo">
+          <Link to="/" className="auth-brand-logo" aria-label="الذهاب للصفحة الرئيسية">
             <UrwahLogo variant="mark" width={56} />
-          </div>
+          </Link>
           <div className="auth-brand-content">
             <h1 className="auth-brand-title">تشارك البيانات بدقة وأمان</h1>
             <p className="auth-brand-sub">منصة عروة تساعدك على تشارك بيانات فروعك مع منصات التكامل بأمان</p>

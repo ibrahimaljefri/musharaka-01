@@ -89,7 +89,9 @@
    !important is required here because page-specific CSS like
    `.adm-users .adm-tbl th` has higher specificity than a single class. */
 th.adm-th-actions,
-td.adm-td-actions {
+td.adm-td-actions,
+th.srl-th-actions,
+td.srl-td-actions {
   width: 1% !important;
   white-space: nowrap !important;
   text-align: center !important;
