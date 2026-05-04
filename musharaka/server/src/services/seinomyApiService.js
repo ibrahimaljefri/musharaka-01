@@ -48,6 +48,10 @@ function buildFriendlyCenomiError(status, body) {
       lower.includes('invalid lease')   || lower.includes('invalid contract')) {
     return 'رقم العقد غير مسجل صحيح. الحل المقترح: تأكد من صحة رقم العقد.'
   }
+  if (lower.includes('record already exists') || lower.includes('already exists') ||
+      lower.includes('duplicate')) {
+    return 'سبق إرسال هذه الفترة إلى المركز التجاري. الحل المقترح: لا حاجة لإعادة الإرسال — راجع تقرير الإرسالات للتأكد من السجل السابق.'
+  }
   if (status === 401 || lower.includes('unauthorized') || lower.includes('invalid token') || lower.includes('invalid api key')) {
     return 'فشل التحقق. الحل المقترح: تواصل مع الإدارة للتحقق من توكن واجهة API الخاص بحسابك.'
   }
