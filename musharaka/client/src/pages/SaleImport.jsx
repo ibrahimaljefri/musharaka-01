@@ -79,17 +79,16 @@ export default function SaleImport() {
 
   const tips = [
     'الأعمدة المطلوبة: input_type، amount',
-    'input_type يجب أن يكون: daily أو monthly أو range',
+    'input_type يجب أن يكون: daily أو monthly',
     'للنوع daily أضف: sale_date (YYYY-MM-DD)',
     'للنوع monthly أضف: month (1-12) و year',
-    'للنوع range أضف: period_start_date و period_end_date',
     'حجم الملف الأقصى: 10 ميجابايت',
   ]
 
   return (
     <div className="import-page">
       <div className="ip-header">
-        <h1 className="ip-title">استيراد ملف Excel</h1>
+        <h1 className="ip-title">استيراد ملف</h1>
         <div className="ip-subtitle">ارفع ملف المبيعات أو حمّل نموذج جاهز ثم أعد رفعه بعد تعبئته</div>
       </div>
 
@@ -137,7 +136,6 @@ export default function SaleImport() {
             <b>أمثلة على البيانات:</b>
             <p><code>daily</code> | التاريخ: 2026-01-15 | المبلغ: 5000</p>
             <p><code>monthly</code> | الشهر: 1 | السنة: 2026 | المبلغ: 150000</p>
-            <p><code>range</code> | البداية: 2026-01-01 | النهاية: 2026-01-10 | المبلغ: 50000</p>
           </div>
         </div>
 
