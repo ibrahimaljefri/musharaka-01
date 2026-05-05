@@ -1,0 +1,42 @@
+{
+  "_comment_": "cpanel-deploy skill config — read by ~/deploy.sh on the VPS. Secrets live in ~/.env.deploy on the VPS, not here.",
+
+  "domain":         "urrwah.com",
+  "dev_subdomain":  "dev.urrwah.com",
+  "vps_user":       "<CPANEL_USER>",
+  "vps_host":       "urrwah.com",
+
+  "branches": {
+    "prod": "master",
+    "dev":  "dev"
+  },
+
+  "client_dir":    "musharaka/client",
+  "server_dir":    "musharaka/server",
+  "schema_dir":    "musharaka/server/src/schema",
+  "build_output":  "musharaka/client/dist",
+
+  "node_app": {
+    "prod": "urrwah-api",
+    "dev":  "urrwah-dev-api"
+  },
+  "ports": {
+    "prod": 3001,
+    "dev":  3002
+  },
+
+  "db": {
+    "prod": { "host": "127.0.0.1", "port": 5432, "name": "urrwah_prod", "user": "urrwah_prod_app" },
+    "dev":  { "host": "127.0.0.1", "port": 5433, "name": "urrwah_dev",  "user": "urrwah_dev_app"  }
+  },
+
+  "docroot": {
+    "prod": "public_html",
+    "dev":  "dev.urrwah.com"
+  },
+
+  "preserved_files": [".htaccess"],
+
+  "post_deploy_health_url":  "/api/health",
+  "post_deploy_version_url": "/api/version"
+}

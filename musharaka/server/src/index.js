@@ -94,6 +94,16 @@ app.use('/api/branches',      branchesRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
+// /api/version — returns the deployed git SHA + timestamp.
+// deploy.sh appends GIT_SHA + DEPLOYED_AT to .env on each deploy.
+// Used by the cpanel-deploy skill's post-deploy verification:
+// `curl /api/version | jq .sha` must equal the just-pushed commit.
+app.get('/api/version', (_req, res) => res.json({
+  sha:          process.env.GIT_SHA       || 'dev',
+  deployed_at:  process.env.DEPLOYED_AT   || null,
+  node_env:     process.env.NODE_ENV      || 'development',
+}))
+
 // 404 for undefined /api/* routes only
 app.use('/api', (_req, res) => res.status(404).json({ error: 'المسار غير موجود' }))
 
