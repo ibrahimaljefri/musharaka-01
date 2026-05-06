@@ -22,6 +22,9 @@ function applyUser(u) {
     maxBranches:           u.max_branches            ?? null,
     userCount:             u.user_count              ?? null,
     mustChangePassword:    u.mustChangePassword      || false,
+    mustAcceptTerms:       u.mustAcceptTerms         || false,
+    termsAcceptedAt:       u.terms_accepted_at       || null,
+    createdByAdmin:        u.created_by_admin        || false,
   }
 }
 
@@ -30,6 +33,7 @@ const CLEAR = {
   isSuperAdmin: false, tenantId: null, role: null, tenantStatus: null,
   allowedInputTypes: ['daily'], allowAdvancedDashboard: false,
   allowImport: false, allowReports: false, mustChangePassword: false,
+  mustAcceptTerms: false, termsAcceptedAt: null, createdByAdmin: false,
   activatedAt: null, dataEntryFrom: null, expiresAt: null, planName: null,
   cenomiPostMode: 'monthly', maxBranches: null, userCount: null,
 }
@@ -62,6 +66,16 @@ export const useAuthStore = create((set, get) => ({
       // axiosClient handles 401 → refresh → redirect; catch remaining errors
       set({ loading: false, ...CLEAR })
     }
+  },
+
+  /**
+   * Records the current user's acceptance of the latest T&C and updates
+   * the store so the forced-acceptance gate lifts immediately. Idempotent
+   * on the server (a re-click is a no-op).
+   */
+  acceptTerms: async () => {
+    const { data } = await api.post('/auth/accept-terms')
+    if (data?.user) set(applyUser(data.user))
   },
 
   signOut: async () => {

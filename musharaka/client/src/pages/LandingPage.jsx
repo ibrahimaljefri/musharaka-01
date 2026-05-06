@@ -319,7 +319,7 @@ export default function LandingPage() {
           <div className="links">
             <a href="#features">الميزات</a>
             <button type="button" onClick={openContact}>تواصل معنا</button>
-            <Link to="/faq">الأسئلة الشائعة</Link>
+            <Link to="/terms">الشروط والأحكام</Link>
           </div>
           <div className="copy">© 2026 عروة. جميع الحقوق محفوظة.</div>
         </div>
