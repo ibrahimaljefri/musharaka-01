@@ -24,7 +24,7 @@ if [[ "$ENV" != "prod" && "$ENV" != "dev" ]]; then
 fi
 
 # Locate config + secrets
-REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+REPO_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 CONFIG="$REPO_DIR/.deploy-config.json"
 [[ -f "$CONFIG" ]] || { echo "Missing $CONFIG"; exit 1; }
 
@@ -75,13 +75,8 @@ read_pw "superadmin@urrwah.com"    SUPER_PW
 read_pw "admin@admin.com"          ADMIN_PW
 
 # Generate bcrypt hashes via Node + bcrypt (already a server dep)
-HASH_SCRIPT="
-const bcrypt = require('bcrypt');
-const [pw] = process.argv.slice(2);
-bcrypt.hash(pw, 12).then(h => process.stdout.write(h));
-"
-SUPER_HASH="$(cd "$REPO_DIR/musharaka/server" && node -e "$HASH_SCRIPT" "$SUPER_PW")"
-ADMIN_HASH="$(cd "$REPO_DIR/musharaka/server" && node -e "$HASH_SCRIPT" "$ADMIN_PW")"
+SUPER_HASH="$(cd "$REPO_DIR/musharaka/server" && BCRYPT_PW="$SUPER_PW" node -e "const b=require('bcrypt');b.hash(process.env.BCRYPT_PW,12).then(h=>process.stdout.write(h))")"
+ADMIN_HASH="$(cd "$REPO_DIR/musharaka/server" && BCRYPT_PW="$ADMIN_PW" node -e "const b=require('bcrypt');b.hash(process.env.BCRYPT_PW,12).then(h=>process.stdout.write(h))")"
 
 # Apply seed SQL with variable substitution
 psql -v ON_ERROR_STOP=1 \
