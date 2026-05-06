@@ -3,8 +3,8 @@
 
   "domain":         "urrwah.com",
   "dev_subdomain":  "dev.urrwah.com",
-  "vps_user":       "<CPANEL_USER>",
-  "vps_host":       "urrwah.com",
+  "vps_user":       "d17546",
+  "vps_host":       "d17546.fra1.stableserver.net",
 
   "branches": {
     "prod": "master",
@@ -26,8 +26,8 @@
   },
 
   "db": {
-    "prod": { "host": "127.0.0.1", "port": 5432, "name": "urrwah_prod", "user": "urrwah_prod_app" },
-    "dev":  { "host": "127.0.0.1", "port": 5433, "name": "urrwah_dev",  "user": "urrwah_dev_app"  }
+    "prod": { "host": "127.0.0.1", "port": 5432, "name": "d17546_urrwah_prod", "user": "d17546_urrwah_prod_app" },
+    "dev":  { "host": "127.0.0.1", "port": 5432, "name": "d17546_urrwah_dev",  "user": "d17546_urrwah_dev_app"  }
   },
 
   "docroot": {
