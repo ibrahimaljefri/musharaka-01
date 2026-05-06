@@ -58,14 +58,18 @@ router.post('/signup', authLimiter, async (req, res, next) => {
     const { email, password, full_name, phone } = req.body
     if (!email || !password) return res.status(422).json({ error: 'البريد وكلمة المرور مطلوبان' })
     if (password.length < 8)  return res.status(422).json({ error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' })
+    if (!req.body.terms_accepted) {
+      return res.status(422).json({ error: 'يجب الموافقة على الشروط والأحكام للمتابعة' })
+    }
 
     const exists = await pool.query('SELECT id FROM app_users WHERE email = $1', [email.toLowerCase()])
     if (exists.rows.length) return res.status(409).json({ error: 'البريد الإلكتروني مستخدم مسبقاً' })
 
     const password_hash = await auth.hashPassword(password)
     const { rows } = await pool.query(
-      `INSERT INTO app_users (email, password_hash, full_name, phone)
-       VALUES ($1, $2, $3, $4) RETURNING id`,
+      `INSERT INTO app_users (email, password_hash, full_name, phone,
+                              terms_accepted_at, created_by_admin)
+       VALUES ($1, $2, $3, $4, now(), FALSE) RETURNING id`,
       [email.toLowerCase(), password_hash, full_name || null, phone || null]
     )
     const userId = rows[0].id
@@ -147,6 +151,25 @@ router.get('/me', standardLimiter, authMiddleware, async (req, res, next) => {
     const user = await auth.loadUserWithContext(req.user.id)
     if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' })
     res.json(publicUser(user))
+  } catch (err) { next(err) }
+})
+
+// ── POST /api/auth/accept-terms ────────────────────────────────────────────
+// Records the current user's acceptance of the latest T&C. Idempotent — the
+// `WHERE terms_accepted_at IS NULL` guard means a second click is a no-op.
+// Returns the refreshed public user object so the client can update the
+// auth store and lift the forced-acceptance gate immediately.
+router.post('/accept-terms', standardLimiter, authMiddleware, async (req, res, next) => {
+  try {
+    await pool.query(
+      `UPDATE app_users
+          SET terms_accepted_at = now()
+        WHERE id = $1
+          AND terms_accepted_at IS NULL`,
+      [req.user.id]
+    )
+    const user = await auth.loadUserWithContext(req.user.id)
+    res.json({ user: publicUser(user) })
   } catch (err) { next(err) }
 })
 
@@ -236,6 +259,9 @@ function publicUser(u) {
     cenomi_post_mode:         u.tenant_cenomi_post_mode || 'monthly',
     plan:                     u.tenant_plan          || null,
     user_count:               u.user_count           ?? null,
+    terms_accepted_at:        u.terms_accepted_at    || null,
+    created_by_admin:         u.created_by_admin     || false,
+    mustAcceptTerms:          u.terms_accepted_at == null,
   }
 }
 

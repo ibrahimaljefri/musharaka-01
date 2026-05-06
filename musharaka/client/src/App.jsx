@@ -7,6 +7,9 @@ import ToastProvider from './components/ToastProvider'
 
 // Public pages
 const LandingPage      = lazy(() => import('./pages/LandingPage'))
+const Terms            = lazy(() => import('./pages/Terms'))
+const AcceptTerms      = lazy(() => import('./pages/AcceptTerms'))
+const AdminTerms       = lazy(() => import('./pages/admin/AdminTerms'))
 const Login            = lazy(() => import('./pages/Login'))
 const Register         = lazy(() => import('./pages/Register'))
 const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'))
@@ -61,6 +64,18 @@ function ProtectedRoute({ children }) {
     }
     return <Navigate to="/login" replace />
   }
+  return children
+}
+
+/**
+ * TermsGate — second-stage gate inside ProtectedRoute. If the user has
+ * not yet accepted the Terms & Conditions, every protected route
+ * redirects to /accept-terms. The gate is a no-op for users with a
+ * `terms_accepted_at` timestamp.
+ */
+function TermsGate({ children }) {
+  const mustAcceptTerms = useAuthStore(s => s.mustAcceptTerms)
+  if (mustAcceptTerms) return <Navigate to="/accept-terms" replace />
   return children
 }
 
@@ -122,6 +137,9 @@ export default function App() {
           {/* Public landing page */}
           <Route path="/" element={<LandingPage />} />
 
+          {/* Public Terms & Conditions — readable without auth */}
+          <Route path="/terms" element={<Terms />} />
+
           {/* Guest routes */}
           <Route element={<GuestLayout />}>
             <Route path="/login"            element={<GuestRoute><Login /></GuestRoute>} />
@@ -133,8 +151,12 @@ export default function App() {
           {/* Force password change — authenticated but outside AppLayout */}
           <Route path="/change-password" element={<ProtectedRoute><ChangePassword forced /></ProtectedRoute>} />
 
+          {/* Force T&C acceptance — authenticated, outside AppLayout so the
+              forced gate below can redirect every protected page here. */}
+          <Route path="/accept-terms"   element={<ProtectedRoute><AcceptTerms /></ProtectedRoute>} />
+
           {/* Authenticated app routes */}
-          <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+          <Route element={<ProtectedRoute><TermsGate><AppLayout /></TermsGate></ProtectedRoute>}>
             {/* Tenant pages */}
             <Route path="/dashboard"         element={<SuperAdminDashboardRoute />} />
             <Route path="/sales/create"      element={<SaleCreate />} />
@@ -164,6 +186,7 @@ export default function App() {
             <Route path="/admin/tickets/:id"                  element={<AdminRoute><AdminTicketDetail /></AdminRoute>} />
             <Route path="/admin/cenomi-logs"                  element={<AdminRoute><CenomiLogs /></AdminRoute>} />
             <Route path="/admin/submissions"                  element={<AdminRoute><AdminSubmissions /></AdminRoute>} />
+            <Route path="/admin/terms"                        element={<AdminRoute><AdminTerms /></AdminRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

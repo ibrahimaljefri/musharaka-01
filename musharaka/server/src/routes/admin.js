@@ -175,8 +175,8 @@ router.post('/tenants', async (req, res, next) => {
       try {
         const passwordHash = await hashPassword(user_password)
         const { rows: uRows } = await client.query(
-          `INSERT INTO app_users (email, password_hash, full_name, email_confirmed_at)
-           VALUES ($1, $2, $3, now()) RETURNING id, email`,
+          `INSERT INTO app_users (email, password_hash, full_name, email_confirmed_at, created_by_admin)
+           VALUES ($1, $2, $3, now(), TRUE) RETURNING id, email`,
           [user_email, passwordHash, user_name || name]
         )
         createdUser = uRows[0]
@@ -383,8 +383,8 @@ router.post('/users', async (req, res, next) => {
 
     const passwordHash = await hashPassword(password)
     const { rows } = await pool.query(
-      `INSERT INTO app_users (email, password_hash, full_name, phone, email_confirmed_at)
-       VALUES ($1, $2, $3, $4, now()) RETURNING id, email`,
+      `INSERT INTO app_users (email, password_hash, full_name, phone, email_confirmed_at, created_by_admin)
+       VALUES ($1, $2, $3, $4, now(), TRUE) RETURNING id, email`,
       [email, passwordHash, full_name || '', phone || '']
     )
     res.status(201).json(rows[0])

@@ -16,6 +16,7 @@ const botRoutes         = require('./routes/bot')
 const ticketsRoutes     = require('./routes/tickets')
 const branchesRoutes    = require('./routes/branches')
 const tenantAdminRoutes = require('./routes/tenantAdmin')
+const termsRoutes       = require('./routes/terms')
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -91,6 +92,7 @@ app.use('/api/tenant-admin',  tenantAdminRoutes)
 app.use('/api/bot',           botRoutes)
 app.use('/api/tickets',       ticketsRoutes)
 app.use('/api/branches',      branchesRoutes)
+app.use('/api/terms',         termsRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

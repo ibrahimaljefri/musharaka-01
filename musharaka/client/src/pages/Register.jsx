@@ -18,7 +18,7 @@ function getPasswordStrength(pwd) {
 export default function Register() {
   const navigate = useNavigate()
   const init = useAuthStore(s => s.init)
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '', acceptTerms: false })
   const [showPass, setShowPass] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -71,6 +71,7 @@ export default function Register() {
     if (!form.password)       e.password = 'كلمة المرور مطلوبة'
     else if (form.password.length < 8) e.password = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'
     if (form.password !== form.confirm) e.confirm = 'كلمة المرور غير متطابقة'
+    if (!form.acceptTerms) e.acceptTerms = 'يجب الموافقة على الشروط والأحكام للمتابعة'
     return e
   }
 
@@ -91,6 +92,7 @@ export default function Register() {
       const { data } = await api.post('/auth/signup', {
         email: form.email, password: form.password,
         full_name: form.name, phone: canonicalPhone,
+        terms_accepted: true,
       })
       localStorage.setItem(TOKEN_KEY, data.accessToken)
       await init()
@@ -242,7 +244,37 @@ export default function Register() {
           {errors.confirm && <span style={fieldErrorStyle}>{errors.confirm}</span>}
         </div>
 
-        <button type="submit" disabled={loading} className="auth-submit-btn">
+        {/* Terms acceptance checkbox — required for signup */}
+        <div className="form-group" style={{ marginTop: 4 }}>
+          <label
+            htmlFor="acceptTerms"
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8,
+              fontSize: '13px', cursor: 'pointer', color: '#E7E5E4',
+              lineHeight: 1.6,
+            }}
+          >
+            <input
+              id="acceptTerms"
+              type="checkbox"
+              checked={form.acceptTerms}
+              onChange={e => {
+                setForm(f => ({ ...f, acceptTerms: e.target.checked }))
+                if (e.target.checked) setErrors(prev => ({ ...prev, acceptTerms: '' }))
+              }}
+              style={{ marginTop: 2, accentColor: '#D97706', flexShrink: 0 }}
+            />
+            <span>
+              أوافق على{' '}
+              <Link to="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#FBBF24', textDecoration: 'underline' }}>
+                الشروط والأحكام
+              </Link>
+            </span>
+          </label>
+          {errors.acceptTerms && <span style={fieldErrorStyle}>{errors.acceptTerms}</span>}
+        </div>
+
+        <button type="submit" disabled={loading || !form.acceptTerms} className="auth-submit-btn">
           {loading ? (
             <><ButtonSpinner /><span>جاري إنشاء الحساب...</span></>
           ) : (

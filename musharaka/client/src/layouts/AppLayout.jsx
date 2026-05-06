@@ -32,6 +32,7 @@ const adminNav = [
   { to: '/admin/cenomi-logs',     label: 'سجلات سينومي',      icon: FileText },
   { to: '/admin/bot-subscribers', label: 'مشتركو الروبوت',    icon: MessageCircle },
   { to: '/admin/tickets',         label: 'تذاكر الدعم',       icon: LifeBuoy },
+  { to: '/admin/terms',           label: 'الشروط والأحكام',   icon: FileText },
 ]
 
 function SubscriptionBanner({ status }) {
