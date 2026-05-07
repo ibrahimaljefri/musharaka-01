@@ -243,6 +243,82 @@ jobs:
                grep -n "pkill" ~/deploy.sh ;
              fi'
 
+      # ONE-SHOT: verify SMTP is configured + send a test email to confirm
+      # the mail pipeline actually delivers. Uses prod's .env so it tests the
+      # real urrwah.com → mail server path. Remove on next commit.
+      - name: SMTP smoke test (send to ibrahimaljefri90@gmail.com)
+        env:
+          REMOTE_SCRIPT: |
+            #!/usr/bin/env bash
+            set -e
+            SERVER_ENV=$HOME/repos/urrwah-prod/musharaka/server/.env
+            cd $HOME/repos/urrwah-prod/musharaka/server
+
+            # Show SMTP config (with password redacted) so we can see what's wired up.
+            echo "=== prod .env SMTP config (redacted) ==="
+            grep -E "^(SMTP_HOST|SMTP_PORT|SMTP_SECURE|SMTP_USER|SMTP_FROM|APP_URL)=" "$SERVER_ENV" \
+              | sed -E 's/(SMTP_PASS=).+/\1***/'
+            grep -q "^SMTP_PASS=" "$SERVER_ENV" && echo "SMTP_PASS=*** (set)" || echo "SMTP_PASS= (NOT SET)"
+            echo ""
+
+            # Find the cPanel-managed node binary (deploy.sh uses /opt/alt/alt-nodejs22).
+            # Activate the proper nodeenv so node_modules path resolution works.
+            NODE_VENV="$HOME/nodeenv/repos/urrwah-prod/musharaka/server/22"
+            if [ -f "$NODE_VENV/bin/activate" ]; then
+              set +u
+              # shellcheck disable=SC1090
+              source "$NODE_VENV/bin/activate"
+              set -u
+            fi
+            echo "=== node version ==="
+            node --version
+
+            # Run the test send. Loads .env via dotenv (server already does it),
+            # then uses nodemailer directly with the same config the app uses.
+            echo "=== sending test email ==="
+            cat > /tmp/smtp_test.js <<'JS'
+            require('dotenv').config()
+            const nodemailer = require('nodemailer')
+            const t = nodemailer.createTransport({
+              host:   process.env.SMTP_HOST   || 'localhost',
+              port:   parseInt(process.env.SMTP_PORT || '587'),
+              secure: process.env.SMTP_SECURE === 'true',
+              auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            })
+            t.verify().then(() => {
+              console.log('[ok] transporter.verify() passed — server reachable')
+              return t.sendMail({
+                from:    process.env.SMTP_FROM || `"عروة" <${process.env.SMTP_USER}>`,
+                to:      'ibrahimaljefri90@gmail.com',
+                subject: '✅ SMTP test — عروة (' + new Date().toISOString() + ')',
+                html:    `<div dir="rtl" style="font-family:sans-serif;background:#f9fafb;padding:24px">
+                  <h2 style="color:#ca8a04">SMTP test — عروة</h2>
+                  <p>هذه رسالة اختبار من خادم عروة (urrwah.com) للتأكد من أن البريد يعمل بشكل صحيح.</p>
+                  <p style="color:#6b7280;font-size:13px">
+                    Sent at: ${new Date().toISOString()}<br>
+                    From: ${process.env.SMTP_FROM || process.env.SMTP_USER}<br>
+                    Host: ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}<br>
+                    Secure: ${process.env.SMTP_SECURE}
+                  </p>
+                </div>`,
+              })
+            }).then(info => {
+              console.log('[ok] sent! messageId=' + info.messageId)
+              console.log('[ok] response=' + (info.response || ''))
+              process.exit(0)
+            }).catch(err => {
+              console.error('[fail] ' + (err.message || err))
+              if (err.code) console.error('[fail] code=' + err.code)
+              if (err.response) console.error('[fail] response=' + err.response)
+              process.exit(1)
+            })
+            JS
+            node /tmp/smtp_test.js
+            rm -f /tmp/smtp_test.js
+        run: |
+          printf '%s' "$REMOTE_SCRIPT" | \
+            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'cat > /tmp/smtp_$$.sh && bash /tmp/smtp_$$.sh; rc=$?; rm -f /tmp/smtp_$$.sh; exit $rc'
+
       # The shared ~/deploy.sh kills ALL node processes when starting one env,
       # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
       # listener. Ensure prod is also running after every dev deploy.
