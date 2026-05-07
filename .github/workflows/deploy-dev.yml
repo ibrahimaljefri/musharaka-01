@@ -182,6 +182,13 @@ jobs:
              tail -40 ~/urrwah-dev-api.log 2>&1 ;
              exit 1'
 
+      # Inspect ~/deploy.sh to understand its kill mechanism (one-time).
+      - name: Inspect deploy.sh kill mechanism
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'echo "=== deploy.sh kill section ===" ;
+             grep -n -B 1 -A 8 "pkill\|kill -\|fuser\|lsof.*-i" ~/deploy.sh | head -60'
+
       # The shared ~/deploy.sh kills ALL node processes when starting one env,
       # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
       # listener. Ensure prod is also running after every dev deploy.
