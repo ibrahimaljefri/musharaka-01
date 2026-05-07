@@ -230,16 +230,15 @@ jobs:
           # Write the missing .htaccess proxy rule. Same pattern dev uses:
           # force HTTPS, then proxy ALL traffic to node on port 3001 (node
           # serves both /api/* and the SPA via express.static).
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'mkdir -p ~/public_html/urrwah.com ;
-             cat > ~/public_html/urrwah.com/.htaccess <<HTACCESS
-RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-RewriteRule ^(.*)$ http://127.0.0.1:3001/$1 [P,L]
-HTACCESS
-             echo "[ok] wrote ~/public_html/urrwah.com/.htaccess" ;
-             cat ~/public_html/urrwah.com/.htaccess'
+          # Use printf piped over ssh to avoid nested heredoc/YAML issues.
+          HTACCESS_CONTENT='RewriteEngine On
+          RewriteCond %{HTTPS} off
+          RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+          RewriteRule ^(.*)$ http://127.0.0.1:3001/$1 [P,L]
+          '
+          printf '%s' "$HTACCESS_CONTENT" | sed 's/^          //' | \
+            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+              'mkdir -p ~/public_html/urrwah.com && cat > ~/public_html/urrwah.com/.htaccess && echo "[ok] wrote .htaccess:" && cat ~/public_html/urrwah.com/.htaccess'
 
           # Run the prod deploy: this kills any old node, runs migrations
           # (incl. 025), builds the client, and starts node on port 3001.
