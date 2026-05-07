@@ -75,13 +75,12 @@ jobs:
              echo "=== last 5 lines of node log ==="
              tail -5 ~/urrwah-dev-api.log 2>/dev/null || echo "(no node log)"'
 
-      # Stamp the correct GIT_SHA into server .env, then signal Passenger to
-      # reload the process so it picks up the new value.
-      # We ONLY use touch tmp/restart.txt — pkill and pgrep both exit 255 on
-      # this CloudLinux VPS and drop the SSH connection even behind || true.
-      # Passenger performs a lazy restart: the running process is replaced when
-      # the first request arrives, which is the curl in the next step.
-      - name: Stamp GIT_SHA and touch Passenger restart.txt
+      # Stamp the correct GIT_SHA into server .env, then kill the node process
+      # so Passenger restarts it and picks up both the new code and new .env.
+      # pkill and pgrep both exit 255 on this CloudLinux VPS (binary-level
+      # restriction). We bypass them by scanning /proc/*/cmdline directly
+      # to find the PID, then call kill on that specific PID.
+      - name: Stamp GIT_SHA and kill node process via /proc scan
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env
@@ -93,10 +92,26 @@ jobs:
              echo "GIT_SHA=${{ github.sha }}" >> "$SERVER_ENV"
              echo "DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$SERVER_ENV"
              echo "✓ stamped GIT_SHA=${{ github.sha }}"
-             # Touch Passenger restart.txt — process reloads on the next request.
+             # Also touch restart.txt as belt-and-suspenders
              mkdir -p ~/repos/urrwah-dev/musharaka/server/tmp \
                && touch ~/repos/urrwah-dev/musharaka/server/tmp/restart.txt \
-               && echo "✓ Passenger restart.txt touched — process will reload on next request"'
+               && echo "✓ touched restart.txt"
+             # Find the node process via /proc (avoids pkill/pgrep which exit 255)
+             NODE_PID=""
+             for f in /proc/[0-9]*/cmdline; do
+               cmd=$(cat "$f" 2>/dev/null | tr '"'"'\0'"'"' '"'"' '"'"')
+               if echo "$cmd" | grep -q "musharaka/server/src/index.js"; then
+                 NODE_PID=$(echo "$f" | cut -d/ -f3)
+                 break
+               fi
+             done
+             if [ -n "$NODE_PID" ]; then
+               kill "$NODE_PID" 2>/dev/null \
+                 && echo "✓ killed node PID $NODE_PID via /proc scan — Passenger will restart" \
+                 || echo "⚠ kill $NODE_PID returned non-zero"
+             else
+               echo "ℹ node PID not found in /proc — restart.txt is in effect"
+             fi'
 
       # Wait for the app to come back up after the bounce, then verify SHA.
       # Use grep/cut to parse JSON; avoids depending on `node` being in SSH PATH.
