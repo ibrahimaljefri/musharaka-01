@@ -243,10 +243,164 @@ jobs:
                grep -n "pkill" ~/deploy.sh ;
              fi'
 
-      # ONE-SHOT: verify SMTP is configured + send a test email to confirm
-      # the mail pipeline actually delivers. Uses prod's .env so it tests the
-      # real urrwah.com → mail server path. Remove on next commit.
+      # ONE-SHOT: provision a strong SMTP password for info@urrwah.com via
+      # cPanel uapi, write it to BOTH prod + dev .env files, restart node so
+      # the app re-reads .env, then send a real test email through the
+      # authenticated /api/auth/forgot-password flow.
+      - name: Set SMTP password + send authenticated test email
+        env:
+          REMOTE_SCRIPT: |
+            #!/usr/bin/env bash
+            set -e
+            EMAIL_USER='info'
+            EMAIL_DOMAIN='urrwah.com'
+            EMAIL_FULL="${EMAIL_USER}@${EMAIL_DOMAIN}"
+
+            # 1. Generate a strong 32-char password (alphanumeric + safe symbols
+            #    that DON'T break .env parsing or URL encoding: no '#' '+' or '$').
+            NEW_PASS=$(head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9_-' | head -c 32)
+            test ${#NEW_PASS} -eq 32 || { echo "[fatal] could not generate password"; exit 1; }
+            echo "[ok] generated 32-char SMTP password"
+
+            # 2. Show what cPanel email accounts exist (sanity-check that
+            #    info@urrwah.com actually exists before resetting).
+            echo "=== cPanel email accounts (UAPI list) ==="
+            uapi Email list_pops 2>&1 | grep -E "email|domain|user" | head -10 || true
+            echo ""
+
+            # 3. Reset the password on the cPanel email account.
+            echo "=== resetting password for $EMAIL_FULL ==="
+            uapi Email passwd_pop \
+              email="$EMAIL_USER" \
+              domain="$EMAIL_DOMAIN" \
+              password="$NEW_PASS" 2>&1 | tail -10 \
+              || { echo "[fatal] uapi passwd_pop failed"; exit 1; }
+            echo ""
+
+            # 4. Update both prod + dev .env files. Idempotent: replaces the
+            #    SMTP_PASS line if present, appends if missing.
+            for ENV_FILE in \
+              "$HOME/repos/urrwah-prod/musharaka/server/.env" \
+              "$HOME/repos/urrwah-dev/musharaka/server/.env"
+            do
+              if [ ! -f "$ENV_FILE" ]; then echo "  skip (missing): $ENV_FILE"; continue; fi
+              cp "$ENV_FILE" "$ENV_FILE.bak.$(date +%s)"
+              if grep -q "^SMTP_PASS=" "$ENV_FILE"; then
+                sed -i "s|^SMTP_PASS=.*|SMTP_PASS=$NEW_PASS|" "$ENV_FILE"
+                echo "[ok] replaced SMTP_PASS in $ENV_FILE"
+              else
+                echo "SMTP_PASS=$NEW_PASS" >> "$ENV_FILE"
+                echo "[ok] appended SMTP_PASS to $ENV_FILE"
+              fi
+              # Also ensure SMTP_USER/HOST/PORT/SECURE/FROM are sane on dev.
+              grep -q "^SMTP_USER=" "$ENV_FILE" || echo "SMTP_USER=$EMAIL_FULL" >> "$ENV_FILE"
+              grep -q "^SMTP_HOST=" "$ENV_FILE" || echo "SMTP_HOST=mail.$EMAIL_DOMAIN" >> "$ENV_FILE"
+              grep -q "^SMTP_PORT=" "$ENV_FILE" || echo "SMTP_PORT=587" >> "$ENV_FILE"
+              grep -q "^SMTP_SECURE=" "$ENV_FILE" || echo "SMTP_SECURE=false" >> "$ENV_FILE"
+              grep -q "^SMTP_FROM=" "$ENV_FILE" || echo "SMTP_FROM=\"عروة\" <$EMAIL_FULL>" >> "$ENV_FILE"
+            done
+
+            # 5. Restart both node processes via shutdown endpoints so the
+            #    new SMTP_PASS is picked up. Falls back to PID-file kill.
+            echo ""
+            echo "=== restarting node processes ==="
+            for PORT in 3001 3002; do
+              ENV_DIR="$([ "$PORT" = "3001" ] && echo "urrwah-prod" || echo "urrwah-dev")"
+              KEY=$(grep -oP "(?<=^INTERNAL_KILL_KEY=).+" "$HOME/repos/$ENV_DIR/musharaka/server/.env" 2>/dev/null || true)
+              if [ -n "$KEY" ]; then
+                CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X POST \
+                  http://127.0.0.1:$PORT/api/internal/shutdown \
+                  -H "x-kill-key: $KEY" 2>/dev/null || echo 000)
+                echo "  port $PORT shutdown HTTP $CODE"
+              fi
+            done
+            sleep 5
+
+            # Re-run deploy.sh for both envs to bring node back up. The
+            # shared deploy.sh uses pkill (already env-specific from our
+            # earlier patch), so each call starts only its own process.
+            bash ~/deploy.sh prod 2>&1 | tail -10
+            sleep 2
+            bash ~/deploy.sh dev  2>&1 | tail -10
+            sleep 4
+
+            # 6. Verify both envs back up.
+            echo ""
+            echo "=== verify both envs healthy ==="
+            for PORT in 3001 3002; do
+              for i in 1 2 3 4 5; do
+                CODE=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:$PORT/api/health 2>/dev/null)
+                [ "$CODE" = "200" ] && { echo "  port $PORT: healthy"; break; }
+                sleep 3
+              done
+            done
+
+            # 7. Send a real test through the authenticated app on prod.
+            echo ""
+            echo "=== test send via prod auth /forgot-password (requires user) ==="
+            # /forgot-password silently 200s for unknown users, so use the
+            # standalone send via nodemailer (matches the app's exact config).
+            cd $HOME/repos/urrwah-prod/musharaka/server
+            NODE_BIN=$(ls /opt/alt/alt-nodejs*/root/usr/bin/node 2>/dev/null | sort -V | tail -1)
+            cat > smtp_send_real.js <<'JS'
+            const fs   = require('fs')
+            const path = require('path')
+            const env  = {}
+            for (const raw of fs.readFileSync(path.join(__dirname,'.env'),'utf8').split('\n')) {
+              const line = raw.replace(/\r$/,'')
+              if (!line || line.startsWith('#')) continue
+              const eq = line.indexOf('=')
+              if (eq < 1) continue
+              let v = line.slice(eq+1)
+              if ((v.startsWith('"')&&v.endsWith('"'))||(v.startsWith("'")&&v.endsWith("'"))) v = v.slice(1,-1)
+              env[line.slice(0,eq).trim()] = v
+            }
+            console.log('[debug] SMTP_PASS_len=' + (env.SMTP_PASS ? env.SMTP_PASS.length : 0))
+            const t = require('nodemailer').createTransport({
+              host: env.SMTP_HOST, port: parseInt(env.SMTP_PORT||'587'),
+              secure: env.SMTP_SECURE === 'true',
+              auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+            })
+            t.verify().then(() => {
+              console.log('[ok] verify() passed — auth accepted')
+              return t.sendMail({
+                from: env.SMTP_FROM || `"عروة" <${env.SMTP_USER}>`,
+                to:   'ibrahimaljefri90@gmail.com',
+                subject: '✅ عروة — اختبار SMTP مع مصادقة (' + new Date().toISOString() + ')',
+                html: `<div dir="rtl" style="font-family:sans-serif;background:#f9fafb;padding:24px">
+                  <h2 style="color:#ca8a04">SMTP مع مصادقة كاملة — عروة</h2>
+                  <p>تم إعداد كلمة مرور SMTP جديدة وإعادة تشغيل خادم البريد بنجاح.</p>
+                  <p>هذه الرسالة أُرسلت عبر <code>${env.SMTP_HOST}:${env.SMTP_PORT}</code>
+                     بالحساب <code>${env.SMTP_USER}</code>.</p>
+                  <p style="color:#6b7280;font-size:13px;margin-top:24px">
+                    أُرسلت في: ${new Date().toISOString()}<br>
+                    عبر: urrwah.com (production)
+                  </p>
+                </div>`
+              })
+            }).then(info => {
+              console.log('[ok] delivered: ' + info.messageId)
+              console.log('[ok] response: ' + (info.response||''))
+              process.exit(0)
+            }).catch(err => {
+              console.error('[fail] ' + (err.message||err) + ' code=' + (err.code||''))
+              process.exit(1)
+            })
+            JS
+            "$NODE_BIN" smtp_send_real.js
+            rm -f smtp_send_real.js
+
+            echo ""
+            echo "[done] SMTP password set on cPanel + propagated to both .env files"
+            echo "[done] new password (32 chars) — saved only in .env files on the VPS"
+        run: |
+          printf '%s' "$REMOTE_SCRIPT" | \
+            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'cat > /tmp/smtpset_$$.sh && bash /tmp/smtpset_$$.sh; rc=$?; rm -f /tmp/smtpset_$$.sh; exit $rc'
+
+      # ONE-SHOT (kept for reference): unauthenticated localhost relay test.
+      # No longer needed now that we have authenticated SMTP.
       - name: SMTP smoke test (send to ibrahimaljefri90@gmail.com)
+        if: false
         env:
           REMOTE_SCRIPT: |
             #!/usr/bin/env bash
