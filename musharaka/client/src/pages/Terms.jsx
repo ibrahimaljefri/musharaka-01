@@ -6,7 +6,7 @@
  * content from `GET /api/terms` (no auth required).
  */
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import UrwahLogo from '../components/UrwahLogo'
 import TermsContent from '../components/TermsContent'
 import './terms.css'
@@ -20,15 +20,6 @@ export default function Terms() {
           <span>العودة للرئيسية</span>
           <ArrowLeft size={16} />
         </Link>
-        <button
-          type="button"
-          className="terms-print-btn"
-          onClick={() => window.print()}
-          title="طباعة"
-          aria-label="طباعة"
-        >
-          <Printer size={14} /> طباعة
-        </button>
       </header>
 
       <main className="terms-main">

@@ -262,19 +262,36 @@ jobs:
             test ${#NEW_PASS} -eq 32 || { echo "[fatal] could not generate password"; exit 1; }
             echo "[ok] generated 32-char SMTP password"
 
-            # 2. Show what cPanel email accounts exist (sanity-check that
-            #    info@urrwah.com actually exists before resetting).
-            echo "=== cPanel email accounts (UAPI list) ==="
-            uapi Email list_pops 2>&1 | grep -E "email|domain|user" | head -10 || true
+            # 2. List existing email accounts (sanity check).
+            echo "=== existing cPanel email accounts ==="
+            uapi --output=jsonpretty Email list_pops_with_disk 2>&1 | tail -40 || true
             echo ""
 
-            # 3. Reset the password on the cPanel email account.
-            echo "=== resetting password for $EMAIL_FULL ==="
-            uapi Email passwd_pop \
-              email="$EMAIL_USER" \
-              domain="$EMAIL_DOMAIN" \
-              password="$NEW_PASS" 2>&1 | tail -10 \
-              || { echo "[fatal] uapi passwd_pop failed"; exit 1; }
+            # 3. Create the account if it doesn't exist; otherwise reset its
+            #    password. The check uses uapi Email exists_pop.
+            EXISTS=$(uapi --output=jsonpretty Email exists_pop \
+                       email="$EMAIL_USER" \
+                       domain="$EMAIL_DOMAIN" 2>/dev/null \
+                     | grep -oE '"data" *: *(true|false|1|0)' | tail -1)
+            echo "=== exists_pop check: $EXISTS ==="
+            if echo "$EXISTS" | grep -qE 'true|: 1'; then
+              echo "  account exists — resetting password"
+              uapi Email passwd_pop \
+                email="$EMAIL_USER" \
+                domain="$EMAIL_DOMAIN" \
+                password="$NEW_PASS" 2>&1 | tail -10 \
+                || { echo "[fatal] passwd_pop failed"; exit 1; }
+            else
+              echo "  account does not exist — creating it"
+              uapi Email add_pop \
+                email="$EMAIL_USER" \
+                domain="$EMAIL_DOMAIN" \
+                password="$NEW_PASS" \
+                quota=1024 \
+                send_welcome_email=0 2>&1 | tail -15 \
+                || { echo "[fatal] add_pop failed"; exit 1; }
+              echo "[ok] created $EMAIL_FULL"
+            fi
             echo ""
 
             # 4. Update both prod + dev .env files. Idempotent: replaces the
