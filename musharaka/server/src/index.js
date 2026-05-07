@@ -94,6 +94,18 @@ app.use('/api/branches',      branchesRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
+// Internal shutdown — allows deploy scripts to gracefully kill this process
+// without needing pkill/pgrep (both exit 255 on CloudLinux/CageFS).
+// Protected by INTERNAL_KILL_KEY env var; ignored if the key is not configured.
+app.post('/api/internal/shutdown', (req, res) => {
+  const key = process.env.INTERNAL_KILL_KEY
+  if (!key || req.headers['x-kill-key'] !== key) {
+    return res.status(403).json({ error: 'forbidden' })
+  }
+  res.json({ bye: true })
+  setTimeout(() => process.exit(0), 200)
+})
+
 // /api/version — returns the deployed git SHA + timestamp.
 // deploy.sh and the GH Actions stamp step write GIT_SHA + DEPLOYED_AT to
 // server/.env on each deploy.  We read the file fresh on every request so

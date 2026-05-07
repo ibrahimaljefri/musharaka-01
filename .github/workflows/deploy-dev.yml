@@ -32,43 +32,81 @@ jobs:
       - name: Add VPS to known_hosts
         run: ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
+      # Ensure INTERNAL_KILL_KEY exists in the VPS server/.env.
+      # This key protects the /api/internal/shutdown endpoint used to restart
+      # the node process on CloudLinux/CageFS where pkill/pgrep are blocked.
+      - name: Ensure INTERNAL_KILL_KEY in server .env
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env
+             if ! grep -q "^INTERNAL_KILL_KEY=" "$SERVER_ENV" 2>/dev/null; then
+               KEY=$(head -c 32 /dev/urandom | base64 | tr -dc A-Za-z0-9 | head -c 40)
+               echo "INTERNAL_KILL_KEY=$KEY" >> "$SERVER_ENV"
+               echo "✓ generated INTERNAL_KILL_KEY (40-char random)"
+             else
+               echo "✓ INTERNAL_KILL_KEY already set"
+             fi'
+
       # Kill the running node process BEFORE deploy.sh tries to start a new one.
-      # pkill/pgrep exit 255 on CloudLinux/CageFS. We use two safer methods:
-      #   1. PID file written by the app on startup (~/urrwah-dev-api.pid)
-      #   2. `ss -Hltnp` port-to-PID lookup (avoids /proc scanning)
-      # This ensures the port is free so deploy.sh's `nohup node` succeeds.
+      # pkill / pgrep / /proc-scanning all exit 255 on CloudLinux/CageFS.
+      # Four escalating methods; any one success is sufficient.
       - name: Kill old process before deploy
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'set +e
              KILLED=0
-             # Method 1: PID file written by the app on startup
-             PID_FILE="$HOME/urrwah-dev-api.pid"
-             if [ -f "$PID_FILE" ]; then
-               OLD_PID=$(cat "$PID_FILE" 2>/dev/null)
-               if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
-                 kill -9 "$OLD_PID" 2>/dev/null \
-                   && echo "✓ pidfile: killed PID $OLD_PID" \
-                   || echo "⚠ pidfile: kill $OLD_PID failed"
+
+             # Method 1: HTTP shutdown endpoint (works once new code has been deployed at least once)
+             KILL_KEY=$(grep -oP "(?<=^INTERNAL_KILL_KEY=).+" \
+               ~/repos/urrwah-dev/musharaka/server/.env 2>/dev/null || true)
+             if [ -n "$KILL_KEY" ]; then
+               HTTP_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+                 -X POST http://127.0.0.1:3002/api/internal/shutdown \
+                 -H "x-kill-key: $KILL_KEY" 2>/dev/null || echo "000")
+               if [ "$HTTP_STATUS" = "200" ]; then
+                 echo "✓ http: shutdown endpoint accepted (HTTP $HTTP_STATUS)"
                  KILLED=1
+                 sleep 2
+               else
+                 echo "  http: shutdown returned HTTP $HTTP_STATUS (old code or not running)"
                fi
-               rm -f "$PID_FILE"
+             else
+               echo "  http: INTERNAL_KILL_KEY not in .env — skipping"
              fi
-             # Method 2: ss-based PID lookup (works without /proc scanning)
+
+             # Method 2: PID file written by the app on startup (new code writes ~/urrwah-dev-api.pid)
              if [ "$KILLED" -eq 0 ]; then
-               SS_PID=$(ss -Hltnp 2>/dev/null \
-                 | awk '"'"'/[: ]3002[^0-9]/{match($0,/pid=([0-9]+)/,a); if(a[1]!="") print a[1]}'"'"' \
-                 | head -1)
-               if [ -n "$SS_PID" ]; then
-                 kill -9 "$SS_PID" 2>/dev/null \
-                   && echo "✓ ss: killed PID $SS_PID" \
-                   || echo "⚠ ss: kill $SS_PID failed"
+               PID_FILE="$HOME/urrwah-dev-api.pid"
+               if [ -f "$PID_FILE" ]; then
+                 OLD_PID=$(cat "$PID_FILE" 2>/dev/null)
+                 if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+                   kill -9 "$OLD_PID" 2>/dev/null \
+                     && echo "✓ pidfile: killed PID $OLD_PID" \
+                     || echo "⚠ pidfile: kill $OLD_PID failed"
+                   KILLED=1
+                 fi
+                 rm -f "$PID_FILE"
+               fi
+             fi
+
+             # Method 3: cPanel PassengerApps restart (disable + re-enable)
+             # Works if the app is registered as a Passenger/Node.js Selector app.
+             if [ "$KILLED" -eq 0 ]; then
+               PA_LIST=$(uapi PassengerApps list_applications 2>/dev/null)
+               if echo "$PA_LIST" | grep -qi "urrwah\|3002\|dev\.urrwah"; then
+                 uapi PassengerApps disable_application domain=dev.urrwah.com 2>/dev/null \
+                   && echo "✓ passenger: disabled dev.urrwah.com" || true
+                 sleep 1
+                 uapi PassengerApps enable_application domain=dev.urrwah.com 2>/dev/null \
+                   && echo "✓ passenger: re-enabled dev.urrwah.com" || true
                  KILLED=1
                else
-                 echo "  ss: no PID found for port 3002"
+                 echo "  passenger: dev.urrwah.com not found in PassengerApps list"
+                 echo "$PA_LIST" | head -20
                fi
              fi
-             [ "$KILLED" -eq 1 ] && sleep 2 || echo "  no process killed — port may already be free"
+
+             [ "$KILLED" -eq 1 ] && sleep 2 || echo "  no process killed — port may already be free or will fail EADDRINUSE"
              true'
 
       - name: Run deploy.sh dev on VPS
@@ -93,9 +131,8 @@ jobs:
              exit 1'
 
       # Stamp the correct GIT_SHA into server .env.
-      # The new process started by deploy.sh writes a PID file and also
-      # has readEnvKey() in index.js — so /api/version reads GIT_SHA fresh
-      # from .env on every request without needing a second restart.
+      # readEnvKey() in index.js reads .env fresh on every /api/version request —
+      # no restart needed for SHA to reflect after the process is running new code.
       - name: Stamp GIT_SHA into server .env
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
