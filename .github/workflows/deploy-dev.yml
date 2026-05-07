@@ -193,8 +193,13 @@ jobs:
             SERVER_ENV=$HOME/repos/urrwah-dev/musharaka/server/.env
             DB_URL=$(grep -oP "(?<=^DATABASE_URL=).+" "$SERVER_ENV")
             cd $HOME/repos/urrwah-dev/musharaka/server
-            HASH=$(node -e 'console.log(require("bcryptjs").hashSync("Aa@123456789", 10))')
-            test -n "$HASH" || { echo "[fatal] bcryptjs missing"; exit 1; }
+            # node isn't in $PATH by default on cPanel — find it via the
+            # CloudLinux Node.js Selector path used by deploy.sh.
+            NODE_BIN=$(ls /opt/alt/alt-nodejs*/root/usr/bin/node 2>/dev/null | sort -V | tail -1)
+            test -n "$NODE_BIN" || { echo "[fatal] no node binary found under /opt/alt/alt-nodejs*"; exit 1; }
+            echo "[ok] using $NODE_BIN"
+            HASH=$($NODE_BIN -e 'console.log(require("bcryptjs").hashSync("Aa@123456789", 10))')
+            test -n "$HASH" || { echo "[fatal] bcryptjs missing or hashing failed"; exit 1; }
             echo "[ok] bcrypt hash generated"
             cat > /tmp/seed_dev_admin.sql <<'SQL'
             \set ON_ERROR_STOP on
