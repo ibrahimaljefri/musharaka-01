@@ -193,14 +193,16 @@ jobs:
             SERVER_ENV=$HOME/repos/urrwah-dev/musharaka/server/.env
             DB_URL=$(grep -oP "(?<=^DATABASE_URL=).+" "$SERVER_ENV")
             cd $HOME/repos/urrwah-dev/musharaka/server
-            # node isn't in $PATH by default on cPanel — find it via the
-            # CloudLinux Node.js Selector path used by deploy.sh.
-            NODE_BIN=$(ls /opt/alt/alt-nodejs*/root/usr/bin/node 2>/dev/null | sort -V | tail -1)
-            test -n "$NODE_BIN" || { echo "[fatal] no node binary found under /opt/alt/alt-nodejs*"; exit 1; }
-            echo "[ok] using $NODE_BIN"
-            HASH=$($NODE_BIN -e 'console.log(require("bcryptjs").hashSync("Aa@123456789", 10))')
-            test -n "$HASH" || { echo "[fatal] bcryptjs missing or hashing failed"; exit 1; }
-            echo "[ok] bcrypt hash generated"
+            # Server uses 'bcrypt' (native node addon), not 'bcryptjs'.
+            # Use cPanel's python3 with the bcrypt package (always installed).
+            HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'Aa@123456789', bcrypt.gensalt(10)).decode())" 2>/dev/null)
+            if [ -z "$HASH" ]; then
+              # Fallback: use the app's own bcrypt via node from the deploy nodeenv.
+              NODE_BIN=$(ls /opt/alt/alt-nodejs*/root/usr/bin/node 2>/dev/null | sort -V | tail -1)
+              HASH=$($NODE_BIN -e 'console.log(require("bcrypt").hashSync("Aa@123456789", 10))' 2>/dev/null)
+            fi
+            test -n "$HASH" || { echo "[fatal] could not generate bcrypt hash"; exit 1; }
+            echo "[ok] bcrypt hash generated (length=${#HASH})"
             cat > /tmp/seed_dev_admin.sql <<'SQL'
             \set ON_ERROR_STOP on
             INSERT INTO app_users (id, email, password_hash, full_name, email_confirmed_at,
