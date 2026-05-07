@@ -261,17 +261,12 @@ jobs:
             grep -q "^SMTP_PASS=" "$SERVER_ENV" && echo "SMTP_PASS=*** (set)" || echo "SMTP_PASS= (NOT SET)"
             echo ""
 
-            # Find the cPanel-managed node binary (deploy.sh uses /opt/alt/alt-nodejs22).
-            # Activate the proper nodeenv so node_modules path resolution works.
-            NODE_VENV="$HOME/nodeenv/repos/urrwah-prod/musharaka/server/22"
-            if [ -f "$NODE_VENV/bin/activate" ]; then
-              set +u
-              # shellcheck disable=SC1090
-              source "$NODE_VENV/bin/activate"
-              set -u
-            fi
-            echo "=== node version ==="
-            node --version
+            # node isn't on $PATH for non-interactive shells — use the cPanel
+            # nodeenv binary directly. Pick the highest available alt-nodejs.
+            NODE_BIN=$(ls /opt/alt/alt-nodejs*/root/usr/bin/node 2>/dev/null | sort -V | tail -1)
+            test -n "$NODE_BIN" || { echo "[fatal] no node binary found"; exit 1; }
+            echo "=== using $NODE_BIN ==="
+            "$NODE_BIN" --version
 
             # Run the test send. Loads .env via dotenv (server already does it),
             # then uses nodemailer directly with the same config the app uses.
@@ -313,7 +308,7 @@ jobs:
               process.exit(1)
             })
             JS
-            node /tmp/smtp_test.js
+            "$NODE_BIN" /tmp/smtp_test.js
             rm -f /tmp/smtp_test.js
         run: |
           printf '%s' "$REMOTE_SCRIPT" | \
