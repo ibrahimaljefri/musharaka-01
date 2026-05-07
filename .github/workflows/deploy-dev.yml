@@ -186,32 +186,37 @@ jobs:
       # when the user doesn't exist). Password = Aa@123456789.
       # Bcrypt hash is generated remotely via the app's bcryptjs.
       - name: Seed admin@admin.com on dev DB
-        run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash -s <<'REMOTE'
+        env:
+          REMOTE_SCRIPT: |
+            #!/usr/bin/env bash
             set -e
             SERVER_ENV=$HOME/repos/urrwah-dev/musharaka/server/.env
             DB_URL=$(grep -oP "(?<=^DATABASE_URL=).+" "$SERVER_ENV")
             cd $HOME/repos/urrwah-dev/musharaka/server
             HASH=$(node -e 'console.log(require("bcryptjs").hashSync("Aa@123456789", 10))')
-            if [ -z "$HASH" ]; then echo "[fatal] bcryptjs missing"; exit 1; fi
+            test -n "$HASH" || { echo "[fatal] bcryptjs missing"; exit 1; }
             echo "[ok] bcrypt hash generated"
-            psql "$DB_URL" -v hash="$HASH" <<'SQL'
-\set ON_ERROR_STOP on
-INSERT INTO app_users (id, email, password_hash, full_name, email_confirmed_at,
-                       terms_accepted_at, created_by_admin)
-SELECT gen_random_uuid(), 'admin@admin.com', :'hash', 'Admin', now(), now(), false
-WHERE NOT EXISTS (SELECT 1 FROM app_users WHERE email = 'admin@admin.com');
+            cat > /tmp/seed_dev_admin.sql <<'SQL'
+            \set ON_ERROR_STOP on
+            INSERT INTO app_users (id, email, password_hash, full_name, email_confirmed_at,
+                                   terms_accepted_at, created_by_admin)
+            SELECT gen_random_uuid(), 'admin@admin.com', :'hash', 'Admin', now(), now(), false
+            WHERE NOT EXISTS (SELECT 1 FROM app_users WHERE email = 'admin@admin.com');
 
-INSERT INTO super_admins (user_id)
-SELECT id FROM app_users WHERE email = 'admin@admin.com'
-  AND id NOT IN (SELECT user_id FROM super_admins);
+            INSERT INTO super_admins (user_id)
+            SELECT id FROM app_users WHERE email = 'admin@admin.com'
+              AND id NOT IN (SELECT user_id FROM super_admins);
 
-SELECT email,
-       (id IN (SELECT user_id FROM super_admins)) AS is_super_admin,
-       terms_accepted_at IS NOT NULL              AS terms_accepted
-  FROM app_users WHERE email = 'admin@admin.com';
-SQL
-          REMOTE
+            SELECT email,
+                   (id IN (SELECT user_id FROM super_admins)) AS is_super_admin,
+                   terms_accepted_at IS NOT NULL              AS terms_accepted
+              FROM app_users WHERE email = 'admin@admin.com';
+            SQL
+            psql "$DB_URL" -v hash="$HASH" -f /tmp/seed_dev_admin.sql
+            rm -f /tmp/seed_dev_admin.sql
+        run: |
+          printf '%s' "$REMOTE_SCRIPT" | \
+            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'cat > /tmp/seed_$$.sh && bash /tmp/seed_$$.sh && rm -f /tmp/seed_$$.sh'
 
       # ROOT-CAUSE FIX: ~/deploy.sh kills via
       #   pkill -9 -u "$USER" -f "node.*$SERVER_DIR/src/index.js"
