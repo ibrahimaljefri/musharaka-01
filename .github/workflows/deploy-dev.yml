@@ -163,6 +163,23 @@ jobs:
              echo "✗ /api/version SHA never matched after 30s"
              exit 1'
 
+      # Diagnose Apache proxy → port 3002 path (remove once 500 is fixed)
+      - name: Diagnose Apache proxy config
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'echo "=== docroot .htaccess ==="
+             cat ~/dev.urrwah.com/.htaccess 2>/dev/null || echo "(no .htaccess)"
+             echo "=== apache error log (last 20) ==="
+             tail -20 ~/logs/dev.urrwah.com-ssl.error 2>/dev/null \
+               || tail -20 ~/logs/dev.urrwah.com.error 2>/dev/null \
+               || ls ~/logs/ 2>/dev/null || echo "(no logs dir)"
+             echo "=== node process check ==="
+             curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null
+             echo ""
+             echo "=== public HTTPS check ==="
+             curl -fsS https://dev.urrwah.com/api/health 2>/dev/null \
+               || echo "(public HTTPS failed)"'
+
       - name: Tail deploy log on failure
         if: failure()
         run: |
