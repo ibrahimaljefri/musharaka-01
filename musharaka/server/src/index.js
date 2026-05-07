@@ -95,13 +95,26 @@ app.use('/api/branches',      branchesRoutes)
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
 // /api/version — returns the deployed git SHA + timestamp.
-// deploy.sh appends GIT_SHA + DEPLOYED_AT to .env on each deploy.
-// Used by the cpanel-deploy skill's post-deploy verification:
-// `curl /api/version | jq .sha` must equal the just-pushed commit.
+// deploy.sh and the GH Actions stamp step write GIT_SHA + DEPLOYED_AT to
+// server/.env on each deploy.  We read the file fresh on every request so
+// this works even when the Passenger-managed process has not restarted
+// (e.g. on cPanel/CloudLinux where pkill/pgrep are restricted).
+function readEnvKey(key) {
+  try {
+    const fs      = require('fs')
+    const envFile = path.join(__dirname, '..', '.env')
+    const content = fs.readFileSync(envFile, 'utf8')
+    const match   = content.match(new RegExp(`^${key}=([^\\r\\n]+)`, 'm'))
+    return match ? match[1].trim() : null
+  } catch {
+    return null
+  }
+}
+
 app.get('/api/version', (_req, res) => res.json({
-  sha:          process.env.GIT_SHA       || 'dev',
-  deployed_at:  process.env.DEPLOYED_AT   || null,
-  node_env:     process.env.NODE_ENV      || 'development',
+  sha:          readEnvKey('GIT_SHA')      || process.env.GIT_SHA      || 'dev',
+  deployed_at:  readEnvKey('DEPLOYED_AT')  || process.env.DEPLOYED_AT  || null,
+  node_env:     process.env.NODE_ENV       || 'development',
 }))
 
 // 404 for undefined /api/* routes only
