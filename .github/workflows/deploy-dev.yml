@@ -308,12 +308,28 @@ jobs:
             // Promote to process.env so the rest of the script works unchanged.
             for (const k of Object.keys(env)) process.env[k] = env[k]
             const nodemailer = require('nodemailer')
-            const t = nodemailer.createTransport({
-              host:   process.env.SMTP_HOST   || 'localhost',
-              port:   parseInt(process.env.SMTP_PORT || '587'),
-              secure: process.env.SMTP_SECURE === 'true',
-              auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-            })
+
+            // If no SMTP_PASS, try unauthenticated localhost relay (cPanel
+            // typically allows it from the same machine). This is a real
+            // fallback — many cPanel-hosted apps run this way.
+            const useAuth = !!process.env.SMTP_PASS
+            console.log('[debug] auth mode = ' + (useAuth ? 'PLAIN (host SMTP)' : 'localhost relay (no auth)'))
+
+            const config = useAuth
+              ? {
+                  host:   process.env.SMTP_HOST,
+                  port:   parseInt(process.env.SMTP_PORT || '587'),
+                  secure: process.env.SMTP_SECURE === 'true',
+                  auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+                }
+              : {
+                  host:        '127.0.0.1',
+                  port:        25,
+                  secure:      false,
+                  ignoreTLS:   true,
+                  tls:         { rejectUnauthorized: false },
+                }
+            const t = nodemailer.createTransport(config)
             t.verify().then(() => {
               console.log('[ok] transporter.verify() passed — server reachable')
               return t.sendMail({
