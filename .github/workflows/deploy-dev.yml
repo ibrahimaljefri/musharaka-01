@@ -170,6 +170,16 @@ jobs:
             'echo "=== node log tail (crashes?) ==="
              tail -30 ~/urrwah-dev-api.log 2>/dev/null || echo "(no log)"
              echo ""
+             echo "=== client dist contents ==="
+             ls -la ~/repos/urrwah-dev/musharaka/client/dist/ 2>/dev/null \
+               || echo "(client/dist missing or empty)"
+             echo "--- index.html head ---"
+             head -3 ~/repos/urrwah-dev/musharaka/client/dist/index.html 2>/dev/null \
+               || echo "(no index.html)"
+             echo ""
+             echo "=== deploy.sh dev contents (first 80 lines) ==="
+             head -80 ~/deploy.sh 2>/dev/null || echo "(~/deploy.sh not found)"
+             echo ""
              echo "=== Apache error log search ==="
              find ~/logs/ -name "*dev.urrwah*" -not -name "*.gz" 2>/dev/null | while read f; do
                echo "--- $f ---"; tail -20 "$f"; done || echo "(no uncompressed logs)"
