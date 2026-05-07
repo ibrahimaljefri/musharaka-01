@@ -38,22 +38,28 @@ jobs:
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'bash ~/deploy.sh dev'
 
-      - name: Wait for app to be healthy (up to 30s)
+      # Health check via direct port over SSH — bypasses Apache/SSL.
+      # Switch to https://dev.urrwah.com/api/health once AutoSSL is active.
+      - name: Verify app is healthy on port 3002
         run: |
-          for i in 1 2 3 4 5 6; do
-            if curl -fsS https://dev.urrwah.com/api/health | grep -q '"status":"ok"'; then
-              echo "✓ dev.urrwah.com is healthy on attempt $i"
-              exit 0
-            fi
-            echo "  attempt $i: not ready yet, waiting 5s…"
-            sleep 5
-          done
-          echo "✗ dev.urrwah.com health check failed after 30s"
-          exit 1
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'for i in 1 2 3 4 5 6; do
+               result=$(curl -fsS http://127.0.0.1:3002/api/health 2>/dev/null || echo "fail")
+               if echo "$result" | grep -q "\"status\":\"ok\""; then
+                 echo "✓ dev backend healthy on attempt $i: $result"
+                 exit 0
+               fi
+               echo "  attempt $i: $result — waiting 5s…"
+               sleep 5
+             done
+             echo "✗ dev backend health check failed after 30s"
+             exit 1'
 
+      # SHA check via direct port over SSH — same reason.
       - name: Verify deployed SHA matches this commit
         run: |
-          DEPLOYED=$(curl -fsS https://dev.urrwah.com/api/version | jq -r .sha)
+          DEPLOYED=$(ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null | node -e "let d=\"\"; process.stdin.on(\"data\",c=>d+=c); process.stdin.on(\"end\",()=>{ try{console.log(JSON.parse(d).sha)}catch{console.log(\"\")} })"')
           if [ "$DEPLOYED" != "${{ github.sha }}" ]; then
             echo "✗ /api/version returned '$DEPLOYED', expected '${{ github.sha }}'"
             exit 1
