@@ -75,12 +75,10 @@ jobs:
              echo "=== last 5 lines of node log ==="
              tail -5 ~/urrwah-dev-api.log 2>/dev/null || echo "(no node log)"'
 
-      # Stamp the correct GIT_SHA into server .env, then kill the node process
-      # so Passenger restarts it and picks up both the new code and new .env.
-      # pkill and pgrep both exit 255 on this CloudLinux VPS (binary-level
-      # restriction). We bypass them by scanning /proc/*/cmdline directly
-      # to find the PID, then call kill on that specific PID.
-      - name: Stamp GIT_SHA and kill node process via /proc scan
+      # Stamp the correct GIT_SHA into server .env, then restart the app.
+      # pkill, pgrep, and /proc scanning all exit 255 on CloudLinux/CageFS.
+      # Use cPanel's UAPI which is the native restart mechanism for Node.js apps.
+      - name: Stamp GIT_SHA and restart via cPanel UAPI
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env
@@ -92,26 +90,15 @@ jobs:
              echo "GIT_SHA=${{ github.sha }}" >> "$SERVER_ENV"
              echo "DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$SERVER_ENV"
              echo "✓ stamped GIT_SHA=${{ github.sha }}"
-             # Also touch restart.txt as belt-and-suspenders
+             # Touch Passenger restart.txt (belt-and-suspenders)
              mkdir -p ~/repos/urrwah-dev/musharaka/server/tmp \
                && touch ~/repos/urrwah-dev/musharaka/server/tmp/restart.txt \
                && echo "✓ touched restart.txt"
-             # Find the node process via /proc (avoids pkill/pgrep which exit 255)
-             NODE_PID=""
-             for f in /proc/[0-9]*/cmdline; do
-               cmd=$(cat "$f" 2>/dev/null | tr '"'"'\0'"'"' '"'"' '"'"')
-               if echo "$cmd" | grep -q "musharaka/server/src/index.js"; then
-                 NODE_PID=$(echo "$f" | cut -d/ -f3)
-                 break
-               fi
-             done
-             if [ -n "$NODE_PID" ]; then
-               kill "$NODE_PID" 2>/dev/null \
-                 && echo "✓ killed node PID $NODE_PID via /proc scan — Passenger will restart" \
-                 || echo "⚠ kill $NODE_PID returned non-zero"
-             else
-               echo "ℹ node PID not found in /proc — restart.txt is in effect"
-             fi'
+             # cPanel UAPI: native restart for Node.js apps managed by Node.js Selector
+             uapi NodeJsApp restart_app 2>&1 \
+               && echo "✓ uapi NodeJsApp restart_app succeeded" \
+               || echo "⚠ uapi restart_app failed or not available — continuing"
+             true'
 
       # Wait for the app to come back up after the bounce, then verify SHA.
       # Use grep/cut to parse JSON; avoids depending on `node` being in SSH PATH.
