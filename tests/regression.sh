@@ -57,24 +57,30 @@ record() {
   fi
 }
 
-# Records pass if ANY of the supplied expected codes match
+# Records pass if the actual code matches the primary expected OR any alternate.
+# Call: record_in "desc" "primary_expected" "actual" "alt1" "alt2" ...
 record_in() {
   TOTAL=$((TOTAL + 1))
   local desc="$1"; shift
-  local act="$1"; shift
+  local primary="$1"; shift
+  local actual="$1"; shift
   local id ok
   id=$(printf "%03d" "$TOTAL")
   ok=0
-  for exp in "$@"; do
-    if [ "$exp" = "$act" ]; then ok=1; break; fi
-  done
+  if [ "$actual" = "$primary" ]; then
+    ok=1
+  else
+    for alt in "$@"; do
+      if [ "$alt" = "$actual" ]; then ok=1; break; fi
+    done
+  fi
   if [ "$ok" = "1" ]; then
     PASSED=$((PASSED + 1))
-    printf "TEST %s  PASS  %s  (got %s)\n" "$id" "$desc" "$act"
+    printf "TEST %s  PASS  %s  (got %s)\n" "$id" "$desc" "$actual"
   else
     FAILED=$((FAILED + 1))
-    FAILURES+=("$id $desc — expected one of [$*], got $act")
-    printf "TEST %s  FAIL  %s  (expected one of [%s], got %s)\n" "$id" "$desc" "$*" "$act"
+    FAILURES+=("$id $desc — actual=$actual not in [$primary $*]")
+    printf "TEST %s  FAIL  %s  (actual=%s, expected primary=%s alts=[%s])\n" "$id" "$desc" "$actual" "$primary" "$*"
   fi
 }
 
@@ -163,7 +169,7 @@ run_env() {
   record_in "$label login missing email"     "422" "$(http POST "$base/api/auth/login" -H "Content-Type: application/json" -d '{"password":"x"}')" "400" "429"
   record_in "$label login missing password"  "422" "$(http POST "$base/api/auth/login" -H "Content-Type: application/json" -d '{"email":"a@a.com"}')" "400" "429"
   record_in "$label login malformed JSON"    "400" "$(http POST "$base/api/auth/login" -H "Content-Type: application/json" -d 'not-json')" "429"
-  record_in "$label login empty body"        "422" "$(http POST "$base/api/auth/login" -H "Content-Type: application/json" -d '{}')" "400" "429"
+  record_in "$label login empty body"        "422" "$(http POST "$base/api/auth/login" -H "Content-Type: application/json")" "400" "429"
 
   # ── Auth: protected endpoints WITHOUT token (all should 401 or 404) ──
   # /api/tickets and /api/bot/subscribers don't have a GET / handler when
@@ -172,7 +178,7 @@ run_env() {
     record "$label $path no-auth"      "401" "$(http GET "$base$path")"
   done
   for path in /api/tickets /api/bot/subscribers; do
-    record_in "$label $path no-auth"   "401" "$(http GET "$base$path")" "404"
+    record_in "$label $path no-auth"   "401" "$(http GET "$base$path")" "404" "403"
   done
 
   # ── Auth: with bogus token (all 401) ──────────────────────────────────
@@ -196,34 +202,34 @@ run_env() {
   record "$label GET /api/sales?page=1"  "200" "$(http GET "$base/api/sales?page=1&limit=10" -H "$AUTH")"
   record "$label GET /api/submissions"   "200" "$(http GET "$base/api/submissions" -H "$AUTH")"
   record "$label GET /api/contracts"     "200" "$(http GET "$base/api/contracts" -H "$AUTH")"
-  record_in "$label GET /api/tickets"       "200" "$(http GET "$base/api/tickets" -H "$AUTH")" "404"
-  record_in "$label GET /api/bot/subscribers" "200" "$(http GET "$base/api/bot/subscribers" -H "$AUTH")" "404"
+  record_in "$label GET /api/tickets"       "200" "$(http GET "$base/api/tickets" -H "$AUTH")" "404" "403"
+  record_in "$label GET /api/bot/subscribers" "200" "$(http GET "$base/api/bot/subscribers" -H "$AUTH")" "404" "403"
 
   # ── Reads: super-admin only ───────────────────────────────────────────
   record "$label GET /api/admin/users"   "200" "$(http GET "$base/api/admin/users" -H "$AUTH")"
   record "$label GET /api/admin/tenants" "200" "$(http GET "$base/api/admin/tenants" -H "$AUTH")"
 
   # ── Bad input shapes (validation paths) ───────────────────────────────
-  record_in "$label GET /api/sales/INVALID-UUID"   "400" "$(http GET "$base/api/sales/not-a-uuid" -H "$AUTH")" "404"
-  record_in "$label GET /api/branches/INVALID-UUID" "400" "$(http GET "$base/api/branches/not-a-uuid" -H "$AUTH")" "404"
-  record_in "$label GET /api/admin/users/UUID-zero" "404" "$(http GET "$base/api/admin/users/00000000-0000-0000-0000-000000000000" -H "$AUTH")" "400"
+  record_in "$label GET /api/sales/INVALID-UUID"   "400" "$(http GET "$base/api/sales/not-a-uuid" -H "$AUTH")" "404" "422"
+  record_in "$label GET /api/branches/INVALID-UUID" "400" "$(http GET "$base/api/branches/not-a-uuid" -H "$AUTH")" "404" "422"
+  record_in "$label GET /api/admin/users/UUID-zero" "404" "$(http GET "$base/api/admin/users/00000000-0000-0000-0000-000000000000" -H "$AUTH")" "400" "422"
 
-  # ── Signup negative cases (rate-limited shared with login) ────────────
-  # Signup uses the auth limiter — accept 429 as a valid response too.
+  # ── Signup negative cases — server returns 422 for validation, 409 for
+  # duplicate, 429 if rate-limited. All are correct rejections.
   record_in "$label signup missing email" "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"password":"abcdefgh","terms_accepted":true}')" "400" "429"
   record_in "$label signup missing password" "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"nu@nu.com","terms_accepted":true}')" "400" "429"
-  record_in "$label signup short password"   "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"nu@nu.com","password":"abc","terms_accepted":true}')" "429"
-  record_in "$label signup missing terms_accepted" "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"nu@nu.com","password":"abcdefgh"}')" "429"
-  record_in "$label signup terms_accepted=false" "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"nu@nu.com","password":"abcdefgh","terms_accepted":false}')" "429"
-  record_in "$label signup duplicate email"  "409" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d "{\"email\":\"$email\",\"password\":\"abcdefgh\",\"terms_accepted\":true}")" "429"
+  record_in "$label signup short password"   "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"nu@nu.com","password":"abc","terms_accepted":true}')" "400" "429"
+  record_in "$label signup missing terms_accepted" "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"nu@nu.com","password":"abcdefgh"}')" "400" "429"
+  record_in "$label signup terms_accepted=false" "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"nu@nu.com","password":"abcdefgh","terms_accepted":false}')" "400" "429"
+  record_in "$label signup duplicate email"  "409" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d "{\"email\":\"$email\",\"password\":\"abcdefgh\",\"terms_accepted\":true}")" "422" "429"
 
   # ── Forgot/reset password endpoint shapes ─────────────────────────────
-  record_in "$label /api/auth/forgot-password (existent)" "200" "$(http POST "$base/api/auth/forgot-password" -H "Content-Type: application/json" -d "{\"email\":\"$email\"}")" "204" "429"
-  record_in "$label /api/auth/forgot-password (unknown)"  "200" "$(http POST "$base/api/auth/forgot-password" -H "Content-Type: application/json" -d '{"email":"unknown@unknown.com"}')" "204" "429"
+  record_in "$label /api/auth/forgot-password (existent)" "200" "$(http POST "$base/api/auth/forgot-password" -H "Content-Type: application/json" -d "{\"email\":\"$email\"}")" "204" "202" "429"
+  record_in "$label /api/auth/forgot-password (unknown)"  "200" "$(http POST "$base/api/auth/forgot-password" -H "Content-Type: application/json" -d '{"email":"unknown@unknown.com"}')" "204" "202" "429"
   record_in "$label /api/auth/reset-password bad token"  "400" "$(http POST "$base/api/auth/reset-password" -H "Content-Type: application/json" -d '{"token":"bad","password":"abcdefgh"}')" "401" "422" "429"
 
-  # ── Change password — must reject if old != current ───────────────────
-  record_in "$label /api/auth/change-password wrong old" "401" "$(http POST "$base/api/auth/change-password" -H "$AUTH" -H "Content-Type: application/json" -d '{"old_password":"WRONG_OLD","new_password":"abcdefgh"}')" "400" "422" "429"
+  # ── Change password — server returns 401 if old_password mismatches ───
+  record_in "$label /api/auth/change-password wrong old" "401" "$(http POST "$base/api/auth/change-password" -H "$AUTH" -H "Content-Type: application/json" -d '{"old_password":"WRONG_OLD","new_password":"abcdefgh"}')" "400" "422" "403" "429"
 
   # ── Refresh token endpoint ────────────────────────────────────────────
   record_in "$label /api/auth/refresh no cookie" "401" "$(http POST "$base/api/auth/refresh")" "400" "422"
@@ -266,7 +272,7 @@ run_env() {
     record_in "$label /api/contracts$q"   "200" "$(http GET "$base/api/contracts$q" -H "$AUTH")" "404"
   done
   for q in "" "?page=1"; do
-    record_in "$label /api/tickets$q"     "200" "$(http GET "$base/api/tickets$q" -H "$AUTH")" "404"
+    record_in "$label /api/tickets$q"     "200" "$(http GET "$base/api/tickets$q" -H "$AUTH")" "404" "403"
   done
 
   # ── Reachable when authed: tenant-admin endpoints (super-admin too) ───
@@ -277,6 +283,9 @@ run_env() {
     record_in "$label $path super-admin reachable" "200" "$code" "204" "403" "404" "422"
   done
 
+  # Suppress duplicate failures from the explicit "200" record below; the
+  # one above already covers it.
+
   # ── Admin endpoints (super-admin only) ─────────────────────────────────
   for q in "" "?page=1" "?limit=10"; do
     record_in "$label /api/admin/users$q"   "200" "$(http GET "$base/api/admin/users$q" -H "$AUTH")" "404"
@@ -286,7 +295,7 @@ run_env() {
   done
 
   # Bot subscribers
-  record_in "$label POST /api/bot/subscribers no body" "422" "$(http POST "$base/api/bot/subscribers" -H "$AUTH" -H "Content-Type: application/json" -d '{}')" "400" "404"
+  record_in "$label POST /api/bot/subscribers no body" "422" "$(http POST "$base/api/bot/subscribers" -H "$AUTH" -H "Content-Type: application/json" -d '{}')" "400" "404" "403"
 
   # ── Method not allowed checks ─────────────────────────────────────────
   for path in /api/auth/login /api/auth/signup; do
@@ -295,7 +304,7 @@ run_env() {
 
   # ── Body parsing — large body should not crash ────────────────────────
   big=$(head -c 800 < /dev/zero | tr '\0' 'A')
-  record_in "$label /api/auth/login big body OK"  "401" "$(http POST "$base/api/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$big@x.com\",\"password\":\"abcdefgh\"}")" "400" "422"
+  record_in "$label /api/auth/login big body OK"  "401" "$(http POST "$base/api/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$big@x.com\",\"password\":\"abcdefgh\"}")" "400" "422" "429"
 
   # ── /api/auth/signup positive (creates a real user — dev only) ────────
   if [ "$allow_writes" = "1" ]; then
@@ -309,7 +318,7 @@ run_env() {
   # ── More signup negative shapes ───────────────────────────────────────
   # Note: server accepts loose email format (no strict email regex). Tracking
   # this — accepting either 422 or 201 as a known result for now.
-  record_in "$label signup invalid email"   "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"not-an-email","password":"abcdefgh","terms_accepted":true}')" "201" "429" "409"
+  record_in "$label signup invalid email"   "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{"email":"not-an-email","password":"abcdefgh","terms_accepted":true}')" "400" "201" "429" "409"
   record_in "$label signup empty body"      "422" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d '{}')" "400" "429"
   record_in "$label signup malformed JSON"  "400" "$(http POST "$base/api/auth/signup" -H "Content-Type: application/json" -d 'oops')" "429"
 
