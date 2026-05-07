@@ -55,9 +55,12 @@ jobs:
              echo "✗ dev backend health check failed after 30s"
              exit 1'
 
-      # Stamp the correct GIT_SHA into server .env, then kill the node process
-      # so Passenger/cPanel restarts it and picks up the new env value.
-      # The VPS deploy.sh doesn't stamp GIT_SHA (template feature not yet applied).
+      # Stamp the correct GIT_SHA into server .env, then restart the node process
+      # so Passenger picks up the new env value.
+      # Two restart mechanisms:
+      #   1. touch tmp/restart.txt  — Passenger's standard restart signal (always works)
+      #   2. kill by PID via pgrep  — forces immediate restart rather than waiting for next request
+      # Neither is allowed to fail the step (pkill exits 255 on CloudLinux; kill is safer).
       - name: Stamp GIT_SHA and bounce node process
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
@@ -70,11 +73,19 @@ jobs:
              echo "GIT_SHA=${{ github.sha }}" >> "$SERVER_ENV"
              echo "DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$SERVER_ENV"
              echo "✓ stamped GIT_SHA=${{ github.sha }}"
-             # Kill the running node process so it restarts and reads the new .env
-             pkill -f "urrwah-dev/musharaka/server/src/index.js" 2>/dev/null \
-               || pkill -f "urrwah-dev-api" 2>/dev/null \
-               || true
-             echo "✓ signaled node process to restart"'
+             # 1) Passenger restart.txt — triggers reload on next request (primary mechanism)
+             mkdir -p ~/repos/urrwah-dev/musharaka/server/tmp \
+               && touch ~/repos/urrwah-dev/musharaka/server/tmp/restart.txt \
+               && echo "✓ Passenger restart.txt touched" \
+               || echo "⚠ restart.txt touch failed (non-fatal)"
+             # 2) Kill by explicit PID so Passenger restarts immediately, not lazily.
+             #    pgrep+kill avoids the exit-255 CloudLinux restriction that pkill triggers.
+             NODE_PID=$(pgrep -f "urrwah-dev/musharaka/server/src/index.js" 2>/dev/null | head -1 || true)
+             if [ -n "$NODE_PID" ]; then
+               kill "$NODE_PID" 2>/dev/null && echo "✓ killed node PID $NODE_PID (Passenger will restart)" || echo "⚠ kill $NODE_PID returned non-zero (restart.txt still in effect)"
+             else
+               echo "ℹ no matching node PID found; restart.txt will handle it on next request"
+             fi'
 
       # Wait for the app to come back up after the bounce, then verify SHA.
       # Use grep/cut to parse JSON; avoids depending on `node` being in SSH PATH.
