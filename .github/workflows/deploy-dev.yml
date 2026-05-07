@@ -182,48 +182,42 @@ jobs:
              tail -40 ~/urrwah-dev-api.log 2>&1 ;
              exit 1'
 
-      # ONE-SHOT: seed admin@admin.com on dev DB (idempotent — only inserts
-      # when the user doesn't exist). Password = Aa@123456789.
-      # Bcrypt hash is generated remotely via the app's bcryptjs.
+      # ONE-SHOT: seed admin@admin.com on dev DB (idempotent).
+      # Password = Aa@123456789. Hash generated on the GH runner.
       - name: Seed admin@admin.com on dev DB
-        env:
-          REMOTE_SCRIPT: |
-            #!/usr/bin/env bash
-            set -e
-            SERVER_ENV=$HOME/repos/urrwah-dev/musharaka/server/.env
-            DB_URL=$(grep -oP "(?<=^DATABASE_URL=).+" "$SERVER_ENV")
-            cd $HOME/repos/urrwah-dev/musharaka/server
-            # Server uses 'bcrypt' (native node addon), not 'bcryptjs'.
-            # Use cPanel's python3 with the bcrypt package (always installed).
-            HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'Aa@123456789', bcrypt.gensalt(10)).decode())" 2>/dev/null)
-            if [ -z "$HASH" ]; then
-              # Fallback: use the app's own bcrypt via node from the deploy nodeenv.
-              NODE_BIN=$(ls /opt/alt/alt-nodejs*/root/usr/bin/node 2>/dev/null | sort -V | tail -1)
-              HASH=$($NODE_BIN -e 'console.log(require("bcrypt").hashSync("Aa@123456789", 10))' 2>/dev/null)
-            fi
-            test -n "$HASH" || { echo "[fatal] could not generate bcrypt hash"; exit 1; }
-            echo "[ok] bcrypt hash generated (length=${#HASH})"
-            cat > /tmp/seed_dev_admin.sql <<'SQL'
-            \set ON_ERROR_STOP on
-            INSERT INTO app_users (id, email, password_hash, full_name, email_confirmed_at,
-                                   terms_accepted_at, created_by_admin)
-            SELECT gen_random_uuid(), 'admin@admin.com', :'hash', 'Admin', now(), now(), false
-            WHERE NOT EXISTS (SELECT 1 FROM app_users WHERE email = 'admin@admin.com');
-
-            INSERT INTO super_admins (user_id)
-            SELECT id FROM app_users WHERE email = 'admin@admin.com'
-              AND id NOT IN (SELECT user_id FROM super_admins);
-
-            SELECT email,
-                   (id IN (SELECT user_id FROM super_admins)) AS is_super_admin,
-                   terms_accepted_at IS NOT NULL              AS terms_accepted
-              FROM app_users WHERE email = 'admin@admin.com';
-            SQL
-            psql "$DB_URL" -v hash="$HASH" -f /tmp/seed_dev_admin.sql
-            rm -f /tmp/seed_dev_admin.sql
         run: |
-          printf '%s' "$REMOTE_SCRIPT" | \
-            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'cat > /tmp/seed_$$.sh && bash /tmp/seed_$$.sh && rm -f /tmp/seed_$$.sh'
+          # Generate bcrypt hash on the GH runner (has python3 + bcrypt easily).
+          pip install --quiet bcrypt 2>&1 | tail -3 || true
+          HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'Aa@123456789', bcrypt.gensalt(10)).decode())")
+          test -n "$HASH" || { echo "[fatal] could not generate hash"; exit 1; }
+          echo "[ok] hash generated len=${#HASH}"
+
+          cat > /tmp/seed_dev_admin.sql <<'SQL'
+          \set ON_ERROR_STOP on
+          INSERT INTO app_users (id, email, password_hash, full_name, email_confirmed_at,
+                                 terms_accepted_at, created_by_admin)
+          SELECT gen_random_uuid(), 'admin@admin.com', :'hash', 'Admin', now(), now(), false
+          WHERE NOT EXISTS (SELECT 1 FROM app_users WHERE email = 'admin@admin.com');
+
+          INSERT INTO super_admins (user_id)
+          SELECT id FROM app_users WHERE email = 'admin@admin.com'
+            AND id NOT IN (SELECT user_id FROM super_admins);
+
+          SELECT email,
+                 (id IN (SELECT user_id FROM super_admins)) AS is_super_admin,
+                 terms_accepted_at IS NOT NULL              AS terms_accepted
+            FROM app_users WHERE email = 'admin@admin.com';
+          SQL
+
+          # Ship SQL + hash to the VPS, run psql there.
+          scp -o StrictHostKeyChecking=accept-new /tmp/seed_dev_admin.sql \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/seed_dev_admin.sql
+
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "DB_URL=\$(grep -oP \"(?<=^DATABASE_URL=).+\" \$HOME/repos/urrwah-dev/musharaka/server/.env) ; \
+             psql \"\$DB_URL\" -v hash='$HASH' -f /tmp/seed_dev_admin.sql && \
+             rm -f /tmp/seed_dev_admin.sql"
+          rm -f /tmp/seed_dev_admin.sql
 
       # ROOT-CAUSE FIX: ~/deploy.sh kills via
       #   pkill -9 -u "$USER" -f "node.*$SERVER_DIR/src/index.js"
