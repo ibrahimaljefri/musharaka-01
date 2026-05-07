@@ -272,7 +272,11 @@ jobs:
             # then uses nodemailer directly with the same config the app uses.
             echo "=== sending test email ==="
             cat > /tmp/smtp_test.js <<'JS'
-            require('dotenv').config()
+            const path = require('path')
+            require('dotenv').config({ path: path.resolve(__dirname, '.env') })
+            console.log('[debug] SMTP_USER=' + (process.env.SMTP_USER || '(empty)'))
+            console.log('[debug] SMTP_HOST=' + (process.env.SMTP_HOST || '(empty)'))
+            console.log('[debug] SMTP_PASS_set=' + (process.env.SMTP_PASS ? 'yes' : 'no'))
             const nodemailer = require('nodemailer')
             const t = nodemailer.createTransport({
               host:   process.env.SMTP_HOST   || 'localhost',
