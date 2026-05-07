@@ -163,35 +163,72 @@ jobs:
              echo "✗ /api/version SHA never matched after 30s"
              exit 1'
 
-      # Temporary: surface why login + /api/terms are 500-ing right now.
-      # Provokes one error from each endpoint, then prints the matching log lines.
-      - name: Diagnose 500 on login + /api/terms
+      # One-shot fix: URL-encode special characters (#, +, %) in the password
+      # portion of DATABASE_URL. psql accepts the raw form but Node's pg-pool
+      # url-parses it, so an unencoded `#` in the password makes the host parse
+      # as garbage → ENOTFOUND. Idempotent: re-encoding an already-encoded URL
+      # is a no-op because we only encode the password substring.
+      - name: Fix DATABASE_URL url-encoding in server .env
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'echo "=== provoke errors ===" ;
-             curl -sS -o /dev/null -w "terms HTTP %{http_code}\n" http://127.0.0.1:3002/api/terms ;
-             curl -sS -o /dev/null -w "login HTTP %{http_code}\n" \
-               -X POST http://127.0.0.1:3002/api/auth/login \
-               -H "Content-Type: application/json" \
-               -d "{\"email\":\"a@a.com\",\"password\":\"abcdefgh\"}" ;
+            'SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env ;
+             python3 - <<PY
+import re, urllib.parse, pathlib
+p = pathlib.Path("'"$SERVER_ENV"'")
+lines = p.read_text().splitlines()
+out = []
+fixed = False
+for ln in lines:
+    if ln.startswith("DATABASE_URL="):
+        url = ln[len("DATABASE_URL="):]
+        # Strip outer quotes if any
+        url = url.strip()
+        if (url.startswith("\"") and url.endswith("\"")) or (url.startswith("'\''") and url.endswith("'\''")):
+            url = url[1:-1]
+        # postgres://user:password@host:port/db
+        m = re.match(r"^(postgres(?:ql)?://[^:]+:)(.+)(@[^@]+)$", url)
+        if m:
+            head, pw, tail = m.group(1), m.group(2), m.group(3)
+            # Decode first to avoid double-encoding, then re-encode safely
+            try:
+                pw_decoded = urllib.parse.unquote(pw)
+            except Exception:
+                pw_decoded = pw
+            pw_enc = urllib.parse.quote(pw_decoded, safe="")
+            new_url = head + pw_enc + tail
+            if new_url != url:
+                fixed = True
+                ln = "DATABASE_URL=" + new_url
+                print("[fix] re-encoded password in DATABASE_URL")
+            else:
+                print("[ok] DATABASE_URL password already safely encoded")
+        else:
+            print("[warn] DATABASE_URL did not match expected pattern; left untouched")
+    out.append(ln)
+p.write_text("\n".join(out) + "\n")
+print("[done] fixed=" + str(fixed))
+PY
              echo "" ;
-             echo "=== node log tail (last 80 lines) ===" ;
-             tail -80 ~/urrwah-dev-api.log 2>&1 || echo "(no log)" ;
+             echo "=== restart node so it reloads .env ===" ;
+             KILL_KEY=$(grep -oP "(?<=^INTERNAL_KILL_KEY=).+" "$SERVER_ENV" 2>/dev/null) ;
+             [ -n "$KILL_KEY" ] && curl -sS -o /dev/null -w "shutdown HTTP %{http_code}\n" \
+               -X POST http://127.0.0.1:3002/api/internal/shutdown \
+               -H "x-kill-key: $KILL_KEY" 2>/dev/null ;
+             sleep 4 ;
              echo "" ;
-             echo "=== terms_content row check ===" ;
-             SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env ;
-             DB_URL=$(grep -oP "(?<=^DATABASE_URL=).+" "$SERVER_ENV" 2>/dev/null) ;
-             if [ -n "$DB_URL" ]; then
-               psql "$DB_URL" -c "SELECT id, length(body) AS body_len, updated_at FROM terms_content;" 2>&1 | head -20 ;
-               echo "" ;
-               echo "--- app_users new columns ---" ;
-               psql "$DB_URL" -c "SELECT column_name FROM information_schema.columns WHERE table_name=\"app_users\" AND column_name IN (\"terms_accepted_at\",\"created_by_admin\");" 2>&1 | head -10 ;
-               echo "" ;
-               echo "--- super-admin count ---" ;
-               psql "$DB_URL" -c "SELECT count(*) FROM super_admins;" 2>&1 | head -5 ;
-             else
-               echo "(could not read DATABASE_URL)" ;
-             fi'
+             echo "=== verify endpoints ===" ;
+             for i in 1 2 3 4 5 6; do
+               H=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3002/api/health) ;
+               T=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3002/api/terms) ;
+               L=$(curl -sS -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:3002/api/auth/login -H "Content-Type: application/json" -d "{\"email\":\"a@a.com\",\"password\":\"abcdefgh\"}") ;
+               echo "  attempt $i: health=$H terms=$T login=$L" ;
+               [ "$T" = "200" ] && [ "$L" != "500" ] && exit 0 ;
+               sleep 3 ;
+             done ;
+             echo "" ;
+             echo "=== node log tail (last 30 lines) ===" ;
+             tail -30 ~/urrwah-dev-api.log 2>&1 ;
+             exit 1'
 
       - name: Tail deploy log on failure
         if: failure()
