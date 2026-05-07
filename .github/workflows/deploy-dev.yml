@@ -256,9 +256,13 @@ jobs:
 
             # Show SMTP config (with password redacted) so we can see what's wired up.
             echo "=== prod .env SMTP config (redacted) ==="
-            grep -E "^(SMTP_HOST|SMTP_PORT|SMTP_SECURE|SMTP_USER|SMTP_FROM|APP_URL)=" "$SERVER_ENV" \
-              | sed -E 's/(SMTP_PASS=).+/\1***/'
-            grep -q "^SMTP_PASS=" "$SERVER_ENV" && echo "SMTP_PASS=*** (set)" || echo "SMTP_PASS= (NOT SET)"
+            grep -E "^(SMTP_HOST|SMTP_PORT|SMTP_SECURE|SMTP_USER|SMTP_FROM|APP_URL)=" "$SERVER_ENV"
+            # Show how SMTP_PASS line LOOKS (length only, never the value)
+            PASS_LINE=$(grep "^SMTP_PASS=" "$SERVER_ENV" || echo "")
+            PASS_VAL=${PASS_LINE#SMTP_PASS=}
+            echo "SMTP_PASS line length=${#PASS_LINE} value-length=${#PASS_VAL}"
+            echo "=== bytes around SMTP_PASS ==="
+            grep -B 1 -A 1 "^SMTP_PASS" "$SERVER_ENV" | wc -l
             echo ""
 
             # node isn't on $PATH for non-interactive shells — use the cPanel
