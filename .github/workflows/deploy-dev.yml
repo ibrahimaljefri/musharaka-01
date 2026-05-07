@@ -271,28 +271,38 @@ jobs:
             # Run the test send. Loads .env via dotenv (server already does it),
             # then uses nodemailer directly with the same config the app uses.
             echo "=== sending test email ==="
-            # dotenv chokes on `#` or special chars in SMTP_PASS. Parse the
-            # `.env` ourselves and export every line as a real shell var
-            # before invoking node. Single-quote each value to keep special
-            # chars literal.
-            set -o allexport
-            while IFS='=' read -r k v; do
-              # Skip comments and blank lines
-              case "$k" in '' | '#'*) continue ;; esac
-              # Strip surrounding quotes if any
-              v=${v#\"}; v=${v%\"}
-              v=${v#\'}; v=${v%\'}
-              eval "export $k=\"\$v\"" 2>/dev/null || true
-            done < "$SERVER_ENV"
-            set +o allexport
-
             cat > /tmp/smtp_test.js <<'JS'
-            // .env is already exported as real env vars by the shell wrapper,
-            // so we don't need dotenv here.
-            console.log('[debug] SMTP_USER=' + (process.env.SMTP_USER || '(empty)'))
-            console.log('[debug] SMTP_HOST=' + (process.env.SMTP_HOST || '(empty)'))
-            console.log('[debug] SMTP_PORT=' + (process.env.SMTP_PORT || '(empty)'))
-            console.log('[debug] SMTP_PASS_len=' + (process.env.SMTP_PASS ? process.env.SMTP_PASS.length : 0))
+            // Parse .env ourselves — dotenv truncates on '#' which breaks
+            // SMTP_PASS values that contain it. Read raw lines and split on
+            // the FIRST '=' only. Strip wrapping quotes if any. Strip CR for
+            // Windows-style line endings.
+            const fs   = require('fs')
+            const path = require('path')
+            const env  = {}
+            try {
+              const txt = fs.readFileSync(path.join(__dirname, '.env'), 'utf8')
+              for (const raw of txt.split('\n')) {
+                const line = raw.replace(/\r$/, '')
+                if (!line || line.startsWith('#')) continue
+                const eq = line.indexOf('=')
+                if (eq < 1) continue
+                const k = line.slice(0, eq).trim()
+                let   v = line.slice(eq + 1)
+                // Strip wrapping quotes (single or double) if balanced
+                if ((v.startsWith('"')  && v.endsWith('"'))  ||
+                    (v.startsWith("'")  && v.endsWith("'")))  v = v.slice(1, -1)
+                env[k] = v
+              }
+            } catch (e) {
+              console.error('[fail] could not read .env: ' + e.message)
+              process.exit(1)
+            }
+            console.log('[debug] SMTP_USER=' + (env.SMTP_USER || '(empty)'))
+            console.log('[debug] SMTP_HOST=' + (env.SMTP_HOST || '(empty)'))
+            console.log('[debug] SMTP_PORT=' + (env.SMTP_PORT || '(empty)'))
+            console.log('[debug] SMTP_PASS_len=' + (env.SMTP_PASS ? env.SMTP_PASS.length : 0))
+            // Promote to process.env so the rest of the script works unchanged.
+            for (const k of Object.keys(env)) process.env[k] = env[k]
             const nodemailer = require('nodemailer')
             const t = nodemailer.createTransport({
               host:   process.env.SMTP_HOST   || 'localhost',
