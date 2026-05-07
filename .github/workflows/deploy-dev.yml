@@ -163,69 +163,22 @@ jobs:
              echo "✗ /api/version SHA never matched after 30s"
              exit 1'
 
-      # One-shot fix: URL-encode special characters in the password portion of
-      # DATABASE_URL. psql accepts the raw form but Node's pg-pool URL-parses
-      # it, so unencoded `#`, `+`, `@`, `?` etc. in the password break host
-      # parsing → ENOTFOUND. Idempotent: re-encoding an already-encoded URL
-      # is a no-op because we only encode the password substring.
-      - name: Fix DATABASE_URL url-encoding in server .env
-        env:
-          PYTHON_SCRIPT: |
-            import os, re, urllib.parse, pathlib, sys
-            p = pathlib.Path(os.environ["SERVER_ENV"])
-            lines = p.read_text().splitlines()
-            out = []
-            fixed = False
-            for ln in lines:
-                if ln.startswith("DATABASE_URL="):
-                    url = ln[len("DATABASE_URL="):].strip()
-                    if len(url) >= 2 and url[0] == url[-1] and url[0] in ("\"", "'"):
-                        url = url[1:-1]
-                    m = re.match(r"^(postgres(?:ql)?://[^:/?#]+:)(.+)(@[^@]+)$", url)
-                    if m:
-                        head, pw, tail = m.group(1), m.group(2), m.group(3)
-                        try: pw = urllib.parse.unquote(pw)
-                        except Exception: pass
-                        new = head + urllib.parse.quote(pw, safe="") + tail
-                        if new != url:
-                            fixed = True
-                            ln = "DATABASE_URL=" + new
-                            print("[fix] re-encoded password in DATABASE_URL")
-                        else:
-                            print("[ok] DATABASE_URL already safe")
-                    else:
-                        print("[warn] DATABASE_URL did not match expected pattern")
-                out.append(ln)
-            p.write_text("\n".join(out) + "\n")
-            print("[done] fixed=" + str(fixed))
+      # Verify the dev backend can actually use DATABASE_URL after restart by
+      # hitting one DB-touching endpoint. /api/terms is public + always-on,
+      # so it's a clean smoke test for "did pg-pool connect successfully?".
+      - name: Smoke-test DB connectivity via /api/terms
         run: |
-          # Send the python script to the VPS as a file so we don't need to
-          # juggle nested heredoc quoting between local bash, ssh, and remote
-          # bash. Then run it with SERVER_ENV exported.
-          REMOTE_SCRIPT=/tmp/fix_db_url_$$.py
-          printf '%s' "$PYTHON_SCRIPT" | \
-            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cat > $REMOTE_SCRIPT"
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "SERVER_ENV=\$HOME/repos/urrwah-dev/musharaka/server/.env \
-             python3 $REMOTE_SCRIPT && rm -f $REMOTE_SCRIPT"
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'SERVER_ENV=$HOME/repos/urrwah-dev/musharaka/server/.env ;
-             echo "=== restart node ===" ;
-             KILL_KEY=$(grep -oP "(?<=^INTERNAL_KILL_KEY=).+" "$SERVER_ENV" 2>/dev/null) ;
-             [ -n "$KILL_KEY" ] && curl -sS -o /dev/null -w "shutdown HTTP %{http_code}\n" \
-               -X POST http://127.0.0.1:3002/api/internal/shutdown \
-               -H "x-kill-key: $KILL_KEY" 2>/dev/null ;
-             sleep 4 ;
-             echo "=== verify endpoints ===" ;
-             for i in 1 2 3 4 5 6; do
-               H=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3002/api/health) ;
-               T=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3002/api/terms) ;
-               L=$(curl -sS -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:3002/api/auth/login -H "Content-Type: application/json" -d "{\"email\":\"a@a.com\",\"password\":\"abcdefgh\"}") ;
-               echo "  attempt $i: health=$H terms=$T login=$L" ;
-               [ "$T" = "200" ] && [ "$L" != "500" ] && exit 0 ;
+            'for i in 1 2 3 4 5; do
+               status=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3002/api/terms) ;
+               if [ "$status" = "200" ]; then
+                 echo "✓ /api/terms 200 on attempt $i — DB pool is healthy" ;
+                 exit 0 ;
+               fi ;
+               echo "  attempt $i: /api/terms HTTP $status — waiting 3s…" ;
                sleep 3 ;
              done ;
-             echo "=== node log tail ===" ;
+             echo "✗ /api/terms never returned 200 — DB connectivity issue" ;
              tail -40 ~/urrwah-dev-api.log 2>&1 ;
              exit 1'
 
