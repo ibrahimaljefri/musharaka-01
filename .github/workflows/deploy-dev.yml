@@ -56,10 +56,12 @@ jobs:
              exit 1'
 
       # SHA check via direct port over SSH — same reason.
+      # Use grep/cut to parse JSON; avoids depending on `node` being in SSH PATH.
       - name: Verify deployed SHA matches this commit
         run: |
           DEPLOYED=$(ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null | node -e "let d=\"\"; process.stdin.on(\"data\",c=>d+=c); process.stdin.on(\"end\",()=>{ try{console.log(JSON.parse(d).sha)}catch{console.log(\"\")} })"')
+            'curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null \
+             | grep -o "\"sha\":\"[^\"]*\"" | head -1 | cut -d"\"" -f4')
           if [ "$DEPLOYED" != "${{ github.sha }}" ]; then
             echo "✗ /api/version returned '$DEPLOYED', expected '${{ github.sha }}'"
             exit 1
