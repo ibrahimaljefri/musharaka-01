@@ -182,6 +182,48 @@ jobs:
              tail -40 ~/urrwah-dev-api.log 2>&1 ;
              exit 1'
 
+      # TEMP: diagnose why urrwah.com prod isn't proxying /api/* to node.
+      # Remove once urrwah.com is healthy.
+      - name: Diagnose urrwah.com prod vhost
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'echo "=== cPanel docroot for urrwah.com ===" ;
+             cat /var/cpanel/userdata/$(whoami)/urrwah.com 2>/dev/null | grep -E "documentroot|servername|user" | head -10 ;
+             cat /var/cpanel/userdata/$(whoami)/urrwah.com_SSL 2>/dev/null | grep -E "documentroot|servername|user" | head -10 ;
+             echo "" ;
+             echo "=== home dirs that look prod-related ===" ;
+             ls -ld ~/urrwah.com ~/public_html/urrwah.com ~/public_html/urrwah ~/repos/urrwah-prod 2>/dev/null ;
+             echo "" ;
+             echo "=== docroot contents (likely public_html/urrwah.com) ===" ;
+             ls -la ~/public_html/urrwah.com/ 2>/dev/null | head -20 ;
+             echo "" ;
+             echo "=== .htaccess at docroot ===" ;
+             cat ~/public_html/urrwah.com/.htaccess 2>/dev/null || echo "(no .htaccess)" ;
+             echo "" ;
+             echo "=== prod repo config ===" ;
+             ls ~/repos/ 2>/dev/null ;
+             echo "" ;
+             echo "=== prod server .env (port + db, redacted) ===" ;
+             for envf in ~/repos/urrwah-prod/musharaka/server/.env ~/public_html/urrwah.com/server/.env ~/public_html/musharaka/server/server/.env; do
+               if [ -f "$envf" ]; then
+                 echo "--- $envf ---" ;
+                 grep -E "^(PORT|NODE_ENV|CLIENT_ORIGIN|DATABASE_URL)=" "$envf" \
+                   | sed -E "s|(://[^:]+:)[^@]+(@)|\1***\2|" ;
+               fi ;
+             done ;
+             echo "" ;
+             echo "=== prod node processes ===" ;
+             ps -fu $(whoami) | grep -E "node|index.js" | grep -v grep | head -5 ;
+             echo "" ;
+             echo "=== prod ports listening ===" ;
+             ss -tlnp 2>/dev/null | grep -E ":300[0-9]|:443" | head -10 ;
+             echo "" ;
+             echo "=== probe prod node directly on common ports ===" ;
+             for p in 3001 3003 3000; do
+               s=$(curl -sS -o /dev/null -w "%{http_code}" -m 2 http://127.0.0.1:$p/api/health 2>/dev/null) ;
+               echo "  port $p → HTTP $s" ;
+             done'
+
       - name: Tail deploy log on failure
         if: failure()
         run: |
