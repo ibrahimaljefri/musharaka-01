@@ -55,6 +55,26 @@ jobs:
              echo "✗ dev backend health check failed after 30s"
              exit 1'
 
+      # Diagnose post-deploy state: confirm new code is running and .env is readable.
+      # This step is intentionally verbose to help trace the GIT_SHA propagation.
+      - name: Diagnose post-deploy state
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'echo "=== GIT_SHA in server/.env ==="
+             grep "GIT_SHA" ~/repos/urrwah-dev/musharaka/server/.env 2>/dev/null || echo "(not found)"
+             echo "=== /api/version raw response ==="
+             curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null
+             echo ""
+             echo "=== new readEnvKey code present? ==="
+             grep -c "readEnvKey" ~/repos/urrwah-dev/musharaka/server/src/index.js 2>/dev/null \
+               && echo "(new code)" || echo "(OLD code — readEnvKey missing)"
+             echo "=== __dirname of index.js (inferred) ==="
+             ls -la ~/repos/urrwah-dev/musharaka/server/src/index.js 2>/dev/null
+             echo "=== server/tmp dir ==="
+             ls -la ~/repos/urrwah-dev/musharaka/server/tmp/ 2>/dev/null || echo "(no tmp dir)"
+             echo "=== last 5 lines of node log ==="
+             tail -5 ~/urrwah-dev-api.log 2>/dev/null || echo "(no node log)"'
+
       # Stamp the correct GIT_SHA into server .env, then signal Passenger to
       # reload the process so it picks up the new value.
       # We ONLY use touch tmp/restart.txt — pkill and pgrep both exit 255 on
