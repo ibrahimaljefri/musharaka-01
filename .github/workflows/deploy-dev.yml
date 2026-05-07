@@ -55,40 +55,44 @@ jobs:
              echo "✗ dev backend health check failed after 30s"
              exit 1'
 
-      # Stamp GIT_SHA from GitHub Actions into the server .env so /api/version
-      # returns the correct commit hash. The VPS deploy.sh doesn't do this yet
-      # (it uses the template's step 3 only when re-deployed from the template).
-      - name: Stamp GIT_SHA into server .env
+      # Stamp the correct GIT_SHA into server .env, then kill the node process
+      # so Passenger/cPanel restarts it and picks up the new env value.
+      # The VPS deploy.sh doesn't stamp GIT_SHA (template feature not yet applied).
+      - name: Stamp GIT_SHA and bounce node process
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env
+             # Update GIT_SHA in .env
              if [ -f "$SERVER_ENV" ]; then
                grep -v -E "^(GIT_SHA|DEPLOYED_AT)=" "$SERVER_ENV" > "$SERVER_ENV.tmp" \
                  && mv "$SERVER_ENV.tmp" "$SERVER_ENV"
              fi
-             printf "GIT_SHA=${{ github.sha }}\nDEPLOYED_AT=$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)\n" \
-               >> "$SERVER_ENV"
-             # Touch Passenger restart file so the app reloads the new env
-             mkdir -p ~/repos/urrwah-dev/tmp && touch ~/repos/urrwah-dev/tmp/restart.txt'
+             echo "GIT_SHA=${{ github.sha }}" >> "$SERVER_ENV"
+             echo "DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$SERVER_ENV"
+             echo "✓ stamped GIT_SHA=${{ github.sha }}"
+             # Kill the running node process so it restarts and reads the new .env
+             pkill -f "urrwah-dev/musharaka/server/src/index.js" 2>/dev/null \
+               || pkill -f "urrwah-dev-api" 2>/dev/null \
+               || true
+             echo "✓ signaled node process to restart"'
 
-      # SHA check via direct port over SSH — same reason.
+      # Wait for the app to come back up after the bounce, then verify SHA.
       # Use grep/cut to parse JSON; avoids depending on `node` being in SSH PATH.
-      # Allow up to 15s for Passenger to restart after env update.
       - name: Verify deployed SHA matches this commit
         run: |
-          for i in 1 2 3; do
-            DEPLOYED=$(ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-              'curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null \
-               | grep -o "\"sha\":\"[^\"]*\"" | head -1 | cut -d"\"" -f4')
-            if [ "$DEPLOYED" = "${{ github.sha }}" ]; then
-              echo "✓ deployed SHA matches: $DEPLOYED"
-              exit 0
-            fi
-            echo "  attempt $i: got '$DEPLOYED', waiting 5s…"
-            sleep 5
-          done
-          echo "✗ /api/version returned '$DEPLOYED', expected '${{ github.sha }}'"
-          exit 1
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'for i in 1 2 3 4 5 6; do
+               sha=$(curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null \
+                     | grep -o "\"sha\":\"[^\"]*\"" | head -1 | cut -d"\"" -f4)
+               if [ "$sha" = "${{ github.sha }}" ]; then
+                 echo "✓ deployed SHA matches on attempt $i: $sha"
+                 exit 0
+               fi
+               echo "  attempt $i: sha=\"$sha\" — waiting 5s…"
+               sleep 5
+             done
+             echo "✗ /api/version SHA never matched after 30s"
+             exit 1'
 
       - name: Tail deploy log on failure
         if: failure()
