@@ -243,6 +243,19 @@ jobs:
                grep -n "pkill" ~/deploy.sh ;
              fi'
 
+      # ONE-SHOT: force prod redeploy to pick up the master-HEAD chart fix
+      # (and any other master commits not yet shipped). Idempotent — calling
+      # deploy.sh prod is safe even when prod is already on the latest SHA.
+      - name: Force prod redeploy (master HEAD)
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'echo "=== running bash ~/deploy.sh prod ===" ;
+             bash ~/deploy.sh prod 2>&1 | tail -50 ;
+             echo "" ;
+             echo "=== prod /api/version after redeploy ===" ;
+             sleep 4 ;
+             curl -sS http://127.0.0.1:3001/api/version'
+
       # The shared ~/deploy.sh kills ALL node processes when starting one env,
       # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
       # listener. Ensure prod is also running after every dev deploy.
