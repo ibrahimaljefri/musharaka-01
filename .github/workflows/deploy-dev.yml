@@ -185,9 +185,21 @@ jobs:
       # The shared ~/deploy.sh kills ALL node processes when starting one env,
       # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
       # listener. Ensure prod is also running after every dev deploy.
-      # Idempotent — only runs deploy.sh prod when port 3001 isn't responding.
+      # Also re-writes the .htaccess proxy rule because deploy.sh's rsync
+      # --delete wipes it from the docroot.
       - name: Ensure urrwah.com prod is also running
         run: |
+          # Always re-write the proxy .htaccess (idempotent, costs nothing).
+          # Apache vhost docroot for urrwah.com is ~/public_html/urrwah.com
+          HTACCESS_CONTENT='RewriteEngine On
+          RewriteCond %{HTTPS} off
+          RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+          RewriteRule ^(.*)$ http://127.0.0.1:3001/$1 [P,L]
+          '
+          printf '%s' "$HTACCESS_CONTENT" | sed 's/^          //' | \
+            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+              'mkdir -p ~/public_html/urrwah.com && cat > ~/public_html/urrwah.com/.htaccess && echo "[ok] re-wrote prod .htaccess"'
+
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'PROD_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3001/api/health 2>/dev/null) ;
              echo "prod /api/health → $PROD_STATUS" ;
@@ -205,6 +217,17 @@ jobs:
                exit 1 ;
              fi ;
              echo "✓ prod is already healthy"'
+
+          # Final external check via Apache (HTTPS → vhost → .htaccess → node)
+          for i in 1 2 3 4 5; do
+            s=$(curl -sS -o /dev/null -w "%{http_code}" -m 5 https://urrwah.com/api/health 2>/dev/null)
+            body=$(curl -sS -m 5 https://urrwah.com/api/health 2>/dev/null | head -1)
+            echo "  external https://urrwah.com/api/health → $s ($body)"
+            [ "$s" = "200" ] && case "$body" in *'"status":"ok"'*) echo "✓ prod external health OK"; exit 0;; esac
+            sleep 3
+          done
+          echo "✗ external prod health failed — Apache not proxying to node"
+          exit 1
 
       # Likewise: deploy.sh prod kills dev. Re-verify dev is still up at end.
       - name: Re-verify dev still up after prod ensure
