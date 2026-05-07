@@ -243,6 +243,12 @@ jobs:
                grep -n "pkill" ~/deploy.sh ;
              fi'
 
+      # ONE-SHOT: redeploy prod to ship the master Terms.jsx change (no print btn).
+      # Idempotent — safe if prod is already up to date.
+      - name: Force prod redeploy (master HEAD)
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'bash ~/deploy.sh prod 2>&1 | tail -20'
 
       # The shared ~/deploy.sh kills ALL node processes when starting one env,
       # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
