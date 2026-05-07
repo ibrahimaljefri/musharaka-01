@@ -182,12 +182,29 @@ jobs:
              tail -40 ~/urrwah-dev-api.log 2>&1 ;
              exit 1'
 
-      # Inspect ~/deploy.sh to understand its kill mechanism (one-time).
-      - name: Inspect deploy.sh kill mechanism
+      # ROOT-CAUSE FIX: ~/deploy.sh kills via
+      #   pkill -9 -u "$USER" -f "node.*$SERVER_DIR/src/index.js"
+      # which matches BOTH urrwah-dev AND urrwah-prod node processes (the
+      # SERVER_DIR substring "musharaka/server" appears in both paths).
+      # Result: deploying one env nukes the other.
+      #
+      # Patch the kill line to use REPO_DIR (env-specific path) so each env
+      # only kills its own process. Idempotent — sed only replaces if the
+      # broken pattern is still present.
+      - name: Patch deploy.sh kill mechanism (env-specific)
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'echo "=== deploy.sh kill section ===" ;
-             grep -n -B 1 -A 8 "pkill\|kill -\|fuser\|lsof.*-i" ~/deploy.sh | head -60'
+            'BEFORE=$(grep -c "pkill -9 -u \"\$USER\" -f \"node.*\$SERVER_DIR/src/index.js\"" ~/deploy.sh 2>/dev/null || echo 0) ;
+             echo "matches before patch: $BEFORE" ;
+             if [ "$BEFORE" -gt 0 ]; then
+               cp ~/deploy.sh ~/deploy.sh.bak.$(date +%s) ;
+               sed -i "s|pkill -9 -u \"\$USER\" -f \"node.*\$SERVER_DIR/src/index.js\"|pkill -9 -u \"\$USER\" -f \"node.*\$REPO_DIR/\$SERVER_DIR/src/index.js\"|g" ~/deploy.sh ;
+               echo "[ok] patched kill line in ~/deploy.sh" ;
+               grep -n "pkill" ~/deploy.sh ;
+             else
+               echo "[ok] kill line already patched (no replacement needed)" ;
+               grep -n "pkill" ~/deploy.sh ;
+             fi'
 
       # The shared ~/deploy.sh kills ALL node processes when starting one env,
       # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
