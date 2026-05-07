@@ -182,6 +182,50 @@ jobs:
              tail -40 ~/urrwah-dev-api.log 2>&1 ;
              exit 1'
 
+      # The shared ~/deploy.sh kills ALL node processes when starting one env,
+      # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
+      # listener. Ensure prod is also running after every dev deploy.
+      # Idempotent — only runs deploy.sh prod when port 3001 isn't responding.
+      - name: Ensure urrwah.com prod is also running
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'PROD_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3001/api/health 2>/dev/null) ;
+             echo "prod /api/health → $PROD_STATUS" ;
+             if [ "$PROD_STATUS" != "200" ]; then
+               echo "→ restarting prod node via deploy.sh prod" ;
+               bash ~/deploy.sh prod 2>&1 | tail -30 ;
+               for i in 1 2 3 4 5 6; do
+                 s=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3001/api/health 2>/dev/null) ;
+                 echo "  attempt $i: prod health=$s" ;
+                 [ "$s" = "200" ] && exit 0 ;
+                 sleep 4 ;
+               done ;
+               echo "✗ prod still not healthy" ;
+               tail -30 ~/urrwah-prod-api.log 2>/dev/null || tail -30 ~/musharaka.log 2>/dev/null ;
+               exit 1 ;
+             fi ;
+             echo "✓ prod is already healthy"'
+
+      # Likewise: deploy.sh prod kills dev. Re-verify dev is still up at end.
+      - name: Re-verify dev still up after prod ensure
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'DEV_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3002/api/health 2>/dev/null) ;
+             echo "dev /api/health → $DEV_STATUS" ;
+             if [ "$DEV_STATUS" != "200" ]; then
+               echo "→ dev was killed by prod deploy; restarting via deploy.sh dev" ;
+               bash ~/deploy.sh dev 2>&1 | tail -30 ;
+               for i in 1 2 3 4 5 6; do
+                 s=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3002/api/health 2>/dev/null) ;
+                 echo "  attempt $i: dev health=$s" ;
+                 [ "$s" = "200" ] && exit 0 ;
+                 sleep 4 ;
+               done ;
+               echo "✗ dev still not healthy" ;
+               exit 1 ;
+             fi ;
+             echo "✓ dev is healthy"'
+
 
       - name: Tail deploy log on failure
         if: failure()
