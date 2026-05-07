@@ -55,18 +55,40 @@ jobs:
              echo "✗ dev backend health check failed after 30s"
              exit 1'
 
+      # Stamp GIT_SHA from GitHub Actions into the server .env so /api/version
+      # returns the correct commit hash. The VPS deploy.sh doesn't do this yet
+      # (it uses the template's step 3 only when re-deployed from the template).
+      - name: Stamp GIT_SHA into server .env
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env
+             if [ -f "$SERVER_ENV" ]; then
+               grep -v -E "^(GIT_SHA|DEPLOYED_AT)=" "$SERVER_ENV" > "$SERVER_ENV.tmp" \
+                 && mv "$SERVER_ENV.tmp" "$SERVER_ENV"
+             fi
+             printf "GIT_SHA=${{ github.sha }}\nDEPLOYED_AT=$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)\n" \
+               >> "$SERVER_ENV"
+             # Touch Passenger restart file so the app reloads the new env
+             mkdir -p ~/repos/urrwah-dev/tmp && touch ~/repos/urrwah-dev/tmp/restart.txt'
+
       # SHA check via direct port over SSH — same reason.
       # Use grep/cut to parse JSON; avoids depending on `node` being in SSH PATH.
+      # Allow up to 15s for Passenger to restart after env update.
       - name: Verify deployed SHA matches this commit
         run: |
-          DEPLOYED=$(ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null \
-             | grep -o "\"sha\":\"[^\"]*\"" | head -1 | cut -d"\"" -f4')
-          if [ "$DEPLOYED" != "${{ github.sha }}" ]; then
-            echo "✗ /api/version returned '$DEPLOYED', expected '${{ github.sha }}'"
-            exit 1
-          fi
-          echo "✓ deployed SHA matches: $DEPLOYED"
+          for i in 1 2 3; do
+            DEPLOYED=$(ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+              'curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null \
+               | grep -o "\"sha\":\"[^\"]*\"" | head -1 | cut -d"\"" -f4')
+            if [ "$DEPLOYED" = "${{ github.sha }}" ]; then
+              echo "✓ deployed SHA matches: $DEPLOYED"
+              exit 0
+            fi
+            echo "  attempt $i: got '$DEPLOYED', waiting 5s…"
+            sleep 5
+          done
+          echo "✗ /api/version returned '$DEPLOYED', expected '${{ github.sha }}'"
+          exit 1
 
       - name: Tail deploy log on failure
         if: failure()
