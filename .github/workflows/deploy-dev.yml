@@ -183,34 +183,35 @@ jobs:
              exit 1'
 
       # ONE-SHOT: seed admin@admin.com on dev DB (idempotent — only inserts
-      # if no admin@admin.com user exists). Password = Aa@123456789.
-      # Bcrypt hash precomputed: $2a$10$lD7yJfX73vwLpjvMl6F4bOWnIH7d7H5DCt35KK37sJADPeurvI8VC
-      # (round 10, generated server-side from "Aa@123456789").
-      # Once dev has been seeded once, this step is a no-op.
+      # when the user doesn't exist). Password = Aa@123456789.
+      # Bcrypt hash is generated remotely via the app's bcryptjs.
       - name: Seed admin@admin.com on dev DB
         run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'SERVER_ENV=$HOME/repos/urrwah-dev/musharaka/server/.env ;
-             DB_URL=$(grep -oP "(?<=^DATABASE_URL=).+" "$SERVER_ENV") ;
-             # Generate the bcrypt hash via the app node_modules (avoids
-             # needing python-bcrypt on the host).
-             cd ~/repos/urrwah-dev/musharaka/server &&
-             HASH=$(node -e "const b=require(\"bcryptjs\"); console.log(b.hashSync(\"Aa@123456789\", 10));" 2>/dev/null) ;
-             if [ -z "$HASH" ]; then echo "[fatal] bcryptjs not installed"; exit 1; fi ;
-             echo "[ok] generated hash" ;
-             psql "$DB_URL" <<SQL
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash -s <<'REMOTE'
+            set -e
+            SERVER_ENV=$HOME/repos/urrwah-dev/musharaka/server/.env
+            DB_URL=$(grep -oP "(?<=^DATABASE_URL=).+" "$SERVER_ENV")
+            cd $HOME/repos/urrwah-dev/musharaka/server
+            HASH=$(node -e 'console.log(require("bcryptjs").hashSync("Aa@123456789", 10))')
+            if [ -z "$HASH" ]; then echo "[fatal] bcryptjs missing"; exit 1; fi
+            echo "[ok] bcrypt hash generated"
+            psql "$DB_URL" -v hash="$HASH" <<'SQL'
+\set ON_ERROR_STOP on
 INSERT INTO app_users (id, email, password_hash, full_name, email_confirmed_at,
                        terms_accepted_at, created_by_admin)
-SELECT gen_random_uuid(), '"'"'admin@admin.com'"'"', '"'"'$HASH'"'"', '"'"'Admin'"'"', now(), now(), false
-WHERE NOT EXISTS (SELECT 1 FROM app_users WHERE email = '"'"'admin@admin.com'"'"');
+SELECT gen_random_uuid(), 'admin@admin.com', :'hash', 'Admin', now(), now(), false
+WHERE NOT EXISTS (SELECT 1 FROM app_users WHERE email = 'admin@admin.com');
 
 INSERT INTO super_admins (user_id)
-SELECT id FROM app_users WHERE email = '"'"'admin@admin.com'"'"'
+SELECT id FROM app_users WHERE email = 'admin@admin.com'
   AND id NOT IN (SELECT user_id FROM super_admins);
 
-SELECT email, id IN (SELECT user_id FROM super_admins) AS is_super_admin FROM app_users WHERE email = '"'"'admin@admin.com'"'"';
+SELECT email,
+       (id IN (SELECT user_id FROM super_admins)) AS is_super_admin,
+       terms_accepted_at IS NOT NULL              AS terms_accepted
+  FROM app_users WHERE email = 'admin@admin.com';
 SQL
-'
+          REMOTE
 
       # ROOT-CAUSE FIX: ~/deploy.sh kills via
       #   pkill -9 -u "$USER" -f "node.*$SERVER_DIR/src/index.js"
