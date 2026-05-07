@@ -147,7 +147,19 @@ app.use(errorHandler)
 
 // Only start listening when run directly (not when required by tests)
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Urwah API running on port ${PORT}`))
+  app.listen(PORT, () => {
+    // Write PID file so deploy scripts can kill this process with `kill -9 $(cat *.pid)`.
+    // pkill / pgrep exit 255 on CloudLinux / CageFS; direct kill with a known PID works.
+    const fs = require('fs')
+    const os = require('os')
+    try {
+      fs.writeFileSync(
+        require('path').join(os.homedir(), 'urrwah-dev-api.pid'),
+        String(process.pid)
+      )
+    } catch (_) { /* non-fatal — deploy falls back to ss-based PID lookup */ }
+    console.log(`Urwah API running on port ${PORT}`)
+  })
 }
 
 module.exports = app

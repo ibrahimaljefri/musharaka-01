@@ -32,14 +32,51 @@ jobs:
       - name: Add VPS to known_hosts
         run: ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
+      # Kill the running node process BEFORE deploy.sh tries to start a new one.
+      # pkill/pgrep exit 255 on CloudLinux/CageFS. We use two safer methods:
+      #   1. PID file written by the app on startup (~/urrwah-dev-api.pid)
+      #   2. `ss -Hltnp` port-to-PID lookup (avoids /proc scanning)
+      # This ensures the port is free so deploy.sh's `nohup node` succeeds.
+      - name: Kill old process before deploy
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            'set +e
+             KILLED=0
+             # Method 1: PID file written by the app on startup
+             PID_FILE="$HOME/urrwah-dev-api.pid"
+             if [ -f "$PID_FILE" ]; then
+               OLD_PID=$(cat "$PID_FILE" 2>/dev/null)
+               if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+                 kill -9 "$OLD_PID" 2>/dev/null \
+                   && echo "✓ pidfile: killed PID $OLD_PID" \
+                   || echo "⚠ pidfile: kill $OLD_PID failed"
+                 KILLED=1
+               fi
+               rm -f "$PID_FILE"
+             fi
+             # Method 2: ss-based PID lookup (works without /proc scanning)
+             if [ "$KILLED" -eq 0 ]; then
+               SS_PID=$(ss -Hltnp 2>/dev/null \
+                 | awk '"'"'/[: ]3002[^0-9]/{match($0,/pid=([0-9]+)/,a); if(a[1]!="") print a[1]}'"'"' \
+                 | head -1)
+               if [ -n "$SS_PID" ]; then
+                 kill -9 "$SS_PID" 2>/dev/null \
+                   && echo "✓ ss: killed PID $SS_PID" \
+                   || echo "⚠ ss: kill $SS_PID failed"
+                 KILLED=1
+               else
+                 echo "  ss: no PID found for port 3002"
+               fi
+             fi
+             [ "$KILLED" -eq 1 ] && sleep 2 || echo "  no process killed — port may already be free"
+             true'
+
       - name: Run deploy.sh dev on VPS
         run: |
           ssh -o StrictHostKeyChecking=accept-new \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'bash ~/deploy.sh dev'
 
-      # Health check via direct port over SSH — bypasses Apache/SSL.
-      # Switch to https://dev.urrwah.com/api/health once AutoSSL is active.
       - name: Verify app is healthy on port 3002
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
@@ -55,41 +92,21 @@ jobs:
              echo "✗ dev backend health check failed after 30s"
              exit 1'
 
-      # Diagnose: show deploy.sh restart section + node log startup timestamp
-      - name: Diagnose restart mechanism
-        run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'echo "=== deploy.sh step 7 (restart section) ==="
-             grep -n -A5 "7/8\|restart node\|urrwah-dev-api\|pkill\|nohup\|RESTART\|passenger\|port 3002" ~/deploy.sh 2>/dev/null | head -40
-             echo "=== last 20 lines of node log (startup timestamp) ==="
-             tail -20 ~/urrwah-dev-api.log 2>/dev/null || echo "(no log)"
-             echo "=== uapi modules available ==="
-             uapi --list-modules 2>/dev/null | grep -i "node\|lang\|app" || echo "(uapi list failed)"'
-
-      # Stamp the correct GIT_SHA into server .env, then restart the app.
-      # pkill, pgrep, and /proc scanning all exit 255 on CloudLinux/CageFS.
-      # Use cPanel's UAPI which is the native restart mechanism for Node.js apps.
-      - name: Stamp GIT_SHA and restart via cPanel UAPI
+      # Stamp the correct GIT_SHA into server .env.
+      # The new process started by deploy.sh writes a PID file and also
+      # has readEnvKey() in index.js — so /api/version reads GIT_SHA fresh
+      # from .env on every request without needing a second restart.
+      - name: Stamp GIT_SHA into server .env
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'SERVER_ENV=~/repos/urrwah-dev/musharaka/server/.env
-             # Update GIT_SHA in .env
              if [ -f "$SERVER_ENV" ]; then
                grep -v -E "^(GIT_SHA|DEPLOYED_AT)=" "$SERVER_ENV" > "$SERVER_ENV.tmp" \
                  && mv "$SERVER_ENV.tmp" "$SERVER_ENV"
              fi
              echo "GIT_SHA=${{ github.sha }}" >> "$SERVER_ENV"
              echo "DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$SERVER_ENV"
-             echo "✓ stamped GIT_SHA=${{ github.sha }}"
-             # Touch Passenger restart.txt (belt-and-suspenders)
-             mkdir -p ~/repos/urrwah-dev/musharaka/server/tmp \
-               && touch ~/repos/urrwah-dev/musharaka/server/tmp/restart.txt \
-               && echo "✓ touched restart.txt"
-             # cPanel UAPI: native restart for Node.js apps managed by Node.js Selector
-             uapi NodeJsApp restart_app 2>&1 \
-               && echo "✓ uapi NodeJsApp restart_app succeeded" \
-               || echo "⚠ uapi restart_app failed or not available — continuing"
-             true'
+             echo "✓ stamped GIT_SHA=${{ github.sha }}"'
 
       # Wait for the app to come back up after the bounce, then verify SHA.
       # Use grep/cut to parse JSON; avoids depending on `node` being in SSH PATH.
