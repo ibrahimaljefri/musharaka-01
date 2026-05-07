@@ -271,12 +271,28 @@ jobs:
             # Run the test send. Loads .env via dotenv (server already does it),
             # then uses nodemailer directly with the same config the app uses.
             echo "=== sending test email ==="
+            # dotenv chokes on `#` or special chars in SMTP_PASS. Parse the
+            # `.env` ourselves and export every line as a real shell var
+            # before invoking node. Single-quote each value to keep special
+            # chars literal.
+            set -o allexport
+            while IFS='=' read -r k v; do
+              # Skip comments and blank lines
+              case "$k" in '' | '#'*) continue ;; esac
+              # Strip surrounding quotes if any
+              v=${v#\"}; v=${v%\"}
+              v=${v#\'}; v=${v%\'}
+              eval "export $k=\"\$v\"" 2>/dev/null || true
+            done < "$SERVER_ENV"
+            set +o allexport
+
             cat > /tmp/smtp_test.js <<'JS'
-            const path = require('path')
-            require('dotenv').config({ path: path.resolve(__dirname, '.env') })
+            // .env is already exported as real env vars by the shell wrapper,
+            // so we don't need dotenv here.
             console.log('[debug] SMTP_USER=' + (process.env.SMTP_USER || '(empty)'))
             console.log('[debug] SMTP_HOST=' + (process.env.SMTP_HOST || '(empty)'))
-            console.log('[debug] SMTP_PASS_set=' + (process.env.SMTP_PASS ? 'yes' : 'no'))
+            console.log('[debug] SMTP_PORT=' + (process.env.SMTP_PORT || '(empty)'))
+            console.log('[debug] SMTP_PASS_len=' + (process.env.SMTP_PASS ? process.env.SMTP_PASS.length : 0))
             const nodemailer = require('nodemailer')
             const t = nodemailer.createTransport({
               host:   process.env.SMTP_HOST   || 'localhost',
