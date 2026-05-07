@@ -55,25 +55,16 @@ jobs:
              echo "✗ dev backend health check failed after 30s"
              exit 1'
 
-      # Diagnose post-deploy state: confirm new code is running and .env is readable.
-      # This step is intentionally verbose to help trace the GIT_SHA propagation.
-      - name: Diagnose post-deploy state
+      # Diagnose: show deploy.sh restart section + node log startup timestamp
+      - name: Diagnose restart mechanism
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'echo "=== GIT_SHA in server/.env ==="
-             grep "GIT_SHA" ~/repos/urrwah-dev/musharaka/server/.env 2>/dev/null || echo "(not found)"
-             echo "=== /api/version raw response ==="
-             curl -fsS http://127.0.0.1:3002/api/version 2>/dev/null
-             echo ""
-             echo "=== new readEnvKey code present? ==="
-             grep -c "readEnvKey" ~/repos/urrwah-dev/musharaka/server/src/index.js 2>/dev/null \
-               && echo "(new code)" || echo "(OLD code — readEnvKey missing)"
-             echo "=== __dirname of index.js (inferred) ==="
-             ls -la ~/repos/urrwah-dev/musharaka/server/src/index.js 2>/dev/null
-             echo "=== server/tmp dir ==="
-             ls -la ~/repos/urrwah-dev/musharaka/server/tmp/ 2>/dev/null || echo "(no tmp dir)"
-             echo "=== last 5 lines of node log ==="
-             tail -5 ~/urrwah-dev-api.log 2>/dev/null || echo "(no node log)"'
+            'echo "=== deploy.sh step 7 (restart section) ==="
+             grep -n -A5 "7/8\|restart node\|urrwah-dev-api\|pkill\|nohup\|RESTART\|passenger\|port 3002" ~/deploy.sh 2>/dev/null | head -40
+             echo "=== last 20 lines of node log (startup timestamp) ==="
+             tail -20 ~/urrwah-dev-api.log 2>/dev/null || echo "(no log)"
+             echo "=== uapi modules available ==="
+             uapi --list-modules 2>/dev/null | grep -i "node\|lang\|app" || echo "(uapi list failed)"'
 
       # Stamp the correct GIT_SHA into server .env, then restart the app.
       # pkill, pgrep, and /proc scanning all exit 255 on CloudLinux/CageFS.
