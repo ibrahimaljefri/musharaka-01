@@ -308,8 +308,12 @@ jobs:
               process.exit(1)
             })
             JS
-            "$NODE_BIN" /tmp/smtp_test.js
-            rm -f /tmp/smtp_test.js
+            # Move script into server dir so node resolves dotenv + nodemailer
+            # via the regular node_modules lookup.
+            mv /tmp/smtp_test.js $HOME/repos/urrwah-prod/musharaka/server/smtp_test.js
+            cd $HOME/repos/urrwah-prod/musharaka/server
+            "$NODE_BIN" smtp_test.js
+            rm -f smtp_test.js
         run: |
           printf '%s' "$REMOTE_SCRIPT" | \
             ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'cat > /tmp/smtp_$$.sh && bash /tmp/smtp_$$.sh; rc=$?; rm -f /tmp/smtp_$$.sh; exit $rc'
