@@ -1,991 +1,878 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عروة — عرض تقديمي</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#080E1A;
-  --gold:#F59E0B;
-  --gold-dark:#D97706;
-  --purple:#7C3AED;
-  --glass-bg:rgba(255,255,255,0.06);
-  --glass-border:rgba(255,255,255,0.12);
-  --glass-hover:rgba(255,255,255,0.10);
-  --text-primary:#fff;
-  --text-secondary:rgba(255,255,255,0.7);
-  --text-muted:rgba(255,255,255,0.45);
-  --dur:0.6s;
-  --ease:cubic-bezier(0.16,1,0.3,1);
-}
-html{scroll-behavior:auto;overflow:hidden;height:100%}
-body{
-  font-family:'Cairo',sans-serif;
-  background:var(--bg);
-  color:var(--text-primary);
-  overflow:hidden;
-  height:100%;
-  direction:rtl;
-  -webkit-font-smoothing:antialiased;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>عروة — دليل المبيعات والقدرات</title>
+  <meta name="description" content="عروة — نظام مشاركة البيانات بين الفروع التجارية والمراكز التجارية الكبرى. دليل المبيعات والقدرات، النسخة الثانية." />
 
-/* Progress bar */
-#progress{position:fixed;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--purple));z-index:1000;transition:width 0.4s var(--ease);width:5%}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-/* Slide counter */
-#counter{position:fixed;bottom:28px;left:36px;font-size:0.85rem;color:var(--text-muted);z-index:1000;font-variant-numeric:tabular-nums;letter-spacing:0.05em}
+  <style>
+    /* ════════════════════════════════════════════════════════════════════
+       عروة — Sales & Capabilities Guide
+       Print-first, A4 portrait, RTL Arabic-first.
+       Designed to render to PDF via Playwright; readable on screen too.
+       ════════════════════════════════════════════════════════════════════ */
 
-/* Nav dots */
-#nav-dots{position:fixed;left:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:1000}
-.nav-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.3s}
-.nav-dot.active{background:var(--gold);box-shadow:0 0 8px rgba(245,158,11,0.5);transform:scale(1.3)}
+    :root {
+      --gold:        #B8860B;
+      --gold-soft:   #FBBF24;
+      --gold-tint:   #FEF3C7;
+      --gold-line:   #FDE68A;
 
-/* Slide container */
-#deck{position:relative;width:100%;height:100vh}
-.slide{
-  position:absolute;top:0;right:0;width:100%;height:100vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 60px;
-  opacity:0;visibility:hidden;pointer-events:none;
-  transform:translateY(32px);
-  transition:opacity 0.55s var(--ease),transform 0.55s var(--ease),visibility 0s 0.55s;
-  overflow:hidden;
-}
-.slide.active{
-  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
-  transition:opacity 0.55s var(--ease),transform 0.55s var(--ease),visibility 0s 0s;
-}
-/* Used to set starting position before transition fires — transition:none so it snaps */
-.slide.will-enter-below{transform:translateY(32px);opacity:0;visibility:visible;pointer-events:none;transition:none}
-.slide.will-enter-above{transform:translateY(-32px);opacity:0;visibility:visible;pointer-events:none;transition:none}
-.slide.exit-up  {opacity:0;transform:translateY(-32px);visibility:visible}
-.slide.exit-down{opacity:0;transform:translateY(32px);visibility:visible}
+      --ink:         #0C0A09;
+      --ink-2:       #1C1917;
+      --ink-3:       #44403C;
+      --ink-4:       #57534E;
+      --ink-mute:    #78716C;
 
-/* Background glows */
-.slide::before{
-  content:'';position:absolute;width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(circle,rgba(245,158,11,0.08) 0%,transparent 70%);
-  top:-10%;right:-10%;pointer-events:none;
-}
-.slide::after{
-  content:'';position:absolute;width:500px;height:500px;border-radius:50%;
-  background:radial-gradient(circle,rgba(124,58,237,0.06) 0%,transparent 70%);
-  bottom:-10%;left:-10%;pointer-events:none;
-}
-/* Subtle dot grid overlay for all slides */
-.slide-grid{
-  position:absolute;inset:0;pointer-events:none;z-index:0;
-  background-image:radial-gradient(circle,rgba(245,158,11,0.06) 1px,transparent 1px);
-  background-size:36px 36px;
-}
+      --paper:       #FFFFFF;
+      --surface:     #FAFAF9;
+      --surface-2:   #F5F5F4;
+      --line:        #E7E5E4;
+      --line-strong: #D6D3D1;
+    }
 
-/* Glass card */
-.glass{
-  background:var(--glass-bg);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid var(--glass-border);
-  border-radius:16px;
-  padding:28px 32px;
-}
-.glass-sm{
-  background:var(--glass-bg);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--glass-border);
-  border-radius:12px;
-  padding:20px 24px;
-}
+    @page { size: A4; margin: 0; }
 
-/* Typography */
-.slide-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--gold);margin-bottom:12px;line-height:1.3}
-.slide-subtitle{font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text-secondary);margin-bottom:32px;line-height:1.6;max-width:700px;text-align:center}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Reveal children — reset when slide inactive, animate in when active */
-.slide .reveal{
-  opacity:0;transform:translateY(20px);
-  transition:opacity 0.5s var(--ease),transform 0.5s var(--ease);
-}
-.slide.active .reveal{opacity:1;transform:translateY(0)}
-.slide.active .reveal:nth-child(2) {transition-delay:0.08s}
-.slide.active .reveal:nth-child(3) {transition-delay:0.16s}
-.slide.active .reveal:nth-child(4) {transition-delay:0.24s}
-.slide.active .reveal:nth-child(5) {transition-delay:0.30s}
-.slide.active .reveal:nth-child(6) {transition-delay:0.36s}
-.slide.active .reveal:nth-child(7) {transition-delay:0.42s}
-.slide.active .reveal:nth-child(8) {transition-delay:0.48s}
+    html { background: #ddd; }
 
-/* Gold orb */
-.orb{
-  width:120px;height:120px;border-radius:50%;
-  background:radial-gradient(circle at 40% 35%,#FBBF24,var(--gold),var(--gold-dark));
-  display:flex;align-items:center;justify-content:center;
-  font-size:3.2rem;font-weight:900;color:var(--bg);
-  box-shadow:0 0 60px rgba(245,158,11,0.3),0 0 120px rgba(245,158,11,0.1);
-  flex-shrink:0;
-}
-.orb-lg{width:160px;height:160px;font-size:4.5rem;box-shadow:0 0 80px rgba(245,158,11,0.35),0 0 160px rgba(245,158,11,0.12)}
-.orb-sm{width:56px;height:56px;font-size:1.6rem}
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+      font-weight: 400;
+      color: var(--ink-2);
+      line-height: 1.7;
+      font-size: 11pt;
+      direction: rtl;
+      background: #ddd;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
 
-/* Utility */
-.flex-row{display:flex;flex-direction:row;gap:24px;flex-wrap:wrap;justify-content:center;align-items:stretch}
-.flex-col{display:flex;flex-direction:column;gap:16px;align-items:center}
-.w-full{width:100%}
-.text-center{text-align:center}
-.text-gold{color:var(--gold)}
-.text-sec{color:var(--text-secondary)}
-.text-sm{font-size:0.9rem}
-.text-xs{font-size:0.78rem}
-.fw-700{font-weight:700}
-.fw-600{font-weight:600}
-.mt-8{margin-top:8px}
-.mt-16{margin-top:16px}
-.mb-8{margin-bottom:8px}
-.gap-12{gap:12px}
-.gap-16{gap:16px}
-.gap-32{gap:32px}
+    @media screen {
+      body { padding: 24px 0; }
+      .page { margin: 0 auto 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+    }
+    @media print {
+      body { padding: 0; background: #fff; }
+      .page { margin: 0; box-shadow: none; }
+    }
 
-/* Grid helpers */
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%;max-width:900px}
-.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;max-width:960px}
-.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;width:100%;max-width:800px}
+    /* ── Page primitive ─────────────────────────────────────────────── */
+    .page {
+      width: 210mm; height: 297mm;
+      background: var(--paper);
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+    }
+    .page:last-child { page-break-after: auto; break-after: auto; }
+    .page-body {
+      padding: 30mm 22mm 24mm 22mm;
+      display: flex; flex-direction: column; gap: 14px;
+    }
 
-/* Checkmark */
-.check{color:var(--gold);margin-left:8px;font-weight:700}
+    /* ── Running header / footer ─────────────────────────────────────── */
+    .ph {
+      position: absolute; top: 0; right: 0; left: 0;
+      height: 18mm; padding: 8mm 22mm 0 22mm;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 9pt; color: var(--ink-mute); letter-spacing: 0.02em;
+    }
+    .ph::after {
+      content: ''; position: absolute; bottom: 4mm; right: 22mm; left: 22mm;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--line) 20%, var(--line) 80%, transparent 100%);
+    }
+    .ph .brand-mark {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-weight: 700; color: var(--gold);
+    }
+    .ph .brand-mark::before {
+      content: ''; width: 8px; height: 8px;
+      background: var(--gold); border-radius: 50%;
+    }
+    .pf {
+      position: absolute; bottom: 0; right: 0; left: 0;
+      height: 16mm; padding: 0 22mm 8mm 22mm;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      font-size: 8.5pt; color: var(--ink-mute);
+    }
+    .pf::before {
+      content: ''; position: absolute; top: 4mm; right: 22mm; left: 22mm;
+      height: 1px; background: var(--line);
+    }
+    .pf .pn {
+      font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-3);
+    }
 
-/* Step circle */
-.step-num{
-  width:44px;height:44px;border-radius:50%;
-  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.1rem;font-weight:800;color:var(--bg);
-  flex-shrink:0;
-}
+    /* ── Cover ──────────────────────────────────────────────────────── */
+    .cover {
+      background:
+        radial-gradient(ellipse 480px 380px at 92% 8%, rgba(184,134,11,0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 380px 320px at 8% 95%, rgba(184,134,11,0.06) 0%, transparent 60%),
+        var(--paper);
+      position: relative; overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(12,10,9,0.06) 1px, transparent 0);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(ellipse 800px 600px at 70% 50%, #000 30%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 800px 600px at 70% 50%, #000 30%, transparent 70%);
+      pointer-events: none; opacity: 0.5;
+    }
+    .cover-rule-top, .cover-rule-bot {
+      position: absolute; right: 22mm; left: 22mm; height: 1.5px;
+      background: linear-gradient(90deg, transparent, var(--gold) 25%, var(--gold) 75%, transparent);
+    }
+    .cover-rule-top { top: 22mm; }
+    .cover-rule-bot { bottom: 22mm; }
+    .cover-brand {
+      position: absolute; top: 28mm; right: 22mm;
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; color: var(--gold); font-size: 14pt;
+      letter-spacing: 0.04em;
+    }
+    .cover-brand::before {
+      content: ''; width: 14px; height: 14px;
+      background: var(--gold); border-radius: 3px;
+      transform: rotate(45deg);
+      box-shadow: 0 0 0 4px rgba(184,134,11,0.15);
+    }
+    .cover-tag-en {
+      position: absolute; top: 30mm; left: 22mm;
+      font-size: 9pt; color: var(--ink-mute);
+      letter-spacing: 0.18em; text-transform: uppercase;
+    }
+    .cover-main {
+      position: absolute; top: 42%; transform: translateY(-50%);
+      right: 22mm; left: 22mm; text-align: right;
+    }
+    .cover-eyebrow {
+      font-size: 11pt; color: var(--gold); font-weight: 600;
+      letter-spacing: 0.14em; margin-bottom: 12px;
+    }
+    .cover-h1 {
+      font-size: 96pt; font-weight: 900; color: var(--ink);
+      line-height: 1; letter-spacing: -0.03em;
+    }
+    .cover-h2 {
+      font-size: 22pt; font-weight: 500; color: var(--ink-3);
+      margin-top: 8px; line-height: 1.4;
+    }
+    .cover-rule { width: 80px; height: 3px; background: var(--gold); margin-top: 24px; border-radius: 2px; }
+    .cover-doctitle { font-size: 18pt; font-weight: 600; color: var(--ink-2); margin-top: 18px; }
+    .cover-bottom {
+      position: absolute; bottom: 30mm; right: 22mm; left: 22mm;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      font-size: 9pt; color: var(--ink-mute); letter-spacing: 0.02em;
+    }
+    .cover-bottom .meta { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+    .cover-bottom .meta strong { color: var(--ink-2); font-weight: 600; }
+    .cover-bottom .conf { font-size: 8pt; color: var(--gold); letter-spacing: 0.2em; font-weight: 700; text-transform: uppercase; }
 
-/* Flow line */
-.flow-line{width:48px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);flex-shrink:0;align-self:center}
+    /* ── Typography ─────────────────────────────────────────────────── */
+    .h1 { font-size: 28pt; font-weight: 800; color: var(--ink); line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .h1-eyebrow { font-size: 9.5pt; color: var(--gold); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .h1-eyebrow::before { content: ''; width: 18px; height: 2px; background: var(--gold); }
+    .h1-rule { width: 60px; height: 3px; background: var(--gold); border-radius: 2px; margin: 8px 0 14px; }
+    .lead { font-size: 13pt; font-weight: 500; color: var(--ink-3); line-height: 1.55; max-width: 70ch; }
+    .h2 { font-size: 16pt; font-weight: 700; color: var(--ink-2); margin-top: 14px; margin-bottom: 6px; line-height: 1.3; display: flex; align-items: center; gap: 8px; }
+    .h2::before { content: ''; width: 4px; height: 18px; background: var(--gold); border-radius: 2px; }
+    .h3 { font-size: 12pt; font-weight: 700; color: var(--ink-2); margin-top: 8px; margin-bottom: 2px; }
+    p { margin: 0 0 6px; color: var(--ink-3); }
+    p strong, b { color: var(--ink); font-weight: 700; }
 
-/* CTA button */
-.cta{
-  display:inline-flex;align-items:center;gap:10px;
-  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
-  color:var(--bg);font-weight:700;font-size:1.1rem;
-  padding:14px 40px;border-radius:12px;border:none;cursor:pointer;
-  font-family:inherit;
-  box-shadow:0 4px 24px rgba(245,158,11,0.3);
-  transition:transform 0.2s,box-shadow 0.2s;
-}
-.cta:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(245,158,11,0.4)}
+    /* ── Components ─────────────────────────────────────────────────── */
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 6px 0; }
+    .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; position: relative; overflow: hidden; }
+    .stat::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--gold); }
+    .stat .v { font-size: 26pt; font-weight: 800; color: var(--ink); line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .stat .l { font-size: 9.5pt; color: var(--ink-mute); margin-top: 4px; line-height: 1.35; }
 
-/* Code block */
-.code-block{
-  background:rgba(0,0,0,0.4);
-  border:1px solid var(--glass-border);
-  border-radius:10px;
-  padding:18px 24px;
-  font-family:'Courier New',monospace;
-  font-size:0.85rem;
-  color:#a5f3fc;
-  direction:ltr;
-  text-align:left;
-  max-width:580px;
-  width:100%;
-  line-height:1.7;
-}
+    .callout { background: linear-gradient(180deg, #FFFDF7 0%, var(--gold-tint) 100%); border: 1px solid var(--gold-line); border-right: 4px solid var(--gold); border-radius: 10px; padding: 12px 16px; color: var(--ink-2); font-size: 10.5pt; line-height: 1.6; }
+    .callout .clbl { font-size: 9pt; font-weight: 700; color: var(--gold); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
 
-/* Chat bubble */
-.chat-bubble{
-  background:rgba(255,255,255,0.08);
-  border:1px solid var(--glass-border);
-  border-radius:16px 16px 4px 16px;
-  padding:14px 20px;
-  max-width:340px;
-  font-size:0.95rem;
-  color:var(--text-primary);
-  line-height:1.6;
-}
-.chat-bubble.bot{
-  background:rgba(245,158,11,0.12);
-  border-color:rgba(245,158,11,0.25);
-  border-radius:16px 16px 16px 4px;
-}
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+    .card .card-head { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); font-size: 11pt; }
+    .card .card-num { width: 28px; height: 28px; background: var(--gold); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11pt; flex-shrink: 0; }
+    .card p { font-size: 10pt; color: var(--ink-4); margin: 0; line-height: 1.6; }
 
-/* Badge */
-.badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--glass-bg);
-  border:1px solid var(--glass-border);
-  border-radius:8px;padding:8px 16px;
-  font-size:0.85rem;color:var(--text-secondary);
-}
+    .card-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .card-grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-/* Pricing highlight */
-.pricing-highlight{
-  border-color:var(--gold) !important;
-  box-shadow:0 0 30px rgba(245,158,11,0.12);
-}
-.pricing-tag{
-  position:absolute;top:-12px;right:50%;transform:translateX(50%);
-  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
-  color:var(--bg);font-size:0.75rem;font-weight:700;
-  padding:4px 16px;border-radius:20px;white-space:nowrap;
-}
+    .check-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .check-list li { position: relative; padding-right: 24px; font-size: 10.5pt; color: var(--ink-3); line-height: 1.6; }
+    .check-list li::before { content: '✓'; position: absolute; right: 0; top: 1px; width: 18px; height: 18px; background: var(--gold); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10pt; font-weight: 700; }
 
-/* Table */
-.compare-table{width:100%;max-width:700px;border-collapse:collapse}
-.compare-table th,.compare-table td{padding:10px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);font-size:0.9rem}
-.compare-table th{color:var(--gold);font-weight:700;font-size:0.85rem}
-.compare-table td:first-child{text-align:right;color:var(--text-secondary)}
+    .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0; counter-reset: stepc; }
+    .flow .step { counter-increment: stepc; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; position: relative; }
+    .flow .step::before { content: counter(stepc); position: absolute; top: -10px; right: 14px; width: 28px; height: 28px; background: var(--gold); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11pt; box-shadow: 0 2px 6px rgba(184,134,11,0.3); }
+    .flow .step h4 { font-size: 11pt; font-weight: 700; color: var(--ink); margin: 4px 0 4px; }
+    .flow .step p { font-size: 9.5pt; color: var(--ink-4); margin: 0; line-height: 1.5; }
 
-/* Timeline */
-.timeline{display:flex;align-items:flex-start;gap:0;width:100%;max-width:800px;position:relative}
-.timeline::before{content:'';position:absolute;top:22px;right:0;left:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--purple),var(--gold))}
-.tl-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1}
-.tl-dot{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px rgba(245,158,11,0.4);flex-shrink:0}
-.tl-label{font-size:0.82rem;color:var(--text-secondary);text-align:center;line-height:1.5;max-width:140px}
-.tl-q{font-size:0.78rem;font-weight:700;color:var(--gold);margin-top:2px}
+    table.urw { width: 100%; border-collapse: collapse; font-size: 10pt; }
+    table.urw th, table.urw td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--line); }
+    table.urw thead th { background: var(--surface); color: var(--ink-2); font-weight: 700; border-bottom: 2px solid var(--gold); font-size: 10pt; }
+    table.urw tbody tr:nth-child(even) { background: var(--surface); }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 9pt; font-weight: 600; letter-spacing: 0.02em; }
+    .pill.pending { background: #FEF3C7; color: #92400E; }
+    .pill.sent    { background: #D1FAE5; color: #065F46; }
+    .pill.locked  { background: #E5E7EB; color: #374151; }
 
-/* KPI big number */
-.kpi-big{font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:var(--gold);line-height:1}
-.kpi-label{font-size:0.85rem;color:var(--text-secondary);margin-top:6px}
+    .pipe { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 6px 0; }
+    .pipe .node { flex: 1; background: var(--paper); border: 1.5px solid var(--gold); border-radius: 10px; padding: 10px 12px; text-align: center; }
+    .pipe .node .nlbl { font-size: 10.5pt; font-weight: 700; color: var(--ink); }
+    .pipe .node .nsub { font-size: 8.5pt; color: var(--ink-mute); margin-top: 2px; }
+    .pipe .arrow { flex: 0 0 auto; color: var(--gold); font-size: 14pt; font-weight: 800; }
 
-/* Security pillar */
-.sec-pillar{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
-.sec-icon{font-size:2rem;width:64px;height:64px;border-radius:50%;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(245,158,11,0.2)}
+    .toc { list-style: none; padding: 0; margin: 16px 0 0; counter-reset: tocc; }
+    .toc li { counter-increment: tocc; display: flex; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 10px; font-size: 11.5pt; }
+    .toc li::before { content: counter(tocc, decimal-leading-zero); font-variant-numeric: tabular-nums; color: var(--gold); font-weight: 800; font-size: 10pt; flex: 0 0 auto; width: 32px; }
+    .toc li .ttl { flex: 1; color: var(--ink-2); font-weight: 600; }
+    .toc li .pn { color: var(--ink-mute); font-variant-numeric: tabular-nums; font-weight: 600; flex: 0 0 auto; }
+    .toc-fill { flex: 1; border-bottom: 1px dotted var(--line-strong); margin: 0 8px; transform: translateY(-4px); }
 
-/* Responsive */
-@media(max-width:768px){
-  .slide{padding:24px 20px}
-  .grid-3,.grid-4{grid-template-columns:1fr 1fr}
-  .grid-2{grid-template-columns:1fr}
-  .flex-row{flex-direction:column;align-items:center}
-  .flow-line{display:none}
-  .timeline{flex-direction:column;gap:16px;align-items:flex-start}
-  .timeline::before{display:none}
-  .compare-table{font-size:0.8rem}
-  .orb-lg{width:120px;height:120px;font-size:3.5rem}
-  .code-block{font-size:0.75rem}
-}
+    .hero-solution { background: linear-gradient(135deg, var(--ink) 0%, #1C1917 100%); color: white; border-radius: 16px; padding: 28px 32px; position: relative; overflow: hidden; }
+    .hero-solution::before { content: ''; position: absolute; top: -40%; left: -10%; width: 320px; height: 320px; background: radial-gradient(circle, rgba(184,134,11,0.4) 0%, transparent 60%); pointer-events: none; }
+    .hero-solution h2 { font-size: 28pt; font-weight: 800; letter-spacing: -0.02em; color: white; margin: 0 0 6px; position: relative; z-index: 1; }
+    .hero-solution p { color: rgba(255,255,255,0.85); font-size: 12pt; max-width: 60ch; position: relative; z-index: 1; margin: 0; }
+    .hero-solution .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; position: relative; z-index: 1; }
+    .hero-solution .pillar { border: 1px solid rgba(184,134,11,0.4); background: rgba(184,134,11,0.08); border-radius: 10px; padding: 12px 14px; }
+    .hero-solution .pillar h4 { color: var(--gold-soft); font-size: 11pt; font-weight: 800; margin: 0 0 4px; letter-spacing: 0.04em; }
+    .hero-solution .pillar p { color: rgba(255,255,255,0.7); font-size: 9.5pt; margin: 0; line-height: 1.55; }
 
-@media(prefers-reduced-motion:reduce){
-  .slide,.slide .reveal{transition:none !important}
-  #progress{transition:none !important}
-}
+    .signoff { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 20mm; text-align: center; }
+    .signoff-mark { width: 64px; height: 64px; background: var(--gold); border-radius: 14px; transform: rotate(45deg); box-shadow: 0 0 0 8px rgba(184,134,11,0.18); margin-bottom: 8px; }
+    .signoff h1 { font-size: 64pt; font-weight: 900; color: var(--ink); letter-spacing: -0.03em; line-height: 1; }
+    .signoff .gold-rule { width: 120px; height: 3px; background: var(--gold); border-radius: 2px; }
 
-/* ── Urwah full-logo glass card (matches branding.html) ── */
-.sm-flc {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 18px;
-  border-radius: 14px;
-  background: rgba(10, 18, 32, 0.72);
-  border: 1px solid rgba(245, 158, 11, 0.28);
-  box-shadow: 0 6px 28px rgba(0,0,0,0.6), 0 0 50px rgba(245,158,11,0.14);
-}
-.sm-flc::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 12%; right: 12%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(245,158,11,0.65), rgba(251,191,36,0.45), rgba(245,158,11,0.65), transparent);
-}
-</style>
+    ul.bullets { list-style: none; padding: 0; margin: 0; }
+    ul.bullets li { position: relative; padding-right: 16px; margin-bottom: 4px; font-size: 10.5pt; color: var(--ink-3); line-height: 1.6; }
+    ul.bullets li::before { content: ''; position: absolute; right: 0; top: 9px; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; }
+
+    .tag { display: inline-block; padding: 3px 10px; background: var(--gold-tint); color: var(--gold); border: 1px solid var(--gold-line); border-radius: 999px; font-size: 8.5pt; font-weight: 700; letter-spacing: 0.04em; }
+
+    h1, h2, h3, h4, .h1, .h2, .h3, .lead { break-inside: avoid; }
+    table, .card, .stat, .callout, .step, .flow, .hero-solution, .pipe { break-inside: avoid; }
+  </style>
 </head>
 <body>
 
-<div id="progress"></div>
-<div id="counter"></div>
-<div id="nav-dots"></div>
+  <!-- ════ PAGE 1 — COVER ════════════════════════════════════════════════ -->
+  <section class="page cover">
+    <div class="cover-rule-top"></div>
+    <div class="cover-brand">عروة</div>
+    <div class="cover-tag-en">URRWAH · DATA SHARING PLATFORM</div>
 
-<div id="deck">
+    <div class="cover-main">
+      <div class="cover-eyebrow">دليل المبيعات والقدرات</div>
+      <div class="cover-h1">عروة</div>
+      <div class="cover-h2">منصة B2B لمشاركة بيانات الفروع<br>مع المراكز التجارية الكبرى</div>
+      <div class="cover-rule"></div>
+      <div class="cover-doctitle">القدرات · الميزات · رحلة المستخدم</div>
+    </div>
 
-<!-- Slide 1: Cover -->
-<div class="slide active" data-slide="0">
-  <div class="slide-grid"></div>
-  <div class="reveal" style="margin-bottom:28px">
-    <div class="sm-flc"><span class="sm-logo-slot" data-size="90"></span></div>
-  </div>
-  <h1 class="reveal" style="font-size:clamp(3rem,6vw,5rem);font-weight:900;color:var(--gold);letter-spacing:-1px;margin-bottom:4px">عروة</h1>
-  <p class="reveal" style="font-size:clamp(1.1rem,2vw,1.5rem);color:var(--text-primary);font-weight:600;margin-bottom:8px">نظام مشاركة البيانات للمستأجرين</p>
-  <p class="reveal text-sec" style="font-size:clamp(0.9rem,1.4vw,1.1rem)">حل رقمي متكامل لمشاركة بيانات مشاركة البيانات</p>
-  <div class="reveal" style="margin-top:32px;display:flex;gap:24px;align-items:center">
-    <span class="badge">B2B SaaS</span>
-    <span class="badge">المملكة العربية السعودية</span>
-    <span class="badge">قطاع التجزئة</span>
-  </div>
-</div>
-
-<!-- Slide 2: The Challenge -->
-<div class="slide" data-slide="1">
-  <h2 class="slide-title reveal">ما التحدي الذي يواجهه المستأجرون؟</h2>
-  <p class="slide-subtitle reveal">يعاني المستأجرون في المراكز التجارية من تحديات يومية في تقارير مشاركة البيانات</p>
-  <div class="grid-3 reveal">
-    <div class="glass text-center flex-col" style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:2.2rem">&#9203;</div>
-      <h3 class="fw-700" style="font-size:1rem;color:var(--text-primary)">تقارير يدوية معقدة</h3>
-      <p class="text-sec text-sm">إعداد التقارير يدوياً يستهلك وقتاً وجهداً كبيراً من فريق مشاركة البيانات</p>
-    </div>
-    <div class="glass text-center flex-col" style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:2.2rem">&#9888;</div>
-      <h3 class="fw-700" style="font-size:1rem;color:var(--text-primary)">أخطاء وتأخر في البيانات</h3>
-      <p class="text-sec text-sm">الأخطاء البشرية والتأخر في الإرسال يؤدي لمشاكل مع إدارة المول</p>
-    </div>
-    <div class="glass text-center flex-col" style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:2.2rem">&#128065;</div>
-      <h3 class="fw-700" style="font-size:1rem;color:var(--text-primary)">غياب الرؤية الفورية</h3>
-      <p class="text-sec text-sm">لا توجد لوحة تحكم تعرض أداء الفروع بشكل فوري ومحدّث</p>
-    </div>
-  </div>
-</div>
-
-<!-- Slide 3: The Solution -->
-<div class="slide" data-slide="2">
-  <h2 class="slide-title reveal">عروة — منصة ذكية للتقارير</h2>
-  <p class="slide-subtitle reveal">حل واحد يجمع كل قنوات تسجيل مشاركة البيانات في منصة موحدة</p>
-  <div class="reveal" style="display:flex;align-items:center;gap:40px;flex-wrap:wrap;justify-content:center">
-    <div class="glass-sm text-center" style="width:160px">
-      <div class="text-gold fw-700 mb-8">&#128187;</div>
-      <div class="fw-600 text-sm">بوابة إلكترونية</div>
-    </div>
-    <div class="glass-sm text-center" style="width:160px">
-      <div class="text-gold fw-700 mb-8">&#128190;</div>
-      <div class="fw-600 text-sm">استيراد Excel</div>
-    </div>
-    <div class="reveal" style="margin:0 16px;display:flex;align-items:center;justify-content:center;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(245,158,11,0.18),rgba(245,158,11,0.06));box-shadow:0 0 60px rgba(245,158,11,0.25),0 0 120px rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)">
-      <div class="sm-flc" style="padding:8px 14px;border-radius:10px;"><span class="sm-logo-slot" data-size="70"></span></div>
-    </div>
-    <div class="glass-sm text-center" style="width:160px">
-      <div class="text-gold fw-700 mb-8">&#128279;</div>
-      <div class="fw-600 text-sm">API تكامل</div>
-    </div>
-    <div class="glass-sm text-center" style="width:160px">
-      <div class="text-gold fw-700 mb-8">&#128200;</div>
-      <div class="fw-600 text-sm">تقارير تلقائية</div>
-    </div>
-  </div>
-</div>
-
-<!-- Slide 4: How It Works -->
-<div class="slide" data-slide="3">
-  <h2 class="slide-title reveal">كيف يعمل النظام</h2>
-  <p class="slide-subtitle reveal">أربع خطوات بسيطة من تسجيل مشاركة البيانات إلى الإرسال</p>
-  <div class="flex-row reveal" style="align-items:flex-start;gap:12px">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
-      <div class="step-num">1</div>
-      <div class="fw-600" style="font-size:0.95rem">تسجيل مشاركة البيانات</div>
-      <div class="text-sec text-xs">يومي · شهري · فترة · Excel</div>
-    </div>
-    <div class="flow-line"></div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
-      <div class="step-num">2</div>
-      <div class="fw-600" style="font-size:0.95rem">المعالجة التلقائية</div>
-      <div class="text-sec text-xs">تحقق وحساب تلقائي</div>
-    </div>
-    <div class="flow-line"></div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
-      <div class="step-num">3</div>
-      <div class="fw-600" style="font-size:0.95rem">التقارير والتحليلات</div>
-      <div class="text-sec text-xs">لوحة تحكم تفاعلية</div>
-    </div>
-    <div class="flow-line"></div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:160px;text-align:center">
-      <div class="step-num">4</div>
-      <div class="fw-600" style="font-size:0.95rem">الإرسال لمنصة التكامل</div>
-      <div class="text-sec text-xs">إرسال آلي في الموعد</div>
-    </div>
-  </div>
-</div>
-
-<!-- Slide 5: Web Portal -->
-<div class="slide" data-slide="4">
-  <h2 class="slide-title reveal">البوابة الإلكترونية</h2>
-  <p class="slide-subtitle reveal">واجهة متكاملة لإدارة جميع عمليات مشاركة البيانات</p>
-  <div class="grid-2 reveal">
-    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
-      <span class="check">&#10003;</span>
-      <div>
-        <div class="fw-600" style="font-size:0.95rem">إدخال مشاركة البيانات يومي وشهري</div>
-        <div class="text-sec text-xs mt-8">تسجيل سريع مع حفظ تلقائي</div>
+    <div class="cover-bottom">
+      <div class="conf">CONFIDENTIAL · إصدار العملاء</div>
+      <div class="meta">
+        <span><strong>النسخة 2.0</strong></span>
+        <span>مايو ٢٠٢٦</span>
       </div>
     </div>
-    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
-      <span class="check">&#10003;</span>
-      <div>
-        <div class="fw-600" style="font-size:0.95rem">استيراد ملفات Excel</div>
-        <div class="text-sec text-xs mt-8">رفع البيانات من ملفات جاهزة</div>
+    <div class="cover-rule-bot"></div>
+  </section>
+
+  <!-- ════ PAGE 2 — Mission ═══════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>رسالتنا</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">من نحن</div>
+      <h1 class="h1">منصة متخصّصة بمشاركة البيانات في القطاع التجاري السعودي</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">عروة هي منصة B2B متخصّصة في مشاركة البيانات بين أصحاب الفروع التجارية والمراكز التجارية الكبرى في المملكة العربية السعودية. صُمّمت لتُلغي التعقيد اليدوي، وتُسرّع تدفق البيانات، وتمنح أصحاب القرار رؤية لحظية على أداء فروعهم.</p>
+
+      <div class="callout" style="margin-top:14px">
+        <div class="clbl">القدرات الجوهرية</div>
+        <p style="margin:0;font-size:11pt">إدخال وتتبع مشاركة البيانات يومياً أو شهرياً · إرسال البيانات مباشرةً إلى المركز التجاري · متابعة حالة الإرساليات وسجل التحقق من الإرسال · نظام تذاكر متكامل للدعم الفني وحلّ المشكلات.</p>
+      </div>
+
+      <h2 class="h2" style="margin-top:18px">لمن صُمّمت عروة</h2>
+      <div class="card-grid-2" style="margin-top:6px">
+        <div class="card">
+          <div class="card-head"><span class="card-num">١</span><span>مشغّلو الفروع التجارية</span></div>
+          <p>أصحاب المتاجر والوكلاء المتعدّدو الفروع الذين يحتاجون إلى تسجيل وإرسال بيانات أداء فروعهم بسلاسة، بدقّة، ودون أخطاء يدوية.</p>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-num">٢</span><span>إدارات المراكز التجارية</span></div>
+          <p>المسؤولون عن متابعة أداء المستأجرين، الذين يحتاجون رؤية فورية ومجمّعة على البيانات الواردة من جميع الفروع لاتخاذ قرارات مبنيّة على بيانات حقيقية.</p>
+        </div>
+      </div>
+
+      <h2 class="h2" style="margin-top:14px">شعارنا</h2>
+      <p style="font-size:14pt;font-weight:600;color:var(--gold);line-height:1.4;margin-top:4px">
+        مشاركة بياناتك — بدقّة، سهولة، وثقة.
+      </p>
+      <p style="font-size:9.5pt;color:var(--ink-mute);margin-top:2px">
+        منصّتك الموثوقة لمشاركة البيانات إلى المراكز التجارية الكبرى.
+      </p>
+    </div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">2 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 3 — TOC ════════════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>المحتويات</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">المحتويات</div>
+      <h1 class="h1">دليلك إلى عروة</h1>
+      <div class="h1-rule"></div>
+
+      <ol class="toc">
+        <li><span class="ttl">رسالتنا</span><span class="toc-fill"></span><span class="pn">2</span></li>
+        <li><span class="ttl">نظرة عامة على المنصّة</span><span class="toc-fill"></span><span class="pn">4</span></li>
+        <li><span class="ttl">التحدي الذي نحلّه</span><span class="toc-fill"></span><span class="pn">5</span></li>
+        <li><span class="ttl">الحلّ — ما تقدّمه عروة</span><span class="toc-fill"></span><span class="pn">7</span></li>
+        <li><span class="ttl">طرق إدخال البيانات</span><span class="toc-fill"></span><span class="pn">8</span></li>
+        <li><span class="ttl">دورة حياة الإرساليات</span><span class="toc-fill"></span><span class="pn">9</span></li>
+        <li><span class="ttl">إدارة الفروع</span><span class="toc-fill"></span><span class="pn">10</span></li>
+        <li><span class="ttl">لوحة المعلومات الفورية</span><span class="toc-fill"></span><span class="pn">11</span></li>
+        <li><span class="ttl">التقارير والإحصاءات</span><span class="toc-fill"></span><span class="pn">12</span></li>
+        <li><span class="ttl">الدعم الفني ونظام التذاكر</span><span class="toc-fill"></span><span class="pn">13</span></li>
+        <li><span class="ttl">الأدوار والصلاحيات</span><span class="toc-fill"></span><span class="pn">14</span></li>
+        <li><span class="ttl">الأمان وحماية البيانات</span><span class="toc-fill"></span><span class="pn">15</span></li>
+        <li><span class="ttl">رحلة المستخدم النموذجية</span><span class="toc-fill"></span><span class="pn">16</span></li>
+        <li><span class="ttl">لماذا عروة</span><span class="toc-fill"></span><span class="pn">17</span></li>
+        <li><span class="ttl">الملخّص السريع</span><span class="toc-fill"></span><span class="pn">18</span></li>
+      </ol>
+    </div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">3 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 4 — Platform Overview ═══════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>نظرة عامة على المنصّة</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الأول · نظرة عامة</div>
+      <h1 class="h1">منصّة B2B متكاملة لمشاركة البيانات</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">عروة تُختصِر المسافة بين الفرع التجاري والمركز التجاري إلى نقرة واحدة. واجهة عربية أصيلة، تدفّق بيانات لحظي، وسجلّ تحقّق كامل لكل عملية إرسال — كل ذلك في منصّة سحابية واحدة.</p>
+
+      <div class="stat-row" style="margin-top:14px">
+        <div class="stat"><div class="v">٤</div><div class="l">قدرات جوهرية تغطّي دورة حياة البيانات بالكامل من الإدخال إلى الأرشفة</div></div>
+        <div class="stat"><div class="v">٣</div><div class="l">طرق مرنة لإدخال البيانات: ويب · Excel · API</div></div>
+        <div class="stat"><div class="v">RTL</div><div class="l">واجهة عربية أصيلة مُحسَّنة للأجهزة المكتبية والمحمولة</div></div>
+      </div>
+
+      <h2 class="h2">القدرات الجوهرية الأربع</h2>
+      <div class="card-grid-2">
+        <div class="card"><div class="card-head"><span class="card-num">١</span>الإدخال والتتبّع</div><p>إدخال وتتبع مشاركة البيانات لفروعك بدقّة — يومياً أو شهرياً، عبر النموذج المباشر أو الاستيراد الجماعي.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">٢</span>الإرسال إلى المركز</div><p>إرسال بيانات المشاركة مباشرةً إلى المركز التجاري بنقرة واحدة، مع حفظ دليل الإرسال تلقائياً.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">٣</span>متابعة الإرساليات</div><p>متابعة حالة كل إرسالية وسجل التحقّق من الإرسال، مع تواريخ دقيقة لكل تحوّل في الحالة.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">٤</span>الدعم الفني</div><p>نظام تذاكر متكامل لحلّ المشكلات، يربطك مباشرةً بفريق الدعم بمتوسّط ردّ يوم عمل واحد.</p></div>
+      </div>
+
+      <div class="callout" style="margin-top:10px">
+        <div class="clbl">بنية التشغيل</div>
+        <p style="margin:0">المنصّة تعمل عبر السحابة. لا تنزيلات. لا تثبيتات. أي متصفّح حديث على أي جهاز يكفي لتشغيل تجربة كاملة.</p>
       </div>
     </div>
-    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
-      <span class="check">&#10003;</span>
-      <div>
-        <div class="fw-600" style="font-size:0.95rem">إدارة الفروع</div>
-        <div class="text-sec text-xs mt-8">إضافة وتعديل بيانات الفروع</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">4 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 5 — The Problem ════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>التحدي الذي نحلّه</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الثاني · المشكلة</div>
+      <h1 class="h1">العمل اليدوي يكلّفك<br>أكثر مما تتصوّر</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">قبل عروة، كانت دورة مشاركة البيانات بين فروع المستأجرين وإدارات المراكز التجارية تعتمد على ملفات يدوية، رسائل بريد، واتصالات هاتفية. ثلاث مشكلات تتكرّر يومياً وتُكلّف الطرفين وقتاً وثقة.</p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+        <div class="card" style="border-right:4px solid var(--gold)"><div class="card-head"><span class="card-num">١</span>تقارير يدوية معقّدة</div><p>إعداد ملفات Excel شهرية، نسخها بين أنظمة، إرسالها كمرفقات بريد، ومراجعتها يدوياً يستهلك ساعات أسبوعياً من المسؤولين الماليين والإداريين في كلا الطرفين.</p></div>
+        <div class="card" style="border-right:4px solid var(--gold)"><div class="card-head"><span class="card-num">٢</span>أخطاء وتأخّر في البيانات</div><p>كل تدخّل بشري في النقل اليدوي يُولّد مخاطرة خطأ — مبلغ خاطئ، فرع خاطئ، شهر خاطئ. الأخطاء تُكتشَف متأخراً، فتؤجَّل القرارات، وتتعطّل عمليات التسوية.</p></div>
+        <div class="card" style="border-right:4px solid var(--gold)"><div class="card-head"><span class="card-num">٣</span>غياب الرؤية الفورية</div><p>إدارات المراكز التجارية لا تملك رؤية لحظية على أداء المستأجرين. النتيجة: قرارات تشغيلية مبنيّة على بيانات قد تكون مرّ عليها أسابيع.</p></div>
+      </div>
+
+      <div class="callout" style="margin-top:12px">
+        <div class="clbl">الكلفة الحقيقية</div>
+        <p style="margin:0">العمل اليدوي ليس مجرد مصدر إزعاج — هو مصدر تكلفة. ساعات عمل ضائعة، أخطاء تتطلّب تسوية، وقرارات متأخّرة تُترجَم إلى فرص نمو ضائعة.</p>
       </div>
     </div>
-    <div class="glass-sm" style="display:flex;align-items:center;gap:12px">
-      <span class="check">&#10003;</span>
-      <div>
-        <div class="fw-600" style="font-size:0.95rem">لوحة تحكم تفاعلية</div>
-        <div class="text-sec text-xs mt-8">رسوم بيانية ومؤشرات أداء</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">5 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 6 — Both perspectives ═══════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>التحدي الذي نحلّه</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الثاني · تابع</div>
+      <h1 class="h1">من زاوية كلّ طرف</h1>
+      <div class="h1-rule"></div>
+
+      <h2 class="h2">من منظور مشغّل الفرع</h2>
+      <ul class="bullets">
+        <li>تكرار إدخال نفس البيانات في عدة قنوات (نظام محاسبة داخلي، ملف Excel للمركز، بريد إلكتروني).</li>
+        <li>عدم وجود سجلّ موحّد يثبت أن البيانات وصلت فعلاً.</li>
+        <li>نسيان مواعيد الإرسال يؤدّي إلى متابعات وتنبيهات يدوية مزعجة من إدارة المركز.</li>
+        <li>صعوبة استرجاع تقارير الأشهر السابقة أو مقارنة أداء الفروع.</li>
+      </ul>
+
+      <h2 class="h2" style="margin-top:14px">من منظور إدارة المركز التجاري</h2>
+      <ul class="bullets">
+        <li>تجميع بيانات عشرات أو مئات المستأجرين شهرياً عبر بريد إلكتروني فوضوي.</li>
+        <li>التحقّق من صحّة كل ملف يدوياً قبل ضمّه للتقارير الإدارية.</li>
+        <li>غياب الإحصاءات الموحَّدة يجعل اتخاذ القرارات الاستراتيجية مبنيّاً على تخمين.</li>
+        <li>صعوبة قياس مَن يلتزم بالمواعيد ومَن لا يلتزم.</li>
+      </ul>
+
+      <div class="hero-solution" style="margin-top:20px">
+        <h2>عروة تجمع كل ذلك في منصّة واحدة.</h2>
+        <p>طرف واحد للإدخال. طرف واحد للاستقبال. سجلّ واحد للتحقّق. واجهة واحدة لكلا الطرفين، مُحسَّنة لكلٍّ منهما.</p>
       </div>
     </div>
-  </div>
-</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">6 / 19</span></footer>
+  </section>
 
-<!-- Slide 6: Three Entry Modes -->
-<div class="slide" data-slide="5">
-  <h2 class="slide-title reveal">ثلاثة أوضاع لإدخال مشاركة البيانات</h2>
-  <p class="slide-subtitle reveal">اختر الوضع الأنسب لكل فرع — إدخال يومي، شهري، أو لفترة زمنية</p>
-  <div class="grid-3 reveal" style="max-width:880px">
-    <div class="glass text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:24px 20px">
-      <div style="font-size:2.2rem">&#128197;</div>
-      <div class="text-gold fw-700" style="font-size:1.05rem">إدخال يومي</div>
-      <div class="text-sec text-xs" style="line-height:1.7">سجّل مشاركة البيانات كل يوم على حدة — مناسب للفروع التي تُحدّث بياناتها يومياً</div>
-    </div>
-    <div class="glass text-center pricing-highlight" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:24px 20px">
-      <div style="font-size:2.2rem">&#128467;</div>
-      <div class="text-gold fw-700" style="font-size:1.05rem">إدخال شهري</div>
-      <div class="text-sec text-xs" style="line-height:1.7">شبكة شهر كامل في شاشة واحدة — أسرع وسيلة لإغلاق الشهر</div>
-    </div>
-    <div class="glass text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:24px 20px">
-      <div style="font-size:2.2rem">&#128338;</div>
-      <div class="text-gold fw-700" style="font-size:1.05rem">إدخال لفترة</div>
-      <div class="text-sec text-xs" style="line-height:1.7">حدّد نطاق تواريخ مرناً — مفيد للتعويض أو الإدخال الرجعي</div>
-    </div>
-  </div>
-  <div class="reveal mt-16">
-    <span class="badge">&#128229; استيراد Excel جماعي بقالب جاهز</span>
-  </div>
-</div>
+  <!-- ════ PAGE 7 — The Solution ══════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>الحلّ — ما تقدّمه عروة</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الثالث · الحلّ</div>
+      <h1 class="h1">منصّة واحدة. ثلاث ركائز.</h1>
+      <div class="h1-rule"></div>
 
-<!-- Slide 7: API Integration -->
-<div class="slide" data-slide="6">
-  <h2 class="slide-title reveal">API للتكامل</h2>
-  <p class="slide-subtitle reveal">تكامل مباشر مع أنظمتكم الداخلية</p>
-  <div class="code-block reveal" style="margin-bottom:24px">
-<span style="color:#7dd3fc">POST</span> /api/v1/sales
-<br><br>
-{
-  <span style="color:var(--gold)">"branch_id"</span>: <span style="color:#a5f3fc">"BR-001"</span>,
-  <span style="color:var(--gold)">"date"</span>: <span style="color:#a5f3fc">"2025-01-15"</span>,
-  <span style="color:var(--gold)">"amount"</span>: <span style="color:#86efac">15000</span>,
-  <span style="color:var(--gold)">"currency"</span>: <span style="color:#a5f3fc">"SAR"</span>
-}
-  </div>
-  <div class="flex-row reveal" style="gap:16px">
-    <div class="badge">&#128196; توثيق كامل</div>
-    <div class="badge">&#128274; مفاتيح API آمنة</div>
-    <div class="badge">&#9881; تحكم كامل</div>
-  </div>
-</div>
+      <p class="lead">عروة تُلخِّص دورة مشاركة البيانات في تجربة عربية بسيطة، سريعة، آمنة. صُمّمت من البداية لتُلائم سياق السوق السعودي وأنماط عمل المراكز التجارية المحلّية.</p>
 
-<!-- Slide 8: Reports & Analytics -->
-<div class="slide" data-slide="7">
-  <h2 class="slide-title reveal">التقارير والإحصاءات</h2>
-  <p class="slide-subtitle reveal">رؤية شاملة لأداء جميع فروعك</p>
-  <div class="grid-4 reveal">
-    <div class="glass text-center" style="position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(245,158,11,0.08)"></div>
-      <div class="kpi-big">458K</div>
-      <div class="kpi-label">إجمالي مشاركة البيانات (ر.س)</div>
-    </div>
-    <div class="glass text-center" style="position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(124,58,237,0.08)"></div>
-      <div class="kpi-big" style="color:var(--purple)">12</div>
-      <div class="kpi-label">فرع نشط</div>
-    </div>
-    <div class="glass text-center" style="position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(34,197,94,0.08)"></div>
-      <div class="kpi-big" style="color:#22c55e">97%</div>
-      <div class="kpi-label">معدل الإرسال في الوقت</div>
-    </div>
-    <div class="glass text-center" style="position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(59,130,246,0.08)"></div>
-      <div class="kpi-big" style="color:#3b82f6">+23%</div>
-      <div class="kpi-label">مقارنة بالشهر السابق</div>
-    </div>
-  </div>
-</div>
+      <div class="hero-solution" style="margin-top:16px">
+        <h2>عروة</h2>
+        <p>منصّة B2B سحابية تجمع جميع طرق إدخال البيانات في مكان واحد، وتنقلها لحظياً إلى المركز التجاري، مع سجلّ تحقّق كامل لا يقبل التلاعب.</p>
 
-<!-- Slide 9: Branch Management -->
-<div class="slide" data-slide="8">
-  <h2 class="slide-title reveal">إدارة الفروع</h2>
-  <p class="slide-subtitle reveal">تحكم كامل في جميع فروعك من مكان واحد</p>
-  <div class="grid-3 reveal">
-    <div class="glass-sm text-center">
-      <div style="font-size:1.6rem;margin-bottom:8px">&#128203;</div>
-      <div class="fw-600 text-sm">إضافة وتعديل الفروع</div>
-      <div class="text-sec text-xs mt-8">اسم الفرع، المدينة، المنطقة</div>
-    </div>
-    <div class="glass-sm text-center">
-      <div style="font-size:1.6rem;margin-bottom:8px">&#128196;</div>
-      <div class="fw-600 text-sm">أرقام العقود</div>
-      <div class="text-sec text-xs mt-8">ربط رقم العقد بكل فرع</div>
-    </div>
-    <div class="glass-sm text-center">
-      <div style="font-size:1.6rem;margin-bottom:8px">&#128289;</div>
-      <div class="fw-600 text-sm">أكواد الفروع</div>
-      <div class="text-sec text-xs mt-8">أكواد فريدة لكل فرع</div>
-    </div>
-    <div class="glass-sm text-center">
-      <div style="font-size:1.6rem;margin-bottom:8px">&#128200;</div>
-      <div class="fw-600 text-sm">حالة الفرع</div>
-      <div class="text-sec text-xs mt-8">نشط، معلق، مغلق</div>
-    </div>
-    <div class="glass-sm text-center">
-      <div style="font-size:1.6rem;margin-bottom:8px">&#128101;</div>
-      <div class="fw-600 text-sm">صلاحيات المستخدمين</div>
-      <div class="text-sec text-xs mt-8">تحكم في الوصول لكل فرع</div>
-    </div>
-    <div class="glass-sm text-center">
-      <div style="font-size:1.6rem;margin-bottom:8px">&#128230;</div>
-      <div class="fw-600 text-sm">تصدير البيانات</div>
-      <div class="text-sec text-xs mt-8">Excel, CSV, PDF</div>
-    </div>
-  </div>
-</div>
+        <div class="pillars">
+          <div class="pillar"><h4>السهولة</h4><p>واجهة عربية أصيلة، خطوات إدخال تتمّ بنقرات قليلة، استيراد جماعي عبر Excel للحالات الكبيرة.</p></div>
+          <div class="pillar"><h4>السرعة</h4><p>إرسال البيانات لحظياً إلى المركز التجاري — من «ساعات» في النموذج اليدوي إلى «ثوانٍ» في عروة.</p></div>
+          <div class="pillar"><h4>الأمان</h4><p>تشفير كامل أثناء النقل، سجلّ تدقيق غير قابل للتعديل، صلاحيات محكمة على مستوى الفرع.</p></div>
+        </div>
+      </div>
 
-<!-- Slide 10: Security & Compliance -->
-<div class="slide" data-slide="9">
-  <h2 class="slide-title reveal">الأمان والامتثال</h2>
-  <p class="slide-subtitle reveal">حماية بياناتك أولوية قصوى</p>
-  <div class="grid-3 reveal" style="max-width:720px">
-    <div class="glass sec-pillar">
-      <div class="sec-icon">&#128274;</div>
-      <div class="fw-700" style="font-size:1rem">تشفير كامل</div>
-      <div class="text-sec text-xs">تشفير البيانات أثناء النقل والتخزين باستخدام TLS و AES-256</div>
-    </div>
-    <div class="glass sec-pillar">
-      <div class="sec-icon">&#128272;</div>
-      <div class="fw-700" style="font-size:1rem">مصادقة ثنائية</div>
-      <div class="text-sec text-xs">طبقة حماية إضافية عند تسجيل الدخول لضمان الأمان</div>
-    </div>
-    <div class="glass sec-pillar">
-      <div class="sec-icon">&#128209;</div>
-      <div class="fw-700" style="font-size:1rem">سجلات مراجعة</div>
-      <div class="text-sec text-xs">تتبع كامل لجميع العمليات والتغييرات في النظام</div>
-    </div>
-  </div>
-  <div class="reveal mt-16">
-    <div class="badge" style="border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.08)">
-      &#128737; Supabase Row Level Security
-    </div>
-  </div>
-</div>
-
-<!-- Slide 11: Why Urwah -->
-<div class="slide" data-slide="10">
-  <h2 class="slide-title reveal">لماذا عروة؟</h2>
-  <p class="slide-subtitle reveal">مقارنة سريعة مع الطرق التقليدية</p>
-  <div class="glass reveal" style="max-width:720px;width:100%;padding:0;overflow:hidden">
-    <table class="compare-table">
-      <thead>
-        <tr style="background:rgba(255,255,255,0.03)">
-          <th style="text-align:right">الميزة</th>
-          <th>عروة</th>
-          <th>الطريقة التقليدية</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>سرعة الإرسال</td>
-          <td style="color:#22c55e">&#10003; فوري</td>
-          <td style="color:#ef4444">&#10007; ساعات</td>
-        </tr>
-        <tr>
-          <td>دقة البيانات</td>
-          <td style="color:#22c55e">&#10003; 99.9%</td>
-          <td style="color:#ef4444">&#10007; أخطاء متكررة</td>
-        </tr>
-        <tr>
-          <td>قنوات الإدخال</td>
-          <td style="color:#22c55e">&#10003; بوابة + Excel + API</td>
-          <td style="color:#ef4444">&#10007; Excel فقط</td>
-        </tr>
-        <tr>
-          <td>التقارير الفورية</td>
-          <td style="color:#22c55e">&#10003; لحظية</td>
-          <td style="color:#ef4444">&#10007; يدوية</td>
-        </tr>
-        <tr>
-          <td>الدعم الفني</td>
-          <td style="color:#22c55e">&#10003; متوفر</td>
-          <td style="color:var(--text-muted)">&#8212; غير متاح</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Slide 12: Pricing -->
-<div class="slide" data-slide="11">
-  <h2 class="slide-title reveal">باقات الاشتراك</h2>
-  <p class="slide-subtitle reveal">اشتراك سنوي — ثلاث باقات تناسب جميع الأحجام</p>
-  <div class="grid-3 reveal" style="max-width:880px">
-    <div class="glass text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:24px 20px">
-      <div class="text-gold fw-700" style="font-size:1.15rem">أساسي</div>
-      <div class="text-sec text-xs">3 فروع · 3 مستخدمين</div>
-      <div style="font-size:1.8rem;font-weight:900;color:var(--text-primary);line-height:1.1">999<span style="font-size:1rem;font-weight:600;color:var(--text-secondary)"> ر.س</span></div>
-      <div class="text-sec text-xs" style="color:rgba(255,255,255,0.45)">83 ر.س / شهر</div>
-      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%;line-height:1.9">
-        بوابة إلكترونية<br>إدخال يومي / شهري / لفترة<br>تقارير أساسية<br>دعم عبر التذاكر
+      <h2 class="h2" style="margin-top:14px">المخرجات لكل طرف</h2>
+      <div class="card-grid-2">
+        <div class="card"><div class="card-head"><span class="card-num">●</span>للمستأجر</div><p>توفير ساعات أسبوعياً، إلغاء أخطاء النقل اليدوي، أرشيف منظَّم للتقارير، دليل إرسال يحفظ حقوقه.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">●</span>لإدارة المركز</div><p>رؤية لحظية على جميع المستأجرين، تقارير مجمَّعة بضغطة، قرارات مبنيّة على بيانات حقيقية لا تخمين.</p></div>
       </div>
     </div>
-    <div class="glass text-center pricing-highlight" style="display:flex;flex-direction:column;gap:10px;align-items:center;position:relative;padding:24px 20px">
-      <div class="pricing-tag">الأكثر طلباً</div>
-      <div class="text-gold fw-700" style="font-size:1.15rem">متوسط</div>
-      <div class="text-sec text-xs">8 فروع · 8 مستخدمين</div>
-      <div style="font-size:1.8rem;font-weight:900;color:var(--gold);line-height:1.1">1,999<span style="font-size:1rem;font-weight:600;color:var(--text-secondary)"> ر.س</span></div>
-      <div class="text-sec text-xs" style="color:rgba(255,255,255,0.45)">167 ر.س / شهر</div>
-      <div class="text-sec text-xs" style="border-top:1px solid rgba(245,158,11,0.2);padding-top:12px;width:100%;line-height:1.9">
-        جميع مزايا الأساسي<br>لوحة تحكم متقدمة<br>استيراد Excel<br>دعم أولوية
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">7 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 8 — Data Entry Methods ════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>طرق إدخال البيانات</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الرابع · القنوات</div>
+      <h1 class="h1">ثلاث قنوات لإدخال البيانات</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">عروة تُدرك أن مشغّلي الفروع يتفاوتون في حجم العمليات وأسلوب التشغيل. لذلك تُتيح ثلاث قنوات إدخال متكاملة، يستطيع كل فرع اختيار الأنسب له — أو الجمع بينها بمرونة.</p>
+
+      <div class="card-grid-3" style="margin-top:14px">
+        <div class="card">
+          <div class="tag">القناة ١</div>
+          <div class="card-head" style="margin-top:6px">النموذج المباشر — Web</div>
+          <p>الإدخال اليدوي عبر متصفّح. مناسب للإدخال اليومي السريع من فرع واحد. النموذج يحتوي على: اختيار الفرع، نوع الإدخال (يومي/شهري)، التاريخ، والمبلغ بالريال السعودي.</p>
+        </div>
+        <div class="card">
+          <div class="tag">القناة ٢</div>
+          <div class="card-head" style="margin-top:6px">الاستيراد الجماعي — Excel</div>
+          <p>رفع ملف Excel يحتوي على عدّة قيود دفعةً واحدة. مناسب لإغلاق آخر الشهر أو إرسال بيانات عدة فروع بنقرة واحدة. النظام يتحقّق من صيغة الملف ويُبلّغ بأي خطأ.</p>
+        </div>
+        <div class="card">
+          <div class="tag">القناة ٣</div>
+          <div class="card-head" style="margin-top:6px">التكامل المباشر — API</div>
+          <p>للمستأجرين الذين يملكون أنظمة محاسبة داخلية، يُمكن ربط النظام مباشرةً بعروة عبر مفاتيح API آمنة. البيانات تتدفّق تلقائياً دون أي تدخّل يدوي.</p>
+        </div>
+      </div>
+
+      <h2 class="h2" style="margin-top:14px">أنواع الإدخال</h2>
+      <table class="urw">
+        <thead><tr><th style="width:18%">النوع</th><th>الوصف</th><th style="width:30%">الحالة الأنسب</th></tr></thead>
+        <tbody>
+          <tr><td><strong>يومي</strong></td><td>قيد منفصل لكل يوم — اختيار الفرع، اختيار التاريخ من التقويم، إدخال المبلغ بالريال السعودي.</td><td>الفروع التي تُغلق المبيعات يومياً.</td></tr>
+          <tr><td><strong>شهري</strong></td><td>قيد إجمالي للشهر بأكمله. النظام يوزّع المبلغ بالتساوي على أيام الشهر تلقائياً عند الإرسال.</td><td>التقارير الشهرية المجمَّعة.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout" style="margin-top:8px">
+        <div class="clbl">واجهة بسيطة</div>
+        <p style="margin:0">زر <strong>«إضافة مشاركة البيانات»</strong> في لوحة المعلومات يفتح النموذج. الحفظ يكون فورياً والقيد يظهر في حالة «معلّقة» حتى يُرسَل.</p>
       </div>
     </div>
-    <div class="glass text-center" style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:24px 20px">
-      <div class="text-gold fw-700" style="font-size:1.15rem">متقدم</div>
-      <div class="text-sec text-xs">15 فرع · 15 مستخدم</div>
-      <div style="font-size:1.8rem;font-weight:900;color:var(--text-primary);line-height:1.1">3,999<span style="font-size:1rem;font-weight:600;color:var(--text-secondary)"> ر.س</span></div>
-      <div class="text-sec text-xs" style="color:rgba(255,255,255,0.45)">333 ر.س / شهر</div>
-      <div class="text-sec text-xs" style="border-top:1px solid var(--glass-border);padding-top:12px;width:100%;line-height:1.9">
-        جميع مزايا المتوسط<br>API + تكامل مخصص<br>مدير حساب مخصص<br>SLA مضمون
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">8 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 9 — Submission Lifecycle ═══════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>دورة حياة الإرساليات</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الخامس · دورة الحياة</div>
+      <h1 class="h1">من «معلّقة» إلى «مُقفَلة»</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">كل قيد بيانات في عروة يمرّ بثلاث حالات واضحة، تُحدّد ما يُسمَح به وما يُمنَع — لحماية البيانات، وضمان وصولها للمركز، وإثبات سجل الإرسال عند أي مراجعة.</p>
+
+      <div class="pipe" style="margin-top:14px">
+        <div class="node" style="border-color:#FCD34D;background:#FFFBEB"><div class="nlbl"><span class="pill pending">معلّقة</span></div><div class="nsub">قيد محفوظ، لم يُرسَل بعد</div></div>
+        <div class="arrow">←</div>
+        <div class="node" style="border-color:#10B981;background:#ECFDF5"><div class="nlbl"><span class="pill sent">مُرسَلة</span></div><div class="nsub">وصلت إلى المركز التجاري</div></div>
+        <div class="arrow">←</div>
+        <div class="node" style="border-color:#6B7280;background:#F9FAFB"><div class="nlbl"><span class="pill locked">مُقفَلة</span></div><div class="nsub">محميّة من التعديل</div></div>
+      </div>
+
+      <h2 class="h2" style="margin-top:14px">ما الذي يُسمَح به في كل حالة</h2>
+      <table class="urw">
+        <thead><tr><th style="width:18%">الحالة</th><th style="width:20%">التعديل</th><th style="width:20%">الحذف</th><th>الوصف</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill pending">معلّقة</span></td><td>✓ مسموح</td><td>✓ مسموح بأيقونة الحذف</td><td>القيد محفوظ في النظام لكنه لم يُرسَل بعد. صاحب الحساب يستطيع تعديله أو حذفه قبل الإرسال.</td></tr>
+          <tr><td><span class="pill sent">مُرسَلة</span></td><td>— لا يُمكن</td><td>— لا يُمكن للمستخدم</td><td>القيد وصل بنجاح إلى المركز التجاري، وحُفظ دليل الإرسال. يحتاج تعديله إلى تدخّل المسؤول.</td></tr>
+          <tr><td><span class="pill locked">مُقفَلة</span></td><td>— لا يُمكن إلا بإلغاء القفل</td><td>— لا يُمكن للمستخدم</td><td>الحالة الحامية. تُستخدم بعد إغلاق الفترة المحاسبية. يفتحها المسؤول فقط.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="h2" style="margin-top:14px">رحلة الإرسال</h2>
+      <div class="flow">
+        <div class="step"><h4>إعداد القيود</h4><p>إضافة قيد أو أكثر عبر النموذج المباشر، أو الاستيراد، أو الـ API. كل القيود تكون «معلّقة» مبدئياً.</p></div>
+        <div class="step"><h4>المراجعة</h4><p>عرض القيود في لوحة المعلومات قبل الإرسال — يُمكن حذف أيّ قيد خاطئ من الأيقونة (×).</p></div>
+        <div class="step"><h4>الإرسال</h4><p>بنقرة <strong>«إرسال مشاركة البيانات»</strong> ينتقل القيد إلى «مُرسَلة» فوراً، ويُحفظ دليل الإرسال في الإرساليات.</p></div>
       </div>
     </div>
-  </div>
-  <div class="reveal mt-16">
-    <span class="text-xs" style="color:var(--text-muted)">إمكانية زيادة عدد الفروع والمستخدمين بتكاليف إضافية حسب الاحتياج</span>
-  </div>
-</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">9 / 19</span></footer>
+  </section>
 
-<!-- Slide 13: Roadmap -->
-<div class="slide" data-slide="12">
-  <h2 class="slide-title reveal">خارطة الطريق</h2>
-  <p class="slide-subtitle reveal">رحلة التطوير المستمر</p>
-  <div class="timeline reveal">
-    <div class="tl-item">
-      <div class="tl-q">Q1</div>
-      <div class="tl-dot"></div>
-      <div class="tl-label">إطلاق البوابة الإلكترونية واستيراد Excel</div>
+  <!-- ════ PAGE 10 — Branches ═════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>إدارة الفروع</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم السادس · الفروع</div>
+      <h1 class="h1">فروع متعدّدة، إدارة موحَّدة</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">المستأجر الواحد قد يملك فرعاً واحداً أو عشرات الفروع. عروة تُتيح ربط جميعها بحساب واحد، مع إمكانية تصفية وتقارير على مستوى كل فرع.</p>
+
+      <h2 class="h2">بطاقة الفرع</h2>
+      <p>كل فرع له ثلاث خصائص جوهرية:</p>
+      <ul class="check-list" style="margin-top:6px">
+        <li><strong>الاسم:</strong> الاسم التجاري للفرع كما يظهر في التقارير.</li>
+        <li><strong>الرمز:</strong> معرّف فريد قصير (مثل JED-001) يُستخدم للفلترة السريعة والاستيراد الجماعي.</li>
+        <li><strong>رقم العقد:</strong> رقم عقد التأجير مع المركز التجاري — يربط البيانات بالاتفاقية الرسمية.</li>
+      </ul>
+
+      <h2 class="h2" style="margin-top:14px">مثال واقعي</h2>
+      <table class="urw">
+        <thead><tr><th>الفرع</th><th>الرمز</th><th>رقم العقد</th><th>الحالة</th></tr></thead>
+        <tbody>
+          <tr><td>فرع جدة — المول التجاري</td><td>JED-001</td><td>C-2024-0089</td><td><span class="pill sent">نشِط</span></td></tr>
+          <tr><td>فرع الرياض — مول الرياض</td><td>RYD-002</td><td>C-2024-0102</td><td><span class="pill sent">نشِط</span></td></tr>
+          <tr><td>فرع الدمام — الواحة</td><td>DMM-003</td><td>C-2024-0117</td><td><span class="pill pending">قيد التفعيل</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout" style="margin-top:12px">
+        <div class="clbl">فلترة وتقارير</div>
+        <p style="margin:0">في لوحة المعلومات: بنقرة على اسم الفرع، تنحصر كل البيانات والإحصاءات على ذلك الفرع فقط. مفيد لمراجعة أداء فرع واحد أو إعداد تقرير مخصّص له.</p>
+      </div>
     </div>
-    <div class="tl-item">
-      <div class="tl-q">Q2</div>
-      <div class="tl-dot"></div>
-      <div class="tl-label">API مفتوح وتكامل مع أنظمة POS</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">10 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 11 — Real-time Dashboard ═══════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>لوحة المعلومات الفورية</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم السابع · لوحة المعلومات</div>
+      <h1 class="h1">رؤية لحظية على أداء فروعك</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">لوحة المعلومات هي الشاشة الرئيسية في عروة. تُظهر بطاقات مؤشّرات الأداء الجوهرية (KPIs)، وآخر القيود المُدخَلة، وحالة الإرساليات — كلّها في صفحة واحدة، تتحدّث بياناتها تلقائياً.</p>
+
+      <h2 class="h2">بطاقات المؤشّرات الجوهرية</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="v">٢٤٠,٠٠٠</div><div class="l">إجمالي مشاركة البيانات (الشهر الحالي · ر.س)</div></div>
+        <div class="stat"><div class="v">٧</div><div class="l">قيود معلّقة بانتظار الإرسال</div></div>
+        <div class="stat"><div class="v">٣٢</div><div class="l">قيود مُرسَلة بنجاح</div></div>
+      </div>
+
+      <h2 class="h2" style="margin-top:12px">أحدث القيود</h2>
+      <table class="urw">
+        <thead><tr><th>التاريخ</th><th>الفرع</th><th>المبلغ (ر.س)</th><th>الحالة</th></tr></thead>
+        <tbody>
+          <tr><td>٢٠٢٦/٠٥/٠٧</td><td>JED-001</td><td>٨,٤٥٠</td><td><span class="pill sent">مُرسَلة</span></td></tr>
+          <tr><td>٢٠٢٦/٠٥/٠٧</td><td>RYD-002</td><td>١٢,٧٢٠</td><td><span class="pill sent">مُرسَلة</span></td></tr>
+          <tr><td>٢٠٢٦/٠٥/٠٦</td><td>JED-001</td><td>٧,١٨٠</td><td><span class="pill pending">معلّقة</span></td></tr>
+          <tr><td>٢٠٢٦/٠٥/٠٦</td><td>DMM-003</td><td>٤,٣٤٠</td><td><span class="pill pending">معلّقة</span></td></tr>
+          <tr><td>٢٠٢٦/٠٤/٣٠</td><td>RYD-002</td><td>١٥٠,٠٠٠</td><td><span class="pill locked">مُقفَلة</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout" style="margin-top:10px">
+        <div class="clbl">شارة الحالة</div>
+        <p style="margin:0">كل قيد يحمل شارة لونيّة فوريّة: <span class="pill pending">معلّقة</span> · <span class="pill sent">مُرسَلة</span> · <span class="pill locked">مُقفَلة</span> — حتى يستطيع المستخدم استيعاب وضع جميع قيوده بنظرة واحدة.</p>
+      </div>
     </div>
-    <div class="tl-item">
-      <div class="tl-q">Q3</div>
-      <div class="tl-dot"></div>
-      <div class="tl-label">تقارير ذكية بالذكاء الاصطناعي</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">11 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 12 — Reports ════════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>التقارير والإحصاءات</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الثامن · التقارير</div>
+      <h1 class="h1">تقارير شهرية مع مقارنة الأداء</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">قسم «تقارير مشاركة البيانات» يحوّل القيود اليومية والشهرية إلى ملخّصات قابلة للتصفّح والتصدير. كل تقرير يُمكن فلترته على مستوى فرع، فترة، أو نوع إدخال.</p>
+
+      <h2 class="h2">المخرجات المتاحة</h2>
+      <ul class="check-list">
+        <li>ملخّص شهري بإجمالي المبالغ لكل فرع.</li>
+        <li>مقارنة الشهر الحالي بالشهر السابق لتتبّع الاتجاه.</li>
+        <li>تصدير PDF جاهز للطباعة والأرشفة.</li>
+        <li>فلترة بحسب الفرع أو نطاق التاريخ.</li>
+        <li>تجميع متعدّد الفروع لتكوين تقرير شامل للمستأجر.</li>
+      </ul>
+
+      <h2 class="h2" style="margin-top:14px">مثال تقرير ربع سنوي</h2>
+      <table class="urw">
+        <thead><tr><th>الشهر</th><th>إجمالي مشاركة البيانات (ر.س)</th><th>التغيّر عن الشهر السابق</th><th>الحالة</th></tr></thead>
+        <tbody>
+          <tr><td>يناير ٢٠٢٦</td><td>١٩٠,٠٠٠</td><td style="color:var(--ink-mute)">—</td><td><span class="pill locked">مُقفَل</span></td></tr>
+          <tr><td>فبراير ٢٠٢٦</td><td>٢١٥,٠٠٠</td><td style="color:#15803D;font-weight:700">↑ ١٣٪</td><td><span class="pill locked">مُقفَل</span></td></tr>
+          <tr><td>مارس ٢٠٢٦</td><td>٢٤٠,٠٠٠</td><td style="color:#15803D;font-weight:700">↑ ١١٪</td><td><span class="pill sent">قيد المراجعة</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout" style="margin-top:12px">
+        <div class="clbl">للأرشفة والتدقيق</div>
+        <p style="margin:0">كل تقرير قابل للتصدير كملف PDF، لإرفاقه بالسجلات المحاسبية أو إرساله للمراجع الخارجي.</p>
+      </div>
     </div>
-    <div class="tl-item">
-      <div class="tl-q">Q4</div>
-      <div class="tl-dot"></div>
-      <div class="tl-label">تطبيق جوال وتوسع إقليمي</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">12 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 13 — Support ═══════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>الدعم الفني ونظام التذاكر</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم التاسع · الدعم</div>
+      <h1 class="h1">دعم فنّي بمتوسّط ردّ يوم عمل واحد</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">عروة تحتوي على نظام تذاكر متكامل داخل المنصّة. لا مكالمات، لا بريد ضائع، لا متابعات. كل تذكرة تأخذ رقماً فريداً ويُمكن تتبّعها حتى الإغلاق.</p>
+
+      <h2 class="h2">فئات التذاكر</h2>
+      <div class="card-grid-2">
+        <div class="card"><div class="card-head"><span class="card-num">●</span>تكامل API</div><p>أسئلة تقنية حول مفاتيح الوصول، نقاط النهاية، أو دمج النظام.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">●</span>ترخيص وعقود</div><p>طلبات تتعلّق بحدود الفروع/المستخدمين، تجديد الاشتراك، أو توضيحات تعاقديّة.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">●</span>مشكلة تقنية</div><p>عُسر في تسجيل الدخول، تأخّر في الإرسال، خلل في عرض البيانات.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">●</span>تقارير وبيانات</div><p>تساؤلات حول تقرير محدّد، بيانات تاريخية، أو طلبات استخراج خاصّة.</p></div>
+      </div>
+
+      <h2 class="h2" style="margin-top:12px">دورة حياة التذكرة</h2>
+      <div class="flow">
+        <div class="step"><h4>رفع التذكرة</h4><p>اختيار الفئة، كتابة وصف تفصيلي، إرفاق لقطة شاشة (اختياري) من زر <strong>«رفع تذكرة دعم»</strong>.</p></div>
+        <div class="step"><h4>التتبّع</h4><p>كل تذكرة تأخذ رقماً فورياً (مثل SUP-0042). يُمكن تتبّع حالتها من قسم <strong>«تذاكري»</strong>.</p></div>
+        <div class="step"><h4>الحلّ</h4><p>فريق الدعم يتواصل عبر البريد، ويُحدِّث حالة التذكرة. متوسّط الردّ: يوم عمل واحد.</p></div>
+      </div>
     </div>
-  </div>
-</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">13 / 19</span></footer>
+  </section>
 
+  <!-- ════ PAGE 14 — Roles & Permissions ═══════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>الأدوار والصلاحيات</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم العاشر · الأدوار</div>
+      <h1 class="h1">صلاحيات محكَمة لثلاثة أدوار</h1>
+      <div class="h1-rule"></div>
 
-<!-- Slide 15: Support -->
-<div class="slide" data-slide="13">
-  <h2 class="slide-title reveal">الدعم الفني</h2>
-  <p class="slide-subtitle reveal">فريق دعم متخصص لمساعدتك في كل خطوة</p>
-  <div class="grid-3 reveal" style="max-width:720px">
-    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="font-size:2rem">&#127915;</div>
-      <div class="fw-700" style="font-size:0.95rem">نظام تذاكر الدعم</div>
-      <div class="text-sec text-xs">افتح تذكرة وتتبع حالتها مباشرة من لوحة التحكم</div>
+      <p class="lead">عروة تتبنّى مبدأ «أقل صلاحية ضروريّة». لكلّ مستخدم دور محدَّد، وكل دور يُفعِّل قائمة معيّنة من الإمكانات. هذا يُحافظ على أمان البيانات ويُبسّط واجهة الاستخدام.</p>
+
+      <table class="urw" style="margin-top:8px">
+        <thead><tr><th>الدور</th><th>القدرات</th></tr></thead>
+        <tbody>
+          <tr><td style="width:25%"><strong>المسؤول العام</strong><br><span style="color:var(--ink-mute);font-size:9pt">Super Admin</span></td><td>إدارة جميع المستأجرين والفروع · إنشاء حسابات جديدة · إعادة تعيين كلمات المرور · فتح القيود المقفلة · حذف القيود المُرسَلة · مراقبة المنصّة بأكملها · تحرير الشروط والأحكام.</td></tr>
+          <tr><td><strong>مسؤول المستأجر</strong><br><span style="color:var(--ink-mute);font-size:9pt">Tenant Admin</span></td><td>إدارة فروع المستأجر ومستخدميه · مراجعة الإرساليات · توليد التقارير · رفع التذاكر · ربط مفاتيح API · مراقبة أداء الفروع داخل مستأجره فقط.</td></tr>
+          <tr><td><strong>مستخدم المستأجر</strong><br><span style="color:var(--ink-mute);font-size:9pt">Tenant User</span></td><td>إدخال البيانات اليومية والشهرية · مراجعة قيوده · إرسال البيانات · رفع تذاكر دعم · لا يستطيع إدارة الفروع أو المستخدمين.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout" style="margin-top:12px">
+        <div class="clbl">القائمة الجانبية تتكيّف</div>
+        <p style="margin:0">واجهة عروة الجانبية تُظهر للمستخدم فقط الأقسام التي تخصّه. مستخدم المستأجر لا يرى أدوات الإدارة، ومسؤول المستأجر لا يرى لوحات التحكّم العامة. تقليل التشتيت = تركيز على المهام الحقيقية.</p>
+      </div>
     </div>
-    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="font-size:2rem">&#128214;</div>
-      <div class="fw-700" style="font-size:0.95rem">دليل المستخدم</div>
-      <div class="text-sec text-xs">دليل تفاعلي شامل مع صور توضيحية وفيديوهات</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">14 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 15 — Security ════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>الأمان وحماية البيانات</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الحادي عشر · الأمان</div>
+      <h1 class="h1">معايير حماية على مستوى المؤسّسة</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">بياناتك المالية تستحقّ معايير حماية لا تقلّ عن البنوك. عروة بُنيَت من اليوم الأول لتُلائم أصحاب البيانات الحسّاسة في القطاع التجاري السعودي.</p>
+
+      <h2 class="h2">الطبقات الأمنية</h2>
+      <div class="card-grid-2">
+        <div class="card"><div class="card-head"><span class="card-num">●</span>تشفير الاتصال</div><p>جميع الاتصالات بين متصفّح المستخدم والخوادم محمية بـ HTTPS مع شهادات حديثة، ولا يُسمَح بأي اتصال غير مشفَّر.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">●</span>تشفير كلمات المرور</div><p>كلمات المرور تُحفَظ بصيغة Hash آمنة (bcrypt) ولا تُخزَّن أبداً بصيغة قابلة للقراءة. حتى الإدارة لا تستطيع رؤيتها.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">●</span>جلسات JWT قصيرة العمر</div><p>كل جلسة تستخدم رمزاً مؤقّتاً ينتهي صلاحيته خلال ١٥ دقيقة، ويُجدَّد تلقائياً عبر رمز تحديث آمن. هذا يقلّل من سطح الهجوم.</p></div>
+        <div class="card"><div class="card-head"><span class="card-num">●</span>سجلّ تدقيق كامل</div><p>كل عملية إدخال أو إرسال أو تعديل تُسجَّل بختم زمني وهويّة المستخدم. السجلّ غير قابل للتعديل ويُحفَظ للمراجعة.</p></div>
+      </div>
+
+      <h2 class="h2" style="margin-top:14px">سياسات بيانات إضافية</h2>
+      <ul class="check-list">
+        <li>القيود <strong>المُرسَلة</strong> لا يُمكن للمستخدم حذفها — لحماية حقوق المركز التجاري وضمان عدم التلاعب.</li>
+        <li>القيود <strong>المُقفَلة</strong> محميّة من التعديل حتى لو كان للمستخدم صلاحيات تحرير القيود الجارية.</li>
+        <li>كلمة المرور <strong>تتغيّر إجبارياً</strong> عند أوّل تسجيل دخول لكل حساب جديد.</li>
+        <li>كل حساب يجب أن <strong>يُوافق على الشروط والأحكام</strong> قبل الوصول إلى لوحة التحكم.</li>
+      </ul>
     </div>
-    <div class="glass text-center" style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="font-size:2rem">&#128172;</div>
-      <div class="fw-700" style="font-size:0.95rem">بوابة المساعدة</div>
-      <div class="text-sec text-xs">أسئلة شائعة ومقالات تعليمية محدّثة باستمرار</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">15 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 16 — User Journey ══════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>رحلة المستخدم النموذجية</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الثاني عشر · الرحلة</div>
+      <h1 class="h1">من الدعوة إلى أوّل إرسالية ناجحة</h1>
+      <div class="h1-rule"></div>
+
+      <p class="lead">عروة صُمّمت لتكون مشغّلاً للأعمال خلال أوّل جلسة استخدام. الرحلة النموذجية لمستخدم جديد تستغرق دقائق، لا أسابيع.</p>
+
+      <div class="flow" style="margin-top:14px">
+        <div class="step"><h4>استلام الدعوة</h4><p>المسؤول يُنشئ الحساب من جانبه، فيستلم المستخدم رابط الدعوة عبر البريد الإلكتروني.</p></div>
+        <div class="step"><h4>تسجيل الدخول الأوّل</h4><p>الدخول بكلمة المرور المؤقّتة، ثم تغييرها إجبارياً (٨ أحرف على الأقل تتضمّن أرقاماً).</p></div>
+        <div class="step"><h4>الموافقة على الشروط</h4><p>قراءة الشروط والأحكام والموافقة عليها — مرّة واحدة فقط لكل حساب.</p></div>
+      </div>
+
+      <div class="flow" style="margin-top:8px">
+        <div class="step"><h4>التعرّف على الفروع</h4><p>مراجعة قائمة الفروع المربوطة بالحساب (يضيفها المسؤول مسبقاً، أو يُضيفها مسؤول المستأجر).</p></div>
+        <div class="step"><h4>الإدخال الأوّل</h4><p>من زر <strong>«إضافة مشاركة البيانات»</strong> — إدخال أوّل قيد يومي/شهري بدقائق.</p></div>
+        <div class="step"><h4>الإرسال إلى المركز</h4><p>من زر <strong>«إرسال مشاركة البيانات»</strong> — اختيار الفرع والشهر، مراجعة سريعة، ثم الإرسال.</p></div>
+      </div>
+
+      <div class="hero-solution" style="margin-top:16px">
+        <h2>أقلّ من ١٠ دقائق</h2>
+        <p>متوسّط الوقت الذي يستغرقه مستخدم جديد للوصول من فتح بريد الدعوة إلى رؤية أوّل قيد له بحالة «مُرسَلة» في لوحة المعلومات.</p>
+      </div>
     </div>
-  </div>
-</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">16 / 19</span></footer>
+  </section>
 
-<!-- Slide 16: Numbers -->
-<div class="slide" data-slide="14">
-  <h2 class="slide-title reveal">عروة بالأرقام</h2>
-  <p class="slide-subtitle reveal">أرقام تعكس ثقة عملائنا</p>
-  <div class="grid-4 reveal">
-    <div class="glass text-center">
-      <div class="kpi-big">+150</div>
-      <div class="kpi-label">مستأجر مسجل</div>
+  <!-- ════ PAGE 17 — Why ═════════════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>لماذا عروة</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">القسم الثالث عشر · المتميّزات</div>
+      <h1 class="h1">أربعة أسباب تجعلها الخيار الأنسب</h1>
+      <div class="h1-rule"></div>
+
+      <div class="card-grid-4" style="margin-top:14px">
+        <div class="card" style="background:linear-gradient(180deg,var(--paper),var(--surface))"><div class="card-head"><span class="card-num">١</span>متخصّصة بالسوق السعودي</div><p>صُمّمت من البداية لسياق المراكز التجارية في المملكة، بأنماط عمل وأرقام وعملة (ر.س) وتقويم محلّي.</p></div>
+        <div class="card" style="background:linear-gradient(180deg,var(--paper),var(--surface))"><div class="card-head"><span class="card-num">٢</span>عربية أصيلة</div><p>واجهة عربية بالكامل، بخطّ Tajawal الواضح، اتجاه RTL طبيعي، ومصطلحات تتحدّث بلغة المستأجر السعودي.</p></div>
+        <div class="card" style="background:linear-gradient(180deg,var(--paper),var(--surface))"><div class="card-head"><span class="card-num">٣</span>مرنة في الإدخال</div><p>ثلاث قنوات إدخال (ويب · Excel · API) تُلائم جميع أحجام التشغيل، من الفرع الواحد إلى السلاسل الكبرى.</p></div>
+        <div class="card" style="background:linear-gradient(180deg,var(--paper),var(--surface))"><div class="card-head"><span class="card-num">٤</span>آمنة وموثّقة</div><p>تشفير كامل، سجلّ تدقيق غير قابل للتعديل، صلاحيات محكَمة، ودليل إرسال يحفظ حقوق جميع الأطراف.</p></div>
+      </div>
+
+      <div class="callout" style="margin-top:14px">
+        <div class="clbl">المحصِّلة</div>
+        <p style="margin:0">عروة ليست مجرّد أداة. هي اختصار لساعات عمل أسبوعية، وتقليل لمصادر الخطأ، ومرفأ آمن لبياناتك المالية الحسّاسة.</p>
+      </div>
     </div>
-    <div class="glass text-center">
-      <div class="kpi-big" style="color:var(--purple)">+500</div>
-      <div class="kpi-label">فرع مفعّل</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">17 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 18 — Quick Reference ══════════════════════════════════ -->
+  <section class="page">
+    <header class="ph"><span>الملخّص السريع</span><span class="brand-mark">عروة</span></header>
+    <div class="page-body">
+      <div class="h1-eyebrow">ملخّص</div>
+      <h1 class="h1">المنصّة على صفحة واحدة</h1>
+      <div class="h1-rule"></div>
+
+      <h2 class="h2">المصطلحات الأساسية</h2>
+      <table class="urw">
+        <thead><tr><th style="width:32%">المصطلح</th><th>المعنى</th></tr></thead>
+        <tbody>
+          <tr><td>لوحة المعلومات</td><td>الشاشة الرئيسية مع بطاقات المؤشّرات وأحدث القيود.</td></tr>
+          <tr><td>إضافة مشاركة البيانات</td><td>زرّ إنشاء قيد جديد (يومي أو شهري).</td></tr>
+          <tr><td>إرسال مشاركة البيانات</td><td>زرّ إرسال القيود المعلّقة إلى المركز التجاري.</td></tr>
+          <tr><td>الإرساليات</td><td>القسم الذي يحوي سجل جميع عمليات الإرسال الناجحة.</td></tr>
+          <tr><td>تقارير مشاركة البيانات</td><td>قسم التقارير الشهرية مع المقارنة والتصدير.</td></tr>
+          <tr><td>رفع تذكرة دعم</td><td>إنشاء طلب جديد لفريق الدعم الفنّي.</td></tr>
+          <tr><td>تذاكري</td><td>قسم متابعة حالة التذاكر التي رفعها المستخدم.</td></tr>
+          <tr><td>دليل الإرسال</td><td>السجل المُحفَظ تلقائياً عند نجاح كل إرسالية.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="h2" style="margin-top:14px">الحالات الثلاث</h2>
+      <div style="display:flex;gap:10px;justify-content:center;align-items:center;margin:6px 0">
+        <span class="pill pending" style="font-size:11pt;padding:6px 16px">معلّقة</span>
+        <span style="color:var(--ink-mute)">—</span>
+        <span class="pill sent" style="font-size:11pt;padding:6px 16px">مُرسَلة</span>
+        <span style="color:var(--ink-mute)">—</span>
+        <span class="pill locked" style="font-size:11pt;padding:6px 16px">مُقفَلة</span>
+      </div>
+
+      <h2 class="h2" style="margin-top:10px">قنوات الإدخال الثلاث</h2>
+      <div class="pipe">
+        <div class="node"><div class="nlbl">النموذج المباشر</div><div class="nsub">للإدخال اليدوي اليومي</div></div>
+        <div class="node"><div class="nlbl">استيراد Excel</div><div class="nsub">للإدخال الجماعي الشهري</div></div>
+        <div class="node"><div class="nlbl">تكامل API</div><div class="nsub">للأنظمة الداخلية</div></div>
+      </div>
+
+      <div class="callout" style="margin-top:10px">
+        <div class="clbl">قاعدة جوهرية</div>
+        <p style="margin:0">القيد <strong>المُرسَل</strong> لا يُحذَف. لحفظ حقوق الجميع، التعديل بعد الإرسال يحتاج إلى تدخّل مسؤول. هذا ضمان لكل من المستأجر والمركز التجاري على حدٍّ سواء.</p>
+      </div>
     </div>
-    <div class="glass text-center">
-      <div class="kpi-big" style="color:#22c55e">2M+</div>
-      <div class="kpi-label">عملية مشاركة البيانات مسجلة</div>
+    <footer class="pf"><span>عروة · النسخة 2.0</span><span class="pn">18 / 19</span></footer>
+  </section>
+
+  <!-- ════ PAGE 19 — Sign-off ═══════════════════════════════════════════ -->
+  <section class="page cover" style="background:radial-gradient(ellipse 600px 480px at 50% 50%, rgba(184,134,11,0.10) 0%, transparent 70%), var(--paper)">
+    <div class="cover-rule-top"></div>
+    <div class="signoff">
+      <div class="signoff-mark"></div>
+      <h1>عروة</h1>
+      <div class="gold-rule"></div>
+      <p style="font-size:18pt;font-weight:600;color:var(--ink-2);max-width:46ch">
+        مشاركة البيانات بدقّة، سهولة، وثقة.
+      </p>
+      <p style="font-size:11pt;color:var(--ink-mute);max-width:46ch">
+        منصّتك الموثوقة لمشاركة البيانات إلى المراكز التجارية الكبرى.
+      </p>
+      <div style="margin-top:32px;font-size:8.5pt;color:var(--ink-mute);letter-spacing:0.18em">
+        دليل المبيعات والقدرات · النسخة 2.0 · مايو ٢٠٢٦
+      </div>
     </div>
-    <div class="glass text-center">
-      <div class="kpi-big" style="color:#3b82f6">98%</div>
-      <div class="kpi-label">نسبة رضا العملاء</div>
-    </div>
-  </div>
-</div>
+    <div class="cover-rule-bot"></div>
+  </section>
 
-<!-- Slide 17: Tech Stack -->
-<div class="slide" data-slide="15">
-  <h2 class="slide-title reveal">التقنية المستخدمة</h2>
-  <p class="slide-subtitle reveal">بنية تحتية حديثة وموثوقة</p>
-  <div class="flex-row reveal" style="gap:14px;max-width:700px;flex-wrap:wrap;justify-content:center">
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:#61dafb">&#9883;</span> React
-    </div>
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:#68a063">&#9632;</span> Node.js
-    </div>
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:#3ecf8e">&#9671;</span> Supabase
-    </div>
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:#38bdf8">&#9708;</span> Tailwind CSS
-    </div>
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:#336791">&#9881;</span> PostgreSQL
-    </div>
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:#1d6f42">&#128202;</span> Excel Import
-    </div>
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:#3178c6">TS</span> TypeScript
-    </div>
-    <div class="badge" style="padding:12px 20px;font-size:0.9rem">
-      <span style="color:var(--gold)">&#9729;</span> Vercel
-    </div>
-  </div>
-</div>
-
-<!-- Slide 18: Team -->
-<div class="slide" data-slide="16">
-  <h2 class="slide-title reveal">الفريق</h2>
-  <p class="slide-subtitle reveal">فريق سعودي متخصص في التقنية وقطاع التجزئة</p>
-  <div class="reveal" style="display:flex;flex-direction:column;align-items:center;gap:24px;max-width:600px;width:100%">
-    <div class="glass text-center" style="width:100%;padding:32px 40px">
-      <div style="font-size:2.4rem;margin-bottom:12px">&#128101;</div>
-      <p class="fw-700" style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">فريق متخصص في التقنية والتجزئة</p>
-      <p class="text-sec" style="line-height:1.7">خبرة واسعة في بناء الحلول التقنية لقطاع التجزئة في المملكة العربية السعودية، مع فهم عميق لاحتياجات المستأجرين والمراكز التجارية.</p>
-    </div>
-    <div style="display:flex;gap:16px;width:100%;justify-content:center">
-      <div class="badge">&#127756; فريق سعودي</div>
-      <div class="badge">&#128187; خبرة تقنية</div>
-      <div class="badge">&#127968; قطاع التجزئة</div>
-    </div>
-  </div>
-</div>
-
-<!-- Slide 19: Get Started -->
-<div class="slide" data-slide="17">
-  <h2 class="slide-title reveal">ابدأ الآن</h2>
-  <p class="slide-subtitle reveal">ثلاث خطوات بسيطة للانطلاق</p>
-  <div class="flex-row reveal" style="gap:16px;margin-bottom:36px">
-    <div class="glass-sm text-center" style="width:200px;display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div class="step-num">1</div>
-      <div class="fw-600">تواصل معنا</div>
-      <div class="text-sec text-xs">عبر البريد أو الاتصال المباشر</div>
-    </div>
-    <div class="flow-line"></div>
-    <div class="glass-sm text-center" style="width:200px;display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div class="step-num">2</div>
-      <div class="fw-600">إعداد الحساب</div>
-      <div class="text-sec text-xs">نجهز حسابك وفروعك</div>
-    </div>
-    <div class="flow-line"></div>
-    <div class="glass-sm text-center" style="width:200px;display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div class="step-num">3</div>
-      <div class="fw-600">ابدأ التسجيل</div>
-      <div class="text-sec text-xs">سجل مشاركة بياناتك فوراً</div>
-    </div>
-  </div>
-  <button class="cta reveal" onclick="void(0)">&#128640; طلب عرض توضيحي</button>
-</div>
-
-<!-- Slide 20: Thank You -->
-<div class="slide" data-slide="18">
-  <div class="reveal" style="margin-bottom:32px;display:flex;align-items:center;justify-content:center;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(245,158,11,0.15),rgba(245,158,11,0.04));box-shadow:0 0 80px rgba(245,158,11,0.3),0 0 160px rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.18)">
-    <div class="sm-flc" style="padding:12px 20px;"><span class="sm-logo-slot" data-size="110"></span></div>
-  </div>
-  <h2 class="reveal" style="font-size:clamp(2rem,4vw,3.5rem);font-weight:900;color:var(--gold);margin-bottom:8px">شكراً لكم</h2>
-  <p class="reveal" style="font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text-secondary);margin-bottom:24px">عروة — شريكك في النجاح</p>
-  <div class="flex-row reveal" style="gap:20px">
-    <div class="badge">&#128231; info@urwah.sa</div>
-    <div class="badge">&#128241; +966 5X XXX XXXX</div>
-    <div class="badge">&#127760; urwah.sa</div>
-  </div>
-  <div class="reveal mt-16">
-    <div class="text-muted text-xs" style="color:var(--text-muted)">جميع الحقوق محفوظة &copy; 2025 عروة</div>
-  </div>
-</div>
-
-</div><!-- /deck -->
-
-<script>
-(function(){
-  'use strict';
-
-  var TOTAL = 20;
-  var current = 0;
-  var isAnimating = false;
-  var ANIM_DURATION = 600;
-
-  var slides = document.querySelectorAll('.slide');
-  var progress = document.getElementById('progress');
-  var counter = document.getElementById('counter');
-  var dotsContainer = document.getElementById('nav-dots');
-
-  // Create nav dots
-  for (var i = 0; i < TOTAL; i++) {
-    var dot = document.createElement('div');
-    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
-    dot.setAttribute('data-index', i);
-    dot.addEventListener('click', function() {
-      goTo(parseInt(this.getAttribute('data-index')));
-    });
-    dotsContainer.appendChild(dot);
-  }
-
-  function updateUI() {
-    progress.style.width = ((current + 1) / TOTAL * 100) + '%';
-    counter.textContent = (current + 1) + ' / ' + TOTAL;
-    var dots = dotsContainer.querySelectorAll('.nav-dot');
-    for (var d = 0; d < dots.length; d++) {
-      dots[d].classList.toggle('active', d === current);
-    }
-  }
-
-  function goTo(index) {
-    if (index === current || index < 0 || index >= TOTAL || isAnimating) return;
-    isAnimating = true;
-
-    var prev = slides[current];
-    var next = slides[index];
-    var goingForward = index > current;
-
-    // Step 1: Snap next slide to its OFF-SCREEN starting position (no transition)
-    next.classList.add(goingForward ? 'will-enter-below' : 'will-enter-above');
-
-    // Step 2: Force reflow so the browser commits the starting position
-    void next.offsetWidth;
-
-    // Step 3: Remove snap class + add active → browser sees a "from" state and transitions
-    next.classList.remove('will-enter-below', 'will-enter-above');
-    next.classList.add('active');
-
-    // Step 4: Slide current out
-    prev.classList.remove('active');
-    prev.classList.add(goingForward ? 'exit-up' : 'exit-down');
-
-    current = index;
-    updateUI();
-
-    setTimeout(function() {
-      prev.classList.remove('exit-up', 'exit-down');
-      isAnimating = false;
-    }, ANIM_DURATION);
-  }
-
-  function next() { goTo(current + 1); }
-  function prev() { goTo(current - 1); }
-
-  // Keyboard
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
-      // RTL: left arrow = next
-      e.preventDefault();
-      next();
-    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'PageUp') {
-      e.preventDefault();
-      prev();
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      goTo(0);
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      goTo(TOTAL - 1);
-    }
-  });
-
-  // Mouse wheel
-  var wheelCooldown = false;
-  document.addEventListener('wheel', function(e) {
-    if (wheelCooldown) return;
-    wheelCooldown = true;
-    if (e.deltaY > 0) next();
-    else if (e.deltaY < 0) prev();
-    setTimeout(function() { wheelCooldown = false; }, 800);
-  }, { passive: true });
-
-  // Touch/swipe
-  var touchStartY = 0;
-  var touchStartX = 0;
-  document.addEventListener('touchstart', function(e) {
-    touchStartY = e.touches[0].clientY;
-    touchStartX = e.touches[0].clientX;
-  }, { passive: true });
-
-  document.addEventListener('touchend', function(e) {
-    var dy = e.changedTouches[0].clientY - touchStartY;
-    var dx = e.changedTouches[0].clientX - touchStartX;
-
-    // Use larger axis
-    if (Math.abs(dy) > Math.abs(dx)) {
-      if (dy < -40) next();
-      else if (dy > 40) prev();
-    } else {
-      // RTL: swipe left = next
-      if (dx < -40) prev();
-      else if (dx > 40) next();
-    }
-  }, { passive: true });
-
-  // Initialize
-  updateUI();
-})();
-</script>
-
-<!-- LOGO INJECTION — branding.html canonical full calligraphic SVG — no squircle -->
-<script>
-(function () {
-  'use strict';
-  var P = '<path d="M428.109741,308.062500 C448.252167,303.688812 463.935150,292.184570 478.893982,279.506531 C497.342896,263.870483 513.617004,245.912170 531.592224,229.767548 C546.534424,216.347137 562.293457,204.081390 581.419067,197.053467 C595.298706,191.953232 609.478821,190.154388 624.063232,193.939819 C653.639465,201.616455 663.741516,226.418884 658.878113,251.379181 C658.359314,254.041916 658.276428,256.980682 655.790955,260.006836 C655.450317,256.014160 655.177673,252.748520 654.892151,249.483994 C653.137573,229.421875 639.162720,215.670181 619.272705,213.145767 C596.501221,210.255661 577.976196,219.570038 560.615662,232.369461 C544.345703,244.364822 530.170349,258.756226 515.848633,272.949402 C500.918365,287.745605 485.542084,302.027222 467.671082,313.304199 C453.401306,322.308716 438.159546,328.753021 421.109192,329.944550 C384.898102,332.475098 358.177185,306.386932 357.680817,274.173035 C357.322998,250.951004 367.502075,232.862686 385.321564,218.638031 C387.134308,217.190964 389.023834,215.840012 390.852325,214.463547 C384.869843,204.779770 393.771088,198.624039 395.314545,190.137436 C400.361359,192.710297 403.551727,196.151352 406.834808,199.245850 C410.692841,202.882278 413.924805,202.803116 417.555969,199.362732 C420.212555,196.845749 422.916168,194.378387 425.597992,191.888016 C426.763550,190.805618 427.523651,189.180588 430.002350,188.717926 C429.784851,197.426392 425.101044,203.072540 418.707947,208.151810 C421.833740,211.570679 424.858215,214.785324 427.780304,218.090515 C442.655914,234.916351 434.529297,270.913361 410.321808,277.442474 C390.891754,282.683044 376.220215,269.675049 380.107819,249.960770 C381.566040,242.566177 383.992126,235.508133 387.011810,228.429092 C382.244232,230.805710 379.170013,235.030060 376.246429,239.170074 C356.552155,267.058716 370.345093,301.433746 403.967224,308.592529 C411.930695,310.288116 419.826996,310.131805 428.109741,308.062500 M394.061249,251.254227 C399.086792,259.671692 412.348450,257.227814 419.537933,251.799484 C422.727448,249.391296 423.353729,246.638855 421.360291,243.145081 C416.983429,235.473969 410.323242,230.096466 403.730469,224.446304 C398.876770,228.418381 396.285278,233.255569 393.892151,238.165619 C391.926727,242.198074 391.387360,246.421738 394.061249,251.254227 z"/><path d="M576.357117,289.720032 C581.971436,291.678497 587.302185,292.243591 592.672607,291.302307 C593.070740,290.001831 592.387878,289.433350 591.816345,288.877380 C582.726807,280.034668 581.746826,269.901550 586.896729,258.718628 C592.100098,247.419662 598.905334,237.902390 612.173828,235.340103 C623.994263,233.057419 640.485046,243.305099 643.721375,254.916306 C644.101807,256.281250 644.366516,257.601410 643.164124,258.593048 C641.706421,259.795197 640.299805,258.795837 638.997253,258.147827 C628.586243,252.968658 617.812012,252.809647 606.935303,256.138092 C597.922668,258.896088 597.074280,262.418915 603.265747,269.618744 C612.329407,280.158386 624.713440,283.647034 637.865234,279.028320 C646.027954,276.161652 654.037415,272.859863 662.126038,269.780365 C663.962036,269.081360 665.797668,268.079163 667.833435,269.149872 C668.761353,277.365448 661.081970,290.011444 653.538635,292.796906 C638.088623,298.502045 623.543396,306.548035 607.550781,310.825836 C592.372009,314.885956 577.353699,315.687653 562.958374,307.680237 C556.138611,303.886749 551.007324,298.294373 545.753784,291.455322 C543.585449,304.266907 539.333252,315.313232 531.551331,324.742340 C525.570679,331.988953 518.527039,337.565216 508.798279,338.842468 C504.215607,339.444092 499.839783,338.459106 495.512543,337.284912 C488.557800,335.397766 482.209320,332.040802 475.874207,328.702576 C473.874237,327.648712 471.996399,326.165802 473.046204,323.597565 C474.012085,321.234589 476.253235,321.526855 478.237244,322.131134 C492.827911,326.575165 505.008087,321.622498 516.173767,312.533600 C522.834167,307.112030 528.270386,300.678131 532.713135,293.332794 C535.257019,289.126953 535.310486,285.309509 533.280457,280.663757 C527.429016,267.272614 526.915222,271.732758 537.022156,261.807983 C539.611389,259.265350 542.352661,256.877411 545.808899,253.695984 C552.321899,269.158051 559.869263,283.147614 576.357117,289.720032 z"/><path d="M460.696899,261.690094 C448.874115,256.856354 444.183502,248.285339 446.545380,236.115051 C448.743439,224.788910 453.471405,214.592346 460.851532,205.724289 C471.427490,193.016129 484.579987,193.730453 493.830322,207.369049 C500.527740,217.243668 503.871643,228.277573 505.246124,240.015289 C505.719513,244.058014 504.836975,247.379868 501.634460,250.286636 C496.831299,254.646225 492.413971,259.429199 487.781555,263.980225 C486.896301,264.849915 486.199829,266.211761 484.516815,265.893890 C483.305664,264.217377 485.690765,262.912384 484.898712,261.011902 C477.075256,263.641846 469.112427,264.564697 460.696899,261.690094 M472.851074,240.929062 C477.976929,241.102432 483.088379,241.190582 488.139069,238.484772 C486.093658,231.855240 483.004822,226.058197 478.102966,221.410095 C475.783386,219.210632 472.901459,217.851959 469.432098,218.917328 C464.441132,220.449982 459.441437,226.363358 459.412292,230.897507 C459.385406,235.082794 463.444031,238.975662 469.498566,240.519775 C470.297974,240.723648 471.144653,240.741928 472.851074,240.929062 z"/><path d="M382.481873,161.486572 C388.508118,153.710754 388.534882,153.674393 396.099915,159.241898 C398.623077,161.098846 400.970703,163.194275 403.543152,165.298935 C406.839874,163.066238 408.771912,159.706848 411.103241,156.762924 C412.906372,154.485931 414.646973,153.975250 416.993561,155.749420 C417.786987,156.349289 418.666626,156.833694 419.486877,157.399811 C434.590240,167.824112 430.314941,169.322388 421.531799,180.377075 C419.682190,182.705017 417.997375,182.787796 415.750031,180.716675 C412.223755,177.466934 408.442078,174.494370 404.464203,171.148392 C401.772369,174.355118 399.133362,177.078995 396.997162,180.152344 C394.452789,183.812943 392.316071,183.339478 389.477753,180.502945 C386.903778,177.930573 383.944275,175.732300 381.076324,173.468414 C376.222015,169.636627 376.167786,169.424118 380.080292,164.496826 C380.803772,163.585678 381.536163,162.681625 382.481873,161.486572 z"/><path d="M598.817017,175.773315 C602.242554,173.725784 605.659302,172.304947 608.178589,169.555847 C602.521545,162.847595 602.983154,157.105087 609.391174,153.046036 C611.321838,151.823090 613.356873,151.162094 615.506653,152.302658 C617.662354,153.446365 618.291626,155.486755 618.256531,157.790604 C618.208618,160.935760 616.871826,163.973099 619.744080,167.082062 C620.931458,168.367340 619.235535,172.682281 616.218811,172.016800 C613.102844,171.329437 611.994080,173.028107 610.359192,174.497040 C603.873169,180.324524 595.722717,183.353653 588.486816,182.193817 C591.222656,178.609512 595.348511,177.991287 598.817017,175.773315 z"/><path d="M507.902527,404.792236 C506.407623,409.087341 505.085327,413.029968 503.701965,416.951019 C503.106262,418.639496 502.767944,420.760132 500.404236,420.780090 C498.091400,420.799591 497.560577,418.778503 496.931580,417.073822 C492.440857,404.903259 487.984863,392.719910 483.499115,380.547516 C481.293610,374.562653 479.876892,368.090668 472.621033,365.133789 C479.117920,361.342133 487.598145,363.970551 490.324615,370.255066 C493.959747,378.634216 496.907562,387.310699 500.193939,395.842773 C500.837738,397.514191 501.071320,399.413666 502.563782,400.710358 C511.086945,382.654724 515.424255,376.457520 500.849335,364.856293 C504.528503,361.831055 513.241028,363.803009 516.802246,368.483459 C518.647217,370.908295 519.533813,373.778564 520.576233,376.589020 C523.635803,384.837952 526.767151,393.060303 530.110229,401.929321 C532.135010,399.434021 532.850403,396.972107 533.711243,394.612762 C537.018127,385.549866 540.306213,376.479919 543.550354,367.394379 C544.500122,364.734558 545.808228,362.929169 549.007080,364.191010 C550.179504,365.914948 549.203125,367.445801 548.672791,368.946960 C543.021240,384.943390 537.340149,400.929382 531.658386,416.915161 C531.056458,418.608673 530.746887,420.723724 528.343445,420.687439 C525.806824,420.649200 525.312317,418.481079 524.618042,416.606720 C521.231140,407.463226 517.837341,398.322235 513.946777,387.834808 C511.671082,394.240082 509.860718,399.335571 507.902527,404.792236 z"/><path d="M444.896423,363.692932 C449.430878,363.530029 453.326965,364.229431 457.109009,365.690643 C463.156982,368.027313 466.785614,372.407745 466.896240,378.854340 C467.003815,385.124969 464.176392,390.082489 458.207855,392.838593 C457.177338,393.314484 456.170166,393.840942 454.332306,394.749329 C460.051239,402.327728 462.508301,411.790741 471.285919,416.640350 C472.212402,417.152252 473.102234,417.563293 473.001099,418.765472 C472.878052,420.227814 471.686981,420.641144 470.536438,420.825836 C464.432892,421.805634 459.154419,420.093994 455.537842,415.048431 C451.859894,409.917236 448.670929,404.433746 445.310181,399.077942 C444.057526,397.081726 442.970093,394.686401 440.042236,395.507751 C437.037415,396.350708 438.246918,399.082062 438.181976,401.033691 C438.015808,406.025482 438.005249,411.029205 438.144440,416.022247 C438.261597,420.226166 435.652344,420.323334 432.553497,420.353912 C429.424957,420.384735 427.528290,419.738739 427.571686,415.985260 C427.712250,403.827209 427.591949,391.666443 427.638428,379.506958 C427.659973,373.871216 428.538635,367.904419 419.810608,366.032349 C424.399170,362.334137 428.627960,364.035187 432.424683,363.755096 C436.400696,363.461731 440.415222,363.690918 444.896423,363.692932 M451.526398,370.860443 C449.347168,369.624756 447.047913,368.691162 444.547241,368.415405 C439.624481,367.872559 438.194214,369.095001 438.128815,373.938507 C438.075165,377.911255 438.103851,381.885681 438.148041,385.858826 C438.166626,387.528046 438.239197,389.109222 440.353088,389.777985 C444.830414,391.194519 451.753296,388.993713 454.223267,385.201599 C456.928101,381.048889 456.070953,375.292542 451.526398,370.860443 z"/><path d="M661.812927,365.459839 C662.072876,379.882812 662.207764,393.869171 662.238586,407.855743 C662.247437,411.848602 662.192566,415.692963 667.224609,416.850616 C668.160156,417.065796 668.525513,417.882935 668.387146,418.782288 C668.241943,419.726105 667.477051,420.000946 666.618835,420.249603 C657.141724,422.995361 651.763062,418.962585 651.729126,409.038177 C651.716003,405.207489 651.636230,401.374146 651.749695,397.546844 C651.838928,394.538330 650.494202,393.344635 647.560120,393.394836 C642.565063,393.480286 637.564880,393.511658 632.571777,393.379547 C629.272827,393.292267 628.176025,394.821289 628.242920,397.928894 C628.357666,403.256042 628.146912,408.591034 628.299377,413.916229 C628.411682,417.839874 628.144531,420.569244 622.851990,420.462555 C617.904846,420.362823 617.630493,417.863953 617.660950,414.123230 C617.765381,401.299377 617.698120,388.474152 617.697510,375.649445 C617.697327,371.859589 617.640320,368.120667 612.733582,367.188751 C611.802979,367.012024 611.323181,366.278839 611.429077,365.353851 C611.536438,364.416534 612.285828,364.070160 613.128235,363.795624 C622.158203,360.853180 628.079407,364.968201 628.214966,374.329651 C628.263184,377.660065 628.286072,380.992157 628.236145,384.322235 C628.198730,386.821503 629.355103,388.017334 631.833130,388.014221 C637.162537,388.007477 642.492126,387.984863 647.821167,388.026794 C650.512695,388.047974 651.772522,386.887512 651.717407,384.114563 C651.628113,379.619446 651.693848,375.121094 651.706238,370.624176 C651.726562,363.249451 654.549072,361.661926 661.812927,365.459839 z"/><path d="M572.921875,368.976868 C574.331543,366.638641 574.497375,363.573853 577.951660,363.790863 C581.030151,363.984283 581.337769,366.672882 582.219177,368.688263 C587.879028,381.628754 593.472168,394.598663 599.035217,407.581146 C600.634216,411.312622 602.367554,414.871521 606.382507,416.601349 C607.355591,417.020630 608.178772,417.566681 607.981689,418.787720 C607.735718,420.311859 606.453918,420.329834 605.309387,420.492645 C598.605286,421.446350 592.604004,418.571045 589.759094,411.489594 C587.341614,405.472198 583.587341,404.593750 577.673340,404.015961 C567.109192,402.983795 560.539551,406.019440 558.169983,416.767273 C557.500610,419.803131 555.374634,421.166382 551.151978,419.336700 C558.367737,402.635193 565.563293,385.980530 572.921875,368.976868 M570.155518,399.008972 C574.375549,398.732483 578.679504,399.625000 583.606750,398.094513 C580.936035,391.892609 578.388794,385.977509 575.414001,379.069458 C571.604004,385.228119 569.570068,390.792694 567.225586,396.198639 C566.325684,398.273712 567.588257,398.850220 570.155518,399.008972 z"/><path d="M410.212952,369.202271 C409.786896,381.142426 411.251495,392.669556 409.341431,404.074799 C407.424500,415.520935 399.767639,421.374878 387.301544,421.286316 C374.750793,421.197174 366.641388,414.898254 364.638336,403.817047 C363.082550,395.210236 364.060791,386.542084 363.873840,377.904327 C363.768463,373.036041 364.347107,368.018951 358.025696,366.342621 C357.799896,366.282745 357.773804,365.469757 357.659851,365.028015 C367.501099,360.173645 374.279724,364.085052 374.312866,374.543823 C374.339264,382.869720 374.085175,391.207123 374.438477,399.518890 C374.978210,412.218262 384.438202,418.905151 395.373596,414.574799 C402.775299,411.643677 404.316956,405.054047 404.572784,398.250122 C404.941650,388.438934 404.633270,378.603577 404.722839,368.779510 C404.740814,366.806854 403.961670,363.937836 407.363007,363.927338 C410.635071,363.917206 410.023224,366.660431 410.212952,369.202271 z"/>';
-  function fl(w, uid) {
-    var g = 'flg_' + uid, r = 'flrg_' + uid, h = Math.round(w * 295 / 325);
-    return '<svg width="' + w + '" height="' + h + '" viewBox="350 140 325 295" fill="none"'
-      + ' xmlns="http://www.w3.org/2000/svg" aria-label="شعار عروة" role="img" style="display:block">'
-      + '<defs>'
-      + '<linearGradient id="' + g + '" x1="512" y1="140" x2="512" y2="440" gradientUnits="userSpaceOnUse">'
-      + '<stop offset="0%" stop-color="#FFFDE7"/><stop offset="10%" stop-color="#FDE68A"/>'
-      + '<stop offset="40%" stop-color="#F59E0B"/><stop offset="75%" stop-color="#D97706"/>'
-      + '<stop offset="100%" stop-color="#92400E"/>'
-      + '</linearGradient>'
-      + '<radialGradient id="' + r + '" cx="512" cy="260" r="200" gradientUnits="userSpaceOnUse">'
-      + '<stop offset="0%" stop-color="#FBBF24" stop-opacity="0.28"/>'
-      + '<stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>'
-      + '</radialGradient></defs>'
-      + '<ellipse cx="512" cy="255" rx="230" ry="160" fill="url(#' + r + ')"/>'
-      + '<g fill="url(#' + g + ')">' + P + '</g></svg>';
-  }
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.sm-logo-slot').forEach(function (el, i) {
-      var w = parseInt(el.getAttribute('data-size') || '90', 10);
-      var t = document.createElement('span'); t.innerHTML = fl(w, 'sm' + i);
-      el.parentNode.replaceChild(t.firstElementChild, el);
-    });
-  });
-})();
-</script>
 </body>
 </html>
