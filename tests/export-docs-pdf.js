@@ -40,10 +40,11 @@ const DOCS = [
     style: 'slides',
   },
   // Document-style HTML — already structured into A4 portrait pages with
-  // its own @page rules. Do NOT inject slide overrides; let it render
-  // natively at A4 portrait with no margins (the inner .page handles them).
+  // its own @page rules. Renders from a LOCAL-ONLY file that is in
+  // .gitignore — the user wants this kept local and NOT deployed to dev.
+  // The deployed sales-marketing.html stays as the original slide deck.
   {
-    url:   'https://dev.urrwah.com/sales-marketing.html',
+    url:   'file:///C:/Users/ibrahim/Desktop/Musharaka%20Sales%20Management%20System/musharaka/client/public/_local-sales-doc.html',
     file:  'urrwah-sales-document.pdf',
     title: 'sales-document',
     style: 'document',
