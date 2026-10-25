@@ -33,9 +33,9 @@
     "dev":  { "host": "127.0.0.1", "port": 5432, "name": "d17546_urrwah_dev",  "user": "d17546_urrwah_dev_app"  }
   },
 
-  "_docroot_note_": "prod docroot is the musharakah.urrwah.com cPanel subdomain (~/public_html/musharakah.urrwah.com). legacy_docroot is the APEX docroot (~/public_html): it only carries the legacy 301s from docs/legacy-redirects.htaccess after cutover. ~/deploy.sh on the VPS must be checked against these keys before the first deploy.",
+  "_docroot_note_": "prod docroot is the musharakah.urrwah.com cPanel subdomain, ~/musharakah_site (outside public_html, like ~/partner_portal; pending the owner's OK). legacy_docroot is the APEX docroot (~/public_html): it only carries the legacy 301s from docs/legacy-redirects.htaccess after cutover. ~/deploy.sh on the VPS must be checked against these keys before the first deploy.",
   "docroot": {
-    "prod":   "musharakah.urrwah.com",
+    "prod":   "../musharakah_site",
     "dev":    "dev.urrwah.com",
     "legacy": "public_html"
   },

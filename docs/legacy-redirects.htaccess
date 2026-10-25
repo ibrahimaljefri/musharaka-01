@@ -17,9 +17,17 @@
 # Behaviour: 301 (308 for /api and /assets), case-insensitive like React Router, same path, query string preserved (mod_rewrite appends it
 # when the target has none). A RewriteCond only guards the NEXT RewriteRule, so
 # the apex host condition is repeated before every rule. This matters because
-# the subdomain docroots live under ~/public_html and Apache also reads this
-# parent .htaccess for them: without the per-rule condition
-# musharakah.urrwah.com/api/* would redirect to itself in an endless loop.
+# a subdomain docroot UNDER ~/public_html (e.g. dev.urrwah.com) also reads this
+# parent .htaccess: without the per-rule condition that host would redirect
+# itself. (The Musharakah docroot ~/musharakah_site is outside public_html, but
+# keep the guard anyway.)
+#
+# What is live on the apex today: only `/`, `/assets/*` and a few root files
+# (index.html, branding.*, user-guide.*, sales-marketing.html, marketing-sales.pptx,
+# urwah-logo.*). Deep links such as /dashboard and /api/* are already 404 there, so
+# the router-derived rules mostly protect links people kept or were e-mailed:
+# /reset-password?token=… (reset mails used the apex), /user-guide.html (the
+# Telegram bot link), /login, /dashboard bookmarks.
 #
 # NOT redirected on purpose:
 #   /                         the Partner public home owns it

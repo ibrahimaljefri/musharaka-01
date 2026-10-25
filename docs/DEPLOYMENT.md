@@ -22,7 +22,7 @@ Host convention: `{product}.urrwah.com`, one app per host, accounts and cookies 
 | Setting | Production | Dev |
 |---|---|---|
 | Public host | `https://musharakah.urrwah.com` | `https://dev.urrwah.com` |
-| Docroot (cPanel subdomain) | `~/public_html/musharakah.urrwah.com` | `~/public_html/dev.urrwah.com` |
+| Docroot (cPanel subdomain) | `~/musharakah_site` (outside `public_html`; pending owner OK) | `~/public_html/dev.urrwah.com` |
 | Node app (Node.js Selector) | root `repos/urrwah-prod/musharaka/server`, Node 22, startup `src/index.js`, URI empty | none registered (bare process on :3002, dead) |
 | `CLIENT_ORIGIN` (CORS, comma list) | `https://musharakah.urrwah.com` | `https://dev.urrwah.com` |
 | `APP_URL` (links in e-mail / bot) | optional, defaults to first `CLIENT_ORIGIN` | same |
@@ -73,7 +73,7 @@ The legacy apex `urrwah.com` only carries 301 redirects to the new host after th
 Order follows contract section 6. `S1` = infra session, `S3` = this repo. Take a backup before each step, keep a rollback.
 
 1. **DNS + subdomain (S1).** A record `musharakah.urrwah.com` → `69.72.244.176` (TTL 300). cPanel subdomain with docroot
-   `public_html/musharakah.urrwah.com`. Confirm AutoSSL covers it (the Let's Encrypt cert lists `*.urrwah.com`, expires 2026-12-01).
+   `~/musharakah_site`. Confirm AutoSSL covers it (the Let's Encrypt cert lists `*.urrwah.com`, expires 2026-12-01).
 2. **Back up (S1/S3).** Copy `~/public_html/{index.html,assets,.htaccess.bak}` and the current selector app registration
    (`cloudlinux-selector get --json --interpreter nodejs --user d17546`) to `~/backups/musharakah-<date>/`.
 3. **Re-point the Node.js Selector app.** In cPanel → *Setup Node.js App* (or `cloudlinux-selector`) change the existing
