@@ -105,11 +105,12 @@ Order follows contract section 6. `S1` = infra session, `S3` = this repo. Take a
 **Rollback:** remove the redirect block from the apex `.htaccess`, restore the backed-up docroot files and, if needed, point the
 selector app back at `urrwah.com`. The DNS record and subdomain can stay (harmless).
 
-## Dev (`dev.urrwah.com`) — decision pending
+## Dev (`dev.urrwah.com`)
 
-Dev is 503 until something listens on :3002. Options: (a) register `urrwah-dev-api` as a Node.js Selector app on `dev.urrwah.com`
-(no pidfile/`pkill`, survives restarts; recommended), (b) retire dev. Contract D5: every `*.urrwah.com` host must serve working HTTPS
-before the apex sends `includeSubDomains`, so dev must be repaired or removed before the apex swap.
+Owner decision (2026-10-25): `dev.urrwah.com` stays the Musharakah dev host; no `dev.musharakah.urrwah.com`. It already has a valid
+`*.urrwah.com` certificate, so D5 (working HTTPS on every `*.urrwah.com` host) only needs the app repaired: dev answers 503 until something
+listens on :3002. Repair is its own step with the owner's OK, independent of the apex swap: register `urrwah-dev-api` as a Node.js Selector app
+on `dev.urrwah.com` (recommended: no pidfile/`pkill`, survives restarts). `CLIENT_ORIGIN=https://dev.urrwah.com` there.
 
 ## Pre-flight checks (before any deploy)
 
