@@ -15,6 +15,7 @@
 const { pool, selectMany, insertMany, updateOne } = require('../db/query')
 const { parseSaleMessage }        = require('./saleNlpService')
 const { expandSale }      = require('./saleDistributionService')
+const { getPublicUrl }       = require('../config/hosts')
 
 const MONTHS_AR = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو',
                    'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
@@ -180,14 +181,12 @@ function userHelpMessage() {
   ].join('\n')
 }
 
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173'
-
 function guideMessage() {
   return [
     '📖 دليل المستخدم — عروة للمبيعات',
     '',
     'يمكنك الاطلاع على الدليل الكامل من الرابط التالي:',
-    `${CLIENT_ORIGIN}/user-guide.html`,
+    `${getPublicUrl()}/user-guide.html`,
     '',
     'يشمل الدليل:',
     '• كيفية إضافة الفروع وإدارتها',

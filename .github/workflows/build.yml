@@ -16,10 +16,10 @@ jobs:
       - name: Build client
         working-directory: musharaka/client
         env:
-          # Production API lives on cPanel. Hardcoded to prevent stale-secret regressions.
-          VITE_API_URL: https://apps.stepup2you.com
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # Same-origin build: the client calls /api on the host that serves it
+          # (https://musharakah.urrwah.com). VITE_API_URL is deliberately NOT set;
+          # set it only for a split frontend/API deployment.
+          VITE_API_URL: ''
         run: |
           npm install --legacy-peer-deps
           npm run build

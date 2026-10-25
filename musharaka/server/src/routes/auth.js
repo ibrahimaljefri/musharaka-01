@@ -16,6 +16,7 @@ const nodemailer = require('nodemailer')
 const { pool }   = require('../config/db')
 const auth       = require('../services/authService')
 const { authMiddleware } = require('../middleware/auth')
+const { getPublicUrl } = require('../config/hosts')
 const { standardLimiter, authLimiter } = require('../middleware/rateLimiter')
 
 const router = express.Router()
@@ -43,6 +44,7 @@ async function sendMail(to, subject, html) {
   })
 }
 
+// Host-only by design (domain contract F2): never add a `domain` option.
 function cookieOpts() {
   return {
     httpOnly: true,
@@ -140,7 +142,8 @@ router.post('/logout', standardLimiter, async (req, res, next) => {
   try {
     const raw = req.cookies?.refresh_token || req.body?.refresh_token
     await auth.revokeRefreshToken(raw)
-    res.clearCookie('refresh_token')
+    const { maxAge: _maxAge, ...clearOpts } = cookieOpts()
+    res.clearCookie('refresh_token', clearOpts)
     res.json({ message: 'تم تسجيل الخروج' })
   } catch (err) { next(err) }
 })
@@ -202,7 +205,7 @@ router.post('/forgot-password', authLimiter, async (req, res, next) => {
 
     const user  = rows[0]
     const token = await auth.issuePasswordResetToken(user.id)
-    const url   = `${process.env.APP_URL}/reset-password?token=${token}`
+    const url   = `${getPublicUrl()}/reset-password?token=${token}`
 
     await sendMail(
       email,

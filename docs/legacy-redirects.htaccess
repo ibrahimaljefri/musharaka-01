@@ -1,0 +1,69 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Legacy Musharakah URLs on the apex  →  https://musharakah.urrwah.com
+#
+# WHERE:  the urrwah.com docroot, /home/d17546/public_html/.htaccess
+#         (INSIDE the apex docroot; NOT in any subdomain docroot).
+# WHEN:   contract section 6, step 3 — the same change in which the Partner
+#         Portal public build replaces the old SPA on the apex. Place this
+#         block ABOVE the Partner Portal / SPA fallback rules and below the
+#         http→https and www→apex rules (S1 owns those).
+# OWNER:  S3 produced it; S1 applies it, after the owner's explicit OK.
+#
+# Derived from musharaka/client/src/App.jsx (routes), client/public (static
+# files) and the API/asset prefixes. A vitest guard
+# (server/src/tests/legacy-redirects.test.js) fails when a route or public
+# file is added without a matching rule.
+#
+# Behaviour: 301 (308 for /api and /assets), case-insensitive like React Router, same path, query string preserved (mod_rewrite appends it
+# when the target has none). A RewriteCond only guards the NEXT RewriteRule, so
+# the apex host condition is repeated before every rule. This matters because
+# a subdomain docroot UNDER ~/public_html (e.g. dev.urrwah.com) also reads this
+# parent .htaccess: without the per-rule condition that host would redirect
+# itself. (The Musharakah docroot ~/musharakah_site is outside public_html, but
+# keep the guard anyway.)
+#
+# What is live on the apex today: only `/`, `/assets/*` and a few root files
+# (index.html, branding.*, user-guide.*, sales-marketing.html, marketing-sales.pptx,
+# urwah-logo.*). Deep links such as /dashboard and /api/* are already 404 there, so
+# the router-derived rules mostly protect links people kept or were e-mailed:
+# /reset-password?token=… (reset mails used the apex), /user-guide.html (the
+# Telegram bot link), /login, /dashboard bookmarks.
+#
+# NOT redirected on purpose:
+#   /                         the Partner public home owns it
+#   /services/*, /about, /request-a-call, /robots.txt, /sitemap.xml,
+#   /.well-known/*            Partner / infrastructure paths
+#
+# Collision check (S1/S2, 2026-10-25): the Partner apex serves only /, /services,
+# /services/* and /about, with its own files under /site-assets/. So /terms,
+# /login, /register and /assets/* do NOT collide and all rules stay.
+# ─────────────────────────────────────────────────────────────────────────────
+
+RewriteEngine On
+
+# ── 1. SPA routes: public / auth ─────────────────────────────────────────────
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(login|register|forgot-password|reset-password|change-password|accept-terms|terms)/?$ https://musharakah.urrwah.com/$1 [NC,R=301,L]
+
+# ── 2. SPA routes: authenticated app ─────────────────────────────────────────
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(dashboard|reports|submit|submissions|faq|users/scopes|sales/(create|import)|branches(/create|/[^/]+/edit)?|tickets/(create|success))/?$ https://musharakah.urrwah.com/$1 [NC,R=301,L]
+
+# ── 3. SPA routes: admin ─────────────────────────────────────────────────────
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(admin/(dashboard|users|cenomi-logs|submissions|terms|tenants(/create|/[^/]+/(edit|api-keys))?|bot-subscribers(/create|/[^/]+/edit)?|tickets(/[^/]+)?))/?$ https://musharakah.urrwah.com/$1 [NC,R=301,L]
+
+# ── 4. API and built assets ──────────────────────────────────────────────────
+# 308 (not 301): keeps the method and body, so a POST from an old integration is
+# replayed instead of being turned into a GET. Telegram/Twilio webhooks do NOT
+# follow redirects at all: re-register them on the new host BEFORE this goes live
+# (docs/DEPLOYMENT.md step 8). Browsers cache both codes; if you want a trial run,
+# use R=302/307 first and switch after verification.
+# /assets/*: for stale cached index.html of the old SPA. The Partner apex build
+# uses /site-assets/, so there is no clash.
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^((api|assets)/.*)$ https://musharakah.urrwah.com/$1 [NC,R=308,L]
+
+# ── 5. Static files shipped from client/public ───────────────────────────────
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(branding\.(html|pptx)|user-guide\.(html|pptx)|sales-marketing\.html|marketing-sales\.pptx|sales-infographic\.html|urwah-logo\.(png|svg))$ https://musharakah.urrwah.com/$1 [NC,R=301,L]
