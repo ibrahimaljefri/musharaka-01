@@ -4,6 +4,7 @@ const helmet  = require('helmet')
 const cors    = require('cors')
 const path    = require('path')
 const { errorHandler } = require('./middleware/errorHandler')
+const { getAllowedOrigins } = require('./config/hosts')
 
 const authRoutes        = require('./routes/auth')
 const salesRoutes       = require('./routes/sales')
@@ -28,8 +29,8 @@ const PORT = process.env.PORT || 3001
 // ERR_ERL_UNEXPECTED_X_FORWARDED_FOR ValidationError on every request.
 app.set('trust proxy', 1)
 
-// Security headers — CSP disabled: frontend may be served from this server or from cPanel.
-// We strip CSP entirely so the frontend can call the Render API without browser blocks.
+// Security headers — CSP disabled: the frontend is served by this same server
+// (client/dist) and may call the API cross-origin during development.
 // Everything else (HSTS, X-Frame-Options, nosniff, Referrer-Policy) stays on.
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -53,7 +54,7 @@ app.use((_req, res, next) => {
 })
 
 // CORS — allow only the configured client origin
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map(s => s.trim())
+const allowedOrigins = getAllowedOrigins()
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (server-to-server, curl) and listed origins
@@ -168,7 +169,7 @@ if (require.main === module) {
     const os = require('os')
     try {
       fs.writeFileSync(
-        require('path').join(os.homedir(), 'urrwah-dev-api.pid'),
+        require('path').join(os.homedir(), process.env.PID_FILE || 'urrwah-dev-api.pid'),
         String(process.pid)
       )
     } catch (_) { /* non-fatal — deploy falls back to ss-based PID lookup */ }

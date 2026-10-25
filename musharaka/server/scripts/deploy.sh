@@ -1,4 +1,11 @@
 #!/bin/bash
+# ──────────────────────────────────────────────
+# LEGACY SCRIPT — written for the old apps.stepup2you.com layout
+# (~/repositories/musharaka-01, ~/public_html/musharaka/...). The live
+# urrwah.com deploy is ~/deploy.sh on the VPS (cpanel-deploy skill); see
+# docs/DEPLOYMENT.md. Kept for reference — do not run on the current account
+# without checking every path below first.
+# ──────────────────────────────────────────────
 # ──────────────────────────────────────────────────────────────────────────────
 # Urwa / Musharaka — One-shot deployment script for cPanel
 #
@@ -31,7 +38,7 @@ CLI_DST=~/public_html/musharaka/server/client/dist
 NODE_VERSION=22
 NODE_ENV_PATH=~/nodevenv/public_html/musharaka/server/server/$NODE_VERSION
 APP_PORT=3001
-HEALTH_URL=https://apps.stepup2you.com/
+HEALTH_URL="${HEALTH_URL:-https://musharakah.urrwah.com/api/health}"
 LOG_FILE=~/musharaka.log
 PID_FILE=~/musharaka.pid
 
@@ -206,7 +213,7 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL")
 # Anything 1xx-4xx means node is responding. Only 5xx (especially 503) = dead.
 if [ "$HTTP_CODE" -lt 500 ] 2>/dev/null; then
   ok "wake: HTTP $HTTP_CODE — node is responding 🎉"
-  ok "Site live at: https://apps.stepup2you.com"
+  ok "Site live at: ${HEALTH_URL%/api/health}"
 elif [ "$HTTP_CODE" = "503" ]; then
   warn "wake: HTTP 503 — Apache can't reach node. Recent log:"
   tail -20 "$LOG_FILE"

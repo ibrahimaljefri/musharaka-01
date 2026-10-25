@@ -16,6 +16,7 @@ const nodemailer = require('nodemailer')
 const { pool }   = require('../config/db')
 const auth       = require('../services/authService')
 const { authMiddleware } = require('../middleware/auth')
+const { getPublicUrl } = require('../config/hosts')
 const { standardLimiter, authLimiter } = require('../middleware/rateLimiter')
 
 const router = express.Router()
@@ -202,7 +203,7 @@ router.post('/forgot-password', authLimiter, async (req, res, next) => {
 
     const user  = rows[0]
     const token = await auth.issuePasswordResetToken(user.id)
-    const url   = `${process.env.APP_URL}/reset-password?token=${token}`
+    const url   = `${getPublicUrl()}/reset-password?token=${token}`
 
     await sendMail(
       email,
