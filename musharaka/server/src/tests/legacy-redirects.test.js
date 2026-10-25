@@ -19,12 +19,17 @@ const NEW_HOST = 'https://musharakah.urrwah.com'
 const snippet = fs.readFileSync(SNIPPET, 'utf8')
 const lines   = snippet.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
 
+const HOST_COND = 'RewriteCond %{HTTP_HOST} ^(www\\.)?urrwah\\.com$ [NC]'
+
+// A RewriteCond guards only the NEXT RewriteRule, so each rule must be
+// immediately preceded by the apex host condition.
 const rules = lines
-  .filter(l => l.startsWith('RewriteRule '))
-  .map(l => {
+  .map((l, i) => ({ l, prev: lines[i - 1] }))
+  .filter(({ l }) => l.startsWith('RewriteRule '))
+  .map(({ l, prev }) => {
     const m = l.match(/^RewriteRule\s+(\S+)\s+(\S+)\s+\[([^\]]*)\]$/)
     if (!m) throw new Error(`unparsable RewriteRule: ${l}`)
-    return { pattern: new RegExp(m[1], 'i'), target: m[2], flags: m[3].split(',') }
+    return { pattern: new RegExp(m[1], 'i'), target: m[2], flags: m[3].split(','), guarded: prev === HOST_COND, line: l }
   })
 
 // .htaccess RewriteRule patterns see the path WITHOUT the leading slash.
@@ -44,22 +49,31 @@ const sample = (route) => route.replace(/:[A-Za-z]+/g, 'a1b2c3')
 
 describe('legacy redirect snippet — structure', () => {
   it('scopes every rule to the apex hosts and sends only to the new host', () => {
-    expect(lines).toContain('RewriteCond %{HTTP_HOST} ^(www\\.)?urrwah\\.com$ [NC]')
+    expect(lines).toContain(HOST_COND)
     expect(rules.length).toBeGreaterThan(0)
     for (const r of rules) {
+      expect(r.guarded, `rule not preceded by the apex host condition: ${r.line}`).toBe(true)
       expect(r.target.startsWith(`${NEW_HOST}/`)).toBe(true)
-      expect(r.flags).toContain('R=301')
+      expect(r.flags).toContain('NC')
+      expect(r.flags.some(f => f === 'R=301' || f === 'R=308')).toBe(true)
       expect(r.flags).toContain('L')
     }
+  })
+
+  it('uses 308 (method-preserving) for /api so POSTs from old integrations survive', () => {
+    const [apiRule] = redirectsFor('/api/submit')
+    expect(apiRule.flags).toContain('R=308')
+    expect(redirectsFor('/dashboard')[0].flags).toContain('R=301')
   })
 
   it('does not redirect the apex home page (the Partner public site owns it)', () => {
     expect(redirectsFor('/')).toHaveLength(0)
   })
 
-  it('cannot loop: no pattern is reachable on the new host', () => {
-    // The host condition restricts rules to urrwah.com / www.urrwah.com.
-    expect(snippet).not.toMatch(/HTTP_HOST[^\n]*musharakah/i)
+  it('cannot loop: the only host condition is the apex, never the new host', () => {
+    const conds = lines.filter(l => l.startsWith('RewriteCond'))
+    expect(conds.length).toBe(rules.length)
+    expect(conds.every(c => c === HOST_COND)).toBe(true)
   })
 })
 
@@ -82,7 +96,7 @@ describe('legacy redirect snippet — coverage', () => {
     expect(redirectsFor('/branches/abc/edit/')).not.toHaveLength(0)
   })
 
-  it('301s every /api and /assets path', () => {
+  it('redirects every /api and /assets path', () => {
     for (const p of ['/api/health', '/api/version', '/api/auth/refresh', '/assets/index-abc123.js']) {
       expect(redirectsFor(p), p).not.toHaveLength(0)
     }

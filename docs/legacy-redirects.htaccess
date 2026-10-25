@@ -14,9 +14,12 @@
 # (server/src/tests/legacy-redirects.test.js) fails when a route or public
 # file is added without a matching rule.
 #
-# Behaviour: 301, same path, query string preserved (mod_rewrite appends it
-# when the target has none), HTTP_HOST-scoped so it can never loop (the target
-# host is different and is not matched by the condition).
+# Behaviour: 301 (308 for /api and /assets), case-insensitive like React Router, same path, query string preserved (mod_rewrite appends it
+# when the target has none). A RewriteCond only guards the NEXT RewriteRule, so
+# the apex host condition is repeated before every rule. This matters because
+# the subdomain docroots live under ~/public_html and Apache also reads this
+# parent .htaccess for them: without the per-rule condition
+# musharakah.urrwah.com/api/* would redirect to itself in an endless loop.
 #
 # NOT redirected on purpose:
 #   /                         the Partner public home owns it
@@ -29,19 +32,31 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 RewriteEngine On
-RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
 
 # ── 1. SPA routes: public / auth ─────────────────────────────────────────────
-RewriteRule ^(login|register|forgot-password|reset-password|change-password|accept-terms|terms)/?$ https://musharakah.urrwah.com/$1 [R=301,L]
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(login|register|forgot-password|reset-password|change-password|accept-terms|terms)/?$ https://musharakah.urrwah.com/$1 [NC,R=301,L]
 
 # ── 2. SPA routes: authenticated app ─────────────────────────────────────────
-RewriteRule ^(dashboard|reports|submit|submissions|faq|users/scopes|sales/(create|import)|branches(/create|/[^/]+/edit)?|tickets/(create|success))/?$ https://musharakah.urrwah.com/$1 [R=301,L]
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(dashboard|reports|submit|submissions|faq|users/scopes|sales/(create|import)|branches(/create|/[^/]+/edit)?|tickets/(create|success))/?$ https://musharakah.urrwah.com/$1 [NC,R=301,L]
 
 # ── 3. SPA routes: admin ─────────────────────────────────────────────────────
-RewriteRule ^(admin/(dashboard|users|cenomi-logs|submissions|terms|tenants(/create|/[^/]+/(edit|api-keys))?|bot-subscribers(/create|/[^/]+/edit)?|tickets(/[^/]+)?))/?$ https://musharakah.urrwah.com/$1 [R=301,L]
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(admin/(dashboard|users|cenomi-logs|submissions|terms|tenants(/create|/[^/]+/(edit|api-keys))?|bot-subscribers(/create|/[^/]+/edit)?|tickets(/[^/]+)?))/?$ https://musharakah.urrwah.com/$1 [NC,R=301,L]
 
 # ── 4. API and built assets ──────────────────────────────────────────────────
-RewriteRule ^((api|assets)/.*)$ https://musharakah.urrwah.com/$1 [R=301,L]
+# 308 (not 301): keeps the method and body, so a POST from an old integration is
+# replayed instead of being turned into a GET. Telegram/Twilio webhooks do NOT
+# follow redirects at all: re-register them on the new host BEFORE this goes live
+# (docs/DEPLOYMENT.md step 8). Browsers cache both codes; if you want a trial run,
+# use R=302/307 first and switch after verification.
+# /assets/*: only needed for stale cached index.html of the old SPA. If the
+# Partner Portal build also serves /assets/* from the apex, DROP this rule's
+# 'assets' branch (open question for S2).
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^((api|assets)/.*)$ https://musharakah.urrwah.com/$1 [NC,R=308,L]
 
 # ── 5. Static files shipped from client/public ───────────────────────────────
-RewriteRule ^(branding\.(html|pptx)|user-guide\.(html|pptx)|sales-marketing\.html|marketing-sales\.pptx|sales-infographic\.html|urwah-logo\.(png|svg))$ https://musharakah.urrwah.com/$1 [R=301,L]
+RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
+RewriteRule ^(branding\.(html|pptx)|user-guide\.(html|pptx)|sales-marketing\.html|marketing-sales\.pptx|sales-infographic\.html|urwah-logo\.(png|svg))$ https://musharakah.urrwah.com/$1 [NC,R=301,L]

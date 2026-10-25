@@ -49,6 +49,16 @@ describe('CORS', () => {
   })
 })
 
+describe('HSTS', () => {
+  it('is host-scoped: no includeSubDomains by default and never preload', async () => {
+    const res = await request(app).get('/api/health')
+    const hsts = res.headers['strict-transport-security']
+    expect(hsts).toMatch(/max-age=31536000/)
+    expect(hsts).not.toMatch(/includeSubDomains/i)
+    expect(hsts).not.toMatch(/preload/i)
+  })
+})
+
 describe('e-mail and bot links', () => {
   it('builds the password-reset link from the first origin when APP_URL is unset', async () => {
     vi.spyOn(pool, 'query').mockResolvedValue({ rows: [{ id: 'u1', full_name: 'Test' }] })

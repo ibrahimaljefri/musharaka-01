@@ -30,6 +30,9 @@ Host convention: `{product}.urrwah.com`, one app per host, accounts and cookies 
 | Database | `d17546_urrwah_prod` | `d17546_urrwah_dev` |
 | Branch | `master` | `dev` |
 
+HSTS is sent for this host only (`max-age` 1 year, never `preload`); `includeSubDomains` is opt-in via `HSTS_INCLUDE_SUBDOMAINS=true`
+and must stay off until every `*.urrwah.com` host serves working HTTPS (contract D5).
+
 `CLIENT_ORIGIN` is **required in production**: the server refuses to start without it
 (`musharaka/server/src/config/hosts.js`). Entries must be bare origins (`https://host[:port]`).
 Server env lives in `~/repos/urrwah-prod/musharaka/server/.env` (never in git). `.env.example` documents the keys.
@@ -92,10 +95,11 @@ Order follows contract section 6. `S1` = infra session, `S3` = this repo. Take a
      -H 'Origin: https://musharakah.urrwah.com' -H 'Access-Control-Request-Method: POST' | grep -i access-control-allow-origin
    # log in once in a browser; the refresh_token Set-Cookie must have no Domain= (also pinned by api.auth.cookies.test.js)
    ```
-8. **Apex swap (S1, same change as S2's Partner public build).** Add the rules from `docs/legacy-redirects.htaccess` to
+8. **Telegram webhook — before the apex swap.** Re-register the bot webhook to `https://musharakah.urrwah.com/api/bot/telegram` (and Twilio `/api/bot/whatsapp` if enabled) with the secret from `TELEGRAM_WEBHOOK_SECRET`. Telegram and Twilio do not follow redirects, so the bot is down from step 3 until this is done.
+9. **Apex swap (S1, same change as S2's Partner public build).** Add the rules from `docs/legacy-redirects.htaccess` to
    `~/public_html/.htaccess` above the Partner rules. Verify `curl -sI https://urrwah.com/dashboard` → `301` →
-   `https://musharakah.urrwah.com/dashboard`, and `/api/health` the same, with no loops.
-9. **Telegram webhook** (`TELEGRAM_*`): re-register the bot webhook to `https://musharakah.urrwah.com/api/bot/telegram` (and Twilio `/api/bot/whatsapp` if enabled).
+   `https://musharakah.urrwah.com/dashboard`, and `/api/health` → `308` to the same path on the new host, with no loops.
+   `/api` and `/assets` use 308 so POSTs survive; check with the Partner build that `/assets/*` on the apex is not its own bundle path (else drop that branch). Consider `R=302` for a first trial, then 301/308 after verification.
 10. **Search Console / sitemaps**: add the new host; old password-reset e-mails keep working through the `/reset-password` 301.
 
 **Rollback:** remove the redirect block from the apex `.htaccess`, restore the backed-up docroot files and, if needed, point the

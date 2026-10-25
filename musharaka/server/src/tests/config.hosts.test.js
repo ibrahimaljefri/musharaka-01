@@ -21,6 +21,10 @@ describe('getAllowedOrigins', () => {
     expect(getAllowedOrigins(env)).toEqual(['https://musharakah.urrwah.com'])
   })
 
+  it('lower-cases entries so they match the browser Origin header', () => {
+    expect(getAllowedOrigins({ CLIENT_ORIGIN: 'https://Musharakah.URRWAH.com' })).toEqual(['https://musharakah.urrwah.com'])
+  })
+
   it('defaults to the Vite dev server outside production', () => {
     expect(getAllowedOrigins({})).toEqual(['http://localhost:5173'])
     expect(getAllowedOrigins({ NODE_ENV: 'test', CLIENT_ORIGIN: '  ' })).toEqual(['http://localhost:5173'])
@@ -29,6 +33,16 @@ describe('getAllowedOrigins', () => {
   it('fails fast in production when CLIENT_ORIGIN is missing or blank', () => {
     expect(() => getAllowedOrigins({ NODE_ENV: 'production' })).toThrow(/CLIENT_ORIGIN/)
     expect(() => getAllowedOrigins({ NODE_ENV: 'production', CLIENT_ORIGIN: ' , ' })).toThrow(/CLIENT_ORIGIN/)
+  })
+
+  it('requires https and a dotted hostname in production', () => {
+    const prod = { NODE_ENV: 'production' }
+    expect(getAllowedOrigins({ ...prod, CLIENT_ORIGIN: 'https://musharakah.urrwah.com' })).toEqual(['https://musharakah.urrwah.com'])
+    expect(() => getAllowedOrigins({ ...prod, CLIENT_ORIGIN: 'http://musharakah.urrwah.com' })).toThrow(/https/)
+    expect(() => getAllowedOrigins({ ...prod, CLIENT_ORIGIN: 'https://localhost' })).toThrow(/https/)
+    expect(() => getPublicUrl({ ...prod, CLIENT_ORIGIN: 'https://musharakah.urrwah.com', APP_URL: 'http://x.example' })).toThrow(/APP_URL/)
+    // outside production, http and localhost stay fine
+    expect(getAllowedOrigins({ CLIENT_ORIGIN: 'http://localhost:5173' })).toEqual(['http://localhost:5173'])
   })
 
   it('rejects wildcard and non-http(s) entries', () => {

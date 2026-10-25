@@ -44,6 +44,7 @@ async function sendMail(to, subject, html) {
   })
 }
 
+// Host-only by design (domain contract F2): never add a `domain` option.
 function cookieOpts() {
   return {
     httpOnly: true,
@@ -141,7 +142,8 @@ router.post('/logout', standardLimiter, async (req, res, next) => {
   try {
     const raw = req.cookies?.refresh_token || req.body?.refresh_token
     await auth.revokeRefreshToken(raw)
-    res.clearCookie('refresh_token')
+    const { maxAge: _maxAge, ...clearOpts } = cookieOpts()
+    res.clearCookie('refresh_token', clearOpts)
     res.json({ message: 'تم تسجيل الخروج' })
   } catch (err) { next(err) }
 })

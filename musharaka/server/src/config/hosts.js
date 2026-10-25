@@ -17,12 +17,15 @@ const DEV_DEFAULT = 'http://localhost:5173'
 const ORIGIN_RE = /^https?:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/
 
 function normalise(value) {
-  return value.trim().replace(/\/+$/, '')
+  return value.trim().replace(/\/+$/, '').toLowerCase()   // browsers send a lower-case Origin
 }
 
-function assertOrigin(value, name) {
+function assertOrigin(value, name, env) {
   if (!ORIGIN_RE.test(value)) {
     throw new Error(`${name} contains an invalid origin: "${value}" (expected https://host[:port])`)
+  }
+  if (env.NODE_ENV === 'production' && !/^https:\/\/[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+(:\d{1,5})?$/.test(value)) {
+    throw new Error(`${name} must be an https origin with a dotted hostname in production: "${value}"`)
   }
   return value
 }
@@ -39,12 +42,12 @@ function getAllowedOrigins(env = process.env) {
     }
     return [DEV_DEFAULT]
   }
-  return [...new Set(entries.map(o => assertOrigin(o, 'CLIENT_ORIGIN')))]
+  return [...new Set(entries.map(o => assertOrigin(o, 'CLIENT_ORIGIN', env)))]
 }
 
 function getPublicUrl(env = process.env) {
   const appUrl = normalise(String(env.APP_URL || ''))
-  if (appUrl) return assertOrigin(appUrl, 'APP_URL')
+  if (appUrl) return assertOrigin(appUrl, 'APP_URL', env)
   return getAllowedOrigins(env)[0]
 }
 

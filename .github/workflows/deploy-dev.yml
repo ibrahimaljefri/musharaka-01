@@ -262,13 +262,13 @@ jobs:
           exit 1
 
       # Re-verify dev is still up at the end.
-      - name: Re-verify dev still up after prod ensure
+      - name: Re-verify dev still up
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'DEV_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3002/api/health 2>/dev/null) ;
              echo "dev /api/health → $DEV_STATUS" ;
              if [ "$DEV_STATUS" != "200" ]; then
-               echo "→ dev was killed by prod deploy; restarting via deploy.sh dev" ;
+               echo "→ dev is not answering; restarting via deploy.sh dev" ;
                bash ~/deploy.sh dev 2>&1 | tail -30 ;
                for i in 1 2 3 4 5 6; do
                  s=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3002/api/health 2>/dev/null) ;

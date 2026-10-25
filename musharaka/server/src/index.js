@@ -4,7 +4,7 @@ const helmet  = require('helmet')
 const cors    = require('cors')
 const path    = require('path')
 const { errorHandler } = require('./middleware/errorHandler')
-const { getAllowedOrigins } = require('./config/hosts')
+const { getAllowedOrigins, getPublicUrl } = require('./config/hosts')
 
 const authRoutes        = require('./routes/auth')
 const salesRoutes       = require('./routes/sales')
@@ -35,8 +35,10 @@ app.set('trust proxy', 1)
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
-  // HSTS: 1 year, include subdomains, preload-ready
-  strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  // HSTS: 1 year for THIS host. includeSubDomains is opt-in (HSTS_INCLUDE_SUBDOMAINS=true):
+  // sibling products share *.urrwah.com and must be HTTPS-only first (domain contract D5).
+  // Never `preload`: removal from the browser preload list takes months.
+  strictTransportSecurity: { maxAge: 31536000, includeSubDomains: process.env.HSTS_INCLUDE_SUBDOMAINS === 'true' },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   frameguard: { action: 'deny' },
 }))
@@ -55,6 +57,7 @@ app.use((_req, res, next) => {
 
 // CORS — allow only the configured client origin
 const allowedOrigins = getAllowedOrigins()
+getPublicUrl()   // validate APP_URL at boot so a bad value fails fast, not on the first reset e-mail
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (server-to-server, curl) and listed origins
@@ -169,7 +172,7 @@ if (require.main === module) {
     const os = require('os')
     try {
       fs.writeFileSync(
-        require('path').join(os.homedir(), process.env.PID_FILE || 'urrwah-dev-api.pid'),
+        require('path').join(os.homedir(), 'urrwah-dev-api.pid'),
         String(process.pid)
       )
     } catch (_) { /* non-fatal — deploy falls back to ss-based PID lookup */ }
