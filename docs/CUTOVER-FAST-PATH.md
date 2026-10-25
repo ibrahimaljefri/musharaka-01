@@ -48,6 +48,7 @@ Details and rollback: [DEPLOYMENT.md](DEPLOYMENT.md). Redirect block: [legacy-re
 |---|---|---|---|
 | 1 | Read `~/deploy.sh` (read-only) and the **key names** (not values) of `~/.env.deploy` and the app `.env` | S3 via `ssh cpanel-partner` | **A0** |
 | 2 | DNS A record `musharakah.urrwah.com → 69.72.244.176` (TTL 300) and cPanel subdomain, docroot `~/musharakah_site` (outside `public_html`, so the apex `.htaccess` is never inherited) | owner in cPanel, or S1 via `uapi` | **A1** |
+| 2b | Subdomain created by S1 (F1, 2026-10-25): docroot `~/musharakah_site`, own certificate valid to 2027-01-23, both `musharakah` and `www.musharakah` A records. Put [`musharakah-docroot.htaccess`](musharakah-docroot.htaccess) (www → apex, http → https) into `~/musharakah_site/.htaccess` outside the Selector block; verify with `./verify-hosts.sh --profile fast --only musharakah --ip 69.72.244.176` | S3 | **A1b** |
 | 3 | DB: confirm it exists; if not, create `d17546_urrwah_prod` + user `d17546_urrwah_prod_app` (password generated on the VPS, never printed or committed) and grant privileges | owner in cPanel → PostgreSQL Databases, or S3 via `uapi Postgresql` | **A2** |
 | 4 | Merge PR #3 → `dev` with `[skip ci]` (no cPanel contact) | owner (merge button) or S3 `gh pr merge` | **A3** |
 | 5 | PR `dev → master`, resolve `dist` conflicts, merge normally; `build.yml` pushes the same-origin `dist`. Owner decides whether prod should really take all 58 dev commits | owner decides; S3 prepares the PR | **A4** |
