@@ -82,7 +82,7 @@ Order follows contract section 6. `S1` = infra session, `S3` = this repo. Take a
 4. **Dependencies.** Run "Run NPM Install" in the selector UI (or `npm ci --omit=dev` inside the nodevenv) — fixes `Cannot find module 'dotenv'`.
 5. **Environment.** Add/confirm in the app's `.env` (do not print values): `CLIENT_ORIGIN=https://musharakah.urrwah.com`,
    optional `APP_URL`, `DATABASE_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`, SMTP_*, `TELEGRAM_*`.
-6. **Schema + client.** `bash ~/deploy.sh prod` (pull `master`, apply `src/schema/*.sql`, build client with `VITE_API_URL` unset, restart).
+6. **Schema + client.** **BLOCKER (S1):** the VPS `~/deploy.sh` prod branch has `DOCROOT=$HOME/public_html` and runs `rsync --delete` into it, which would delete the docroots of dev, demo, alashyae and the oratech sites. Set the prod `DOCROOT` to `~/musharakah_site` and verify before any run (see CUTOVER-FAST-PATH.md finding 8). `bash ~/deploy.sh prod` (pull `master`, apply `src/schema/*.sql`, build client with `VITE_API_URL` unset, restart).
    **Check `~/deploy.sh` first**: it must read the keys in `.deploy-config.json` (`domain`, `docroot.prod`), must not `rsync --delete`
    over the docroot's `.htaccess` (Passenger block), and may leave the docroot empty — Express serves `client/dist` itself.
 7. **Verify (before touching the apex).**

@@ -34,9 +34,9 @@
 #   /services/*, /about, /request-a-call, /robots.txt, /sitemap.xml,
 #   /.well-known/*            Partner / infrastructure paths
 #
-# OPEN QUESTION (see PR): /terms, and the Musharakah /login and /register, may
-# collide with Partner public/legal pages on the apex. Remove the entries
-# below if S2 decides the apex keeps them.
+# Collision check (S1/S2, 2026-10-25): the Partner apex serves only /, /services,
+# /services/* and /about, with its own files under /site-assets/. So /terms,
+# /login, /register and /assets/* do NOT collide and all rules stay.
 # ─────────────────────────────────────────────────────────────────────────────
 
 RewriteEngine On
@@ -59,9 +59,8 @@ RewriteRule ^(admin/(dashboard|users|cenomi-logs|submissions|terms|tenants(/crea
 # follow redirects at all: re-register them on the new host BEFORE this goes live
 # (docs/DEPLOYMENT.md step 8). Browsers cache both codes; if you want a trial run,
 # use R=302/307 first and switch after verification.
-# /assets/*: only needed for stale cached index.html of the old SPA. If the
-# Partner Portal build also serves /assets/* from the apex, DROP this rule's
-# 'assets' branch (open question for S2).
+# /assets/*: for stale cached index.html of the old SPA. The Partner apex build
+# uses /site-assets/, so there is no clash.
 RewriteCond %{HTTP_HOST} ^(www\.)?urrwah\.com$ [NC]
 RewriteRule ^((api|assets)/.*)$ https://musharakah.urrwah.com/$1 [NC,R=308,L]
 

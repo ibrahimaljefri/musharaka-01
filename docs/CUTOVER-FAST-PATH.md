@@ -22,9 +22,21 @@ Details and rollback: [DEPLOYMENT.md](DEPLOYMENT.md). Redirect block: [legacy-re
 7. `deploy-dev.yml` contains a hard-coded password for the seeded `admin@admin.com` (dev DB). Rotate it and move the seed out of the
    workflow before dev is exposed again.
 
+8. **BLOCKER: `~/deploy.sh prod` as it stands would delete other sites** (found by S1, read via grep only). The prod branch has
+   `DOCROOT="$HOME_DIR/public_html"` (line 89) and line 161 runs `rsync -av --delete --exclude='.htaccess' --exclude='cgi-bin' <dist>/ "$DOCROOT/"`.
+   `~/public_html` also holds the docroots of dev, demo, alashyae and the oratech sites, so it would wipe them (and the apex after the swap).
+   **Do not run `deploy.sh prod` (A7) until the prod `DOCROOT` is `~/musharakah_site`** and that is verified with
+   `grep -n 'DOCROOT=' ~/deploy.sh`. The same `--delete` is what removed the apex `.htaccess` (and its Passenger block) in the first place.
+   Safer still: after the first deploy keep `--delete` off or restrict it to `$DOCROOT` with a path guard that refuses `public_html`.
+9. **Selector re-point and the old registration (to verify, not assumed).** CloudLinux writes a marked
+   `CLOUDLINUX PASSENGER CONFIGURATION` block into the docroot `.htaccess` of the app's domain. After step 6 check read-only that
+   `~/public_html/.htaccess` carries no such block and that `cloudlinux-selector get --json --interpreter nodejs --user d17546` lists the
+   app under `musharakah.urrwah.com` only. If the old registration is still there, remove it (`destroy`, keeping the app files) and create the
+   app fresh on the new domain, so the Selector can never write a block into `public_html/.htaccess`.
+
 ## Unknowns (cannot be answered from the repo)
 
-- `~/deploy.sh` and `~/.env.deploy` on the VPS: not in git, **not read**. Needed: which `.deploy-config.json` keys it reads
+- `~/deploy.sh` and `~/.env.deploy` on the VPS: not in git, **not read by S3** (S1 grepped a few lines). Needed: which `.deploy-config.json` keys it reads
   (`domain`, `docroot.*`: the relative-path convention of `docroot` is unconfirmed), whether it builds the client or copies the committed
   `dist`, whether it `rsync --delete`s the docroot (wipes the Passenger `.htaccess`: the likely reason the apex lost its block), and which
   branch it pulls. → **A0**.
@@ -41,7 +53,7 @@ Details and rollback: [DEPLOYMENT.md](DEPLOYMENT.md). Redirect block: [legacy-re
 | 5 | PR `dev → master`, resolve `dist` conflicts, merge normally; `build.yml` pushes the same-origin `dist`. Owner decides whether prod should really take all 58 dev commits | owner decides; S3 prepares the PR | **A4** |
 | 6 | Re-point the Node.js Selector app (domain `urrwah.com → musharakah.urrwah.com`, URI empty, Node 22, production, root `repos/urrwah-prod/musharaka/server`, startup `src/index.js`) | owner in cPanel *Setup Node.js App* (recommended) or S3 via `cloudlinux-selector` | **A5** |
 | 7 | Put env **names** in the app `.env` (below) | S3 on the VPS, values supplied by the owner; never printed | **A6** |
-| 8 | `bash ~/deploy.sh prod` (pull `master`, apply `src/schema/*.sql` through `schema-apply.js`, install deps → fixes `dotenv`, restart) | S3 via `ssh cpanel-partner` | **A7** |
+| 8 | **Gate: prod `DOCROOT=~/musharakah_site` confirmed (finding 8).** Then `bash ~/deploy.sh prod` (pull `master`, apply `src/schema/*.sql` through `schema-apply.js`, install deps → fixes `dotenv`, restart) | S3 via `ssh cpanel-partner` | **A7** |
 | 9 | First user: `bash musharaka/server/scripts/seed-fresh-prod.sh prod` (refuses if users exist) or owner restores data | S3 / owner | **A8** |
 | 10 | Verify: `https://musharakah.urrwah.com/api/health` → `{"status":"ok"}`, `/api/version` sha, `/login` 200, login in a browser, `Set-Cookie: refresh_token` has no `Domain`, CORS preflight from the new origin | S3 (read-only curls) | none |
 | 11 | Re-register the Telegram (and Twilio) webhook to `https://musharakah.urrwah.com/api/bot/telegram` (`/api/bot/whatsapp`) **before** the apex redirects | S3 | **A9** |
