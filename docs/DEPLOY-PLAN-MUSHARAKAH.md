@@ -23,9 +23,9 @@ step 7 starts a bare `nohup node` on :3001 next to the Passenger app and `pkill`
 1. **Which code.** (A, recommended) merge PR #3 into `dev` with `[skip ci]` (so `deploy-dev.yml` does not touch the account), then PR `dev → master`, then deploy `master`.
    Prod then gets all 58 `dev` commits; expect conflicts only in committed `dist`. (B, fastest) deploy the PR #3 branch commit directly with
    `bash ~/deploy.sh prod --rollback <sha>`; master stays untouched, merge later. B skips migrations (run D6 separately) and leaves `master` and prod out of sync.
-2. **Where the client is built.** (default) on the account by `deploy.sh`, as it always did. Fallback if the build fails there: build on lab-server
-   and `rsync` the `dist` into `~/musharakah_site` by hand (same exclusions), then run `deploy.sh` with the build step failing is not an option, so this
-   fallback is a manual copy plus `touch tmp/restart.txt`.
+2. **Where the client is built.** (default) on the account by `deploy.sh`, as it always did. `deploy.sh` cannot skip its build step, so shipping a
+   lab-server build means copying `dist` into `~/musharakah_site` by hand (same exclusions, through the guarded path) and touching `tmp/restart.txt`; use it
+   only if the account build fails.
 
 ## Ordered steps (each needs its own OK)
 
