@@ -3,9 +3,9 @@
 
   "domain":         "musharakah.urrwah.com",
   "legacy_domain":  "urrwah.com",
-  "dev_subdomain":  "dev.urrwah.com",
-  "public_url":     { "prod": "https://musharakah.urrwah.com", "dev": "https://dev.urrwah.com" },
-  "client_origin":  { "prod": "https://musharakah.urrwah.com", "dev": "https://dev.urrwah.com" },
+  "dev_subdomain":  "dev.musharakah.urrwah.com",
+  "public_url":     { "prod": "https://musharakah.urrwah.com", "dev": "https://dev.musharakah.urrwah.com" },
+  "client_origin":  { "prod": "https://musharakah.urrwah.com", "dev": "https://dev.musharakah.urrwah.com" },
   "vps_user":       "d17546",
   "vps_host":       "d17546.fra1.stableserver.net",
 
@@ -33,10 +33,10 @@
     "dev":  { "host": "127.0.0.1", "port": 5432, "name": "d17546_urrwah_dev",  "user": "d17546_urrwah_dev_app"  }
   },
 
-  "_docroot_note_": "prod docroot is the musharakah.urrwah.com cPanel subdomain, ~/musharakah_site (outside public_html, like ~/partner_portal; pending the owner's OK). legacy_docroot is the APEX docroot (~/public_html): it only carries the legacy 301s from docs/legacy-redirects.htaccess after cutover. ~/deploy.sh on the VPS must be checked against these keys before the first deploy.",
+  "_docroot_note_": "prod docroot is the musharakah.urrwah.com cPanel subdomain, ~/musharakah_site (dev: ~/musharakah_dev_site; both outside public_html, like ~/partner_portal; pending the owner's OK). legacy_docroot is the APEX docroot (~/public_html): it only carries the legacy 301s from docs/legacy-redirects.htaccess after cutover. ~/deploy.sh on the VPS must be checked against these keys before the first deploy.",
   "docroot": {
     "prod":   "../musharakah_site",
-    "dev":    "dev.urrwah.com",
+    "dev":    "../musharakah_dev_site",
     "legacy": "public_html"
   },
   "legacy_docroot": "public_html",

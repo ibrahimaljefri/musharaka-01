@@ -11,7 +11,7 @@ Host convention: `{product}.urrwah.com`, one app per host, accounts and cookies 
 
 | Want to… | Do this |
 |---|---|
-| Ship to dev (`dev.urrwah.com`) | `git push origin dev` (GitHub Actions `deploy-dev.yml`) — dev is currently down, see below |
+| Ship to dev (`dev.musharakah.urrwah.com`) | `git push origin dev` (GitHub Actions `deploy-dev.yml`) — dev is currently down, see below |
 | Ship to prod (`musharakah.urrwah.com`) | from lab-server: `ssh cpanel-partner 'bash ~/deploy.sh prod'` (after owner OK) |
 | Code-only prod deploy | `bash ~/deploy.sh prod --skip-migrate` |
 | Roll back prod | `bash ~/deploy.sh prod --rollback <sha>` |
@@ -21,10 +21,10 @@ Host convention: `{product}.urrwah.com`, one app per host, accounts and cookies 
 
 | Setting | Production | Dev |
 |---|---|---|
-| Public host | `https://musharakah.urrwah.com` | `https://dev.urrwah.com` |
-| Docroot (cPanel subdomain) | `~/musharakah_site` (outside `public_html`; pending owner OK) | `~/public_html/dev.urrwah.com` |
+| Public host | `https://musharakah.urrwah.com` | `https://dev.musharakah.urrwah.com` |
+| Docroot (cPanel subdomain) | `~/musharakah_site` | `~/musharakah_dev_site` (both outside `public_html`; `deploy.sh dev` still has `DOCROOT=~/public_html/dev.urrwah.com`: fix before any dev deploy) |
 | Node app (Node.js Selector) | root `repos/urrwah-prod/musharaka/server`, Node 22, startup `src/index.js`, URI empty | none registered (bare process on :3002, dead) |
-| `CLIENT_ORIGIN` (CORS, comma list) | `https://musharakah.urrwah.com` | `https://dev.urrwah.com` |
+| `CLIENT_ORIGIN` (CORS, comma list) | `https://musharakah.urrwah.com` | `https://dev.musharakah.urrwah.com` |
 | `APP_URL` (links in e-mail / bot) | optional, defaults to first `CLIENT_ORIGIN` | same |
 | `VITE_API_URL` (client build) | unset (same origin: client calls `/api`) | unset |
 | Database | `d17546_urrwah_prod` | `d17546_urrwah_dev` |
@@ -105,12 +105,16 @@ Order follows contract section 6. `S1` = infra session, `S3` = this repo. Take a
 **Rollback:** remove the redirect block from the apex `.htaccess`, restore the backed-up docroot files and, if needed, point the
 selector app back at `urrwah.com`. The DNS record and subdomain can stay (harmless).
 
-## Dev (`dev.urrwah.com`)
+## Dev (`dev.musharakah.urrwah.com`)
 
-Owner decision (2026-10-25): `dev.urrwah.com` stays the Musharakah dev host; no `dev.musharakah.urrwah.com`. It already has a valid
-`*.urrwah.com` certificate, so D5 (working HTTPS on every `*.urrwah.com` host) only needs the app repaired: dev answers 503 until something
-listens on :3002. Repair is its own step with the owner's OK, independent of the apex swap: register `urrwah-dev-api` as a Node.js Selector app
-on `dev.urrwah.com` (recommended: no pidfile/`pkill`, survives restarts). `CLIENT_ORIGIN=https://dev.urrwah.com` there.
+Owner decision (2026-10-25, relayed by S1; supersedes the earlier "dev stays on dev.urrwah.com"): the Musharakah dev host is
+`dev.musharakah.urrwah.com` (docroot `~/musharakah_dev_site`, own certificate to 2027-01-23, answers 403 until the app is deployed; no vhost
+force-HTTPS, so its docroot `.htaccess` must redirect http to https like the prod one). `dev.urrwah.com` still answers 503; whether to retire it is
+undecided. D5 needs a working HTTPS host everywhere, so either repair or retire it before the apex sends `includeSubDomains`.
+
+Repair of dev is its own step with the owner's OK: register `urrwah-dev-api` as a Node.js Selector app on `dev.musharakah.urrwah.com`
+(recommended: no pidfile/`pkill`, survives restarts), `CLIENT_ORIGIN=https://dev.musharakah.urrwah.com`. Before any dev deploy fix the dev
+`DOCROOT` in `~/deploy.sh` (still `~/public_html/dev.urrwah.com`, whose `rsync --delete` is harmless to other sites but targets the old host).
 
 ## Pre-flight checks (before any deploy)
 

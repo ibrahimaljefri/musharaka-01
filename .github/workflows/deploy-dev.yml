@@ -1,4 +1,4 @@
-name: Deploy to dev.urrwah.com
+name: Deploy to dev.musharakah.urrwah.com
 
 # Triggers:
 #   push to dev branch        → auto-deploy
@@ -94,14 +94,14 @@ jobs:
              if [ "$KILLED" -eq 0 ]; then
                PA_LIST=$(uapi PassengerApps list_applications 2>/dev/null)
                if echo "$PA_LIST" | grep -qi "urrwah\|3002\|dev\.urrwah"; then
-                 uapi PassengerApps disable_application domain=dev.urrwah.com 2>/dev/null \
-                   && echo "✓ passenger: disabled dev.urrwah.com" || true
+                 uapi PassengerApps disable_application domain=dev.musharakah.urrwah.com 2>/dev/null \
+                   && echo "✓ passenger: disabled dev.musharakah.urrwah.com" || true
                  sleep 1
-                 uapi PassengerApps enable_application domain=dev.urrwah.com 2>/dev/null \
-                   && echo "✓ passenger: re-enabled dev.urrwah.com" || true
+                 uapi PassengerApps enable_application domain=dev.musharakah.urrwah.com 2>/dev/null \
+                   && echo "✓ passenger: re-enabled dev.musharakah.urrwah.com" || true
                  KILLED=1
                else
-                 echo "  passenger: dev.urrwah.com not found in PassengerApps list"
+                 echo "  passenger: dev.musharakah.urrwah.com not found in PassengerApps list"
                  echo "$PA_LIST" | head -20
                fi
              fi
