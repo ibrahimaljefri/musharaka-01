@@ -1,4 +1,4 @@
-name: Deploy to dev.urrwah.com
+name: Deploy to dev.musharakah.urrwah.com
 
 # Triggers:
 #   push to dev branch        → auto-deploy
@@ -94,14 +94,14 @@ jobs:
              if [ "$KILLED" -eq 0 ]; then
                PA_LIST=$(uapi PassengerApps list_applications 2>/dev/null)
                if echo "$PA_LIST" | grep -qi "urrwah\|3002\|dev\.urrwah"; then
-                 uapi PassengerApps disable_application domain=dev.urrwah.com 2>/dev/null \
-                   && echo "✓ passenger: disabled dev.urrwah.com" || true
+                 uapi PassengerApps disable_application domain=dev.musharakah.urrwah.com 2>/dev/null \
+                   && echo "✓ passenger: disabled dev.musharakah.urrwah.com" || true
                  sleep 1
-                 uapi PassengerApps enable_application domain=dev.urrwah.com 2>/dev/null \
-                   && echo "✓ passenger: re-enabled dev.urrwah.com" || true
+                 uapi PassengerApps enable_application domain=dev.musharakah.urrwah.com 2>/dev/null \
+                   && echo "✓ passenger: re-enabled dev.musharakah.urrwah.com" || true
                  KILLED=1
                else
-                 echo "  passenger: dev.urrwah.com not found in PassengerApps list"
+                 echo "  passenger: dev.musharakah.urrwah.com not found in PassengerApps list"
                  echo "$PA_LIST" | head -20
                fi
              fi
@@ -243,61 +243,32 @@ jobs:
                grep -n "pkill" ~/deploy.sh ;
              fi'
 
-      # The shared ~/deploy.sh kills ALL node processes when starting one env,
-      # so a dev deploy can leave urrwah.com (port 3001 / prod) without a
-      # listener. Ensure prod is also running after every dev deploy.
-      # Also re-writes the .htaccess proxy rule because deploy.sh's rsync
-      # --delete wipes it from the docroot.
-      - name: Ensure urrwah.com prod is also running
+      # Read-only production check. The dev deploy used to re-write an
+      # .htaccess proxy rule and restart prod through deploy.sh; both were wrong
+      # (the rule went to ~/public_html/urrwah.com, which is not the docroot, and
+      # prod is a cPanel Node.js Selector app that Passenger owns). A dev push must
+      # never change production, so this step only reports.
+      - name: Report production health (read-only)
+        continue-on-error: true
         run: |
-          # Always re-write the proxy .htaccess (idempotent, costs nothing).
-          # Apache vhost docroot for urrwah.com is ~/public_html/urrwah.com
-          HTACCESS_CONTENT='RewriteEngine On
-          RewriteCond %{HTTPS} off
-          RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-          RewriteRule ^(.*)$ http://127.0.0.1:3001/$1 [P,L]
-          '
-          printf '%s' "$HTACCESS_CONTENT" | sed 's/^          //' | \
-            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-              'mkdir -p ~/public_html/urrwah.com && cat > ~/public_html/urrwah.com/.htaccess && echo "[ok] re-wrote prod .htaccess"'
-
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            'PROD_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3001/api/health 2>/dev/null) ;
-             echo "prod /api/health → $PROD_STATUS" ;
-             if [ "$PROD_STATUS" != "200" ]; then
-               echo "→ restarting prod node via deploy.sh prod" ;
-               bash ~/deploy.sh prod 2>&1 | tail -30 ;
-               for i in 1 2 3 4 5 6; do
-                 s=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3001/api/health 2>/dev/null) ;
-                 echo "  attempt $i: prod health=$s" ;
-                 [ "$s" = "200" ] && exit 0 ;
-                 sleep 4 ;
-               done ;
-               echo "✗ prod still not healthy" ;
-               tail -30 ~/urrwah-prod-api.log 2>/dev/null || tail -30 ~/musharaka.log 2>/dev/null ;
-               exit 1 ;
-             fi ;
-             echo "✓ prod is already healthy"'
-
-          # Final external check via Apache (HTTPS → vhost → .htaccess → node)
-          for i in 1 2 3 4 5; do
-            s=$(curl -sS -o /dev/null -w "%{http_code}" -m 5 https://urrwah.com/api/health 2>/dev/null)
-            body=$(curl -sS -m 5 https://urrwah.com/api/health 2>/dev/null | head -1)
-            echo "  external https://urrwah.com/api/health → $s ($body)"
-            [ "$s" = "200" ] && case "$body" in *'"status":"ok"'*) echo "✓ prod external health OK"; exit 0;; esac
+          PROD_URL="${PROD_PUBLIC_URL:-https://musharakah.urrwah.com}"
+          for i in 1 2 3; do
+            s=$(curl -sS -o /dev/null -w "%{http_code}" -m 8 "$PROD_URL/api/health" 2>/dev/null)
+            echo "  $PROD_URL/api/health → $s"
+            [ "$s" = "200" ] && { echo "✓ prod healthy"; exit 0; }
             sleep 3
           done
-          echo "✗ external prod health failed — Apache not proxying to node"
+          echo "::warning::prod $PROD_URL/api/health is not 200 — not touched by the dev deploy; see docs/DEPLOYMENT.md"
           exit 1
 
-      # Likewise: deploy.sh prod kills dev. Re-verify dev is still up at end.
-      - name: Re-verify dev still up after prod ensure
+      # Re-verify dev is still up at the end.
+      - name: Re-verify dev still up
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             'DEV_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3002/api/health 2>/dev/null) ;
              echo "dev /api/health → $DEV_STATUS" ;
              if [ "$DEV_STATUS" != "200" ]; then
-               echo "→ dev was killed by prod deploy; restarting via deploy.sh dev" ;
+               echo "→ dev is not answering; restarting via deploy.sh dev" ;
                bash ~/deploy.sh dev 2>&1 | tail -30 ;
                for i in 1 2 3 4 5 6; do
                  s=$(curl -sS -o /dev/null -w "%{http_code}" -m 3 http://127.0.0.1:3002/api/health 2>/dev/null) ;

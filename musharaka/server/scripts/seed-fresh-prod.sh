@@ -91,7 +91,7 @@ unset PGPASSWORD SUPER_PW ADMIN_PW SUPER_HASH ADMIN_HASH
 
 echo ""
 echo "✓ Seed complete on $ENV ($DB_NAME)."
-echo "  Login at https://${ENV/prod/urrwah.com}${ENV/dev/dev.urrwah.com}/login"
+echo "  Login at https://${ENV/prod/musharakah.urrwah.com}${ENV/dev/dev.musharakah.urrwah.com}/login"
 echo "  Users: superadmin@urrwah.com, admin@admin.com"
 echo ""
 echo "Tables that should still be empty:"

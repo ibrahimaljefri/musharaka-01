@@ -3,7 +3,8 @@ name: Build Staging (redesign branch)
 # Triggers on every push to the redesign branch.
 # Builds the client and commits the dist to a separate `staging-dist` branch.
 # Configure cPanel to pull from `staging-dist` into a staging subdomain
-# (e.g. staging.apps.stepup2you.com → /public_html/staging/).
+# (a staging.urrwah.com host is reserved but not provisioned; no staging site
+# exists today — see docs/DEPLOYMENT.md).
 
 on:
   push:
@@ -28,11 +29,9 @@ jobs:
       - name: Build client
         working-directory: musharaka/client
         env:
-          # Staging shares the prod backend (frontend-only redesign).
-          # If a separate staging API ever exists, change this URL only.
-          VITE_API_URL: https://apps.stepup2you.com
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # Same-origin build (calls /api on the host that serves it). Set
+          # VITE_API_URL only if staging is ever served apart from its API.
+          VITE_API_URL: ''
         run: |
           npm install --legacy-peer-deps
           npm run build

@@ -1,0 +1,76 @@
+--- deploy.sh.current	2026-10-25 09:24:37.138166181 +0000
++++ deploy.sh.h5	2026-10-25 09:24:55.624657356 +0000
+@@ -171,23 +171,38 @@
+ "$SYS_NPM" install --no-audit --no-fund --omit=dev 2>&1 | tee -a "$LOG"
+ 
+ # ── 7. Restart node app ──────────────────────────────────────────────────────
+-log "── 7/8 restart node app ($NODE_APP on port $PORT) ──"
+-# Kill any existing node process for this app
+-pkill -9 -u "$USER" -f "node.*$REPO_DIR/$SERVER_DIR/src/index.js" 2>/dev/null || true
+-sleep 1
+-
+-# Start fresh — detached, all output to log
+-PORT="$PORT" GIT_SHA="$GIT_SHA" \
+-setsid nohup node "$REPO_DIR/$SERVER_DIR/src/index.js" \
+-  > "$HOME_DIR/${NODE_APP}.log" 2>&1 < /dev/null &
+-disown || true
+-sleep 3
++NODE_APP="${NODE_APP:-urrwah-${ENV}-api}"
++if [[ "$ENV" == "prod" ]]; then
++  # prod is a CloudLinux Node.js Selector (Passenger) app: restart by touching tmp/restart.txt.
++  # No bare node process (pkill/pgrep are blocked on CageFS, so those would pile up).
++  log "── 7/8 restart Passenger app ($REPO_DIR/$SERVER_DIR) ──"
++  mkdir -p "$REPO_DIR/$SERVER_DIR/tmp"
++  touch "$REPO_DIR/$SERVER_DIR/tmp/restart.txt"
++  HEALTH_URL="${PROD_HEALTH_URL:-https://musharakah.urrwah.com/api/health}"
++  VERSION_URL="${PROD_VERSION_URL:-https://musharakah.urrwah.com/api/version}"
++  APP_LOG="$HOME_DIR/logs/urrwah-api.log"
++else
++  log "── 7/8 restart node app ($NODE_APP on port $PORT) ──"
++  # Kill any existing node process for this app
++  pkill -9 -u "$USER" -f "node.*$REPO_DIR/$SERVER_DIR/src/index.js" 2>/dev/null || true
++  sleep 1
++
++  # Start fresh — detached, all output to log
++  PORT="$PORT" GIT_SHA="$GIT_SHA" \
++  setsid nohup node "$REPO_DIR/$SERVER_DIR/src/index.js" \
++    > "$HOME_DIR/${NODE_APP}.log" 2>&1 < /dev/null &
++  disown || true
++  sleep 3
++  HEALTH_URL="http://127.0.0.1:$PORT/api/health"
++  VERSION_URL="http://127.0.0.1:$PORT/api/version"
++  APP_LOG="$HOME_DIR/${NODE_APP}.log"
++fi
+ 
+ # ── 8. Health check ──────────────────────────────────────────────────────────
+ log "── 8/8 health check ──"
+ HEALTH_OK=0
+-for i in 1 2 3 4 5; do
+-  if curl -fsS "http://127.0.0.1:$PORT/api/health" | grep -q '"status":"ok"'; then
++for i in 1 2 3 4 5 6 7 8; do
++  if curl -fsS "$HEALTH_URL" | grep -q '"status":"ok"'; then
+     HEALTH_OK=1
+     log "  ✓ health OK on attempt $i"
+     break
+@@ -198,12 +213,12 @@
+ 
+ if [[ "$HEALTH_OK" -ne 1 ]]; then
+   log "  ✗ health check failed after 5 attempts. tail of node log:"
+-  tail -30 "$HOME_DIR/${NODE_APP}.log" | tee -a "$LOG"
++  tail -30 "$APP_LOG" | tee -a "$LOG" || true
+   fatal "Health check failed — node app did not come up"
+ fi
+ 
+ # Verify deployed SHA
+-DEPLOYED_SHA="$(curl -fsS "http://127.0.0.1:$PORT/api/version" | node -e "let d=''; process.stdin.on('data',c=>d+=c); process.stdin.on('end',()=>{ try { console.log(JSON.parse(d).sha) } catch { console.log('') } })" 2>/dev/null || echo "")"
++DEPLOYED_SHA="$(curl -fsS "$VERSION_URL" | node -e "let d=''; process.stdin.on('data',c=>d+=c); process.stdin.on('end',()=>{ try { console.log(JSON.parse(d).sha) } catch { console.log('') } })" 2>/dev/null || echo "")"
+ if [[ "$DEPLOYED_SHA" != "$GIT_SHA" ]]; then
+   log "  WARN: /api/version returned '$DEPLOYED_SHA' but expected '$GIT_SHA'"
+ else
+@@ -216,5 +231,5 @@
+ 
+ log "──── deploy.sh DONE: env=$ENV sha=$GIT_SHA ────"
+ log "Tail logs:  tail -f $LOG"
+-log "Tail node:  tail -f $HOME_DIR/${NODE_APP}.log"
++log "Tail app:   tail -f $HOME_DIR/logs/urrwah-api.log (prod, Passenger) or $HOME_DIR/${NODE_APP}.log (dev)"
+ exit 0

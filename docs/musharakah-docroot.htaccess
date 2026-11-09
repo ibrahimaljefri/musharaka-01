@@ -1,0 +1,26 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Host hygiene for the Musharakah docroot: /home/d17546/musharakah_site/.htaccess
+#
+# cPanel's vhost for this subdomain has NO force-HTTPS and creates a www alias,
+# so both need rules here. The docroot is outside public_html and inherits nothing.
+#
+# Keep these lines OUTSIDE the block that the CloudLinux Node.js Selector writes
+# (between its "CLOUDLINUX PASSENGER CONFIGURATION BEGIN/END" markers) and keep
+# cPanel's default php-handler block. deploy.sh rsyncs with --exclude='.htaccess',
+# so this file survives deploys.
+#
+# Order: put it ABOVE the Selector block. Applied only after the owner's OK.
+# ─────────────────────────────────────────────────────────────────────────────
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # www.musharakah → musharakah (one hop, http or https, keeps path and query)
+  RewriteCond %{HTTP_HOST} ^www\.musharakah\.urrwah\.com(:[0-9]+)?$ [NC]
+  RewriteRule ^ https://musharakah.urrwah.com%{REQUEST_URI} [R=301,L]
+
+  # http → https (ACME http-01 challenges under /.well-known stay reachable)
+  RewriteCond %{HTTPS} off
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteRule ^ https://musharakah.urrwah.com%{REQUEST_URI} [R=301,L]
+</IfModule>
