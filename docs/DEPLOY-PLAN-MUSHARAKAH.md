@@ -18,6 +18,22 @@ step 7 starts a bare `nohup node` on :3001 next to the Passenger app and `pkill`
 (stale code); the health check hits `127.0.0.1:3001`, not the public URL. It reads only `client_dir`, `server_dir`, `schema_dir`, `build_output` from
 `.deploy-config.json`; DB name/user/port come from `~/.env.deploy` or default to `urrwah_prod` / `urrwah_prod_app` / 5432.
 
+## Findings from D0 and D1 (2026-11-04, names-only reads)
+
+- Repo `~/repos/urrwah-prod` exists on `master` at `4b62523f` (May 7). Real `node_modules` exist in the server dir (installed May 7), so the old `dotenv` crash
+  (log of May 6) is no longer the cause.
+- Database exists: `d17546_urrwah_prod` with user `d17546_urrwah_prod_app` (about 9.6 MB, so tables are present; the dev DB `d17546_urrwah_dev` too). D2 is done;
+  D6 (`schema-apply.js`) is still worth running to bring the schema to 025.
+- `~/.env.deploy` has keys `DB_{PROD,DEV}_{NAME,PASS,PORT,USER}`, `DEV_PORT`, `PROD_PORT`, `ENCRYPTION_KEY`, `SEINOMY_*`, `CLIENT_ORIGIN`, `NODE_APP_DEV`, `NODE_APP_PROD`.
+  It defines `NODE_APP_PROD`, not `NODE_APP`, so `$NODE_APP` in `deploy.sh` is still unbound (`set -u` aborts at step 7); the H5 patch fixes that.
+- App `.env` has keys `APP_URL`, `CLIENT_ORIGIN`, `DATABASE_SSL`, `DATABASE_URL`, `DEPLOYED_AT`, `ENCRYPTION_KEY`, `GIT_SHA`, `JWT_SECRET`, `NODE_ENV`, `PORT`, `REDIS_URL`,
+  `SEINOMY_*`, `SMTP_*`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`. Missing but optional: `TWILIO_AUTH_TOKEN`, `CONTRACTS_API_KEY`, `INTERNAL_KILL_KEY`, `UPLOAD_DIR`.
+  Still to check without printing values: `REDIS_URL` must be empty (no Redis here), `CLIENT_ORIGIN` must be `https://musharakah.urrwah.com`, `NODE_ENV=production`, `APP_URL` blank or the new host.
+- **Why the host hangs:** D1's placeholder shows static paths answer in 0.3 s while every other path waits until timeout, so Passenger starts the app but never gets a
+  listener. `src/index.js` only called `listen()` when `require.main === module`, which is false under Passenger's loader (the old prod ran as a bare `nohup node`).
+  Fixed in this PR (`config/runtime.js`: listen when main **or** the `PhusionPassenger` global exists; tested). The fix reaches the account only with the deploy (D4/D8), then
+  `touch tmp/restart.txt` (H5 patch).
+
 ## Decisions for the owner
 
 1. **Which code.** (A, recommended) merge PR #3 into `dev` with `[skip ci]` (so `deploy-dev.yml` does not touch the account), then PR `dev → master`, then deploy `master`.
@@ -32,8 +48,8 @@ step 7 starts a bare `nohup node` on :3001 next to the Passenger app and `pkill`
 | Step | What | Who | Evidence / success |
 |---|---|---|---|
 | D0 | Names-only, read-only inspection: `ls ~/repos/urrwah-prod` + current git HEAD, key **names** (no values) of `~/.env.deploy` and the app `.env`, `uapi Postgresql list_databases/list_users` (names), `ls -A ~/musharakah_site` | S3 | pasted names list; tells which env/DB items already exist |
-| D1 | *(optional)* Static placeholder `~/musharakah_site/index.html` (Arabic/English "launching", `noindex`, no scripts) so visitors of `/` stop timing out; paths other than `/` still hit the app. Removed automatically by the first deploy's `rsync --delete` | S3 | `curl -I https://musharakah.urrwah.com/` → 200 fast |
-| D2 | Database: owner creates (or confirms) `d17546_urrwah_prod` and user `d17546_urrwah_prod_app` in cPanel → PostgreSQL Databases, grants all privileges, chooses the password | owner | `uapi Postgresql list_databases` shows it |
+| D1 | **DONE 2026-11-04** *(optional)* Static placeholder `~/musharakah_site/index.html` (Arabic/English "launching", `noindex`, no scripts) so visitors of `/` stop timing out; paths other than `/` still hit the app. Removed automatically by the first deploy's `rsync --delete` | S3 | `curl -I https://musharakah.urrwah.com/` → 200 fast |
+| D2 | **Already exists** (see findings). Database: owner creates (or confirms) `d17546_urrwah_prod` and user `d17546_urrwah_prod_app` in cPanel → PostgreSQL Databases, grants all privileges, chooses the password | owner | `uapi Postgresql list_databases` shows it |
 | D3 | Env files. `~/.env.deploy`: `DB_PROD_PASS`, `DB_PROD_NAME`, `DB_PROD_USER`, `DB_PROD_PORT`, `ENCRYPTION_KEY`, `SEINOMY_*`. App `~/repos/urrwah-prod/musharaka/server/.env`: see names below. S3 creates a names-only template (empty values) if a file is missing; **owner fills in secrets in his own editor on the server**, mode 600 | owner (+S3 template) | `grep -c '=$'` shows no empty required keys (names only) |
 | D4 | Code path from decision 1: **A** merge PR #3 → `dev` (`[skip ci]`), PR `dev → master`, merge. **B** pick the branch SHA | owner merges / S3 prepares PRs | `git ls-remote origin master` equals the intended SHA |
 | D5 | Patch `~/deploy.sh` per `deploy-sh-h5.patch.txt` (define `NODE_APP`; prod restarts Passenger by `touch tmp/restart.txt` instead of a bare node; health check on the public URL). Backup first, `bash -n`, diff | S3 | `diff` equals the patch; `bash -n` ok; not run |

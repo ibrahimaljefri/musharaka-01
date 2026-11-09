@@ -5,6 +5,7 @@ const cors    = require('cors')
 const path    = require('path')
 const { errorHandler } = require('./middleware/errorHandler')
 const { getAllowedOrigins, getPublicUrl } = require('./config/hosts')
+const { shouldListen, isPassenger } = require('./config/runtime')
 
 const authRoutes        = require('./routes/auth')
 const salesRoutes       = require('./routes/sales')
@@ -163,19 +164,22 @@ app.get('*', (_req, res) => {
 
 app.use(errorHandler)
 
-// Only start listening when run directly (not when required by tests)
-if (require.main === module) {
+// Only start listening when run directly or under Passenger (not when required by tests)
+if (shouldListen({ isMain: require.main === module })) {
   app.listen(PORT, () => {
-    // Write PID file so deploy scripts can kill this process with `kill -9 $(cat *.pid)`.
-    // pkill / pgrep exit 255 on CloudLinux / CageFS; direct kill with a known PID works.
-    const fs = require('fs')
-    const os = require('os')
-    try {
-      fs.writeFileSync(
-        require('path').join(os.homedir(), 'urrwah-dev-api.pid'),
-        String(process.pid)
-      )
-    } catch (_) { /* non-fatal — deploy falls back to ss-based PID lookup */ }
+    // Passenger manages the process; the PID file is only for bare `node` runs.
+    if (!isPassenger()) {
+      // Write PID file so deploy scripts can kill this process with `kill -9 $(cat *.pid)`.
+      // pkill / pgrep exit 255 on CloudLinux / CageFS; direct kill with a known PID works.
+      const fs = require('fs')
+      const os = require('os')
+      try {
+        fs.writeFileSync(
+          require('path').join(os.homedir(), 'urrwah-dev-api.pid'),
+          String(process.pid)
+        )
+      } catch (_) { /* non-fatal — deploy falls back to ss-based PID lookup */ }
+    }
     console.log(`Urwah API running on port ${PORT}`)
   })
 }
